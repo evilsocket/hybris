@@ -18,7 +18,7 @@ HYBRIS_BUILTIN(hhttp_get){
 	htype_assert( data->at(0), H_OT_STRING );
 	htype_assert( data->at(1), H_OT_STRING );
 	if( data->size() >= 3 ){
-		htype_assert( data->at(2), H_OT_INT );
+		htype_assert( data->at(2), H_OT_MAP );
 	}
 
 	CURL  *cd;
@@ -62,14 +62,14 @@ HYBRIS_BUILTIN(hhttp_get){
 	}
 
 	if( data->size() > 3 ){
-		htype_assert( data->at(3), H_OT_INT );
+		htype_assert( data->at(3), H_OT_MAP );
 		unsigned int i;
 		string header;
 		Object *headers = data->at(3);
 
 		for( i = 0; i < headers->xmap.size(); i++ ){
 			Object *name  = headers->xmap[i]->toString(),
-					*value = headers->xarray[i]->toString();
+				   *value = headers->xarray[i]->toString();
 			header     = name->xstring + ": " + value->xstring;
 			headerlist = curl_slist_append( headerlist, header.c_str() );
 			delete name;
