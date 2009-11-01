@@ -1,4 +1,4 @@
-dll  = dllopen( "libc-2.9.so" );
+dll  = dllopen( "libc-2.10.1.so" );
 if( dll == 0 ){
 	print( "error loading library\n" );
 	exit();

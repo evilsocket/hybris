@@ -5,20 +5,24 @@
 
 #define H_PCRE_MAX_MATCHES 300
 
-#define H_PCRE_BOOL_MATCH  0x0
-#define H_PCRE_MULTI_MATCH 0x1
+#define H_PCRE_BOOL_MATCH    0x0
+#define H_PCRE_MULTI_MATCH   0x1
+#define H_PCRE_REPLACE_MATCH 0x2
 
 int classify_pcre_regex( string& r ){							
 	pcrecpp::RE_Options  OPTS( PCRE_CASELESS | PCRE_EXTENDED );
-	pcrecpp::RE          REGEX( ".*[^" +
-								pcrecpp::RE::QuoteMeta("\\") + "]" + 
-								pcrecpp::RE::QuoteMeta("(") + "[^" +
-								pcrecpp::RE::QuoteMeta(")") + "]+[^" + 
-								pcrecpp::RE::QuoteMeta("\\") + "]" + 
-								pcrecpp::RE::QuoteMeta(")") + ".*", OPTS );
+	pcrecpp::RE          MULTI_REGEX( ".*[^" +
+									  pcrecpp::RE::QuoteMeta("\\") + "]" + 
+									  pcrecpp::RE::QuoteMeta("(") + "[^" +
+									  pcrecpp::RE::QuoteMeta(")") + "]+[^" + 
+									  pcrecpp::RE::QuoteMeta("\\") + "]" + 
+									  pcrecpp::RE::QuoteMeta(")") + ".*", OPTS );
 	
-	if( REGEX.PartialMatch(r.c_str()) ){
+	if( MULTI_REGEX.PartialMatch(r.c_str()) ){
 		return H_PCRE_MULTI_MATCH;
+	}
+	else if(0){
+		return H_PCRE_REPLACE_MATCH;
 	}
 	else{
 		return H_PCRE_BOOL_MATCH;
