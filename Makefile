@@ -3,6 +3,7 @@ OPTIMIZATION= -O3
 CFLAGS= -Iinclude/ $(OPTIMIZATION) $(WFLAGS) `xml2-config --cflags --libs` -funroll-loops -fomit-frame-pointer -ffast-math -fno-stack-protector -ffunction-sections
 LFLAGS= -ldl -lpcrecpp -lcurl
 LIBXML= `xml2-config --cflags --libs`
+TARGET=hybris
 
 all: builtins
 	g++ -c src/common.cpp $(CFLAGS)
@@ -15,7 +16,7 @@ all: builtins
 	g++ -c src/tree.cpp $(CFLAGS)
 	g++ -c src/node.cpp $(CFLAGS)
 	g++ -c src/vmem.cpp $(CFLAGS)
-	g++ src/parser.cpp *.o src/builtins/*.o -o hybris $(CFLAGS) $(LFLAGS)
+	g++ src/parser.cpp *.o src/builtins/*.o -o $(TARGET) $(CFLAGS) $(LFLAGS)
 	
 builtins: parser
 	g++ -c src/builtins/type.cc -o src/builtins/type.o $(CFLAGS)
@@ -42,8 +43,9 @@ lexer:
 	flex -o src/lexer.cpp src/lexer.l.cpp
 
 clean:
-	rm -f src/lexer.cpp src/parser.hpp src/parser.cpp *.o src/*.o src/builtins/*.o hybris
+	rm -f src/lexer.cpp src/parser.hpp src/parser.cpp *.o src/*.o src/builtins/*.o $(TARGET)
 	
-	
+install:
+	cp $(TARGET) /usr/bin/
 
 

@@ -5,6 +5,26 @@
 
 #define H_PCRE_MAX_MATCHES 300
 
+#define H_PCRE_BOOL_MATCH  0x0
+#define H_PCRE_MULTI_MATCH 0x1
+
+int classify_pcre_regex( string& r ){							
+	pcrecpp::RE_Options  OPTS( PCRE_CASELESS | PCRE_EXTENDED );
+	pcrecpp::RE          REGEX( ".*[^" +
+								pcrecpp::RE::QuoteMeta("\\") + "]" + 
+								pcrecpp::RE::QuoteMeta("(") + "[^" +
+								pcrecpp::RE::QuoteMeta(")") + "]+[^" + 
+								pcrecpp::RE::QuoteMeta("\\") + "]" + 
+								pcrecpp::RE::QuoteMeta(")") + ".*", OPTS );
+	
+	if( REGEX.PartialMatch(r.c_str()) ){
+		return H_PCRE_MULTI_MATCH;
+	}
+	else{
+		return H_PCRE_BOOL_MATCH;
+	}
+}
+
 void parse_pcre_regex( string& raw, string& regex, int& opts ){
 	unsigned int i;
 	vector<string> blocks;
@@ -40,6 +60,42 @@ void parse_pcre_regex( string& raw, string& regex, int& opts ){
 	else{
 		opts  = 0;
 		regex = raw;
+	}
+}
+
+Object *hrex_operator( Object *o, Object *regexp ){
+	htype_assert( o, 	  H_OT_STRING );
+	htype_assert( regexp, H_OT_STRING );
+	
+	string rawreg  = regexp->xstring,
+		   subject = o->xstring,
+		   regex;
+	int    opts;
+	
+	parse_pcre_regex( rawreg, regex, opts );
+	
+	if( classify_pcre_regex( regex ) == H_PCRE_BOOL_MATCH ){
+		pcrecpp::RE_Options OPTS(opts);
+		pcrecpp::RE         REGEX( regex.c_str(), OPTS );
+
+		return new Object( REGEX.PartialMatch(subject.c_str()) );
+	}
+	else{
+		pcrecpp::RE_Options  OPTS(opts);
+		pcrecpp::RE          REGEX( regex.c_str(), OPTS );
+		pcrecpp::StringPiece SUBJECT( subject.c_str() );
+		string   match;
+		Object *matches = new Object();
+		int i = 0;
+
+		while( REGEX.FindAndConsume( &SUBJECT, &match ) == true ){
+			if( i++ > H_PCRE_MAX_MATCHES ){
+				hybris_generic_error( "something of your regex is forcing infinite matches" );
+			}
+			matches->push( new Object((char *)match.c_str()) );
+		}
+
+		return matches;
 	}
 }
 

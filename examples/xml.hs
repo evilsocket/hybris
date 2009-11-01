@@ -1,4 +1,5 @@
-#!/home/evilsocket/Desktop/hybris/hybris -e
+#!/usr/bin/hybris
+
 print( "TEST XML_LOAD :\n\n" );
 map   = xml_load( "test.xml" );
 foods = map["food"];

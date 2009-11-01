@@ -119,6 +119,8 @@ include          BEGIN(INCLUSION);
 "&&"            return LAND;
 "||"            return LOR;
 
+"~="            return REGEX_OP;
+
 [\(|\)|\{|\}|\[|\]|\,\?\:] return yytext[0];
 
 "$"             return DOLLAR;

@@ -51,7 +51,7 @@ hybris_globals_t HGLOBALS;
 %token <function>   FUNCTION_PROTOTYPE;
 
 
-%token EOSTMT DOT DOTE PLUS PLUSE MINUS MINUSE DIV DIVE MUL MULE MOD MODE XOR XORE NOT AND ANDE OR ORE SHIFTL SHIFTLE SHIFTR SHIFTRE ASSIGN
+%token EOSTMT DOT DOTE PLUS PLUSE MINUS MINUSE DIV DIVE MUL MULE MOD MODE XOR XORE NOT AND ANDE OR ORE SHIFTL SHIFTLE SHIFTR SHIFTRE ASSIGN REGEX_OP
 %token SUBSCRIPTADD SUBSCRIPTSET SUBSCRIPTGET WHILE FOR FOREACH FOREACHM OF TO IF QUESTION DOLLAR MAPS
 %token RETURN CALL
 %nonassoc IFX
@@ -160,6 +160,8 @@ expression : INTEGER                                 { $$ = Tree::addInt($1); }
            | expression EQ expression                { $$ = Tree::addOperator( EQ,  2, $1, $3 ); }
            | expression LAND expression              { $$ = Tree::addOperator( LAND,  2, $1, $3 ); }
            | expression LOR expression               { $$ = Tree::addOperator( LOR,  2, $1, $3 ); }
+           /* regex specific */
+           | expression REGEX_OP expression          { $$ = Tree::addOperator( REGEX_OP, 2, $1, $3 ); }
            /* function call (consider two different cases due to builtin calls */
 		   | IDENT      '(' arglist ')'  %prec FBX   { $$ = Tree::addCall( $1, $3 ); }
            | expression '(' arglist ')'              { $$ = Tree::addCall( $1, $3 ); }
@@ -353,7 +355,7 @@ Object *htree_execute( vmem_t *stackframe, Node *node ){
                 return htree_function_call( stackframe, node );
             /* unary, binary or ternary operator */
             case H_NT_OPERATOR   :
-                switch( node->_operator ){
+                switch( node->_operator ){					
 					/* $ */
                     case DOLLAR :
                         object = htree_execute( stackframe, node->child(0) )->toString();
@@ -466,6 +468,12 @@ Object *htree_execute( vmem_t *stackframe, Node *node ){
                     case UMINUS :
                         object = htree_execute(stackframe, node->child(0));
                         return -(*object);
+
+					/* expression ~= expression */
+					case REGEX_OP :
+						return hrex_operator(  htree_execute( stackframe, node->child(0) ),  htree_execute( stackframe, node->child(1) ) );
+					break;   
+                     
 					/* expression + expression */
                     case PLUS    :
                         return (*htree_execute(stackframe, node->child(0))) + htree_execute(stackframe, node->child(1));
