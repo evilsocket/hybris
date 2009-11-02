@@ -58,13 +58,6 @@ H_NODE_TYPE Node::type(){
 	return m_type;
 }
 
-Object       *_constant;
-char          _identifier[0xFF];
-int           _operator;
-char          _function[0xFF];
-char          _call[0xFF];
-Node         *_aliascall;
-
 unsigned int Node::children(){
 	return m_children.size();
 }

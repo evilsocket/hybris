@@ -76,6 +76,7 @@ body       : body statement { switch( HGLOBALS.action ){
                                 default :
                                     hybris_generic_error( "action not yet implemented" );
                               }
+                              
                               Tree::release($2);
                             }
            | /* empty */ ;

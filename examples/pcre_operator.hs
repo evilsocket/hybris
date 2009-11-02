@@ -1,21 +1,21 @@
 #!/usr/bin/hybris
 
-println( "\nTEST CONTROLLO EMAIL :\n" );
+print( "\nTEST CONTROLLO EMAIL :\n\n" );
 mails = array( "evilsocket@gmail.com", "lamer@foo" );
 foreach( mail of mails ){
 	if( mail ~= "/^[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+\.[a-zA-Z.]{2,5}$/i" ){
-		println( mail." è un email valida ." );	
+		print( mail." è un email valida .\n" );	
 	}
 	else{
-		println( mail." NON è un email valida ." );	
+		print( mail." NON è un email valida .\n" );	
 	}
 }
 
-println( "\nTEST ESTRAZIONE LINK (in connessione ...) :\n" );
+print( "\nTEST ESTRAZIONE LINK (in connessione ...) :\n\n" );
 html  = http_get( "www.google.it" , "/" );
 links = (html ~= "/a[^>]+href=[\"']([^\"']+)[\"']/i");
-println( "Trovati ".elements(links)." links :\n" );
+print( "Trovati ".elements(links)." links :\n\n" );
 foreach( link of links ){
-	println( "\t".link );	
+	print( "\t".link."\n" );	
 }
 
