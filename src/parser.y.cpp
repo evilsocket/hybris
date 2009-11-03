@@ -52,7 +52,7 @@ hybris_globals_t HGLOBALS;
 
 
 %token EOSTMT DOT DOTE PLUS PLUSE MINUS MINUSE DIV DIVE MUL MULE MOD MODE XOR XORE NOT AND ANDE OR ORE SHIFTL SHIFTLE SHIFTR SHIFTRE ASSIGN REGEX_OP
-%token SUBSCRIPTADD SUBSCRIPTSET SUBSCRIPTGET WHILE FOR FOREACH FOREACHM OF TO IF QUESTION DOLLAR MAPS
+%token SUBSCRIPTADD SUBSCRIPTSET SUBSCRIPTGET WHILE FOR FOREACH FOREACHM OF TO IF QUESTION DOLLAR MAPS PTR OBJ
 %token RETURN CALL
 %nonassoc IFX
 %nonassoc SBX
@@ -119,7 +119,10 @@ expression : INTEGER                                 { $$ = Tree::addInt($1); }
            | STRING                                  { $$ = Tree::addString($1); free($1); }
            | IDENT                                   { $$ = Tree::addIdentifier($1); free($1); }
            /* expression evaluation returns an identifier */
-           | DOLLAR expression                       {  $$ = Tree::addOperator( DOLLAR, 1, $2 ); }
+           | DOLLAR expression                       { $$ = Tree::addOperator( DOLLAR, 1, $2 ); }
+           /* ptr/alias evaluation */
+           | AND expression                          { $$ = Tree::addOperator( PTR, 1, $2 ); }
+           | MUL expression                          { $$ = Tree::addOperator( OBJ, 1, $2 ); }
 		   /* identifier declaration/assignation */
 		   | IDENT ASSIGN expression                 { $$ = Tree::addOperator( ASSIGN, 2, Tree::addIdentifier($1), $3 ); }
            /* a single subscript could be an expression itself */
@@ -364,6 +367,16 @@ Object *htree_execute( vmem_t *stackframe, Node *node ){
                             hybris_syntax_error( "'%s' undeclared identifier", (char *)object->xstring.c_str() );
                         }
                         return destination;
+                        
+                    case PTR :
+						object = htree_execute( stackframe, node->child(0) );
+						return new Object( (unsigned int)(new Object(object)) );
+						
+					case OBJ :
+						object = htree_execute( stackframe, node->child(0) );
+						return object->getObject();
+						
+                    
                     /* return */
                     case RETURN :
                         return new Object( htree_execute( stackframe, node->child(0) ) );

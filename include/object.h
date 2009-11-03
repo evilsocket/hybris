@@ -55,7 +55,7 @@ public  :
 	vector<Object *> xarray;
 	vector<Object *> xmap;
 	unsigned int     xalias;
-
+	
     Object( int value );
     Object( int value, unsigned int _is_extern );
     Object( double value );
@@ -71,6 +71,8 @@ public  :
 	int equals( Object *o );
 
 	int mapFind( Object *map );
+	
+	Object * getObject();
 
     void compile( FILE *fp );
     unsigned char *serialize();

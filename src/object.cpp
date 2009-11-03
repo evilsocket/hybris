@@ -299,6 +299,13 @@ int Object::mapFind( Object *map ){
 	return -1;
 }
 
+Object * Object::getObject(){
+	if( xtype != H_OT_ALIAS ){
+		hybris_generic_error( "invalid pointer reference" );
+	}
+	return (Object *)xalias;
+}
+
 void Object::compile( FILE *fp ){
 	fwrite( &xtype, 1, sizeof(H_OBJECT_TYPE), fp );
 	fwrite( &xsize, 1, sizeof(unsigned int), fp );
@@ -326,14 +333,42 @@ void Object::compile( FILE *fp ){
 
 unsigned char *Object::serialize(){
 	unsigned char *buffer = new unsigned char[ xsize ];
+	unsigned int xmapsize = 0, i, offset = 0;
+	
+	memset( buffer, 0x00, xsize );
 	switch( xtype ){
-		case H_OT_INT    : memcpy( buffer, &xint, xsize );                   break;
-		case H_OT_ALIAS  : memcpy( buffer, &xalias, xsize );                 break;
-		case H_OT_FLOAT  : memcpy( buffer, &xfloat, xsize );                 break;
-		case H_OT_CHAR   : memcpy( buffer, &xchar, xsize );                  break;
-		case H_OT_STRING : memcpy( buffer, xstring.c_str(), xsize );         break;
+		case H_OT_INT    : memcpy( buffer, &xint, xsize );           break;
+		case H_OT_ALIAS  : memcpy( buffer, &xalias, xsize );         break;
+		case H_OT_FLOAT  : memcpy( buffer, &xfloat, xsize );         break;
+		case H_OT_CHAR   : memcpy( buffer, &xchar, xsize );          break;
+		case H_OT_STRING : memcpy( buffer, xstring.c_str(), xsize ); break;
+		case H_OT_MAP    : 
+			// compute the map objects size
+			for( i = 0; i < xsize; i++ ){
+				switch( xarray[i]->xtype ){
+					case H_OT_INT    : xmapsize += xarray[i]->xsize; break;
+					case H_OT_ALIAS  : xmapsize += xarray[i]->getObject()->xsize; break;
+					case H_OT_FLOAT  : xmapsize += xarray[i]->xsize; break;
+					case H_OT_CHAR   : xmapsize += xarray[i]->xsize; break;
+					case H_OT_STRING : xmapsize += xarray[i]->xsize; break;
+					default:
+						hybris_generic_error( "invalid map sub type '%s' for field %s", Object::type(xarray[i]), xmap[i]->toString() ); 
+				}				
+			}
+			
+			// alloc new buffer
+			delete[] buffer;
+			buffer = new unsigned char[ xmapsize ];
+			
+			// create the serialized stream looping each map's object
+			for( i = 0; i < xsize; i++ ){
+				memcpy( (buffer + offset), xarray[i]->serialize(), xarray[i]->xsize );
+				offset += xarray[i]->xsize;
+			}
+			
+		break;
+		
 		case H_OT_ARRAY  : hybris_generic_error( "could not serialize an array" ); break;
-		case H_OT_MAP    : hybris_generic_error( "could not serialize a map" );    break;
 	}
 	return buffer;
 }
@@ -343,7 +378,7 @@ void Object::print( unsigned int tabs /*= 0*/ ){
 	for( i = 0; i < tabs; i++ ) printf( "\t" );
 	switch(xtype){
 		case H_OT_INT    : printf( "%d",  xint );           break;
-		case H_OT_ALIAS  : printf( "%d",  xalias );         break;
+		case H_OT_ALIAS  : printf( "0x%X", xalias );        break;
 		case H_OT_FLOAT  : printf( "%lf", xfloat );         break;
 		case H_OT_CHAR   : printf( "%c", xchar );           break;
 		case H_OT_STRING : printf( "%s", xstring.c_str() ); break;
@@ -433,10 +468,11 @@ int Object::lvalue(){
 
 Object * Object::dot( Object *o ){
 	stringstream ret;
-
+	char         tmp[0xFF] = {0};
+	
 	switch(xtype){
 		case H_OT_INT    : ret << xint;    break;
-		case H_OT_ALIAS  : ret << xalias;  break;
+		case H_OT_ALIAS  : sprintf( tmp, "0x%X", xalias ); ret << tmp; break;
 		case H_OT_FLOAT  : ret << xfloat;  break;
 		case H_OT_CHAR   : ret << xchar;   break;
 		case H_OT_STRING : ret << xstring; break;
@@ -445,7 +481,7 @@ Object * Object::dot( Object *o ){
 	}
 	switch(o->xtype){
 		case H_OT_INT    : ret << o->xint;    break;
-		case H_OT_ALIAS  : ret << o->xalias;  break;
+		case H_OT_ALIAS  : sprintf( tmp, "0x%X", o->xalias ); ret << tmp; break;
 		case H_OT_FLOAT  : ret << o->xfloat;  break;
 		case H_OT_CHAR   : ret << o->xchar;   break;
 		case H_OT_STRING : ret << o->xstring; break;
@@ -458,13 +494,14 @@ Object * Object::dot( Object *o ){
 
 Object * Object::dotequal( Object *o ){
 	stringstream ret;
-
+	char         tmp[0xFF] = {0};
+	
 	switch(xtype){
 		case H_OT_INT    : ret << xint;    break;
 		case H_OT_FLOAT  : ret << xfloat;  break;
 		case H_OT_CHAR   : ret << xchar;   break;
 		case H_OT_STRING : ret << xstring; break;
-		case H_OT_ALIAS  :
+		case H_OT_ALIAS  : sprintf( tmp, "0x%X", xalias ); ret << tmp; break;
 		case H_OT_ARRAY  :
 		case H_OT_MAP    : hybris_syntax_error( "'%s' is an invalid type for '.=' operator", type(this) ); break;
 	}
@@ -473,7 +510,7 @@ Object * Object::dotequal( Object *o ){
 		case H_OT_FLOAT  : ret << o->xfloat;  break;
 		case H_OT_CHAR   : ret << o->xchar;   break;
 		case H_OT_STRING : ret << o->xstring; break;
-		case H_OT_ALIAS  :
+		case H_OT_ALIAS  : sprintf( tmp, "0x%X", xalias ); ret << tmp; break;
 		case H_OT_ARRAY  :
 		case H_OT_MAP    : hybris_syntax_error( "'%s' is an invalid type for '.=' operator", type(o) ); break;
 	}

@@ -86,7 +86,6 @@ HYBRIS_BUILTIN(hrex_match);
 HYBRIS_BUILTIN(hrex_matches);
 HYBRIS_BUILTIN(hrex_replace);
 Object *hrex_operator( Object *o, Object *regexp );
-
 /* conio.cc */
 HYBRIS_BUILTIN(hprint);
 HYBRIS_BUILTIN(hprintln);
@@ -181,6 +180,7 @@ static builtin_t HSTATICBUILTINS[] = {
 	{ "pop", hpop },
 	{ "remove", hremove },
 	{ "contains", hcontains },
+	{ "struct", hmap },
 	{ "map", hmap },
 	{ "mapelements", hmapelements },
 	{ "mappop", hmappop },

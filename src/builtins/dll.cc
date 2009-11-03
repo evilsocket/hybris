@@ -33,7 +33,7 @@ HYBRIS_BUILTIN(hdllcall){
     typedef int (* function_t)(void);
     function_t function = (function_t)data->at(0)->xint;
 
-    unsigned long ulval;
+    unsigned int ulval;
     vector<unsigned char *> garbage;
     unsigned long * stack = new unsigned long[ data->size() - 1 ];
     int    iv;
@@ -49,8 +49,10 @@ HYBRIS_BUILTIN(hdllcall){
             case H_OT_INT    : memcpy( &iv, raw, sizeof(int) );    ulval = (unsigned long)iv; break;
             case H_OT_FLOAT  : memcpy( &fv, raw, sizeof(double) ); ulval = (unsigned long)fv; break;
             case H_OT_CHAR   : memcpy( &cv, raw, sizeof(char) );   ulval = (unsigned long)cv; break;
-            case H_OT_STRING : ulval = (unsigned long)raw; break;
-
+            case H_OT_STRING : ulval = (unsigned long)raw; 									  break;
+			case H_OT_MAP    : ulval = (unsigned long)raw; 									  break;
+			case H_OT_ALIAS  : memcpy( &ulval, raw, sizeof(unsigned int) ); 				  break;
+			
             default :
                hybris_syntax_error( "could not use '%s' type for dllcall function", Object::type(arg) );
         }

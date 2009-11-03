@@ -19,4 +19,4 @@ pointer = printf;
 
 pointer( "hello da pointer\n" );
 
-
+pointer( "0x%X\n", pointer );
