@@ -9,7 +9,7 @@ HYBRIS_BUILTIN(hdllopen){
 	}
 	htype_assert( data->at(0), H_OT_STRING );
 
-    return new Object( (int)dlopen( data->at(0)->xstring.c_str(), RTLD_NOW ) );
+    return new Object( (int)dlopen( data->at(0)->xstring.c_str(), RTLD_LAZY ) );
 }
 
 HYBRIS_BUILTIN(hdlllink){

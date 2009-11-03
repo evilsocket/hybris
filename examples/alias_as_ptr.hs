@@ -25,12 +25,10 @@ if( pstruct == 0 ){
 
 test_struct_t = struct( "number" -> numero,
 						"str"    -> "Hello World",
-						"dbl"    -> 0.321111 );
+						"dbl"    -> 10.12 );
 
-ptr = &test_struct_t;
+ptr = test_struct_t;
 
-print( "ptr         : ".ptr." (".typeof(ptr).")\n" );
-
-pstruct( ptr );
+pstruct( test_struct_t );
 
 dllclose(dll);

@@ -5,10 +5,10 @@ void hmodule_load( char *module ){
     if( !hmodule ){
         char *error = dlerror();
         if( error == NULL ){
-            printf( "Warning : module '%s' could not be loaded .\n", module );
+            hybris_generic_warning( "module '%s' could not be loaded", module );
         }
         else{
-            printf( "Warning : %s .\n", error );
+            hybris_generic_warning( "%s", error );
         }
         return;
     }
@@ -16,7 +16,7 @@ void hmodule_load( char *module ){
     char *modname = (char *)dlsym( hmodule, "hybris_module_name" );
     if( !modname ){
         dlclose(hmodule);
-        printf( "Warning : could not find module name symbol in '%s' .\n", module );
+        hybris_generic_warning( "could not find module name symbol in '%s'", module );
         return;
     }
     /* load initialization routine, usually used for constants definition, etc */
@@ -30,14 +30,14 @@ void hmodule_load( char *module ){
     unsigned int nfunctions = (unsigned int)( hmodule, "hybris_module_nfunctions" );
     if(!nfunctions){
         dlclose(hmodule);
-        printf( "Warning : could not find number of functions exported by '%s' .\n", module );
+        hybris_generic_warning( "could not find number of functions exported by '%s'", module );
         return;
     }
     /* exported functions vector */
     builtin_t *functions = (builtin_t *)( hmodule, "hybris_module_functions" );
     if(!functions){
         dlclose(hmodule);
-        printf( "Warning : could not find module '%s' functions pointer .\n", module );
+        hybris_generic_warning( "could not find module '%s' functions pointer", module );
         return;
     }
 

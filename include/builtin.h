@@ -129,9 +129,11 @@ HYBRIS_BUILTIN(hfwrite);
 HYBRIS_BUILTIN(hfclose);
 HYBRIS_BUILTIN(hfile);
 HYBRIS_BUILTIN(hreaddir);
-/* time.cc */
+/* netio.cc */
 HYBRIS_BUILTIN(hsettimeout);
 HYBRIS_BUILTIN(hconnect);
+HYBRIS_BUILTIN(hserver);
+HYBRIS_BUILTIN(haccept);
 HYBRIS_BUILTIN(hrecv);
 HYBRIS_BUILTIN(hsend);
 HYBRIS_BUILTIN(hclose);
@@ -233,6 +235,8 @@ static builtin_t HSTATICBUILTINS[] = {
     { "readdir", hreaddir },
 	{ "settimeout", hsettimeout },
 	{ "connect", hconnect },
+	{ "server", hserver },
+	{ "accept", haccept },
 	{ "recv", hrecv },
 	{ "send", hsend },
 	{ "close", hclose },

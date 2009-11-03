@@ -44,6 +44,7 @@ typedef struct {
 hybris_globals_t;
 
 void yyerror( char *error );
+void hybris_generic_warning( const char *format, ... );
 void hybris_generic_error( const char *format, ... );
 void hybris_syntax_error( const char *format, ... );
 void htype_assert( Object *o, H_OBJECT_TYPE type );

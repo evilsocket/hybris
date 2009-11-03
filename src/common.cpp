@@ -30,6 +30,20 @@ void yyerror( char *error ){
 	}
 }
 
+void hybris_generic_warning( const char *format, ... ){
+	   char message[0xFF] = {0},
+            error[0xFF] = {0};
+    va_list ap;
+    extern vmem_t HVM;
+
+    va_start( ap, format );
+    vsprintf( message, format, ap );
+    va_end(ap);
+
+    sprintf( error, "Warning : %s .\n", message );
+    yyerror(error);
+}
+
 void hybris_generic_error( const char *format, ... ){
     char message[0xFF] = {0},
             error[0xFF] = {0};

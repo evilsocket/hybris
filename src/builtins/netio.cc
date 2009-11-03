@@ -63,6 +63,67 @@ HYBRIS_BUILTIN(hconnect){
     return _return;
 }
 
+HYBRIS_BUILTIN(hserver){
+	htype_assert( data->at(0), H_OT_INT );
+
+	Object *_return = NULL;
+	if( data->size() >= 1 ){
+		int sd = socket( AF_INET, SOCK_STREAM, 0 );
+		if( sd <= 0 ){
+			return new Object(-1);
+		}
+		if( data->size() == 2 ){
+			htype_assert( data->at(1), H_OT_INT );
+			struct timeval tout = { 0 , data->at(1)->xint };
+
+			setsockopt( sd, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
+			setsockopt( sd, SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
+		}
+
+		short int port = data->at(0)->xint;
+		struct    sockaddr_in servaddr;
+			
+		memset(&servaddr, 0, sizeof(servaddr));
+		servaddr.sin_family      = AF_INET;
+		servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+		servaddr.sin_port        = htons(port);
+		
+		if ( bind( sd, (struct sockaddr *)&servaddr, sizeof(servaddr) ) < 0 ) {
+			return new Object(-1);
+		}
+		
+		if ( listen( sd, 1024 ) < 0 ) {
+			return new Object(-1);
+		}
+
+		_return = new Object( sd );
+    }
+	else{
+		hybris_syntax_error( "function 'server' requires at least 1 parameters (called with %d)", data->size() );
+	}
+    return _return;
+}
+
+HYBRIS_BUILTIN(haccept){
+	htype_assert( data->at(0), H_OT_INT );
+	
+	Object *_return = NULL;
+	if( data->size() >= 1 ){
+		int sd = data->at(0)->xint,
+		    csd;
+		    
+		if( (csd = accept( sd, NULL, NULL) ) < 0 ) {
+			return new Object(-1);
+		}
+		
+		_return = new Object( csd );
+	}
+	else{
+		hybris_syntax_error( "function 'accept' requires 1 parameters (called with %d)", data->size() );
+	}
+    return _return;
+}
+
 HYBRIS_BUILTIN(hrecv){
 	htype_assert( data->at(0), H_OT_INT );
 
