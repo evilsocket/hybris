@@ -126,7 +126,7 @@ expression : INTEGER                                 { $$ = Tree::addInt($1); }
 		   /* identifier declaration/assignation */
 		   | IDENT ASSIGN expression                 { $$ = Tree::addOperator( ASSIGN, 2, Tree::addIdentifier($1), $3 ); }
            /* a single subscript could be an expression itself */
-           | expression '[' expression ']' %prec SBX { $$ = Tree::addOperator( SUBSCRIPTGET, 2, $1, $3 ); }
+           | expression '[' expression ']' %prec SBX { $$ = Tree::addOperator( SUBSCRIPTGET, 2, $1, $3 ); }          
            /* arithmetic */
            | MINUS expression %prec UMINUS           { $$ = Tree::addOperator( UMINUS, 1, $2 ); }
            | expression DOT expression               { $$ = Tree::addOperator( DOT, 2, $1, $3 ); }
@@ -386,6 +386,7 @@ Object *htree_execute( vmem_t *stackframe, Node *node ){
 						object      = htree_execute( stackframe, node->child(1) );
 						return destination->push(object);
 					break;
+											
 					/* (identifier)? = object[ expression ]; */
                     case SUBSCRIPTGET :
                         if( node->children() == 3 ){

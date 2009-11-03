@@ -1,3 +1,7 @@
+print( "**************************************************************************************************\n".
+	   "* !!!!!!!!!!!!!!!! THIS IS STILL A BUGGY FEATURE, IT'S ONLY FOR TESTING PURPOSE !!!!!!!!!!!!!!!! *\n".
+	   "**************************************************************************************************\n\n" );
+
 numero = 123;
 
 reference = &numero;
@@ -20,7 +24,7 @@ if( pstruct == 0 ){
 }
 
 test_struct_t = struct( "number" -> numero,
-						"str"    -> "Hello World!",
+						"str"    -> "Hello World",
 						"dbl"    -> 0.321111 );
 
 ptr = &test_struct_t;
