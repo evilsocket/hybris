@@ -126,12 +126,14 @@ HYBRIS_BUILTIN(haccept){
 
 HYBRIS_BUILTIN(hrecv){
 	htype_assert( data->at(0), H_OT_INT );
-
+	
+	bool isEOF	    = false,
+		 isEOL 		= false;
     Object *_return = NULL;
     if( data->size() >= 2 ){
 		int sd            = data->at(0)->xint;
 		Object *object   = data->at(1);
-		unsigned int size, read = 0, i;
+		unsigned int size, read = 0, i, n;
 		char c;
 		/* explicit size declaration */
 		if( data->size() == 3 ){
@@ -163,19 +165,22 @@ HYBRIS_BUILTIN(hrecv){
 				case H_OT_FLOAT  : object->xsize = read = recv( sd, &object->xfloat, sizeof(double), 0 ); break;
 				case H_OT_CHAR   : object->xsize = read = recv( sd, &object->xchar,  sizeof(char), 0 ); break;
 				case H_OT_STRING :
-					do{
-						if( recv( sd, &c, sizeof(char), 0 ) > 0 ){
-							if( strchr( "\n\r\x00", c ) == NULL ){
+					object->xstring = "";
+					while( !isEOL && !isEOF ){
+						n = recv( sd, &c, sizeof(char), 0 );
+				 		if( n < 1 ){
+							isEOF = true;
+						}
+						else if( c == '\n' ){
+							isEOL = true;
+						}
+						else {
+							if( c != '\r' ){
 								read++;
 								object->xstring += c;
 							}
 						}
-						else{
-							read = 0;
-							break;
-						}
 					}
-					while( strchr( "\n\r\x00", c ) == NULL );
 					object->xsize = read;
 				break;
 				case H_OT_ARRAY  : hybris_generic_error( "can not directly deserialize an array type" ); break;

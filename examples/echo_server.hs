@@ -8,8 +8,7 @@ if( sd <= 0 ){
 	exit();
 }
 
-
-while( (client = accept(sd)) > 0 ){
+while( (client = accept(sd)) > 0 && !exit ){
 	if( fork() == 0 ){
 		println( "New client on process : ".getpid() );	
 		

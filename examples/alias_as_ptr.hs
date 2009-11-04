@@ -1,9 +1,6 @@
-print( "**************************************************************************************************\n".
-	   "* !!!!!!!!!!!!!!!! THIS IS STILL A BUGGY FEATURE, IT'S ONLY FOR TESTING PURPOSE !!!!!!!!!!!!!!!! *\n".
-	   "**************************************************************************************************\n\n" );
+#!/usr/bin/hybris
 
-numero = 123;
-
+numero    = 123;
 reference = &numero;
 nuovo     = *reference;
 
@@ -26,8 +23,6 @@ if( pstruct == 0 ){
 test_struct_t = struct( "number" -> numero,
 						"str"    -> "Hello World",
 						"dbl"    -> 10.12 );
-
-ptr = test_struct_t;
 
 pstruct( test_struct_t );
 
