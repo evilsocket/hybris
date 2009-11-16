@@ -1,4 +1,22 @@
 %{
+/*
+ * This file is part of hybris.
+ *
+ * Copyleft of Simone Margaritelli aka evilsocket <evilsocket@gmail.com>
+ *
+ * hybris is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * hybris is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with hybris.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include "object.h"
 #include "vmem.h"
@@ -76,7 +94,7 @@ body       : body statement { switch( HGLOBALS.action ){
                                 default :
                                     hybris_generic_error( "action not yet implemented" );
                               }
-                              
+
                               Tree::release($2);
                             }
            | /* empty */ ;
@@ -126,7 +144,7 @@ expression : INTEGER                                 { $$ = Tree::addInt($1); }
 		   /* identifier declaration/assignation */
 		   | IDENT ASSIGN expression                 { $$ = Tree::addOperator( ASSIGN, 2, Tree::addIdentifier($1), $3 ); }
            /* a single subscript could be an expression itself */
-           | expression '[' expression ']' %prec SBX { $$ = Tree::addOperator( SUBSCRIPTGET, 2, $1, $3 ); }          
+           | expression '[' expression ']' %prec SBX { $$ = Tree::addOperator( SUBSCRIPTGET, 2, $1, $3 ); }
            /* arithmetic */
            | MINUS expression %prec UMINUS           { $$ = Tree::addOperator( UMINUS, 1, $2 ); }
            | expression DOT expression               { $$ = Tree::addOperator( DOT, 2, $1, $3 ); }
@@ -359,7 +377,7 @@ Object *htree_execute( vmem_t *stackframe, Node *node ){
                 return htree_function_call( stackframe, node );
             /* unary, binary or ternary operator */
             case H_NT_OPERATOR   :
-                switch( node->_operator ){					
+                switch( node->_operator ){
 					/* $ */
                     case DOLLAR :
                         object = htree_execute( stackframe, node->child(0) )->toString();
@@ -367,16 +385,16 @@ Object *htree_execute( vmem_t *stackframe, Node *node ){
                             hybris_syntax_error( "'%s' undeclared identifier", (char *)object->xstring.c_str() );
                         }
                         return destination;
-                        
+
                     case PTR :
 						object = htree_execute( stackframe, node->child(0) );
 						return new Object( (unsigned int)(new Object(object)) );
-						
+
 					case OBJ :
 						object = htree_execute( stackframe, node->child(0) );
 						return object->getObject();
-						
-                    
+
+
                     /* return */
                     case RETURN :
                         return new Object( htree_execute( stackframe, node->child(0) ) );
@@ -386,7 +404,7 @@ Object *htree_execute( vmem_t *stackframe, Node *node ){
 						object      = htree_execute( stackframe, node->child(1) );
 						return destination->push(object);
 					break;
-											
+
 					/* (identifier)? = object[ expression ]; */
                     case SUBSCRIPTGET :
                         if( node->children() == 3 ){
@@ -487,8 +505,8 @@ Object *htree_execute( vmem_t *stackframe, Node *node ){
 					/* expression ~= expression */
 					case REGEX_OP :
 						return hrex_operator(  htree_execute( stackframe, node->child(0) ),  htree_execute( stackframe, node->child(1) ) );
-					break;   
-                     
+					break;
+
 					/* expression + expression */
                     case PLUS    :
                         return (*htree_execute(stackframe, node->child(0))) + htree_execute(stackframe, node->child(1));

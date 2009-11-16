@@ -1,3 +1,21 @@
+/*
+ * This file is part of hybris.
+ *
+ * Copyleft of Simone Margaritelli aka evilsocket <evilsocket@gmail.com>
+ *
+ * hybris is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * hybris is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with hybris.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #ifndef _HOBJECT_H_
 #	define _HOBJECT_H_
 
@@ -55,7 +73,7 @@ public  :
 	vector<Object *> xarray;
 	vector<Object *> xmap;
 	unsigned int     xalias;
-	
+
     Object( int value );
     Object( int value, unsigned int _is_extern );
     Object( double value );
@@ -71,7 +89,7 @@ public  :
 	int equals( Object *o );
 
 	int mapFind( Object *map );
-	
+
 	Object * getObject();
 
     void compile( FILE *fp );
@@ -82,13 +100,13 @@ public  :
     void println( unsigned int tabs = 0 );
 
 	string toxml( unsigned int tabs = 0 );
-	
+
     void input();
 	Object * toString();
-    
+
 	int lvalue();
     Object * dot( Object *o );
-	Object * dotequal( Object *o );  
+	Object * dotequal( Object *o );
     string svalue();
 	Object *push( Object *o );
 	Object *map( Object *map, Object *o );
@@ -99,7 +117,7 @@ public  :
     Object *at( Object *index );
 	Object *at( char *map );
     Object& at( Object *index, Object *set );
-	
+
     Object&  operator = ( Object *o );
     Object * operator - ();
     Object * operator ! ();

@@ -1,3 +1,21 @@
+/*
+ * This file is part of hybris.
+ *
+ * Copyleft of Simone Margaritelli aka evilsocket <evilsocket@gmail.com>
+ *
+ * hybris is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * hybris is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with hybris.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "common.h"
 #include "vmem.h"
 #include "builtin.h"
@@ -9,15 +27,15 @@
 #define H_PCRE_MULTI_MATCH   0x1
 #define H_PCRE_REPLACE_MATCH 0x2
 
-int classify_pcre_regex( string& r ){							
+int classify_pcre_regex( string& r ){
 	pcrecpp::RE_Options  OPTS( PCRE_CASELESS | PCRE_EXTENDED );
 	pcrecpp::RE          MULTI_REGEX( ".*[^" +
-									  pcrecpp::RE::QuoteMeta("\\") + "]" + 
+									  pcrecpp::RE::QuoteMeta("\\") + "]" +
 									  pcrecpp::RE::QuoteMeta("(") + "[^" +
-									  pcrecpp::RE::QuoteMeta(")") + "]+[^" + 
-									  pcrecpp::RE::QuoteMeta("\\") + "]" + 
+									  pcrecpp::RE::QuoteMeta(")") + "]+[^" +
+									  pcrecpp::RE::QuoteMeta("\\") + "]" +
 									  pcrecpp::RE::QuoteMeta(")") + ".*", OPTS );
-	
+
 	if( MULTI_REGEX.PartialMatch(r.c_str()) ){
 		return H_PCRE_MULTI_MATCH;
 	}
@@ -70,14 +88,14 @@ void parse_pcre_regex( string& raw, string& regex, int& opts ){
 Object *hrex_operator( Object *o, Object *regexp ){
 	htype_assert( o, 	  H_OT_STRING );
 	htype_assert( regexp, H_OT_STRING );
-	
+
 	string rawreg  = regexp->xstring,
 		   subject = o->xstring,
 		   regex;
 	int    opts;
-	
+
 	parse_pcre_regex( rawreg, regex, opts );
-	
+
 	if( classify_pcre_regex( regex ) == H_PCRE_BOOL_MATCH ){
 		pcrecpp::RE_Options OPTS(opts);
 		pcrecpp::RE         REGEX( regex.c_str(), OPTS );

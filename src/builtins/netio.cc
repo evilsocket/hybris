@@ -1,3 +1,21 @@
+/*
+ * This file is part of hybris.
+ *
+ * Copyleft of Simone Margaritelli aka evilsocket <evilsocket@gmail.com>
+ *
+ * hybris is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * hybris is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with hybris.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "common.h"
 #include "vmem.h"
 #include "builtin.h"
@@ -82,16 +100,16 @@ HYBRIS_BUILTIN(hserver){
 
 		short int port = data->at(0)->xint;
 		struct    sockaddr_in servaddr;
-			
+
 		memset(&servaddr, 0, sizeof(servaddr));
 		servaddr.sin_family      = AF_INET;
 		servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 		servaddr.sin_port        = htons(port);
-		
+
 		if ( bind( sd, (struct sockaddr *)&servaddr, sizeof(servaddr) ) < 0 ) {
 			return new Object(-1);
 		}
-		
+
 		if ( listen( sd, 1024 ) < 0 ) {
 			return new Object(-1);
 		}
@@ -106,16 +124,16 @@ HYBRIS_BUILTIN(hserver){
 
 HYBRIS_BUILTIN(haccept){
 	htype_assert( data->at(0), H_OT_INT );
-	
+
 	Object *_return = NULL;
 	if( data->size() >= 1 ){
 		int sd = data->at(0)->xint,
 		    csd;
-		    
+
 		if( (csd = accept( sd, NULL, NULL) ) < 0 ) {
 			return new Object(-1);
 		}
-		
+
 		_return = new Object( csd );
 	}
 	else{
@@ -126,7 +144,7 @@ HYBRIS_BUILTIN(haccept){
 
 HYBRIS_BUILTIN(hrecv){
 	htype_assert( data->at(0), H_OT_INT );
-	
+
 	bool isEOF	    = false,
 		 isEOL 		= false;
     Object *_return = NULL;

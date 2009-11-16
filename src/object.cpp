@@ -1,3 +1,21 @@
+/*
+ * This file is part of hybris.
+ *
+ * Copyleft of Simone Margaritelli aka evilsocket <evilsocket@gmail.com>
+ *
+ * hybris is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * hybris is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with hybris.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "object.h"
 
 
@@ -334,7 +352,7 @@ void Object::compile( FILE *fp ){
 unsigned char *Object::serialize(){
 	unsigned char *buffer = new unsigned char[ xsize ];
 	unsigned int xmapsize = 0, i, offset = 0;
-	
+
 	memset( buffer, 0x00, xsize );
 	switch( xtype ){
 		case H_OT_INT    : memcpy( buffer, &xint, xsize );           break;
@@ -342,7 +360,7 @@ unsigned char *Object::serialize(){
 		case H_OT_FLOAT  : memcpy( buffer, &xfloat, xsize );         break;
 		case H_OT_CHAR   : memcpy( buffer, &xchar, xsize );          break;
 		case H_OT_STRING : memcpy( buffer, xstring.c_str(), xsize ); break;
-		case H_OT_MAP    : 
+		case H_OT_MAP    :
 			// compute the map objects size
 			for( i = 0; i < xsize; i++ ){
 				switch( xarray[i]->xtype ){
@@ -352,22 +370,22 @@ unsigned char *Object::serialize(){
 					case H_OT_CHAR   : xmapsize += xarray[i]->xsize; break;
 					case H_OT_STRING : xmapsize += xarray[i]->xsize; break;
 					default:
-						hybris_generic_error( "invalid map sub type '%s' for field %s", Object::type(xarray[i]), xmap[i]->toString() ); 
-				}				
+						hybris_generic_error( "invalid map sub type '%s' for field %s", Object::type(xarray[i]), xmap[i]->toString() );
+				}
 			}
-			
+
 			// alloc new buffer
 			delete[] buffer;
 			buffer = new unsigned char[ xmapsize ];
-			
+
 			// create the serialized stream looping each map's object
 			for( i = 0; i < xsize; i++ ){
 				memcpy( (buffer + offset), xarray[i]->serialize(), xarray[i]->xsize );
 				offset += xarray[i]->xsize;
 			}
-			
+
 		break;
-		
+
 		case H_OT_ARRAY  : hybris_generic_error( "could not serialize an array" ); break;
 	}
 	return buffer;
@@ -469,7 +487,7 @@ int Object::lvalue(){
 Object * Object::dot( Object *o ){
 	stringstream ret;
 	char         tmp[0xFF] = {0};
-	
+
 	switch(xtype){
 		case H_OT_INT    : ret << xint;    break;
 		case H_OT_ALIAS  : sprintf( tmp, "0x%X", xalias ); ret << tmp; break;
@@ -495,7 +513,7 @@ Object * Object::dot( Object *o ){
 Object * Object::dotequal( Object *o ){
 	stringstream ret;
 	char         tmp[0xFF] = {0};
-	
+
 	switch(xtype){
 		case H_OT_INT    : ret << xint;    break;
 		case H_OT_FLOAT  : ret << xfloat;  break;
