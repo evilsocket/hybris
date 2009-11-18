@@ -69,5 +69,6 @@ void hybris_generic_error( const char *format, ... );
 void hybris_syntax_error( const char *format, ... );
 void htype_assert( Object *o, H_OBJECT_TYPE type );
 void htype_assert( Object *o, H_OBJECT_TYPE type1, H_OBJECT_TYPE type2 );
+void hprint_stacktrace();
 
 #endif

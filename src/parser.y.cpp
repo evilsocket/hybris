@@ -666,10 +666,39 @@ Node *htree_load( FILE *input ){
     return Tree::load(input);
 }
 
+void h_env_release( int onerror = 0 ){
+    if( HGLOBALS.action != H_COMPILE ){
+        hybris_vm_release(&HVM);
+        hybris_vc_release(&HVC);
+    }
+    else{
+        fclose(HGLOBALS.compiled);
+        if( onerror ){
+            unlink(HGLOBALS.destination);
+        }
+    }
+}
+
 void hsignal_handler( int signo ) {
     if( signo == SIGSEGV ){
+        printf( "!!! SIGSEGV SIGNAL CATCHED !!!\n" );
+
+        printf( "\n-- DATA AREA -------------------------------------\n" );
+        unsigned int i, size = HVM.size();
+        for( i = 0; i < size; i++ ){
+            Object *o = HVM.at(i);
+            if( o ){
+                printf( "\t<%s> : [%s] [%d bytes]\n", HVM.label(i), Object::type( o ), o->xsize );
+            }
+        }
+        printf( "--------------------------------------------------\n" );
+
         HGLOBALS.stacktrace = 1;
-        hybris_generic_error( "SIGSEGV signal catched ." );
+        hprint_stacktrace();
+
+        h_env_release();
+
+        exit(signo);
     }
 }
 
@@ -697,19 +726,6 @@ void h_env_init( int argc, char *argv[] ){
     getcwd( HGLOBALS.rootpath, 0xFF );
 
     signal( SIGSEGV, hsignal_handler );
-}
-
-void h_env_release( int onerror = 0 ){
-    if( HGLOBALS.action != H_COMPILE ){
-        hybris_vm_release(&HVM);
-        hybris_vc_release(&HVC);
-    }
-    else{
-        fclose(HGLOBALS.compiled);
-        if( onerror ){
-            unlink(HGLOBALS.destination);
-        }
-    }
 }
 
 int h_file_exists( char *filename ){
