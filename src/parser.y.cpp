@@ -666,6 +666,13 @@ Node *htree_load( FILE *input ){
     return Tree::load(input);
 }
 
+void hsignal_handler( int signo ) {
+    if( signo == SIGSEGV ){
+        HGLOBALS.stacktrace = 1;
+        hybris_generic_error( "SIGSEGV signal catched ." );
+    }
+}
+
 void h_env_init( int argc, char *argv[] ){
     int i;
     char name[0xFF] = {0};
@@ -688,6 +695,8 @@ void h_env_init( int argc, char *argv[] ){
     }
     /* save interpreter directory */
     getcwd( HGLOBALS.rootpath, 0xFF );
+
+    signal( SIGSEGV, hsignal_handler );
 }
 
 void h_env_release( int onerror = 0 ){
