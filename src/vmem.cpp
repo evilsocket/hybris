@@ -19,6 +19,10 @@
 #include "vmem.h"
 
 Object *hybris_vm_add( vmem_t *mem, char *identifier, Object *object ){
+    #ifdef MEM_DEBUG
+    printf( "[MEM DEBUG] vm_add[%s] (+ %d bytes)\n", identifier,  object->xsize );
+    #endif
+
     /* if object does not exist yet, create a new one */
     if( hybris_vm_get( mem, identifier ) == H_UNDEFINED ){
         Object *o = H_UNDEFINED;

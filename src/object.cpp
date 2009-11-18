@@ -159,6 +159,10 @@ Object::Object( int value ) {
 	xint  = value;
 	xsize = sizeof(int);
 	is_extern = 0;
+
+    #ifdef MEM_DEBUG
+    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
+    #endif
 }
 
 Object::Object( int value, unsigned int _is_extern ) {
@@ -166,6 +170,10 @@ Object::Object( int value, unsigned int _is_extern ) {
 	xint  = value;
 	xsize = sizeof(int);
 	is_extern = _is_extern;
+
+    #ifdef MEM_DEBUG
+    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
+    #endif
 }
 
 Object::Object( double value ) {
@@ -173,6 +181,10 @@ Object::Object( double value ) {
 	xfloat = value;
 	xsize  = sizeof(double);
 	is_extern = 0;
+
+    #ifdef MEM_DEBUG
+    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
+    #endif
 }
 
 Object::Object( char value ) {
@@ -180,6 +192,10 @@ Object::Object( char value ) {
 	xchar = value;
 	xsize = sizeof(char);
 	is_extern = 0;
+
+    #ifdef MEM_DEBUG
+    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
+    #endif
 }
 
 Object::Object( char *value ) {
@@ -188,12 +204,20 @@ Object::Object( char *value ) {
 	parse_string( xstring );
 	xsize   = strlen(xstring.c_str()) + 1;
 	is_extern = 0;
+
+    #ifdef MEM_DEBUG
+    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
+    #endif
 }
 
 Object::Object(){
 	xtype = H_OT_ARRAY;
 	xsize = 0;
 	is_extern = 0;
+
+    #ifdef MEM_DEBUG
+    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
+    #endif
 }
 
 Object::Object( unsigned int value ){
@@ -201,6 +225,10 @@ Object::Object( unsigned int value ){
 	xsize  = sizeof(unsigned int);
 	xalias = value;
 	is_extern = 0;
+
+    #ifdef MEM_DEBUG
+    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
+    #endif
 }
 
 Object::Object( Object *o ) {
@@ -225,6 +253,10 @@ Object::Object( Object *o ) {
 		break;
 	}
 	is_extern = o->is_extern;
+
+    #ifdef MEM_DEBUG
+    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
+    #endif
 }
 
 Object::Object( FILE *fp ) {
@@ -256,6 +288,10 @@ Object::Object( FILE *fp ) {
 			}
 		break;
 	}
+
+    #ifdef MEM_DEBUG
+    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
+    #endif
 }
 
 Object::~Object(){
@@ -271,6 +307,10 @@ Object::~Object(){
 			delete xarray[i];
 		}
 	}
+
+    #ifdef MEM_DEBUG
+    printf( "[MEM DEBUG] deleted %s object (- %d bytes)\n", Object::type(this),  xsize );
+    #endif
 }
 
 int Object::equals( Object *o ){

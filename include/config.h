@@ -19,9 +19,17 @@
 #ifndef _HCONFIG_H_
 #   define _HCONFIG_H_
 
+// memory allocation debug messages
+// #define MEM_DEBUG 1
+
+
+// support for regular expressions
 #define PCRE_SUPPORT 1
+// get/post http(s) methos support
 #define HTTP_SUPPORT 1
+// xml parsing support
 #define XML_SUPPORT  1
+
 
 #endif
 
