@@ -13,7 +13,7 @@ while( found < tofind ){
 
 	if( prime ){
 		found++;
-		println( n." è primo" );	
+		//println( n." è primo" );	
 	}
 
 	n++;

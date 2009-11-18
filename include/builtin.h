@@ -99,10 +99,14 @@ HYBRIS_BUILTIN(hstrfind);
 HYBRIS_BUILTIN(hsubstr);
 HYBRIS_BUILTIN(hstrreplace);
 HYBRIS_BUILTIN(hstrsplit);
+
+#ifdef PCRE_SUPPORT
 /* pcre.cc */
 HYBRIS_BUILTIN(hrex_match);
 HYBRIS_BUILTIN(hrex_matches);
 HYBRIS_BUILTIN(hrex_replace);
+#endif
+
 Object *hrex_operator( Object *o, Object *regexp );
 /* conio.cc */
 HYBRIS_BUILTIN(hprint);
@@ -155,12 +159,18 @@ HYBRIS_BUILTIN(haccept);
 HYBRIS_BUILTIN(hrecv);
 HYBRIS_BUILTIN(hsend);
 HYBRIS_BUILTIN(hclose);
+
+#ifdef HTTP_SUPPORT
 /* http.cc */
 HYBRIS_BUILTIN(hhttp_get);
 HYBRIS_BUILTIN(hhttp_post);
+#endif
+
+#ifdef XML_SUPPORT
 /* xml.cc */
 HYBRIS_BUILTIN(hxml_load);
 HYBRIS_BUILTIN(hxml_parse);
+#endif
 
 static builtin_t HSTATICBUILTINS[] = {
 	{ "isint", hisint },
@@ -211,9 +221,13 @@ static builtin_t HSTATICBUILTINS[] = {
 	{ "substr", hsubstr },
 	{ "strreplace", hstrreplace },
 	{ "strsplit", hstrsplit },
+
+	#ifdef PCRE_SUPPORT
 	{ "rex_match", hrex_match },
 	{ "rex_matches", hrex_matches },
 	{ "rex_replace", hrex_replace },
+	#endif
+
 	{ "print", hprint },
 	{ "println", hprintln },
 	{ "input", hinput },
@@ -258,10 +272,16 @@ static builtin_t HSTATICBUILTINS[] = {
 	{ "recv", hrecv },
 	{ "send", hsend },
 	{ "close", hclose },
+
+	#ifdef HTTP_SUPPORT
 	{ "http_get", hhttp_get },
 	{ "http_post", hhttp_post },
+    #endif
+
+	#ifdef XML_SUPPORT
 	{ "xml_load", hxml_load },
 	{ "xml_parse", hxml_parse }
+    #endif
 };
 
 #define NBUILTINS sizeof(HSTATICBUILTINS) / sizeof(HSTATICBUILTINS[0])

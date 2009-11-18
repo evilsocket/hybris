@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="all" />
+	<File name="examples/libtest.cc" open="0" top="0" tabpos="0">
+		<Cursor position="64" topLine="0" />
+	</File>
+	<File name="include/builtin.h" open="1" top="1" tabpos="4">
+		<Cursor position="0" topLine="0" />
+	</File>
+	<File name="include/cmdline.h" open="1" top="0" tabpos="1">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="include/common.h" open="1" top="0" tabpos="3">
+		<Cursor position="744" topLine="7" />
+	</File>
+	<File name="include/map.h" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="include/node.h" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="include/object.h" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="include/tree.h" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="include/vmem.h" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/builtin.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/builtins/array.cc" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/builtins/conio.cc" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/builtins/dll.cc" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/builtins/fileio.cc" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/builtins/http.cc" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/builtins/map.cc" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/builtins/math.cc" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/builtins/netio.cc" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/builtins/pcre.cc" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/builtins/process.cc" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/builtins/reflection.cc" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/builtins/string.cc" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/builtins/time.cc" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/builtins/type.cc" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/builtins/xml.cc" open="0" top="0" tabpos="0">
+		<Cursor position="744" topLine="0" />
+	</File>
+	<File name="src/common.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="745" topLine="0" />
+	</File>
+	<File name="src/lexer.l.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="748" topLine="0" />
+	</File>
+	<File name="src/node.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="745" topLine="0" />
+	</File>
+	<File name="src/object.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="745" topLine="0" />
+	</File>
+	<File name="src/parser.y.cpp" open="1" top="0" tabpos="2">
+		<Cursor position="33371" topLine="645" />
+	</File>
+	<File name="src/tree.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="745" topLine="0" />
+	</File>
+	<File name="src/vmem.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="745" topLine="0" />
+	</File>
+</CodeBlocks_layout_file>

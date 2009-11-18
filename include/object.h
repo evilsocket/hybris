@@ -19,12 +19,16 @@
 #ifndef _HOBJECT_H_
 #	define _HOBJECT_H_
 
+#include "config.h"
+
 #include <string>
 #include <sstream>
 #include <vector>
 #include <iostream>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
+#ifdef XML_SUPPORT
+    #include <libxml/parser.h>
+    #include <libxml/tree.h>
+#endif
 #include <string.h>
 
 extern void  hybris_syntax_error( const char *format, ... );
@@ -51,10 +55,14 @@ class Object {
 public  :
     /* return a string rapresentation of the type */
     static const char *type( Object *o );
+
+    #ifdef XML_SUPPORT
     /* create an object from a xml tree */
 	static Object *fromxml( xmlNode *node );
     /* create an object from a xml stream */
 	static Object *fromxml( char *xml );
+    #endif
+
     /* return 1 if a and b are of one of the types described on the arguments */
 	static unsigned int assert_type( Object *a, Object *b, unsigned int ntypes, ... );
     /* replace each occurrence of "find" in "source" with "replace" */
@@ -99,7 +107,9 @@ public  :
 
     void println( unsigned int tabs = 0 );
 
+    #ifdef XML_SUPPORT
 	string toxml( unsigned int tabs = 0 );
+    #endif
 
     void input();
 	Object * toString();

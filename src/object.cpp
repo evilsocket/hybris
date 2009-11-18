@@ -31,6 +31,7 @@ const char *Object::type( Object *o ){
 	}
 }
 
+#ifdef XML_SUPPORT
 Object *Object::fromxml( xmlNode *node ){
 	char *data = (char *)(node->children ? node->children->content : NULL);
 
@@ -102,6 +103,7 @@ Object *Object::fromxml( char *xml ){
 
 	return object;
 }
+#endif
 
 unsigned int Object::assert_type( Object *a, Object *b, unsigned int ntypes, ... ){
 	unsigned int o, i, valid = 0;
@@ -428,6 +430,7 @@ void Object::println( unsigned int tabs /*= 0*/ ){
 	printf("\n");
 }
 
+#ifdef XML_SUPPORT
 string Object::toxml( unsigned int tabs /*= 0*/ ){
 	unsigned int i;
 	string       xtabs;
@@ -459,6 +462,7 @@ string Object::toxml( unsigned int tabs /*= 0*/ ){
 
 	return xml.str().c_str();
 }
+#endif
 
 void Object::input(){
 	switch(xtype){
