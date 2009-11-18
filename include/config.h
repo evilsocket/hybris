@@ -19,6 +19,9 @@
 #ifndef _HCONFIG_H_
 #   define _HCONFIG_H_
 
+#define AUTHOR  "Simone Margaritelli <evilsocket@gmail.com>"
+#define VERSION "1.0a"
+
 // memory allocation debug messages
 // #define MEM_DEBUG 1
 

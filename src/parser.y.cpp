@@ -721,8 +721,18 @@ int h_check_header( FILE *fp ){
     return (memcmp( header.magic, HMAGIC, sizeof(HMAGIC) ) == 0);
 }
 
+int h_banner(){
+    printf( "Hybris %s (built: %s %s)\n"
+            "Copyright (c) by %s\n",
+            VERSION,
+            __DATE__,
+            __TIME__,
+            AUTHOR );
+}
+
 int h_usage( char *argvz ){
-    printf("Usage: %s (action) (-o output) file (--trace)\n"
+    h_banner();
+    printf("\nUsage: %s (action) (-o output) file (--trace)\n"
            "Where action could be :\n"
            "\t-e : Execute the script as an interpreter .\n"
            "\t-c : Compile the script in x-byte-code and save it to 'output' .\n"
@@ -748,7 +758,7 @@ int h_changepath(){
 
 int main( int argc, char *argv[] ){
     if( argc < 2 ){
-        return h_usage( argv[0] );
+        return h_banner();
     }
     else{
         CmdLine cmdline( argc, argv );

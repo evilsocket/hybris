@@ -28,18 +28,23 @@
 using std::string;
 using std::vector;
 
+/* builtin function pointer prototype */
 typedef Object * (*function_t)( vmem_t * );
 
+/* helper macro to define a builtin function */
 #define HYBRIS_BUILTIN(name) Object *name( vmem_t *data )
 
+/* builtins definition list item structure */
 typedef struct {
     string      identifier;
     function_t function;
 }
 builtin_t;
 
+/* module initializer function pointer prototype */
 typedef void (*initializer_t)( vmem_t *vm, vcode_t *vc );
 
+/* module structure definition */
 typedef struct{
     string               name;
     initializer_t       initializer;
@@ -299,7 +304,7 @@ static builtin_t HSTATICBUILTINS[] = {
 
 static vector<module_t *> HDYNAMICMODULES;
 
-void        hmodule_load( char *module );
+void       hmodule_load( char *module );
 function_t hfunction_search( char *identifier );
 
 #endif
