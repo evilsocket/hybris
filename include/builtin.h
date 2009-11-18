@@ -172,6 +172,12 @@ HYBRIS_BUILTIN(hxml_load);
 HYBRIS_BUILTIN(hxml_parse);
 #endif
 
+/* encode.cc */
+HYBRIS_BUILTIN(hurlencode);
+HYBRIS_BUILTIN(hurldecode);
+HYBRIS_BUILTIN(hbase64encode);
+HYBRIS_BUILTIN(hbase64decode);
+
 static builtin_t HSTATICBUILTINS[] = {
 	{ "isint", hisint },
 	{ "isfloat", hisfloat },
@@ -280,8 +286,13 @@ static builtin_t HSTATICBUILTINS[] = {
 
 	#ifdef XML_SUPPORT
 	{ "xml_load", hxml_load },
-	{ "xml_parse", hxml_parse }
+	{ "xml_parse", hxml_parse },
     #endif
+
+    { "urlencode", hurlencode },
+	{ "urldecode", hurldecode },
+    { "base64encode", hbase64encode },
+	{ "base64decode", hbase64decode }
 };
 
 #define NBUILTINS sizeof(HSTATICBUILTINS) / sizeof(HSTATICBUILTINS[0])
