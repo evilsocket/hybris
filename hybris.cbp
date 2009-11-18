@@ -29,6 +29,7 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="Makefile" />
 		<Unit filename="examples/alias.hs">
 			<Option target="all" />
 		</Unit>
@@ -150,6 +151,7 @@
 		<Unit filename="src/builtins/dll.cc">
 			<Option target="all" />
 		</Unit>
+		<Unit filename="src/builtins/encoding.cc" />
 		<Unit filename="src/builtins/fileio.cc">
 			<Option target="all" />
 		</Unit>
