@@ -1,33 +1,18 @@
-function simone( a ){
-	print( "simone::a = ".a."\n" );	
+// dichiaro una funzione che stampa il valore che riceve come argomento
+function a_function( a ){
+	print( "a_function::a = ".a."\n" );	
 }
 
+// questa funzione, sfruttando l'alias 'f' lo usa come fosse una funzione
 function docall( f, arg ){
 	f( arg );
 }
 
-simone( 123 );
+// creo la variabile alias 'f' che punta alla funzione 'a_function'
+f = a_function;
 
-f = simone;
-
-print( "f = ".f."\n" );
-
+// eseguo la chiamata, passando a docall l'alias 'f'
 docall( f, "10" );
 
+// tramite l'operatore $ è possibile richiamare un alias con una stringa che contiene il suo nome
 ($"f")( "composta" );
-
-driver = map( "open"  -> simone, 
-			  "close" -> docall );
-			
-driver["open"]( "questa è open" );
-driver["close"]( f, "doppio ptr" );
-
-xml = toxml(driver);
-
-println(xml);
-
-copy = fromxml(xml);
-
-println(copy);
-
-copy["open"]( "questa è copy-open" );

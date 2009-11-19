@@ -691,7 +691,7 @@ void hsignal_handler( int signo ) {
                 printf( "\t<%s> : [%s] [%d bytes]\n", HVM.label(i), Object::type( o ), o->xsize );
             }
         }
-        printf( "--------------------------------------------------\n" );
+        printf( "-------------------------------------------------\n" );
 
         HGLOBALS.stacktrace = 1;
         hprint_stacktrace();
