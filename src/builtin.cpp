@@ -38,21 +38,21 @@ void hmodule_load( char *module ){
         return;
     }
     /* load initialization routine, usually used for constants definition, etc */
-    initializer_t initializer = (initializer_t)( hmodule, "hybris_module_init" );
+    initializer_t initializer = (initializer_t)dlsym( hmodule, "hybris_module_init" );
     if(initializer){
         extern vmem_t  HVM;
         extern vcode_t HVC;
         initializer( &HVM, &HVC );
     }
     /* number of functions exported */
-    unsigned int nfunctions = (unsigned int)( hmodule, "hybris_module_nfunctions" );
+    unsigned int nfunctions = (unsigned int)dlsym( hmodule, "hybris_module_nfunctions" );
     if(!nfunctions){
         dlclose(hmodule);
         hybris_generic_warning( "could not find number of functions exported by '%s'", module );
         return;
     }
     /* exported functions vector */
-    builtin_t *functions = (builtin_t *)( hmodule, "hybris_module_functions" );
+    builtin_t *functions = (builtin_t *)dlsym( hmodule, "hybris_module_functions" );
     if(!functions){
         dlclose(hmodule);
         hybris_generic_warning( "could not find module '%s' functions pointer", module );

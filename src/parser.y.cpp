@@ -300,6 +300,7 @@ Object *htree_function_call( vmem_t *stackframe, Node *call ){
         /* return function evaluation value */
         return _return;
     }
+    #ifndef _LP64
     /* finally check if the function is an extern identifier loaded by dll importing routines */
     else{
         Object *external;
@@ -330,6 +331,7 @@ Object *htree_function_call( vmem_t *stackframe, Node *call ){
         /* return function evaluation value */
         return _return;
     }
+    #endif
 }
 
 Object *htree_execute( vmem_t *stackframe, Node *node ){

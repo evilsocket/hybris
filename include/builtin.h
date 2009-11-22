@@ -130,7 +130,9 @@ HYBRIS_BUILTIN(hvar_names);
 HYBRIS_BUILTIN(hvar_values);
 HYBRIS_BUILTIN(huser_functions);
 HYBRIS_BUILTIN(hcore_functions);
+#ifndef _LP64
 HYBRIS_BUILTIN(hcall);
+#endif
 /* dll.cc */
 #ifndef _LP64
 HYBRIS_BUILTIN(hdllopen);
