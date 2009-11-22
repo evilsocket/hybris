@@ -22,8 +22,8 @@
 	<File name="include/node.h" open="0" top="0" tabpos="0">
 		<Cursor position="744" topLine="0" />
 	</File>
-	<File name="include/object.h" open="1" top="0" tabpos="6">
-		<Cursor position="2888" topLine="54" />
+	<File name="include/object.h" open="1" top="1" tabpos="6">
+		<Cursor position="2888" topLine="6" />
 	</File>
 	<File name="include/tree.h" open="0" top="0" tabpos="0">
 		<Cursor position="744" topLine="0" />
@@ -92,7 +92,7 @@
 		<Cursor position="745" topLine="26" />
 	</File>
 	<File name="src/object.cpp" open="1" top="0" tabpos="7">
-		<Cursor position="7840" topLine="450" />
+		<Cursor position="7840" topLine="0" />
 	</File>
 	<File name="src/parser.y.cpp" open="1" top="0" tabpos="2">
 		<Cursor position="16599" topLine="327" />
@@ -100,7 +100,7 @@
 	<File name="src/tree.cpp" open="0" top="0" tabpos="0">
 		<Cursor position="745" topLine="0" />
 	</File>
-	<File name="src/vmem.cpp" open="1" top="1" tabpos="5">
+	<File name="src/vmem.cpp" open="1" top="0" tabpos="5">
 		<Cursor position="2260" topLine="42" />
 	</File>
 </CodeBlocks_layout_file>

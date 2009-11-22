@@ -36,11 +36,11 @@ HYBRIS_BUILTIN(hexec){
 }
 
 HYBRIS_BUILTIN(hfork){
-    return new Object( (int)fork() );
+    return new Object( static_cast<int>( fork() ) );
 }
 
 HYBRIS_BUILTIN(hgetpid){
-    return new Object( (int)getpid() );
+    return new Object( static_cast<int>( getpid() ) );
 }
 
 HYBRIS_BUILTIN(hwait){
@@ -48,7 +48,7 @@ HYBRIS_BUILTIN(hwait){
 		hybris_syntax_error( "function 'wait' requires 1 parameter (called with %d)", data->size() );
 	}
 	htype_assert( data->at(0), H_OT_INT );
-    return new Object( (int)wait( &data->at(0)->xint ) );
+    return new Object( static_cast<int>( wait( &data->at(0)->xint ) ) );
 }
 
 HYBRIS_BUILTIN(hpopen){
@@ -56,7 +56,7 @@ HYBRIS_BUILTIN(hpopen){
 	htype_assert( data->at(1), H_OT_STRING );
 
     if( data->size() == 2 ){
-        return new Object( (int)popen( data->at(0)->xstring.c_str(), data->at(1)->xstring.c_str() ) );
+        return new Object( reinterpret_cast<int>( popen( data->at(0)->xstring.c_str(), data->at(1)->xstring.c_str() ) ) );
     }
 	else{
 		hybris_syntax_error( "function 'popen' requires 2 parameters (called with %d)", data->size() );

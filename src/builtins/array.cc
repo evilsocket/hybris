@@ -35,7 +35,7 @@ HYBRIS_BUILTIN(helements){
 	}
 	htype_assert( data->at(0), H_OT_ARRAY );
 
-	return new Object( (int)data->at(0)->xarray.size() );
+	return new Object( static_cast<int>( data->at(0)->xarray.size() ) );
 }
 
 HYBRIS_BUILTIN(hpop){
@@ -69,11 +69,11 @@ HYBRIS_BUILTIN(hcontains){
 		Object *boolean = ((*find) == array->xarray[i]);
 		if( boolean->lvalue() ){
 			delete boolean;
-			return new Object( (int)i );
+			return new Object( static_cast<int>(i) );
 		}
 		delete boolean;
 	}
 
-	return new Object( (int)-1 );
+	return new Object( static_cast<int>(-1) );
 }
 

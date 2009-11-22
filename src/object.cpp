@@ -36,7 +36,7 @@ Object *Object::fromxml( xmlNode *node ){
 	char *data = (char *)(node->children ? node->children->content : NULL);
 
 	if( strcmp( (char *)node->name, "int" ) == 0 ){
-		return new Object( (int)atoi(data) );
+		return new Object( static_cast<int>( atoi(data) ) );
 	}
 	else if( strcmp( (char *)node->name, "alias" ) == 0 ){
 		return new Object( (unsigned int)atoi(data) );
@@ -520,11 +520,11 @@ int Object::lvalue(){
 	switch(xtype){
 		case H_OT_INT    : return xint;        break;
 		case H_OT_ALIAS  : return xalias;      break;
-		case H_OT_FLOAT  : return (int)xfloat; break;
-		case H_OT_CHAR   : return (int)xchar;  break;
+		case H_OT_FLOAT  : return static_cast<int>(xfloat); break;
+		case H_OT_CHAR   : return static_cast<int>(xchar);  break;
 		case H_OT_STRING :
 		case H_OT_ARRAY  :
-		case H_OT_MAP    : return (int)xsize;  break;
+		case H_OT_MAP    : return static_cast<int>(xsize);  break;
 	}
 }
 

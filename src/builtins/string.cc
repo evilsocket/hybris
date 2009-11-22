@@ -26,7 +26,7 @@ HYBRIS_BUILTIN(hstrlen){
 	}
 	htype_assert( data->at(0), H_OT_STRING );
 
-	return new Object( (int)data->at(0)->xstring.size() );
+	return new Object( static_cast<int>( data->at(0)->xstring.size() ) );
 }
 
 HYBRIS_BUILTIN(hstrfind){
@@ -38,7 +38,7 @@ HYBRIS_BUILTIN(hstrfind){
 
 	int found = data->at(0)->xstring.find( data->at(1)->xstring );
 
-	return new Object( (int)(found == string::npos ? -1 : found) );
+	return new Object( static_cast<int>(found == string::npos ? -1 : found) );
 }
 
 HYBRIS_BUILTIN(hsubstr){

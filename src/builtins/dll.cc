@@ -27,7 +27,7 @@ HYBRIS_BUILTIN(hdllopen){
 	}
 	htype_assert( data->at(0), H_OT_STRING );
 
-    return new Object( (int)dlopen( data->at(0)->xstring.c_str(), RTLD_LAZY ) );
+    return new Object( reinterpret_cast<int>( dlopen( data->at(0)->xstring.c_str(), RTLD_LAZY ) ) );
 }
 
 HYBRIS_BUILTIN(hdlllink){
@@ -37,9 +37,9 @@ HYBRIS_BUILTIN(hdlllink){
 	htype_assert( data->at(0), H_OT_INT    );
 	htype_assert( data->at(1), H_OT_STRING );
 
-    void *hdll = (void *)data->at(0)->xint;
+    void *hdll = reinterpret_cast<void *>( data->at(0)->xint );
 
-    return new Object( (int)dlsym( hdll, data->at(1)->xstring.c_str() ), 1 );
+    return new Object( reinterpret_cast<int>( dlsym( hdll, data->at(1)->xstring.c_str() ) ), 1 );
 }
 
 HYBRIS_BUILTIN(hdllcall){
@@ -100,7 +100,7 @@ HYBRIS_BUILTIN(hdllcall){
         delete[] garbage[i];
     }
 
-    return new Object((int)ulval);
+    return new Object( static_cast<int>(ulval) );
 }
 
 HYBRIS_BUILTIN(hdllclose){

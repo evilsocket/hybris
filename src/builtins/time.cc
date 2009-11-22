@@ -27,7 +27,7 @@
 HYBRIS_BUILTIN(hticks){
     timeval ts;
     gettimeofday(&ts,0);
-    return new Object( (int)(ts.tv_sec * 1000 + (ts.tv_usec / 1000)) );
+    return new Object( static_cast<int>(ts.tv_sec * 1000 + (ts.tv_usec / 1000)) );
 }
 
 HYBRIS_BUILTIN(husleep){
@@ -42,7 +42,7 @@ HYBRIS_BUILTIN(husleep){
     ts.tv_nsec = ts.tv_sec * 1000;
     nanosleep(&ts,&ts);
 
-	return new Object( (int)0 );
+	return new Object( static_cast<int>(0) );
 }
 
 HYBRIS_BUILTIN(hsleep){
@@ -57,7 +57,7 @@ HYBRIS_BUILTIN(hsleep){
     ts.tv_nsec = ts.tv_sec * 1000;
     nanosleep(&ts,&ts);
 
-	return new Object( (int)0 );
+	return new Object( static_cast<int>(0) );
 }
 
 HYBRIS_BUILTIN(htime){
@@ -68,14 +68,14 @@ HYBRIS_BUILTIN(htime){
 	time(&raw);
 	ti = localtime(&raw);
 
-	map->map( new Object("sec"),   new Object((int)ti->tm_sec) );
-	map->map( new Object("min"),   new Object((int)ti->tm_min) );
-	map->map( new Object("hour"),  new Object((int)ti->tm_hour) );
-	map->map( new Object("mday"),  new Object((int)ti->tm_mday) );
-	map->map( new Object("month"), new Object((int)ti->tm_mon + 1) );
-	map->map( new Object("year"),  new Object((int)ti->tm_year + 1900) );
-	map->map( new Object("wday"),  new Object((int)ti->tm_wday + 1) );
-	map->map( new Object("yday"),  new Object((int)ti->tm_yday + 1) );
+	map->map( new Object("sec"),   new Object(static_cast<int>(ti->tm_sec)) );
+	map->map( new Object("min"),   new Object(static_cast<int>(ti->tm_min)) );
+	map->map( new Object("hour"),  new Object(static_cast<int>(ti->tm_hour)) );
+	map->map( new Object("mday"),  new Object(static_cast<int>(ti->tm_mday)) );
+	map->map( new Object("month"), new Object(static_cast<int>(ti->tm_mon + 1)) );
+	map->map( new Object("year"),  new Object(static_cast<int>(ti->tm_year + 1900)) );
+	map->map( new Object("wday"),  new Object(static_cast<int>(ti->tm_wday + 1)) );
+	map->map( new Object("yday"),  new Object(static_cast<int>(ti->tm_yday + 1)) );
 
 	return map;
 }

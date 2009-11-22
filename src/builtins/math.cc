@@ -94,10 +94,10 @@ HYBRIS_BUILTIN(hceil){
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->xtype == H_OT_INT ){
-        return new Object((int)ceil(data->at(0)->xint));
+        return new Object( static_cast<int>( ceil(data->at(0)->xint) ) );
     }
     else{
-        return new Object((int)ceil(data->at(0)->xfloat));
+        return new Object(static_cast<int>( ceil(data->at(0)->xfloat) ) );
     }
 }
 
@@ -164,10 +164,10 @@ HYBRIS_BUILTIN(hfloor){
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->xtype == H_OT_INT ){
-        return new Object((int)floor(data->at(0)->xint));
+        return new Object( static_cast<int>( floor(data->at(0)->xint) ) );
     }
     else{
-        return new Object((int)floor(data->at(0)->xfloat));
+        return new Object( static_cast<int>( floor(data->at(0)->xfloat) ) );
     }
 }
 

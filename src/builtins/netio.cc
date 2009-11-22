@@ -204,7 +204,7 @@ HYBRIS_BUILTIN(hrecv){
 				case H_OT_ARRAY  : hybris_generic_error( "can not directly deserialize an array type" ); break;
 			}
 		}
-        _return = new Object( (int)read );
+        _return = new Object( static_cast<int>(read) );
     }
 	else{
 		hybris_syntax_error( "function 'recv' requires 2 or 3 parameters (called with %d)", data->size() );
@@ -252,7 +252,7 @@ HYBRIS_BUILTIN(hsend){
 				break;
 			}
 		}
-        _return = new Object( (int)written );
+        _return = new Object( static_cast<int>(written) );
     }
 	else{
 		hybris_syntax_error( "function 'send' requires 2 or 3 parameters (called with %d)", data->size() );
