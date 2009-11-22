@@ -74,7 +74,7 @@ public  :
     unsigned int     xsize;
     unsigned int     is_extern;
 
-    int              xint;
+    long             xint;
     double           xfloat;
     char             xchar;
     string           xstring;
@@ -82,8 +82,8 @@ public  :
 	vector<Object *> xmap;
 	unsigned int     xalias;
 
-    Object( int value );
-    Object( int value, unsigned int _is_extern );
+    Object( long value );
+    Object( long value, unsigned int _is_extern );
     Object( double value );
     Object( char value );
     Object( char *value );
@@ -114,7 +114,7 @@ public  :
     void input();
 	Object * toString();
 
-	int lvalue();
+	long lvalue();
     Object * dot( Object *o );
 	Object * dotequal( Object *o );
     string svalue();

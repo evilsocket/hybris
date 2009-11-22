@@ -27,7 +27,7 @@ HYBRIS_BUILTIN(hdllopen){
 	}
 	htype_assert( data->at(0), H_OT_STRING );
 
-    return new Object( reinterpret_cast<int>( dlopen( data->at(0)->xstring.c_str(), RTLD_LAZY ) ) );
+    return new Object( reinterpret_cast<long>( dlopen( data->at(0)->xstring.c_str(), RTLD_LAZY ) ) );
 }
 
 HYBRIS_BUILTIN(hdlllink){
@@ -39,7 +39,7 @@ HYBRIS_BUILTIN(hdlllink){
 
     void *hdll = reinterpret_cast<void *>( data->at(0)->xint );
 
-    return new Object( reinterpret_cast<int>( dlsym( hdll, data->at(1)->xstring.c_str() ) ), 1 );
+    return new Object( reinterpret_cast<long>( dlsym( hdll, data->at(1)->xstring.c_str() ) ), 1 );
 }
 
 HYBRIS_BUILTIN(hdllcall){
@@ -64,7 +64,7 @@ HYBRIS_BUILTIN(hdllcall){
         unsigned char *raw  = arg->serialize();
         garbage.push_back(raw);
         switch( arg->xtype ){
-            case H_OT_INT    : memcpy( &iv, raw, sizeof(int) );    ulval = (unsigned long)iv; break;
+            case H_OT_INT    : memcpy( &iv, raw, sizeof(long) );   ulval = (unsigned long)iv; break;
             case H_OT_FLOAT  : memcpy( &fv, raw, sizeof(double) ); ulval = (unsigned long)fv; break;
             case H_OT_CHAR   : memcpy( &cv, raw, sizeof(char) );   ulval = (unsigned long)cv; break;
             case H_OT_STRING : ulval = (unsigned long)raw; 									  break;
@@ -100,7 +100,7 @@ HYBRIS_BUILTIN(hdllcall){
         delete[] garbage[i];
     }
 
-    return new Object( static_cast<int>(ulval) );
+    return new Object( static_cast<long>(ulval) );
 }
 
 HYBRIS_BUILTIN(hdllclose){
@@ -111,5 +111,5 @@ HYBRIS_BUILTIN(hdllclose){
 
 	dlclose( (void *)data->at(0)->xint );
 
-    return new Object(0);
+    return new Object( static_cast<long>(0) );
 }

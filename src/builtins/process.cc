@@ -27,7 +27,7 @@ HYBRIS_BUILTIN(hexec){
 	htype_assert( data->at(0), H_OT_STRING );
     Object *_return = NULL;
     if( data->size() ){
-        _return = new Object( system( data->at(0)->xstring.c_str() ) );
+        _return = new Object( static_cast<long>( system( data->at(0)->xstring.c_str() ) ) );
     }
 	else{
 		hybris_syntax_error( "function 'exec' requires 1 parameter (called with %d)", data->size() );
@@ -36,11 +36,11 @@ HYBRIS_BUILTIN(hexec){
 }
 
 HYBRIS_BUILTIN(hfork){
-    return new Object( static_cast<int>( fork() ) );
+    return new Object( static_cast<long>( fork() ) );
 }
 
 HYBRIS_BUILTIN(hgetpid){
-    return new Object( static_cast<int>( getpid() ) );
+    return new Object( static_cast<long>( getpid() ) );
 }
 
 HYBRIS_BUILTIN(hwait){
@@ -48,7 +48,7 @@ HYBRIS_BUILTIN(hwait){
 		hybris_syntax_error( "function 'wait' requires 1 parameter (called with %d)", data->size() );
 	}
 	htype_assert( data->at(0), H_OT_INT );
-    return new Object( static_cast<int>( wait( &data->at(0)->xint ) ) );
+    return new Object( static_cast<long>( wait( &data->at(0)->xint ) ) );
 }
 
 HYBRIS_BUILTIN(hpopen){
@@ -56,7 +56,7 @@ HYBRIS_BUILTIN(hpopen){
 	htype_assert( data->at(1), H_OT_STRING );
 
     if( data->size() == 2 ){
-        return new Object( reinterpret_cast<int>( popen( data->at(0)->xstring.c_str(), data->at(1)->xstring.c_str() ) ) );
+        return new Object( reinterpret_cast<long>( popen( data->at(0)->xstring.c_str(), data->at(1)->xstring.c_str() ) ) );
     }
 	else{
 		hybris_syntax_error( "function 'popen' requires 2 parameters (called with %d)", data->size() );
@@ -68,7 +68,7 @@ HYBRIS_BUILTIN(hpclose){
     if( data->size() ){
 		pclose( (FILE *)data->at(0)->xint );
     }
-    return new Object(0);
+    return new Object(static_cast<long>(0));
 }
 
 HYBRIS_BUILTIN(hexit){
@@ -79,5 +79,5 @@ HYBRIS_BUILTIN(hexit){
 	}
 	exit(code);
 
-    return new Object(0);
+    return new Object(static_cast<long>(0));
 }

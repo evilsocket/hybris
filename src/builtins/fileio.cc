@@ -28,7 +28,7 @@ HYBRIS_BUILTIN(hfopen){
 
     Object *_return = NULL;
     if( data->size() == 2 ){
-        _return = new Object( reinterpret_cast<int>( fopen( data->at(0)->xstring.c_str(), data->at(1)->xstring.c_str() ) ) );
+        _return = new Object( reinterpret_cast<long>( fopen( data->at(0)->xstring.c_str(), data->at(1)->xstring.c_str() ) ) );
     }
 	else{
 		hybris_syntax_error( "function 'fopen' requires 2 parameters (called with %d)", data->size() );
@@ -43,7 +43,7 @@ HYBRIS_BUILTIN(hfseekset){
 	htype_assert( data->at(0), H_OT_INT );
 	htype_assert( data->at(1), H_OT_INT );
 
-	return new Object( static_cast<int>( fseek( (FILE *)data->at(0)->xint, data->at(1)->xint, SEEK_SET ) ) );
+	return new Object( static_cast<long>( fseek( (FILE *)data->at(0)->xint, data->at(1)->xint, SEEK_SET ) ) );
 }
 
 HYBRIS_BUILTIN(hfseekcur){
@@ -53,7 +53,7 @@ HYBRIS_BUILTIN(hfseekcur){
 	htype_assert( data->at(0), H_OT_INT );
 	htype_assert( data->at(1), H_OT_INT );
 
-	return new Object( static_cast<int>( fseek( (FILE *)data->at(0)->xint, data->at(1)->xint, SEEK_CUR ) ) );
+	return new Object( static_cast<long>( fseek( (FILE *)data->at(0)->xint, data->at(1)->xint, SEEK_CUR ) ) );
 }
 
 HYBRIS_BUILTIN(hfseekend){
@@ -63,7 +63,7 @@ HYBRIS_BUILTIN(hfseekend){
 	htype_assert( data->at(0), H_OT_INT );
 	htype_assert( data->at(1), H_OT_INT );
 
-	return new Object( static_cast<int>( fseek( (FILE *)data->at(0)->xint, data->at(1)->xint, SEEK_END ) ) );
+	return new Object( static_cast<long>( fseek( (FILE *)data->at(0)->xint, data->at(1)->xint, SEEK_END ) ) );
 }
 
 HYBRIS_BUILTIN(hftell){
@@ -72,7 +72,7 @@ HYBRIS_BUILTIN(hftell){
 	}
 	htype_assert( data->at(0), H_OT_INT );
 
-	return new Object( static_cast<int>( ftell( (FILE *)data->at(0)->xint ) ) );
+	return new Object( static_cast<long>( ftell( (FILE *)data->at(0)->xint ) ) );
 }
 
 HYBRIS_BUILTIN(hfsize){
@@ -97,7 +97,7 @@ HYBRIS_BUILTIN(hfsize){
 		fclose(fp);
 	}
 
-	return new Object( size );
+	return new Object( static_cast<long>(size) );
 }
 
 HYBRIS_BUILTIN(hfread){
@@ -132,7 +132,7 @@ HYBRIS_BUILTIN(hfread){
 		/* handle size by type */
 		else{
 			switch( object->xtype ){
-				case H_OT_INT    : object->xsize = read = fread( &object->xint,   1, sizeof(int), fp ); break;
+				case H_OT_INT    : object->xsize = read = fread( &object->xint,   1, sizeof(long), fp ); break;
 				case H_OT_FLOAT  : object->xsize = read = fread( &object->xfloat, 1, sizeof(double), fp ); break;
 				case H_OT_CHAR   : object->xsize = read = fread( &object->xchar,  1, sizeof(char), fp ); break;
 				case H_OT_STRING :
@@ -145,7 +145,7 @@ HYBRIS_BUILTIN(hfread){
 				case H_OT_ARRAY  : hybris_generic_error( "can not directly deserialize an array type" ); break;
 			}
 		}
-        _return = new Object( static_cast<int>(read) );
+        _return = new Object( static_cast<long>(read) );
     }
 	else{
 		hybris_syntax_error( "function 'fread' requires 2 or 3 parameters (called with %d)", data->size() );
@@ -177,7 +177,7 @@ HYBRIS_BUILTIN(hfwrite){
 		}
 		else{
 			switch( object->xtype ){
-				case H_OT_INT    : written = fwrite( &object->xint,   1, sizeof(int), fp ); break;
+				case H_OT_INT    : written = fwrite( &object->xint,   1, sizeof(long), fp ); break;
 				case H_OT_FLOAT  : written = fwrite( &object->xfloat, 1, sizeof(double), fp ); break;
 				case H_OT_CHAR   : written = fwrite( &object->xchar,  1, sizeof(char), fp ); break;
 				case H_OT_STRING : written = fwrite( object->xstring.c_str(), 1, object->xsize, fp ); break;
@@ -185,7 +185,7 @@ HYBRIS_BUILTIN(hfwrite){
 					for( i = 0; i < object->xsize; i++ ){
 						Object *element = object->xarray[i];
 						switch( element->xtype ){
-							case H_OT_INT    : written += fwrite( &element->xint,   1, sizeof(int), fp ); break;
+							case H_OT_INT    : written += fwrite( &element->xint,   1, sizeof(long), fp ); break;
 							case H_OT_FLOAT  : written += fwrite( &element->xfloat, 1, sizeof(double), fp ); break;
 							case H_OT_CHAR   : written += fwrite( &element->xchar,  1, sizeof(char), fp ); break;
 							case H_OT_STRING : written += fwrite( element->xstring.c_str(), 1, element->xsize, fp ); break;
@@ -195,7 +195,7 @@ HYBRIS_BUILTIN(hfwrite){
 				break;
 			}
 		}
-        _return = new Object( static_cast<int>(written) );
+        _return = new Object( static_cast<long>(written) );
     }
 	else{
 		hybris_syntax_error( "function 'fwrite' requires 2 or 3 parameters (called with %d)", data->size() );
@@ -215,7 +215,7 @@ HYBRIS_BUILTIN(hfgets){
 		return new Object(line);
 	}
 	else{
-		return new Object(static_cast<int>(0));
+		return new Object(static_cast<long>(0));
 	}
 }
 
@@ -224,7 +224,7 @@ HYBRIS_BUILTIN(hfclose){
     if( data->size() ){
 		fclose( (FILE *)data->at(0)->xint );
     }
-    return new Object(0);
+    return new Object(static_cast<long>(0));
 }
 
 HYBRIS_BUILTIN(hfile){
@@ -263,7 +263,7 @@ void readdir_recurse( char *root, char *dir, Object *vector ){
         Object *file = new Object();
         string name = string(path) + "/" + string(ent->d_name);
         file->map( new Object((char *)"name"), new Object((char *)name.c_str()) );
-        file->map( new Object((char *)"type"), new Object(static_cast<int>(ent->d_type)) );
+        file->map( new Object((char *)"type"), new Object(static_cast<long>(ent->d_type)) );
         vector->push(file);
         if( ent->d_type == DT_DIR && strcmp( ent->d_name, ".." ) != 0 && strcmp( ent->d_name, "." ) != 0 ){
             readdir_recurse( path, ent->d_name, vector );
@@ -291,7 +291,7 @@ HYBRIS_BUILTIN(hreaddir){
     while( (ent = readdir(dir)) != NULL ){
         Object *file = new Object();
         file->map( new Object((char *)"name"), new Object((char *)ent->d_name) );
-        file->map( new Object((char *)"type"), new Object(static_cast<int>(ent->d_type)) );
+        file->map( new Object((char *)"type"), new Object(static_cast<long>(ent->d_type)) );
         files->push(file);
         if( data->size() > 1 && data->at(1)->lvalue() ){
             if( ent->d_type == DT_DIR && strcmp( ent->d_name, ".." ) != 0 && strcmp( ent->d_name, "." ) != 0 ){

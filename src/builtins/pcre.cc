@@ -100,7 +100,7 @@ Object *hrex_operator( Object *o, Object *regexp ){
 		pcrecpp::RE_Options OPTS(opts);
 		pcrecpp::RE         REGEX( regex.c_str(), OPTS );
 
-		return new Object( REGEX.PartialMatch(subject.c_str()) );
+		return new Object( (long)REGEX.PartialMatch(subject.c_str()) );
 	}
 	else{
 		pcrecpp::RE_Options  OPTS(opts);
@@ -138,7 +138,7 @@ HYBRIS_BUILTIN(hrex_match){
 	pcrecpp::RE_Options OPTS(opts);
 	pcrecpp::RE         REGEX( regex.c_str(), OPTS );
 
-	return new Object( REGEX.PartialMatch(subject.c_str()) );
+	return new Object( (long)REGEX.PartialMatch(subject.c_str()) );
 }
 
 HYBRIS_BUILTIN(hrex_matches){

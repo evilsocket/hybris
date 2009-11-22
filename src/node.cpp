@@ -41,7 +41,7 @@ Node::Node( FILE *fp ){
 			fread( _identifier, n, sizeof(char), fp );
 		break;
 		case H_NT_OPERATOR   :
-			fread( &_operator, 1, sizeof(int), fp );
+			fread( &_operator, 1, sizeof(long), fp );
 		break;
 		case H_NT_FUNCTION   :
 			memset( _function, 0x00, 0xFF );

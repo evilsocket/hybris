@@ -22,7 +22,7 @@ HNodeList *Tree::createList(){
 	return new HNodeList();
 }
 
-Node *Tree::addInt( int value ){
+Node *Tree::addInt( long value ){
 	Node *node     = new Node(H_NT_CONSTANT);
 	node->_constant = new Object(value);
 	return node;
@@ -176,7 +176,7 @@ void Tree::compile( Node *node, FILE *fp ){
 		break;
 		case H_NT_OPERATOR   :
 			n = node->_operator;
-			fwrite( &n, 1, sizeof(int), fp );
+			fwrite( &n, 1, sizeof(long), fp );
 		break;
 		case H_NT_FUNCTION   :
 			n = strlen(node->_function) + 1;
@@ -191,7 +191,7 @@ void Tree::compile( Node *node, FILE *fp ){
 	}
 
 	unsigned int children = node->children(), i;
-	fwrite( &children, 1, sizeof(int), fp );
+	fwrite( &children, 1, sizeof(long), fp );
 	for( i = 0; i < children; i++ ){
 		Tree::compile( node->child(i), fp );
 	}

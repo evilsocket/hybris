@@ -45,7 +45,7 @@ hybris_globals_t HGLOBALS;
 
 %union {
     /* basic types */
-    int     integer;
+    long    integer;
     double  real;
     char    byte;
     char   *string;
@@ -708,7 +708,7 @@ void h_env_init( int argc, char *argv[] ){
 
     if( HGLOBALS.action != H_COMPILE ){
 		/* initialize command line arguments */
-		hybris_vm_add( &HVM, (char *)"argc", new Object( argc - 1 ) );
+		hybris_vm_add( &HVM, (char *)"argc", new Object( static_cast<long>(argc - 1) ) );
         for( i = 1; i < argc; i++ ){
             sprintf( name, "%d", i - 1 );
             hybris_vm_add( &HVM, name, new Object(argv[i]) );

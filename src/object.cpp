@@ -36,7 +36,7 @@ Object *Object::fromxml( xmlNode *node ){
 	char *data = (char *)(node->children ? node->children->content : NULL);
 
 	if( strcmp( (char *)node->name, "int" ) == 0 ){
-		return new Object( static_cast<int>( atoi(data) ) );
+		return new Object( static_cast<long>( atoi(data) ) );
 	}
 	else if( strcmp( (char *)node->name, "alias" ) == 0 ){
 		return new Object( (unsigned int)atoi(data) );
@@ -154,10 +154,10 @@ void Object::parse_string( string& s ){
 	replace( s, "\\\"", "\"" );
 }
 
-Object::Object( int value ) {
+Object::Object( long value ) {
 	xtype = H_OT_INT;
 	xint  = value;
-	xsize = sizeof(int);
+	xsize = sizeof(long);
 	is_extern = 0;
 
     #ifdef MEM_DEBUG
@@ -165,10 +165,10 @@ Object::Object( int value ) {
     #endif
 }
 
-Object::Object( int value, unsigned int _is_extern ) {
+Object::Object( long value, unsigned int _is_extern ) {
 	xtype = H_OT_INT;
 	xint  = value;
-	xsize = sizeof(int);
+	xsize = sizeof(long);
 	is_extern = _is_extern;
 
     #ifdef MEM_DEBUG
@@ -516,15 +516,15 @@ void Object::input(){
 	}
 }
 
-int Object::lvalue(){
+long Object::lvalue(){
 	switch(xtype){
 		case H_OT_INT    : return xint;        break;
 		case H_OT_ALIAS  : return xalias;      break;
-		case H_OT_FLOAT  : return static_cast<int>(xfloat); break;
-		case H_OT_CHAR   : return static_cast<int>(xchar);  break;
+		case H_OT_FLOAT  : return static_cast<long>(xfloat); break;
+		case H_OT_CHAR   : return static_cast<long>(xchar);  break;
 		case H_OT_STRING :
 		case H_OT_ARRAY  :
-		case H_OT_MAP    : return static_cast<int>(xsize);  break;
+		case H_OT_MAP    : return static_cast<long>(xsize);  break;
 	}
 }
 
@@ -775,9 +775,9 @@ Object& Object::operator = ( Object *o ){
 
 Object * Object::operator - (){
 	switch(xtype){
-		case H_OT_INT    : return new Object( -xint );   break;
-		case H_OT_FLOAT  : return new Object( -xfloat ); break;
-		case H_OT_CHAR   : return new Object( -xchar );  break;
+		case H_OT_INT    : return new Object( static_cast<long>(-xint) );   break;
+		case H_OT_FLOAT  : return new Object( static_cast<double>(-xfloat) ); break;
+		case H_OT_CHAR   : return new Object( static_cast<char>(-xchar) );  break;
 		case H_OT_ALIAS  :
 		case H_OT_STRING :
 		case H_OT_ARRAY  :
@@ -787,9 +787,9 @@ Object * Object::operator - (){
 
 Object * Object::operator ! (){
 	switch(xtype){
-		case H_OT_INT    : return new Object( !xint );   break;
-		case H_OT_FLOAT  : return new Object( !xfloat ); break;
-		case H_OT_CHAR   : return new Object( !xchar );  break;
+		case H_OT_INT    : return new Object( static_cast<long>(!xint) );   break;
+		case H_OT_FLOAT  : return new Object( static_cast<double>(!xfloat) ); break;
+		case H_OT_CHAR   : return new Object( static_cast<char>(!xchar) );  break;
 		case H_OT_ALIAS  :
 		case H_OT_STRING :
 		case H_OT_ARRAY  :
@@ -835,7 +835,7 @@ Object * Object::operator + ( Object *o ){
 		return new Object( o->xfloat + (xtype == H_OT_FLOAT ? xfloat : lvalue()) );
 	}
 	else{
-		return new Object( lvalue() + o->lvalue() );
+		return new Object( static_cast<long>(lvalue() + o->lvalue()) );
 	}
 }
 
@@ -868,7 +868,7 @@ Object * Object::operator - ( Object *o ){
 		return new Object( o->xfloat - (xtype == H_OT_FLOAT ? xfloat : lvalue()) );
 	}
 	else{
-		return new Object( lvalue() - o->lvalue() );
+		return new Object( static_cast<long>(lvalue() - o->lvalue()) );
 	}
 }
 
@@ -901,7 +901,7 @@ Object * Object::operator * ( Object *o ){
 		return new Object( o->xfloat * (xtype == H_OT_FLOAT ? xfloat : lvalue()) );
 	}
 	else{
-		return new Object( lvalue() * o->lvalue() );
+		return new Object( static_cast<long>(lvalue() * o->lvalue()) );
 	}
 }
 
@@ -927,13 +927,13 @@ Object * Object::operator / ( Object *o ){
 	}
 
 	if( xtype == H_OT_FLOAT ){
-		return new Object( xfloat / (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue()) );
+		return new Object( static_cast<double>(xfloat / (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue()) ) );
 	}
 	else if( o->xtype == H_OT_FLOAT ){
-		return new Object( o->xfloat / (xtype == H_OT_FLOAT ? xfloat : lvalue()) );
+		return new Object( static_cast<double>( o->xfloat / (xtype == H_OT_FLOAT ? xfloat : lvalue()) ) );
 	}
 	else{
-		return new Object( lvalue() / o->lvalue() );
+		return new Object( static_cast<long>(lvalue() / o->lvalue()) );
 	}
 }
 
@@ -959,7 +959,7 @@ Object * Object::operator % ( Object *o ){
 		hybris_syntax_error( "invalid type for modulus operator" );
 	}
 
-	return new Object( lvalue() % o->lvalue() );
+	return new Object( static_cast<long>(lvalue() % o->lvalue()) );
 }
 
 Object * Object::operator %= ( Object *o ){
@@ -981,7 +981,7 @@ Object * Object::operator & ( Object *o ){
 		hybris_syntax_error( "invalid type for and operator" );
 	}
 
-	return new Object( lvalue() & o->lvalue() );
+	return new Object( static_cast<long>(lvalue() & o->lvalue()) );
 }
 
 Object * Object::operator &= ( Object *o ){
@@ -1004,7 +1004,7 @@ Object * Object::operator | ( Object *o ){
 		hybris_syntax_error( "invalid type for or operator" );
 	}
 
-	return new Object( lvalue() | o->lvalue() );
+	return new Object( static_cast<long>(lvalue() | o->lvalue()) );
 }
 
 Object * Object::operator |= ( Object *o ){
@@ -1027,7 +1027,7 @@ Object * Object::operator << ( Object *o ){
 		hybris_syntax_error( "invalid type for left shift operator" );
 	}
 
-	return new Object( lvalue() << o->lvalue() );
+	return new Object( static_cast<long>(lvalue() << o->lvalue()) );
 }
 
 Object * Object::operator <<= ( Object *o ){
@@ -1050,7 +1050,7 @@ Object * Object::operator >> ( Object *o ){
 		hybris_syntax_error( "invalid type for right shift operator" );
 	}
 
-	return new Object( lvalue() >> o->lvalue() );
+	return new Object( static_cast<long>(lvalue() >> o->lvalue()) );
 }
 
 Object * Object::operator >>= ( Object *o ){
@@ -1073,7 +1073,7 @@ Object * Object::operator ^ ( Object *o ){
 		hybris_syntax_error( "invalid type for xor operator" );
 	}
 
-	return new Object( lvalue() ^ o->lvalue() );
+	return new Object( static_cast<long>(lvalue() ^ o->lvalue()) );
 }
 
 Object * Object::operator ^= ( Object *o ){
@@ -1096,7 +1096,7 @@ Object * Object::operator ~ (){
 		hybris_syntax_error( "invalid type for not operator" );
 	}
 
-	return new Object( ~lvalue() );
+	return new Object( static_cast<long>(~lvalue()) );
 }
 
 Object * Object::lnot (){
@@ -1104,24 +1104,24 @@ Object * Object::lnot (){
 		hybris_syntax_error( "invalid type for logical not operator" );
 	}
 
-	return new Object( !lvalue() );
+	return new Object( static_cast<long>(!lvalue()) );
 }
 
 Object * Object::operator == ( Object *o ){
 	if( xtype == H_OT_STRING && o->xtype == H_OT_STRING ){
-		return new Object( (xstring == o->xstring) );
+		return new Object( static_cast<long>(xstring == o->xstring) );
 	}
 	else{
-		return new Object( lvalue() == o->lvalue() );
+		return new Object( static_cast<long>(lvalue() == o->lvalue()) );
 	}
 }
 
 Object * Object::operator != ( Object *o ){
 	if( xtype == H_OT_STRING && o->xtype == H_OT_STRING ){
-		return new Object( (xstring != o->xstring) );
+		return new Object( static_cast<long>(xstring != o->xstring) );
 	}
 	else{
-		return new Object( lvalue() != o->lvalue() );
+		return new Object( static_cast<long>(lvalue() != o->lvalue()) );
 	}
 }
 
@@ -1130,7 +1130,7 @@ Object * Object::operator < ( Object *o ){
 		hybris_syntax_error( "invalid type for comparision operator" );
 	}
 
-	return new Object( lvalue() < o->lvalue() );
+	return new Object( static_cast<long>(lvalue() < o->lvalue()) );
 }
 
 Object * Object::operator > ( Object *o ){
@@ -1138,7 +1138,7 @@ Object * Object::operator > ( Object *o ){
 		hybris_syntax_error( "invalid type for comparision operator" );
 	}
 
-	return new Object( lvalue() > o->lvalue() );
+	return new Object( static_cast<long>(lvalue() > o->lvalue()) );
 }
 
 Object * Object::operator <= ( Object *o ){
@@ -1146,7 +1146,7 @@ Object * Object::operator <= ( Object *o ){
 		hybris_syntax_error( "invalid type for comparision operator" );
 	}
 
-	return new Object( lvalue() <= o->lvalue() );
+	return new Object( static_cast<long>(lvalue() <= o->lvalue()) );
 }
 
 Object * Object::operator >= ( Object *o ){
@@ -1154,7 +1154,7 @@ Object * Object::operator >= ( Object *o ){
 		hybris_syntax_error( "invalid type for comparision operator" );
 	}
 
-	return new Object( lvalue() >= o->lvalue() );
+	return new Object( static_cast<long>(lvalue() >= o->lvalue()) );
 }
 
 Object * Object::operator || ( Object *o ){
@@ -1162,7 +1162,7 @@ Object * Object::operator || ( Object *o ){
 		hybris_syntax_error( "invalid type for logical operator" );
 	}
 
-	return new Object( lvalue() || o->lvalue() );
+	return new Object( static_cast<long>(lvalue() || o->lvalue()) );
 }
 
 Object * Object::operator && ( Object *o ){
@@ -1170,5 +1170,5 @@ Object * Object::operator && ( Object *o ){
 		hybris_syntax_error( "invalid type for logical operator" );
 	}
 
-	return new Object( lvalue() && o->lvalue() );
+	return new Object( static_cast<long>(lvalue() && o->lvalue()) );
 }

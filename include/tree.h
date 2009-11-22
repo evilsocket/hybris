@@ -33,7 +33,7 @@ public :
 
     static HNodeList *createList();
 
-    static Node *addInt( int value );
+    static Node *addInt( long value );
     static Node *addFloat( double value );
     static Node *addChar( char value );
     static Node *addString( char *value );
