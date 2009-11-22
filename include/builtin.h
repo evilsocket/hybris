@@ -132,10 +132,12 @@ HYBRIS_BUILTIN(huser_functions);
 HYBRIS_BUILTIN(hcore_functions);
 HYBRIS_BUILTIN(hcall);
 /* dll.cc */
+#ifndef _LP64
 HYBRIS_BUILTIN(hdllopen);
 HYBRIS_BUILTIN(hdlllink);
 HYBRIS_BUILTIN(hdllcall);
 HYBRIS_BUILTIN(hdllclose);
+#endif
 /* time.cc */
 HYBRIS_BUILTIN(hticks);
 HYBRIS_BUILTIN(husleep);
@@ -253,11 +255,13 @@ static builtin_t HSTATICBUILTINS[] = {
 	{ "var_values", hvar_values },
 	{ "user_functions", huser_functions },
 	{ "core_functions", hcore_functions },
+	#ifndef _LP64
 	{ "call", hcall },
 	{ "dllopen", hdllopen },
     { "dlllink", hdlllink },
     { "dllcall", hdllcall },
     { "dllclose", hdllclose },
+	#endif
 	{ "ticks", hticks },
 	{ "usleep", husleep },
 	{ "sleep", hsleep },

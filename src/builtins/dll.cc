@@ -21,6 +21,8 @@
 #include "builtin.h"
 #include <dlfcn.h>
 
+#ifndef _LP64
+
 HYBRIS_BUILTIN(hdllopen){
 	if( data->size() != 1 ){
 		hybris_syntax_error( "function 'dllopen' requires 1 parameter (called with %d)", data->size() );
@@ -113,3 +115,5 @@ HYBRIS_BUILTIN(hdllclose){
 
     return new Object( static_cast<long>(0) );
 }
+
+#endif

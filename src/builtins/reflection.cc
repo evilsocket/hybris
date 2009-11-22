@@ -59,6 +59,7 @@ HYBRIS_BUILTIN(hcore_functions){
 	return array;
 }
 
+#ifndef _LP64
 HYBRIS_BUILTIN(hcall){
 	if( data->size() < 1 ){
 		hybris_syntax_error( "function 'call' requires at least 1 parameter (called with %d)", data->size() );
@@ -85,3 +86,4 @@ HYBRIS_BUILTIN(hcall){
 
 	return _return;
 }
+#endif
