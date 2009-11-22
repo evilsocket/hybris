@@ -45,7 +45,7 @@ void hmodule_load( char *module ){
         initializer( &HVM, &HVC );
     }
     /* number of functions exported */
-    unsigned int nfunctions = (unsigned int)dlsym( hmodule, "hybris_module_nfunctions" );
+    unsigned long nfunctions = reinterpret_cast<unsigned long>( dlsym( hmodule, "hybris_module_nfunctions" ) );
     if(!nfunctions){
         dlclose(hmodule);
         hybris_generic_warning( "could not find number of functions exported by '%s'", module );
@@ -62,7 +62,7 @@ void hmodule_load( char *module ){
     module_t *hmod   = new module_t;
     hmod->name        = modname;
     hmod->initializer = initializer;
-    unsigned int i;
+    unsigned long i;
     for( i = 0; i < nfunctions; i++ ){
         builtin_t *function = new builtin_t;
         function->identifier = functions[i].identifier;

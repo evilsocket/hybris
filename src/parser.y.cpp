@@ -390,7 +390,7 @@ Object *htree_execute( vmem_t *stackframe, Node *node ){
 
                     case PTR :
 						object = htree_execute( stackframe, node->child(0) );
-						return new Object( (unsigned int)(new Object(object)) );
+						return new Object( (unsigned int)( reinterpret_cast<unsigned long>(new Object(object)) ) );
 
 					case OBJ :
 						object = htree_execute( stackframe, node->child(0) );
