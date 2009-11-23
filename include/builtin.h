@@ -189,6 +189,7 @@ HYBRIS_BUILTIN(hbase64decode);
 /* pthreads.cc */
 HYBRIS_BUILTIN(hpthread_create);
 HYBRIS_BUILTIN(hpthread_exit);
+HYBRIS_BUILTIN(hpthread_join);
 
 static builtin_t HSTATICBUILTINS[] = {
 	{ "isint", hisint },
@@ -309,7 +310,8 @@ static builtin_t HSTATICBUILTINS[] = {
 	{ "base64decode", hbase64decode },
 
 	{ "pthread_create", hpthread_create },
-    { "pthread_exit",   hpthread_exit }
+    { "pthread_exit",   hpthread_exit },
+    { "pthread_join",   hpthread_join }
 };
 
 #define NBUILTINS sizeof(HSTATICBUILTINS) / sizeof(HSTATICBUILTINS[0])

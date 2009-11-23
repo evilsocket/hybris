@@ -65,3 +65,17 @@ HYBRIS_BUILTIN(hpthread_exit){
 	pthread_exit(NULL);
     return NULL;
 }
+
+HYBRIS_BUILTIN(hpthread_join){
+    if( data->size() < 1 ){
+		hybris_syntax_error( "function 'pthread_join' requires at least 1 parameter (called with %d)", data->size() );
+	}
+	htype_assert( data->at(0), H_OT_INT );
+
+    pthread_t tid = static_cast<pthread_t>( data->at(0)->xint );
+    void *status;
+
+    pthread_join( tid, &status );
+    return NULL;
+}
+
