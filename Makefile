@@ -1,7 +1,7 @@
 WFLAGS= -w
 OPTIMIZATION= -O3
 CFLAGS= -Iinclude/ $(OPTIMIZATION) $(WFLAGS) `xml2-config --cflags --libs` -funroll-loops -fomit-frame-pointer -ffast-math -fno-stack-protector -ffunction-sections
-LFLAGS= -ldl -lpcrecpp -lcurl
+LFLAGS= -ldl -lpcrecpp -lcurl -lpthread
 LIBXML= `xml2-config --cflags --libs`
 TARGET=hybris
 
@@ -39,6 +39,7 @@ builtins: parser
 	g++ -c src/builtins/http.cc -o src/builtins/http.o $(CFLAGS)
 	g++ -c src/builtins/xml.cc -o src/builtins/xml.o $(CFLAGS)
 	g++ -c src/builtins/encoding.cc -o src/builtins/encoding.o $(CFLAGS)
+	g++ -c src/builtins/pthreads.cc -o src/builtins/pthreads.o $(CFLAGS)
 
 parser: lexer
 	bison -y -d -o src/parser.cpp src/parser.y.cpp

@@ -173,6 +173,7 @@
 		<Unit filename="src/builtins/process.cc">
 			<Option target="all" />
 		</Unit>
+		<Unit filename="src/builtins/pthreads.cc" />
 		<Unit filename="src/builtins/reflection.cc">
 			<Option target="all" />
 		</Unit>

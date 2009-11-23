@@ -186,6 +186,9 @@ HYBRIS_BUILTIN(hurlencode);
 HYBRIS_BUILTIN(hurldecode);
 HYBRIS_BUILTIN(hbase64encode);
 HYBRIS_BUILTIN(hbase64decode);
+/* pthreads.cc */
+HYBRIS_BUILTIN(hpthread_create);
+HYBRIS_BUILTIN(hpthread_exit);
 
 static builtin_t HSTATICBUILTINS[] = {
 	{ "isint", hisint },
@@ -303,7 +306,10 @@ static builtin_t HSTATICBUILTINS[] = {
     { "urlencode", hurlencode },
 	{ "urldecode", hurldecode },
     { "base64encode", hbase64encode },
-	{ "base64decode", hbase64decode }
+	{ "base64decode", hbase64decode },
+
+	{ "pthread_create", hpthread_create },
+    { "pthread_exit",   hpthread_exit }
 };
 
 #define NBUILTINS sizeof(HSTATICBUILTINS) / sizeof(HSTATICBUILTINS[0])

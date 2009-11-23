@@ -61,6 +61,19 @@ Object *hybris_vm_get( vmem_t *mem, char *identifier ){
     return (o == vmem_t::null ? H_UNDEFINED : o);
 }
 
+vmem_t *hybris_vm_clone( vmem_t *mem ){
+    vmem_t *clone = new vmem_t;
+    unsigned int size = mem->size(),
+                 i;
+
+    for( i = 0; i < size; i++ ){
+        Object *o = mem->at(i);
+        clone->insert( (char *)mem->label(i), new Object(o) );
+    }
+
+    return clone;
+}
+
 void hybris_vm_release( vmem_t *mem ){
     unsigned int i;
     for( i = 0; i < mem->size(); i++ ){
