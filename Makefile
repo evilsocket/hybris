@@ -40,6 +40,7 @@ builtins: parser
 	g++ -c src/builtins/xml.cc -o src/builtins/xml.o $(CFLAGS)
 	g++ -c src/builtins/encoding.cc -o src/builtins/encoding.o $(CFLAGS)
 	g++ -c src/builtins/pthreads.cc -o src/builtins/pthreads.o $(CFLAGS)
+	g++ -c src/builtins/matrix.cc -o src/builtins/matrix.o $(CFLAGS)
 
 parser: lexer
 	bison -y -d -o src/parser.cpp src/parser.y.cpp

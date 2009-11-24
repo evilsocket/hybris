@@ -104,6 +104,10 @@ HYBRIS_BUILTIN(hstrfind);
 HYBRIS_BUILTIN(hsubstr);
 HYBRIS_BUILTIN(hstrreplace);
 HYBRIS_BUILTIN(hstrsplit);
+/* matrix.cc */
+HYBRIS_BUILTIN(hmatrix);
+HYBRIS_BUILTIN(hcolumns);
+HYBRIS_BUILTIN(hrows);
 
 #ifdef PCRE_SUPPORT
 /* pcre.cc */
@@ -240,6 +244,10 @@ static builtin_t HSTATICBUILTINS[] = {
 	{ "substr", hsubstr },
 	{ "strreplace", hstrreplace },
 	{ "strsplit", hstrsplit },
+
+    { "matrix",  hmatrix },
+    { "columns", hcolumns },
+    { "rows",    hrows },
 
 	#ifdef PCRE_SUPPORT
 	{ "rex_match", hrex_match },

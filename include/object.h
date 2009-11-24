@@ -50,6 +50,7 @@ typedef unsigned short H_OBJECT_TYPE;
 #define H_OT_ARRAY  5
 #define H_OT_MAP    6
 #define H_OT_ALIAS  7
+#define H_OT_MATRIX 8
 
 class Object {
 public  :
@@ -82,6 +83,10 @@ public  :
 	vector<Object *> xmap;
 	unsigned int     xalias;
 
+	unsigned int     xrows;
+	unsigned int     xcolumns;
+	Object       *** xmatrix;
+
     Object( long value );
     Object( long value, unsigned int _is_extern );
     Object( double value );
@@ -89,6 +94,7 @@ public  :
     Object( char *value );
 	Object();
 	Object( unsigned int value );
+	Object( unsigned int rows, unsigned int columns, vector<Object *>& data );
     Object( Object *o );
     Object( FILE *fp );
 
@@ -119,6 +125,7 @@ public  :
 	Object * dotequal( Object *o );
     string svalue();
 	Object *push( Object *o );
+	Object *push_ref( Object *o );
 	Object *map( Object *map, Object *o );
 	Object *pop();
 	Object *mapPop();
