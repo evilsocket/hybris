@@ -19,8 +19,8 @@
 #ifndef _HCONFIG_H_
 #   define _HCONFIG_H_
 
-#define AUTHOR  "Simone Margaritelli <evilsocket@gmail.com>"
-#define VERSION "1.0a"
+#define AUTHOR  "The Hybris Dev Team [http://www.hybris-lang.org/]"
+#define VERSION "1.0b"
 
 // memory allocation debug messages
 // #define MEM_DEBUG 1

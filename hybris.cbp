@@ -164,6 +164,7 @@
 		<Unit filename="src/builtins/math.cc">
 			<Option target="all" />
 		</Unit>
+		<Unit filename="src/builtins/matrix.cc" />
 		<Unit filename="src/builtins/netio.cc">
 			<Option target="all" />
 		</Unit>

@@ -161,6 +161,7 @@ include          BEGIN(INCLUSION);
 {identifier}                           { yylval.identifier = strdup(yytext);    return IDENT; }
 
 -?[0-9]+                               { yylval.integer = atol(yytext);         return INTEGER; }
+-?0x[A-Fa-f0-9]+                       { yylval.integer = strtol(yytext,0,16);  return INTEGER; }
 -?([0-9]+|([0-9]*\.[0-9]+){exponent}?) { yylval.real    = atof(yytext);         return REAL; }
 "'"                                    { yylval.byte    = h_handle_char('\'');  return CHAR; }
 "\""                                   { yylval.string  = h_handle_string('"'); return STRING; }
