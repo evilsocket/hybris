@@ -62,8 +62,12 @@ include          BEGIN(INCLUSION);
     }
     *ptr = 0x00;
 
-    if ( (yyin = fopen( yytext, "r" )) == NULL ){
-        hybris_generic_error( "Could not open '%s' for inclusion", yytext );
+    string mod = yytext;
+    if( (yyin = fopen( mod.c_str(), "r" )) == NULL ){
+        /* attempt to load from /usr/lib/hybris/modules/ */
+        if( (yyin = fopen( ("/usr/lib/hybris/modules/" + mod).c_str(), "r" )) == NULL ){
+            hybris_generic_error( "Could not open '%s' for inclusion", yytext );
+        }
     }
 
     yypush_buffer_state( yy_create_buffer( yyin, YY_BUF_SIZE ) );
@@ -80,7 +84,7 @@ include          BEGIN(INCLUSION);
 
 "import"[ \n\t]+{identifier}[ \n\t]*";" {
     char *sptr = yytext + strlen( "import " );
-    string module = string(HGLOBALS.rootpath) + "/lib/";
+    string module = "/usr/lib/hybris/libs/";
 
     while( *sptr != ';' ){
         module += *sptr;

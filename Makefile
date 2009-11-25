@@ -54,5 +54,7 @@ clean:
 
 install:
 	cp $(TARGET) /usr/bin/
-
-
+	mkdir -p /usr/lib/$(TARGET)
+	mkdir -p /usr/lib/$(TARGET)/libs
+	mkdir -p /usr/lib/$(TARGET)/modules
+	chmod -R 777 /usr/lib/$(TARGET)/
