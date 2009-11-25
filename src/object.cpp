@@ -1410,6 +1410,12 @@ Object * Object::operator == ( Object *o ){
 	if( xtype == H_OT_STRING && o->xtype == H_OT_STRING ){
 		return new Object( static_cast<long>(xstring == o->xstring) );
 	}
+	else if( xtype == H_OT_ARRAY && o->xtype == H_OT_ARRAY ){
+		return new Object( static_cast<long>( this->equals(o) ) );
+	}
+	else if( xtype == H_OT_MAP && o->xtype == H_OT_MAP ){
+		return new Object( static_cast<long>( this->equals(o) ) );
+	}
 	else if( xtype == H_OT_MATRIX && o->xtype == H_OT_MATRIX ){
         return new Object( static_cast<long>( this->equals(o) ) );
 	}
@@ -1421,6 +1427,12 @@ Object * Object::operator == ( Object *o ){
 Object * Object::operator != ( Object *o ){
 	if( xtype == H_OT_STRING && o->xtype == H_OT_STRING ){
 		return new Object( static_cast<long>(xstring != o->xstring) );
+	}
+	else if( xtype == H_OT_ARRAY && o->xtype == H_OT_ARRAY ){
+		return new Object( static_cast<long>( !this->equals(o) ) );
+	}
+	else if( xtype == H_OT_MAP && o->xtype == H_OT_MAP ){
+		return new Object( static_cast<long>( !this->equals(o) ) );
 	}
 	else if( xtype == H_OT_MATRIX && o->xtype == H_OT_MATRIX ){
         return new Object( static_cast<long>( !this->equals(o) ) );
