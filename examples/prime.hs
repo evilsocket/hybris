@@ -1,4 +1,4 @@
-tofind = 1000;
+tofind = 3;
 found  = 0;
 n      = 3;
 

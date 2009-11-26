@@ -498,7 +498,9 @@ Object *htree_execute( vmem_t *stackframe, Node *node ){
                         return object->dotequal( htree_execute(stackframe, node->child(1)) );
 					/* identifier = expression */
                     case ASSIGN    :
-                        return hybris_vm_add( stackframe, node->child(0)->_identifier, htree_execute( stackframe, node->child(1) ) );
+                        object      = htree_execute( stackframe, node->child(1) );
+                        destination = hybris_vm_add( stackframe, node->child(0)->_identifier, object );
+                        return destination;
 				    /* -expression */
                     case UMINUS :
                         object = htree_execute(stackframe, node->child(0));
@@ -709,11 +711,16 @@ void h_env_init( int argc, char *argv[] ){
     char name[0xFF] = {0};
 
     if( HGLOBALS.action != H_COMPILE ){
+        Object *o;
 		/* initialize command line arguments */
-		hybris_vm_add( &HVM, (char *)"argc", new Object( static_cast<long>(argc - 1) ) );
+		o = new Object( static_cast<long>(argc - 1) );
+		hybris_vm_add( &HVM, (char *)"argc", o );
+		delete o;
         for( i = 1; i < argc; i++ ){
             sprintf( name, "%d", i - 1 );
-            hybris_vm_add( &HVM, name, new Object(argv[i]) );
+            o = new Object(argv[i]);
+            hybris_vm_add( &HVM, name, o );
+            delete o;
         }
     }
     else{

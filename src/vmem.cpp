@@ -47,7 +47,7 @@ Object *hybris_vm_set( vmem_t *mem, char *identifier, Object *object ){
 	int idx = mem->quick_search(identifier);
 	if( idx != -1 ){
 	    /* delete old value */
-	    delete mem->at(idx);
+	    mem->at(idx)->release();
 	    /* assign new value */
 		return mem->set( (unsigned int)idx, new Object(object) );
 	}

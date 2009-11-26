@@ -259,7 +259,7 @@ void Tree::release( Node *node ){
 		}
 		/* ignore statically allocated identifiers nodes */
 
-		delete node;
+		//delete node;
 	}
 }
 

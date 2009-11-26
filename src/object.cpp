@@ -370,7 +370,7 @@ void Object::release(){
     unsigned int i, j;
 
     #ifdef MEM_DEBUG
-    printf( "[MEM DEBUG] deleted %s object (- %d bytes)\n", Object::type(this),  xsize );
+    printf( "[MEM DEBUG] deleting %s object (- %d bytes)\n", Object::type(this),  xsize );
     #endif
 
     switch( xtype ){

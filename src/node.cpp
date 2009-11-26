@@ -68,7 +68,7 @@ Node::Node( FILE *fp ){
 
 Node::~Node(){
 	if( _constant ){
-		delete _constant;
+		_constant->release();
 	}
 }
 
