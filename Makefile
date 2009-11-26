@@ -3,6 +3,7 @@ OPTIMIZATION= -O3
 CFLAGS= -Iinclude/ $(OPTIMIZATION) $(WFLAGS) `xml2-config --cflags --libs` -funroll-loops -fomit-frame-pointer -ffast-math -fno-stack-protector -ffunction-sections
 LFLAGS= -ldl -lpcrecpp -lcurl -lpthread
 LIBXML= `xml2-config --cflags --libs`
+PREFIX=/usr/local
 TARGET=hybris
 
 all: hybris
@@ -53,8 +54,8 @@ clean:
 	cd examples && make clean
 
 install:
-	cp $(TARGET) /usr/bin/
-	mkdir -p /usr/lib/$(TARGET)
-	mkdir -p /usr/lib/$(TARGET)/libs
-	mkdir -p /usr/lib/$(TARGET)/modules
-	chmod -R 777 /usr/lib/$(TARGET)/
+	install -m 0755 $(TARGET) $(PREFIX)/bin/
+	mkdir -p $(PREFIX)/lib/$(TARGET)
+	mkdir -p $(PREFIX)/lib/$(TARGET)/libs
+	mkdir -p $(PREFIX)/lib/$(TARGET)/modules
+	chmod -R 777 $(PREFIX)/lib/$(TARGET)/
