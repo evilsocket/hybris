@@ -98,6 +98,8 @@ public  :
     Object( Object *o );
     Object( FILE *fp );
 
+    void release();
+
     ~Object();
 
 	int equals( Object *o );

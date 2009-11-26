@@ -366,32 +366,50 @@ Object::Object( FILE *fp ) {
     #endif
 }
 
-Object::~Object(){
-	unsigned int i, j;
-	if( xtype == H_OT_ARRAY ){
-		for( i = 0; i < xsize; i++ ){
-			delete xarray[i];
-		}
-	}
-	else if( xtype == H_OT_MAP ){
-		for( i = 0; i < xsize; i++ ){
-			delete xmap[i];
-			delete xarray[i];
-		}
-	}
-	else if( xtype == H_OT_MATRIX ){
-        for( i = 0; i < xrows; i++ ){
-            for( j = 0; j < xcolumns; j++ ){
-                delete xmatrix[i][j];
-            }
-            delete [] xmatrix[i];
-        }
-        delete [] xmatrix;
-	}
+void Object::release(){
+    unsigned int i, j;
 
     #ifdef MEM_DEBUG
     printf( "[MEM DEBUG] deleted %s object (- %d bytes)\n", Object::type(this),  xsize );
     #endif
+
+    switch( xtype ){
+        case H_OT_STRING :
+            xstring.clear();
+
+        break;
+
+        case H_OT_ARRAY  :
+            for( i = 0; i < xsize; i++ ){
+                delete xarray[i];
+            }
+        break;
+
+        case H_OT_MAP    :
+            for( i = 0; i < xsize; i++ ){
+                delete xmap[i];
+                delete xarray[i];
+            }
+        break;
+
+        case H_OT_MATRIX :
+            for( i = 0; i < xrows; i++ ){
+                for( j = 0; j < xcolumns; j++ ){
+                    delete xmatrix[i][j];
+                }
+                delete [] xmatrix[i];
+            }
+            delete [] xmatrix;
+            xrows    = 0;
+            xcolumns = 0;
+        break;
+    }
+    xsize = 0;
+    xtype = H_OT_NONE;
+}
+
+Object::~Object(){
+	release();
 }
 
 int Object::equals( Object *o ){
@@ -685,6 +703,8 @@ Object * Object::dotequal( Object *o ){
 		case H_OT_MATRIX : hybris_syntax_error( "'%s' is an invalid type for '.=' operator", type(o) ); break;
 	}
 
+	release();
+
 	xtype   = H_OT_STRING;
 	xstring = ret.str();
 	parse_string( xstring );
@@ -854,61 +874,29 @@ Object& Object::at( Object *index, Object *set ){
 
 Object& Object::operator = ( Object *o ){
 	unsigned int i, j;
-	switch( o->xtype ){
-		case H_OT_INT    : xint    = o->xint;    xsize = o->xsize; xtype = o->xtype; break;
-		case H_OT_ALIAS  : xalias  = o->xalias;  xsize = o->xsize; xtype = o->xtype; break;
-		case H_OT_FLOAT  : xfloat  = o->xfloat;  xsize = o->xsize; xtype = o->xtype; break;
-		case H_OT_CHAR   : xchar   = o->xchar;   xsize = o->xsize; xtype = o->xtype; break;
-		case H_OT_STRING : xstring = o->xstring; xsize = o->xsize; xtype = o->xtype; break;
-		case H_OT_ARRAY  :
-			if( xtype == H_OT_ARRAY ){
-				for( i = 0; i < xsize; i++ ){
-					delete xarray[i];
-				}
-				xarray.clear();
-			}
 
-			xtype = o->xtype;
-			xsize = o->xsize;
+	release();
+
+    xtype = o->xtype;
+    xsize = o->xsize;
+	switch( o->xtype ){
+		case H_OT_INT    : xint    = o->xint;    break;
+		case H_OT_ALIAS  : xalias  = o->xalias;  break;
+		case H_OT_FLOAT  : xfloat  = o->xfloat;  break;
+		case H_OT_CHAR   : xchar   = o->xchar;   break;
+		case H_OT_STRING : xstring = o->xstring; break;
+		case H_OT_ARRAY  :
 			for( i = 0; i < xsize; i++ ){
 				xarray.push_back( new Object( o->xarray[i] ) );
 			}
 		break;
 		case H_OT_MAP    :
-			if( xtype == H_OT_ARRAY || xtype == H_OT_MAP ){
-				for( i = 0; i < xsize; i++ ){
-					delete xarray[i];
-				}
-				xarray.clear();
-				if( xtype == H_OT_MAP ){
-					for( i = 0; i < xsize; i++ ){
-						delete xmap[i];
-					}
-					xmap.clear();
-				}
-			}
-
-			xtype = o->xtype;
-			xsize = o->xsize;
 			for( i = 0; i < xsize; i++ ){
 				xmap.push_back( new Object( o->xmap[i] ) );
 				xarray.push_back( new Object( o->xarray[i] ) );
 			}
 		break;
 		case H_OT_MATRIX :
-            if( xtype == H_OT_ARRAY || xtype == H_OT_MAP ){
-				for( i = 0; i < xsize; i++ ){
-					delete xarray[i];
-				}
-				xarray.clear();
-				if( xtype == H_OT_MAP ){
-					for( i = 0; i < xsize; i++ ){
-						delete xmap[i];
-					}
-					xmap.clear();
-				}
-			}
-
             xrows    = o->xrows;
             xcolumns = o->xcolumns;
             xmatrix  = new Object ** [xrows];
@@ -1211,6 +1199,7 @@ Object * Object::operator *= ( Object *o ){
                 }
             }
         }
+        release();
         (*this) = matrix;
 	}
 	else{
