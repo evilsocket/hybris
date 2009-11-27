@@ -44,7 +44,7 @@ void * hybris_pthread_worker( void *arg ){
 	Object *_return = htree_function_call( data, call );
 	delete call;
     delete _return;
-    hybris_vm_release( data );
+    hybris_vm_release( data, NULL );
 
     pthread_exit(NULL);
 }

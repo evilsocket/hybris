@@ -38,6 +38,7 @@ Node   *htree_load( FILE *input );
 
 vector<string>   HSTACKTRACE;
 vmem_t           HVM;
+vgarbage_t       HVG;
 vcode_t          HVC;
 hybris_globals_t HGLOBALS;
 
@@ -86,7 +87,7 @@ hybris_globals_t HGLOBALS;
 
 %%
 
-program    : body { exit(0); };
+program    : body { /*exit(0);*/ };
 
 body       : body statement { switch( HGLOBALS.action ){
                                 case H_EXECUTE : htree_execute( &HVM, $2 );              break;
@@ -672,7 +673,7 @@ Node *htree_load( FILE *input ){
 
 void h_env_release( int onerror = 0 ){
     if( HGLOBALS.action != H_COMPILE ){
-        hybris_vm_release(&HVM);
+        hybris_vm_release( &HVM, &HVG );
         hybris_vc_release(&HVC);
     }
     else{

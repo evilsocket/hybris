@@ -19,10 +19,6 @@
 #include "vmem.h"
 
 Object *hybris_vm_add( vmem_t *mem, char *identifier, Object *object ){
-    #ifdef MEM_DEBUG
-    printf( "[MEM DEBUG] vm_add[%s] (+ %d bytes)\n", identifier,  object->xsize );
-    #endif
-
     /* if object does not exist yet, create a new one */
     if( hybris_vm_get( mem, identifier ) == H_UNDEFINED ){
         Object *o = H_UNDEFINED;
@@ -62,9 +58,10 @@ Object *hybris_vm_get( vmem_t *mem, char *identifier ){
 }
 
 vmem_t *hybris_vm_clone( vmem_t *mem ){
-    vmem_t *clone = new vmem_t;
-    unsigned int size = mem->size(),
+    unsigned int size,
                  i;
+
+    vmem_t *clone = new vmem_t;
 
     for( i = 0; i < size; i++ ){
         Object *o = mem->at(i);
@@ -74,13 +71,73 @@ vmem_t *hybris_vm_clone( vmem_t *mem ){
     return clone;
 }
 
-void hybris_vm_release( vmem_t *mem ){
-    unsigned int i;
-    for( i = 0; i < mem->size(); i++ ){
-        delete mem->at(i);
+void hybris_vm_release( vmem_t *mem, vgarbage_t *garbage ){
+    unsigned int size,
+                 i;
+    Object      *o;
+
+    if( garbage != NULL ){
+        size = garbage->size();
+        for( i = 0; i < size; i++ ){
+            o = garbage->at(i);
+            if( o && o->xsize > 0 && hybris_vg_isgarbage( mem, o ) ){
+                #ifdef MEM_DEBUG
+                printf( "[MEM DEBUG] !!! releasing '%s' garbage at 0x%X (- %d bytes)\n", Object::type(o), o,  o->xsize );
+                #endif
+                delete o;
+                /* update garbage size upon new item removal */
+                size = garbage->size();
+            }
+        }
+        garbage->clear();
+    }
+
+    size = mem->size();
+    for( i = 0; i < size; i++ ){
+        o = mem->at(i);
+         #ifdef MEM_DEBUG
+        printf( "[MEM DEBUG] !!! releasing '%s' value at 0x%X (- %d bytes)\n", Object::type(o), o,  o->xsize );
+        #endif
+        delete o;
     }
 
     mem->clear();
+}
+
+int hybris_vg_isgarbage( vmem_t *mem, Object *o ){
+    unsigned int size = mem->size(),
+                 i;
+
+    unsigned long ob_address = reinterpret_cast<unsigned long>(o),
+                  vm_address;
+
+    for( i = 0; i < size; i++ ){
+        vm_address = reinterpret_cast<unsigned long>( mem->at(i) );
+        if( ob_address == vm_address ){
+            return 0;
+        }
+    }
+    return 1;
+}
+
+void hybris_vg_add( vgarbage_t *garbage, Object *o ){
+    garbage->push_back(o);
+}
+
+void hybris_vg_del( vgarbage_t *garbage, Object *o ){
+    unsigned int size = garbage->size(),
+                 i;
+
+    unsigned long ob_address = reinterpret_cast<unsigned long>(o),
+                  vm_address;
+
+    for( i = 0; i < size; i++ ){
+        vm_address = reinterpret_cast<unsigned long>( garbage->at(i) );
+        if( ob_address == vm_address ){
+            garbage->erase( garbage->begin() + i );
+            return;
+        }
+    }
 }
 
 Node *hybris_vc_clone( Node *function ){

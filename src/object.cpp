@@ -18,6 +18,14 @@
 */
 #include "object.h"
 
+typedef vector<Object *> vgarbage_t;
+
+extern vgarbage_t HVG;
+
+extern void hybris_vg_add( vgarbage_t *garbage, Object *o );
+extern void hybris_vg_del( vgarbage_t *garbage, Object *o );
+
+
 
 const char *Object::type( Object *o ){
 	switch(o->xtype){
@@ -175,15 +183,21 @@ void Object::parse_string( string& s ){
 	}
 }
 
+void * Object::operator new (size_t size){
+    #ifdef MEM_DEBUG
+    printf( "[MEM DEBUG] new object (+ %d bytes)\n", size );
+    #endif
+
+    Object *o = ::new Object;
+    hybris_vg_add( &HVG, o );
+    return o;
+}
+
 Object::Object( long value ) {
 	xtype = H_OT_INT;
 	xint  = value;
 	xsize = sizeof(long);
 	is_extern = 0;
-
-    #ifdef MEM_DEBUG
-    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
-    #endif
 }
 
 Object::Object( long value, unsigned int _is_extern ) {
@@ -191,10 +205,6 @@ Object::Object( long value, unsigned int _is_extern ) {
 	xint  = value;
 	xsize = sizeof(long);
 	is_extern = _is_extern;
-
-    #ifdef MEM_DEBUG
-    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
-    #endif
 }
 
 Object::Object( double value ) {
@@ -202,10 +212,6 @@ Object::Object( double value ) {
 	xfloat = value;
 	xsize  = sizeof(double);
 	is_extern = 0;
-
-    #ifdef MEM_DEBUG
-    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
-    #endif
 }
 
 Object::Object( char value ) {
@@ -213,10 +219,6 @@ Object::Object( char value ) {
 	xchar = value;
 	xsize = sizeof(char);
 	is_extern = 0;
-
-    #ifdef MEM_DEBUG
-    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
-    #endif
 }
 
 Object::Object( char *value ) {
@@ -225,20 +227,12 @@ Object::Object( char *value ) {
 	parse_string( xstring );
 	xsize   = strlen(xstring.c_str()) + 1;
 	is_extern = 0;
-
-    #ifdef MEM_DEBUG
-    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
-    #endif
 }
 
 Object::Object(){
 	xtype = H_OT_ARRAY;
 	xsize = 0;
 	is_extern = 0;
-
-    #ifdef MEM_DEBUG
-    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
-    #endif
 }
 
 Object::Object( unsigned int value ){
@@ -246,10 +240,6 @@ Object::Object( unsigned int value ){
 	xsize  = sizeof(unsigned int);
 	xalias = value;
 	is_extern = 0;
-
-    #ifdef MEM_DEBUG
-    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
-    #endif
 }
 
 Object::Object( unsigned int rows, unsigned int columns, vector<Object *>& data ){
@@ -284,10 +274,6 @@ Object::Object( unsigned int rows, unsigned int columns, vector<Object *>& data 
             }
         }
     }
-
-    #ifdef MEM_DEBUG
-    printf( "[MEM DEBUG] new %s object (+ %d bytes [%dx%d])\n", Object::type(this), xsize, xrows, xcolumns );
-    #endif
 }
 
 Object::Object( Object *o ) {
@@ -325,10 +311,6 @@ Object::Object( Object *o ) {
 		break;
 	}
 	is_extern = o->is_extern;
-
-    #ifdef MEM_DEBUG
-    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
-    #endif
 }
 
 Object::Object( FILE *fp ) {
@@ -360,18 +342,10 @@ Object::Object( FILE *fp ) {
 			}
 		break;
 	}
-
-    #ifdef MEM_DEBUG
-    printf( "[MEM DEBUG] new %s object (+ %d bytes)\n", Object::type(this),  xsize );
-    #endif
 }
 
 void Object::release(){
     unsigned int i, j;
-
-    #ifdef MEM_DEBUG
-    printf( "[MEM DEBUG] deleting %s object (- %d bytes)\n", Object::type(this),  xsize );
-    #endif
 
     switch( xtype ){
         case H_OT_STRING :
@@ -409,7 +383,7 @@ void Object::release(){
 }
 
 Object::~Object(){
-	release();
+    hybris_vg_del( &HVG, this );
 }
 
 int Object::equals( Object *o ){

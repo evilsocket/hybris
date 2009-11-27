@@ -29,15 +29,21 @@
 #define HANONYMOUSIDENTIFIER (char *)"HANONYMOUSIDENTIFIER"
 
 /* data segment descriptor <identifier, object> */
-typedef Map<Object> vmem_t;
+typedef Map<Object>      vmem_t;
 /* code segment descriptor <function, abstract tree> */
-typedef Map<Node>   vcode_t;
+typedef Map<Node>        vcode_t;
+/* garbage segment descriptor */
+typedef vector<Object *> vgarbage_t;
 
 Object *hybris_vm_add( vmem_t *mem, char *identifier, Object *object );
 Object *hybris_vm_set( vmem_t *mem, char *identifier, Object *object );
 Object *hybris_vm_get( vmem_t *mem, char *identifier );
 vmem_t *hybris_vm_clone( vmem_t *mem );
-void    hybris_vm_release( vmem_t *mem );
+void    hybris_vm_release( vmem_t *mem, vgarbage_t *garbage );
+
+void    hybris_vg_add( vgarbage_t *garbage, Object *o );
+void    hybris_vg_del( vgarbage_t *garbage, Object *o );
+int     hybris_vg_isgarbage( vmem_t *mem, Object *o );
 
 Node   *hybris_vc_add( vcode_t *code, Node *function );
 Node   *hybris_vc_set( vcode_t *code, Node *function );

@@ -87,6 +87,8 @@ public  :
 	unsigned int     xcolumns;
 	Object       *** xmatrix;
 
+    void* operator new (size_t size);
+
     Object( long value );
     Object( long value, unsigned int _is_extern );
     Object( double value );
