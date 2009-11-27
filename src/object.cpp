@@ -346,30 +346,47 @@ Object::Object( FILE *fp ) {
 
 void Object::release(){
     unsigned int i, j;
+    Object *o;
 
     switch( xtype ){
         case H_OT_STRING :
             xstring.clear();
-
         break;
 
         case H_OT_ARRAY  :
-            for( i = 0; i < xsize; i++ ){
-                delete xarray[i];
+            for( i = 0; i < xsize && i < xarray.size(); i++ ){
+                o = xarray[i];
+                if( o ){
+                    delete o;
+                    xarray[i] = NULL;
+                }
             }
+            xarray.clear();
         break;
 
         case H_OT_MAP    :
-            for( i = 0; i < xsize; i++ ){
-                delete xmap[i];
-                delete xarray[i];
+            for( i = 0; i < xsize && i < xmap.size() && i < xarray.size(); i++ ){
+                o = xmap[i];
+                if( o ){
+                    delete o;
+                    xmap[i] = NULL;
+                }
+                o = xarray[i];
+                if( o ){
+                    delete o;
+                    xarray[i] = NULL;
+                }
             }
+            xmap.clear();
+            xarray.clear();
         break;
 
         case H_OT_MATRIX :
             for( i = 0; i < xrows; i++ ){
                 for( j = 0; j < xcolumns; j++ ){
-                    delete xmatrix[i][j];
+                    o = xmatrix[i][j];
+                    delete o;
+                    xmatrix[i][j] = NULL;
                 }
                 delete [] xmatrix[i];
             }
@@ -383,6 +400,7 @@ void Object::release(){
 }
 
 Object::~Object(){
+    // release();
     hybris_vg_del( &HVG, this );
 }
 
