@@ -1,6 +1,6 @@
 WFLAGS= -w
 OPTIMIZATION= -O3
-CFLAGS= -Iinclude/ $(OPTIMIZATION) $(WFLAGS) `xml2-config --cflags --libs` -funroll-loops -fomit-frame-pointer -ffast-math -fno-stack-protector -ffunction-sections
+CFLAGS= -Iinclude/ $(OPTIMIZATION) $(WFLAGS) `xml2-config --cflags --libs` -funroll-loops -ffast-math -fno-stack-protector
 LFLAGS= -ldl -lpcrecpp -lcurl -lpthread
 LIBXML= `xml2-config --cflags --libs`
 PREFIX=/usr/local
