@@ -167,10 +167,9 @@ Node *hybris_vc_clone( Node *function ){
 }
 
 Node *hybris_vc_add( vcode_t *code, Node *function ){
-    printf( "vc_add[ 0x%X ]( %s )\n", code, function->_function );
     /* if object does not exist yet, create a new one */
-    if( hybris_vc_get( code, function->_function ) == H_UNDEFINED ){
-        return code->insert( function->_function, hybris_vc_clone(function) );
+    if( hybris_vc_get( code, (char *)function->_function.c_str() ) == H_UNDEFINED ){
+        return code->insert( (char *)function->_function.c_str(), hybris_vc_clone(function) );
     }
     /* else set the new value */
     else{
@@ -181,10 +180,9 @@ Node *hybris_vc_add( vcode_t *code, Node *function ){
 }
 
 Node *hybris_vc_set( vcode_t *code, Node *function ){
-    printf( "vc_set[ 0x%X ]( %s )\n", code, function->_function );
-    Node *ptr = code->find(function->_function);
+    Node *ptr = code->find( (char *)function->_function.c_str() );
     if( ptr != vcode_t::null ){
-        return code->set( function->_function, function );
+        return code->set( (char *)function->_function.c_str(), function );
     }
     else{
         return H_UNDEFINED;
@@ -192,14 +190,11 @@ Node *hybris_vc_set( vcode_t *code, Node *function ){
 }
 
 Node *hybris_vc_get( vcode_t *code, char *function ){
-    printf( "vc_get[ 0x%X ]( %s ) ", code, function );
     Node *tree = code->find(function);
-    printf( "%s\n", (tree == vcode_t::null ? "NIENTE :(" : "TROVATA !") );
     return (tree == vcode_t::null ? H_UNDEFINED : tree);
 }
 
 void hybris_vc_release( vcode_t *code ){
-    printf( "vc_release\n" );
     unsigned int i;
 
     for( i = 0; i < code->size(); i++ ){

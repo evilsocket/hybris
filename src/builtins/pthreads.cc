@@ -21,14 +21,17 @@
 #include "builtin.h"
 #include "tree.h"
 
-extern Object *htree_function_call( vmem_t *stackframe, Node *call );
-extern vmem_t  HVM;;
+extern Object *htree_function_call( vmem_t *stackframe, Node *call, int threaded = 0 );
+
+unsigned long h_running_threads = 0;
 
 void * hybris_pthread_worker( void *arg ){
+    __sync_fetch_and_add( &h_running_threads, 1 );
+
     vmem_t *data = (vmem_t *)arg;
 
-    Node *call = new Node(H_NT_CALL);
-    strncpy( call->_call, data->at(0)->xstring.c_str(), 0xFF );
+    Node *call  = new Node(H_NT_CALL);
+    call->_call = data->at(0)->xstring;
 	if( data->size() > 1 ){
 		unsigned int i;
 		for( i = 1; i < data->size(); i++ ){
@@ -37,12 +40,14 @@ void * hybris_pthread_worker( void *arg ){
 				case H_OT_FLOAT  : call->addChild( Tree::addFloat(data->at(i)->xfloat) ); break;
 				case H_OT_CHAR   : call->addChild( Tree::addChar(data->at(i)->xchar) ); break;
 				case H_OT_STRING : call->addChild( Tree::addString((char *)data->at(i)->xstring.c_str()) ); break;
-				default : hybris_generic_error( "type not supported for pthread call" );
+				default :
+                    __sync_fetch_and_sub( &h_running_threads, 1 );
+                    hybris_generic_error( "type not supported for pthread call" );
 			}
 		}
 	}
 
-	Object *_return = htree_function_call( &HVM, call );
+	Object *_return = htree_function_call( data, call, 1 );
 	delete call;
     delete _return;
 
@@ -51,6 +56,8 @@ void * hybris_pthread_worker( void *arg ){
     #else
         hybris_vm_release( data );
     #endif
+
+    __sync_fetch_and_sub( &h_running_threads, 1 );
 
     pthread_exit(NULL);
 }

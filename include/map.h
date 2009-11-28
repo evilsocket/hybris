@@ -61,10 +61,8 @@ public  :
 	}
 
 	inline int quick_search( char *label ){
-	    printf( "quick_search [ 0x%X ] ( %s ) :\n", this, label );
 		unsigned int i, j, size = m_map.size(), send = size - 1;
 		for( i = 0, j = send; i < size && j >= 0; i++, j-- ){
-		    printf( "\t%s - %s\n", m_map[i]->label.c_str(), m_map[j]->label.c_str() );
 			if( m_map[i]->label == label ){
 				return i;
 			}else if( m_map[j]->label == label ){

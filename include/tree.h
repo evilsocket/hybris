@@ -46,8 +46,10 @@ public :
 
     static const char *type( Node *node );
     static void print( Node *node, int tabs = 0 );
+    /*
     static void compile( Node *node, FILE *fp );
     static Node * load( FILE *fp );
+    */
     static Node *clone( Node *root, Node *clone );
     static void release( Node *node );
 };

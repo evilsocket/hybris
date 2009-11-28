@@ -19,14 +19,14 @@
 #include "node.h"
 
 Node::Node( H_NODE_TYPE type ){
-	m_type     = type;
-	_constant  = NULL;
-	_aliascall = NULL;
-	memset( _identifier, 0x00, 0xFF );
-	memset( _function, 0x00, 0xFF );
-	memset( _call, 0x00, 0xFF );
+	m_type      = type;
+	_constant   = NULL;
+	_aliascall  = NULL;
+	_identifier = "";
+	_function   = "";
+	_call       = "";
 }
-
+/*
 Node::Node( FILE *fp ){
 	_constant = NULL;
 	fread( &m_type, sizeof(H_NODE_TYPE), 1, fp );
@@ -65,7 +65,7 @@ Node::Node( FILE *fp ){
 		}
 	}
 }
-
+*/
 Node::~Node(){
 	if( _constant ){
 		_constant->release();

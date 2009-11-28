@@ -21,7 +21,7 @@
 
 extern vmem_t         HVM;
 extern vcode_t        HVC;
-extern Object *htree_function_call( vmem_t *stackframe, Node *call );
+extern Object *htree_function_call( vmem_t *stackframe, Node *call, int threaded = 0 );
 
 HYBRIS_BUILTIN(hvar_names){
 	unsigned int i;
@@ -66,8 +66,8 @@ HYBRIS_BUILTIN(hcall){
 	}
 	htype_assert( data->at(0), H_OT_STRING );
 
-	Node *call = new Node(H_NT_CALL);
-    strncpy( call->_call, data->at(0)->xstring.c_str(), 0xFF );
+	Node *call  = new Node(H_NT_CALL);
+    call->_call = data->at(0)->xstring;
 	if( data->size() > 1 ){
 		unsigned int i;
 		for( i = 1; i < data->size(); i++ ){

@@ -22,9 +22,11 @@
 #include "common.h"
 #include <vector>
 #include <list>
+#include <string>
 
 using std::vector;
 using std::list;
+using std::string;
 
 typedef unsigned short H_NODE_TYPE;
 
@@ -45,17 +47,17 @@ private :
 public  :
 
     Node( H_NODE_TYPE type );
-    Node( FILE *fp );
+    /* Node( FILE *fp ); */
 
     ~Node();
 
     H_NODE_TYPE type();
 
     Object       *_constant;
-    char          _identifier[0xFF];
+    string        _identifier;
     int           _operator;
-    char          _function[0xFF];
-    char          _call[0xFF];
+    string        _function;
+    string        _call;
 	Node         *_aliascall;
 
     unsigned int children();

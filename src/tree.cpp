@@ -23,25 +23,25 @@ HNodeList *Tree::createList(){
 }
 
 Node *Tree::addInt( long value ){
-	Node *node     = new Node(H_NT_CONSTANT);
+	Node *node      = new Node(H_NT_CONSTANT);
 	node->_constant = new Object(value);
 	return node;
 }
 
 Node *Tree::addFloat( double value ){
-	Node *node     = new Node(H_NT_CONSTANT);
+	Node *node      = new Node(H_NT_CONSTANT);
 	node->_constant = new Object(value);
 	return node;
 }
 
 Node *Tree::addChar( char value ){
-	Node *node     = new Node(H_NT_CONSTANT);
+	Node *node      = new Node(H_NT_CONSTANT);
 	node->_constant = new Object(value);
 	return node;
 }
 
 Node *Tree::addString( char *value ){
-	Node *node     = new Node(H_NT_CONSTANT);
+	Node *node      = new Node(H_NT_CONSTANT);
 	node->_constant = new Object(value);
 	return node;
 }
@@ -63,8 +63,8 @@ Node *Tree::addOperator( int op, int argc, ... ){
 }
 
 Node *Tree::addIdentifier( char *id ){
-	Node *node = new Node(H_NT_IDENTIFIER);
-	strncpy( node->_identifier, id, 0xFF );
+	Node *node        = new Node(H_NT_IDENTIFIER);
+	node->_identifier = id;
 	return node;
 }
 
@@ -73,7 +73,7 @@ Node *Tree::addFunction( function_decl_t *declaration, int argc, ... ){
 	va_list ap;
 	int i;
 
-	strncpy( node->_function, declaration->function, 0xFF );
+	node->_function = declaration->function;
 
 	/* add function prototype args children */
 	for( i = 0; i < declaration->argc; i++ ){
@@ -94,7 +94,7 @@ Node *Tree::addFunction( char *name, int argc, ... ){
 	va_list ap;
 	int i;
 
-	strncpy( node->_function, name, 0xFF );
+	node->_function = name;
 
 	/* add function body statements node */
 	va_start( ap, argc );
@@ -107,8 +107,8 @@ Node *Tree::addFunction( char *name, int argc, ... ){
 }
 
 Node *Tree::addCall( char *name, HNodeList *argv ){
-	Node *node = new Node(H_NT_CALL);
-	strncpy( node->_call, name, 0xFF );
+	Node *node  = new Node(H_NT_CALL);
+	node->_call = name;
 
 	if( argv != NULL ){
 		for( HNodeList::iterator ni = argv->begin(); ni != argv->end(); ni++ ){
@@ -159,7 +159,7 @@ void Tree::print( Node *node, int tabs /*= 0*/ ){
 		}
 	}
 }
-
+/*
 void Tree::compile( Node *node, FILE *fp ){
 	H_NODE_TYPE type = node->type();
 	fwrite( &type, 1, sizeof(H_NODE_TYPE), fp );
@@ -200,7 +200,7 @@ void Tree::compile( Node *node, FILE *fp ){
 Node * Tree::load( FILE *fp ){
 	return new Node(fp);
 }
-
+*/
 Node *Tree::clone( Node *root, Node *clone ){
 	if( root ){
 		int i;
@@ -216,7 +216,7 @@ Node *Tree::clone( Node *root, Node *clone ){
 				break;
 
 			case H_NT_IDENTIFIER :
-				clone = Tree::addIdentifier( root->_identifier );
+				clone = Tree::addIdentifier( (char *)root->_identifier.c_str() );
 				break;
 
 			case H_NT_OPERATOR   :
@@ -227,7 +227,7 @@ Node *Tree::clone( Node *root, Node *clone ){
 				break;
 
 			case H_NT_FUNCTION   :
-				clone = Tree::addFunction( root->_function, 0 );
+				clone = Tree::addFunction( (char *)root->_function.c_str(), 0 );
 				for( i = 0; i < root->children(); i++ ){
 					clone->addChild( Tree::clone( root->child(i), &node ) );
 				}
@@ -235,7 +235,7 @@ Node *Tree::clone( Node *root, Node *clone ){
 
 			case H_NT_CALL       :
 				if( root->_aliascall == NULL ){
-					clone = Tree::addCall( root->_call, NULL );
+					clone = Tree::addCall( (char *)root->_call.c_str(), NULL );
 				}
 				else{
 					clone = Tree::addCall( root->_aliascall, NULL );
@@ -257,9 +257,6 @@ void Tree::release( Node *node ){
 				Tree::release( node->child(i) );
 			}
 		}
-		/* ignore statically allocated identifiers nodes */
-
-		//delete node;
 	}
 }
 

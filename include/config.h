@@ -20,7 +20,7 @@
 #   define _HCONFIG_H_
 
 #define AUTHOR  "The Hybris Dev Team [http://www.hybris-lang.org/]"
-#define VERSION "0.2b"
+#define VERSION "0.3b"
 
 // memory allocation debug messages
 // #define MEM_DEBUG 1
