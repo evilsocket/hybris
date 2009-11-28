@@ -32,7 +32,18 @@
 extern int yyparse(void);
 extern int yylex(void);
 
-extern unsigned long h_running_threads;
+extern vector<pthread_t> h_thread_pool;
+extern pthread_mutex_t   h_thread_pool_mutex;
+
+
+#define POOL_DEL(tid) pthread_mutex_lock( &h_thread_pool_mutex ); \
+                        for( int pool_i = 0; pool_i < h_thread_pool.size(); pool_i++ ){ \
+                            if( h_thread_pool[pool_i] == tid ){ \
+                                h_thread_pool.erase( h_thread_pool.begin() + pool_i ); \
+                                break; \
+                            } \
+                        } \
+                      pthread_mutex_unlock( &h_thread_pool_mutex )
 
 Object *htree_function_call( vmem_t *stackframe, Node *call, int threaded = 0 );
 Object *htree_execute( vmem_t *stackframe, Node *node );
@@ -291,7 +302,7 @@ Object *htree_function_call( vmem_t *stackframe, Node *call, int threaded /*= 0*
 
         if( identifiers.size() != call->children() ){
             if( threaded ){
-                __sync_fetch_and_sub( &h_running_threads, 1 );
+               POOL_DEL( pthread_self() );
             }
             hybris_syntax_error( "function '%s' requires %d parameters (called with %d)",
                            function->_function.c_str(),
@@ -331,13 +342,13 @@ Object *htree_function_call( vmem_t *stackframe, Node *call, int threaded /*= 0*
         Object *external;
         if( (external = hybris_vm_get( stackframe, (char *)call->_call.c_str() )) == H_UNDEFINED ){
             if( threaded ){
-                __sync_fetch_and_sub( &h_running_threads, 1 );
+                POOL_DEL( pthread_self() );
             }
             hybris_syntax_error( "'%s' undeclared function identifier", (char *)call->_call.c_str() );
         }
         else if( external->is_extern == 0 ){
             if( threaded ){
-                __sync_fetch_and_sub( &h_running_threads, 1 );
+                POOL_DEL( pthread_self() );
             }
            hybris_syntax_error( "'%s' does not name a function", (char *)call->_call.c_str() );
         }
@@ -711,9 +722,17 @@ Node *htree_load( FILE *input ){
 */
 void h_env_release( int onerror = 0 ){
     if( HGLOBALS.action != H_COMPILE ){
-        if( h_running_threads > 0 ){
-            printf( "*** [WARNING] Program exiting with running threads still being executed, this may cause virtual memory corruption (use pthread_join) ! ***\n" );
-        }
+        pthread_mutex_lock( &h_thread_pool_mutex );
+            if( h_thread_pool.size() > 0 ){
+                printf( "[WARNING] Hard killing remaining running threads ... " );
+                for( int pool_i = 0; pool_i < h_thread_pool.size(); pool_i++ ){
+                    pthread_kill( h_thread_pool[pool_i], SIGTERM );
+                }
+                h_thread_pool.clear();
+                printf( "done .\n" );
+            }
+        pthread_mutex_unlock( &h_thread_pool_mutex );
+
 
         #ifdef GC_SUPPORT
             hybris_vm_release( &HVM, &HVG );

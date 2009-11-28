@@ -23,10 +23,28 @@
 
 extern Object *htree_function_call( vmem_t *stackframe, Node *call, int threaded = 0 );
 
-unsigned long h_running_threads = 0;
+
+typedef vector<pthread_t> thread_pool_t;
+
+thread_pool_t   h_thread_pool;
+pthread_mutex_t h_thread_pool_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+#define POOL_ADD(tid) pthread_mutex_lock( &h_thread_pool_mutex ); \
+                        h_thread_pool.push_back(tid); \
+                      pthread_mutex_unlock( &h_thread_pool_mutex )
+
+#define POOL_DEL(tid) pthread_mutex_lock( &h_thread_pool_mutex ); \
+                        for( int pool_i = 0; pool_i < h_thread_pool.size(); pool_i++ ){ \
+                            if( h_thread_pool[pool_i] == tid ){ \
+                                h_thread_pool.erase( h_thread_pool.begin() + pool_i ); \
+                                break; \
+                            } \
+                        } \
+                      pthread_mutex_unlock( &h_thread_pool_mutex )
 
 void * hybris_pthread_worker( void *arg ){
-    __sync_fetch_and_add( &h_running_threads, 1 );
+    pthread_t tid = pthread_self();
+    POOL_ADD(tid);
 
     vmem_t *data = (vmem_t *)arg;
 
@@ -41,7 +59,7 @@ void * hybris_pthread_worker( void *arg ){
 				case H_OT_CHAR   : call->addChild( Tree::addChar(data->at(i)->xchar) ); break;
 				case H_OT_STRING : call->addChild( Tree::addString((char *)data->at(i)->xstring.c_str()) ); break;
 				default :
-                    __sync_fetch_and_sub( &h_running_threads, 1 );
+                    POOL_DEL(tid);
                     hybris_generic_error( "type not supported for pthread call" );
 			}
 		}
@@ -57,7 +75,7 @@ void * hybris_pthread_worker( void *arg ){
         hybris_vm_release( data );
     #endif
 
-    __sync_fetch_and_sub( &h_running_threads, 1 );
+    POOL_DEL(tid);
 
     pthread_exit(NULL);
 }
@@ -75,6 +93,8 @@ HYBRIS_BUILTIN(hpthread_create){
 }
 
 HYBRIS_BUILTIN(hpthread_exit){
+    POOL_DEL(pthread_self());
+
 	pthread_exit(NULL);
     return NULL;
 }
@@ -89,6 +109,9 @@ HYBRIS_BUILTIN(hpthread_join){
     void *status;
 
     pthread_join( tid, &status );
+
+    POOL_DEL(tid);
+
     return NULL;
 }
 
