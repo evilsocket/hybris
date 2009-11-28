@@ -25,6 +25,8 @@
 // memory allocation debug messages
 // #define MEM_DEBUG 1
 
+// garbage collector, *** VERY EXPERIMENTAL FEATURE ***
+// #define GC_SUPPORT 1
 
 // support for regular expressions
 #define PCRE_SUPPORT 1

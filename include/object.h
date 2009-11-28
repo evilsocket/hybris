@@ -87,7 +87,9 @@ public  :
 	unsigned int     xcolumns;
 	Object       *** xmatrix;
 
+    #ifdef GC_SUPPORT
     void* operator new (size_t size);
+    #endif
 
     Object( long value );
     Object( long value, unsigned int _is_extern );

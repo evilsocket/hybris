@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="all" />
-	<File name="Makefile" open="0" top="0" tabpos="12">
-		<Cursor position="2224" topLine="0" />
+	<File name="Makefile" open="1" top="0" tabpos="33">
+		<Cursor position="151" topLine="0" />
 	</File>
 	<File name="examples/libtest.cc" open="0" top="0" tabpos="0">
 		<Cursor position="64" topLine="0" />
@@ -14,7 +14,7 @@
 		<Cursor position="744" topLine="0" />
 	</File>
 	<File name="include/common.h" open="1" top="0" tabpos="32">
-		<Cursor position="1783" topLine="9" />
+		<Cursor position="1055" topLine="9" />
 	</File>
 	<File name="include/config.h" open="1" top="0" tabpos="31">
 		<Cursor position="0" topLine="0" />
@@ -94,8 +94,8 @@
 	<File name="src/common.cpp" open="1" top="0" tabpos="30">
 		<Cursor position="900" topLine="46" />
 	</File>
-	<File name="src/lexer.l.cpp" open="1" top="1" tabpos="18">
-		<Cursor position="2214" topLine="242" />
+	<File name="src/lexer.l.cpp" open="1" top="0" tabpos="18">
+		<Cursor position="4016" topLine="143" />
 	</File>
 	<File name="src/node.cpp" open="1" top="0" tabpos="17">
 		<Cursor position="1372" topLine="0" />
@@ -103,8 +103,8 @@
 	<File name="src/object.cpp" open="1" top="0" tabpos="21">
 		<Cursor position="38630" topLine="1424" />
 	</File>
-	<File name="src/parser.y.cpp" open="1" top="0" tabpos="5">
-		<Cursor position="18310" topLine="742" />
+	<File name="src/parser.y.cpp" open="1" top="1" tabpos="5">
+		<Cursor position="4605" topLine="91" />
 	</File>
 	<File name="src/tree.cpp" open="0" top="0" tabpos="0">
 		<Cursor position="847" topLine="0" />

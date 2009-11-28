@@ -58,7 +58,7 @@ Object *hybris_vm_get( vmem_t *mem, char *identifier ){
 }
 
 vmem_t *hybris_vm_clone( vmem_t *mem ){
-    unsigned int size,
+    unsigned int size = mem->size(),
                  i;
 
     vmem_t *clone = new vmem_t;
@@ -71,6 +71,7 @@ vmem_t *hybris_vm_clone( vmem_t *mem ){
     return clone;
 }
 
+#ifdef GC_SUPPORT
 void hybris_vm_release( vmem_t *mem, vgarbage_t *garbage ){
     unsigned int size,
                  i;
@@ -103,7 +104,26 @@ void hybris_vm_release( vmem_t *mem, vgarbage_t *garbage ){
 
     mem->clear();
 }
+#else
+void hybris_vm_release( vmem_t *mem ){
+    unsigned int size,
+                 i;
+    Object      *o;
 
+    size = mem->size();
+    for( i = 0; i < size; i++ ){
+        o = mem->at(i);
+         #ifdef MEM_DEBUG
+        printf( "[MEM DEBUG] !!! releasing '%s' value at 0x%X (- %d bytes)\n", Object::type(o), o,  o->xsize );
+        #endif
+        delete o;
+    }
+
+    mem->clear();
+}
+#endif
+
+#ifdef GC_SUPPORT
 int hybris_vg_isgarbage( vmem_t *mem, Object *o ){
     unsigned int size = mem->size(),
                  i;
@@ -139,6 +159,7 @@ void hybris_vg_del( vgarbage_t *garbage, Object *o ){
         }
     }
 }
+#endif
 
 Node *hybris_vc_clone( Node *function ){
     Node *node = Tree::clone( function, node );
@@ -146,6 +167,7 @@ Node *hybris_vc_clone( Node *function ){
 }
 
 Node *hybris_vc_add( vcode_t *code, Node *function ){
+    printf( "vc_add[ 0x%X ]( %s )\n", code, function->_function );
     /* if object does not exist yet, create a new one */
     if( hybris_vc_get( code, function->_function ) == H_UNDEFINED ){
         return code->insert( function->_function, hybris_vc_clone(function) );
@@ -159,8 +181,8 @@ Node *hybris_vc_add( vcode_t *code, Node *function ){
 }
 
 Node *hybris_vc_set( vcode_t *code, Node *function ){
+    printf( "vc_set[ 0x%X ]( %s )\n", code, function->_function );
     Node *ptr = code->find(function->_function);
-
     if( ptr != vcode_t::null ){
         return code->set( function->_function, function );
     }
@@ -170,11 +192,14 @@ Node *hybris_vc_set( vcode_t *code, Node *function ){
 }
 
 Node *hybris_vc_get( vcode_t *code, char *function ){
+    printf( "vc_get[ 0x%X ]( %s ) ", code, function );
     Node *tree = code->find(function);
+    printf( "%s\n", (tree == vcode_t::null ? "NIENTE :(" : "TROVATA !") );
     return (tree == vcode_t::null ? H_UNDEFINED : tree);
 }
 
 void hybris_vc_release( vcode_t *code ){
+    printf( "vc_release\n" );
     unsigned int i;
 
     for( i = 0; i < code->size(); i++ ){

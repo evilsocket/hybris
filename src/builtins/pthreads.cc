@@ -22,6 +22,7 @@
 #include "tree.h"
 
 extern Object *htree_function_call( vmem_t *stackframe, Node *call );
+extern vmem_t  HVM;;
 
 void * hybris_pthread_worker( void *arg ){
     vmem_t *data = (vmem_t *)arg;
@@ -41,10 +42,15 @@ void * hybris_pthread_worker( void *arg ){
 		}
 	}
 
-	Object *_return = htree_function_call( data, call );
+	Object *_return = htree_function_call( &HVM, call );
 	delete call;
     delete _return;
-    hybris_vm_release( data, NULL );
+
+    #ifdef GC_SUPPORT
+        hybris_vm_release( data, NULL );
+    #else
+        hybris_vm_release( data );
+    #endif
 
     pthread_exit(NULL);
 }

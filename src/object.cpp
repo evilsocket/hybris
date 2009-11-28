@@ -18,13 +18,14 @@
 */
 #include "object.h"
 
+#ifdef GC_SUPPORT
 typedef vector<Object *> vgarbage_t;
 
 extern vgarbage_t HVG;
 
 extern void hybris_vg_add( vgarbage_t *garbage, Object *o );
 extern void hybris_vg_del( vgarbage_t *garbage, Object *o );
-
+#endif
 
 
 const char *Object::type( Object *o ){
@@ -183,6 +184,7 @@ void Object::parse_string( string& s ){
 	}
 }
 
+#ifdef GC_SUPPORT
 void * Object::operator new (size_t size){
     #ifdef MEM_DEBUG
     printf( "[MEM DEBUG] new object (+ %d bytes)\n", size );
@@ -192,6 +194,7 @@ void * Object::operator new (size_t size){
     hybris_vg_add( &HVG, o );
     return o;
 }
+#endif
 
 Object::Object( long value ) {
 	xtype = H_OT_INT;
@@ -400,8 +403,11 @@ void Object::release(){
 }
 
 Object::~Object(){
-    // release();
-    hybris_vg_del( &HVG, this );
+    #ifdef GC_SUPPORT
+        hybris_vg_del( &HVG, this );
+    #else
+        release();
+    #endif
 }
 
 int Object::equals( Object *o ){
