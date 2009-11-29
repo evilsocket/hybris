@@ -22,6 +22,11 @@
 #define AUTHOR  "The Hybris Dev Team [http://www.hybris-lang.org/]"
 #define VERSION "0.3b"
 
+// system path for libraries (.so dynamic libs)
+#define LIBS_PATH "/usr/lib/hybris/libs/"
+// system path for modules (hybris global scripts)
+#define MODS_PATH "/usr/lib/hybris/modules/"
+
 // memory allocation debug messages
 // #define MEM_DEBUG 1
 

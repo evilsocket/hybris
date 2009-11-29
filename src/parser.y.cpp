@@ -105,7 +105,7 @@ hybris_globals_t HGLOBALS;
 
 %%
 
-program    : body { /*exit(0);*/ };
+program    : body { };
 
 body       : body statement { switch( HGLOBALS.action ){
                                 case H_EXECUTE : htree_execute( &HVM, $2 );              break;
@@ -305,9 +305,9 @@ Object *htree_function_call( vmem_t *stackframe, Node *call, int threaded /*= 0*
                POOL_DEL( pthread_self() );
             }
             hybris_syntax_error( "function '%s' requires %d parameters (called with %d)",
-                           function->_function.c_str(),
-                           identifiers.size(),
-                           call->children() );
+                                 function->_function.c_str(),
+                                 identifiers.size(),
+                                 call->children() );
         }
 
         for( i = 0; i < call->children(); i++ ){
