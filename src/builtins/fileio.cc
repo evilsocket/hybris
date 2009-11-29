@@ -36,34 +36,15 @@ HYBRIS_BUILTIN(hfopen){
     return _return;
 }
 
-HYBRIS_BUILTIN(hfseekset){
-	if( data->size() != 2 ){
-		hybris_syntax_error( "function 'fseekset' requires 2 parameters (called with %d)", data->size() );
+HYBRIS_BUILTIN(hfseek){
+	if( data->size() != 3 ){
+		hybris_syntax_error( "function 'fseek' requires 3 parameters (called with %d)", data->size() );
 	}
 	htype_assert( data->at(0), H_OT_INT );
 	htype_assert( data->at(1), H_OT_INT );
+	htype_assert( data->at(3), H_OT_INT );
 
-	return new Object( static_cast<long>( fseek( (FILE *)data->at(0)->xint, data->at(1)->xint, SEEK_SET ) ) );
-}
-
-HYBRIS_BUILTIN(hfseekcur){
-	if( data->size() != 2 ){
-		hybris_syntax_error( "function 'fseekcur' requires 2 parameters (called with %d)", data->size() );
-	}
-	htype_assert( data->at(0), H_OT_INT );
-	htype_assert( data->at(1), H_OT_INT );
-
-	return new Object( static_cast<long>( fseek( (FILE *)data->at(0)->xint, data->at(1)->xint, SEEK_CUR ) ) );
-}
-
-HYBRIS_BUILTIN(hfseekend){
-	if( data->size() != 2 ){
-		hybris_syntax_error( "function 'fseekend' requires 2 parameters (called with %d)", data->size() );
-	}
-	htype_assert( data->at(0), H_OT_INT );
-	htype_assert( data->at(1), H_OT_INT );
-
-	return new Object( static_cast<long>( fseek( (FILE *)data->at(0)->xint, data->at(1)->xint, SEEK_END ) ) );
+	return new Object( static_cast<long>( fseek( (FILE *)data->at(0)->xint, data->at(1)->xint, data->at(2)->xint ) ) );
 }
 
 HYBRIS_BUILTIN(hftell){

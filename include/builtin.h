@@ -33,6 +33,8 @@ typedef Object * (*function_t)( vmem_t * );
 
 /* helper macro to define a builtin function */
 #define HYBRIS_BUILTIN(name) Object *name( vmem_t *data )
+/* helper macro to define a builtin constant */
+#define HYBRIS_CONSTANT( name, value ) { name, new Object(value) }
 
 /* builtins definition list item structure */
 typedef struct {
@@ -40,6 +42,13 @@ typedef struct {
     function_t function;
 }
 builtin_t;
+
+/* builtins' constants definition structure */
+typedef struct {
+    string identifier;
+    Object *value;
+}
+builtin_constant_t;
 
 /* module initializer function pointer prototype */
 typedef void (*initializer_t)( vmem_t *vm, vcode_t *vc );
@@ -153,9 +162,7 @@ HYBRIS_BUILTIN(hstrtime);
 HYBRIS_BUILTIN(hstrdate);
 /* fileio.cc */
 HYBRIS_BUILTIN(hfopen);
-HYBRIS_BUILTIN(hfseekset);
-HYBRIS_BUILTIN(hfseekcur);
-HYBRIS_BUILTIN(hfseekend);
+HYBRIS_BUILTIN(hfseek);
 HYBRIS_BUILTIN(hftell);
 HYBRIS_BUILTIN(hfsize);
 HYBRIS_BUILTIN(hfread);
@@ -194,6 +201,15 @@ HYBRIS_BUILTIN(hbase64decode);
 HYBRIS_BUILTIN(hpthread_create);
 HYBRIS_BUILTIN(hpthread_exit);
 HYBRIS_BUILTIN(hpthread_join);
+
+static builtin_constant_t HSTATICCONSTANTS[] = {
+    /* file.cc::fseek */
+    HYBRIS_CONSTANT( "SEEK_SET", static_cast<long>(SEEK_SET) ),
+    HYBRIS_CONSTANT( "SEEK_CUR", static_cast<long>(SEEK_CUR) ),
+    HYBRIS_CONSTANT( "SEEK_END", static_cast<long>(SEEK_END) )
+};
+
+#define NCONSTANTS sizeof(HSTATICCONSTANTS) / sizeof(HSTATICCONSTANTS[0])
 
 static builtin_t HSTATICBUILTINS[] = {
 	{ "isint", hisint },
@@ -283,9 +299,7 @@ static builtin_t HSTATICBUILTINS[] = {
 	{ "strtime", hstrtime },
 	{ "strdate", hstrdate },
 	{ "fopen", hfopen },
-	{ "fseekset", hfseekset },
-	{ "fseekcur", hfseekcur },
-	{ "fseekend", hfseekend },
+	{ "fseek", hfseek },
 	{ "ftell", hftell },
 	{ "fsize", hfsize },
 	{ "fread", hfread },

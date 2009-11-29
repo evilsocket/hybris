@@ -788,6 +788,10 @@ void h_env_init( int argc, char *argv[] ){
             hybris_vm_add( &HVM, name, o );
             delete o;
         }
+        /* initialize builtins' constants */
+        for( i = 0; i < NCONSTANTS; i++ ){
+            hybris_vm_add( &HVM, (char *)HSTATICCONSTANTS[i].identifier.c_str(), HSTATICCONSTANTS[i].value );
+        }
     }
     else{
         HGLOBALS.compiled = fopen( HGLOBALS.destination, "w+b" );
