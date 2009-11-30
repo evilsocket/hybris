@@ -203,10 +203,18 @@ HYBRIS_BUILTIN(hpthread_exit);
 HYBRIS_BUILTIN(hpthread_join);
 
 static builtin_constant_t HSTATICCONSTANTS[] = {
-    /* file.cc::fseek */
+    /* fileio.cc::fseek */
     HYBRIS_CONSTANT( "SEEK_SET", static_cast<long>(SEEK_SET) ),
     HYBRIS_CONSTANT( "SEEK_CUR", static_cast<long>(SEEK_CUR) ),
-    HYBRIS_CONSTANT( "SEEK_END", static_cast<long>(SEEK_END) )
+    HYBRIS_CONSTANT( "SEEK_END", static_cast<long>(SEEK_END) ),
+    /* fileio.cc::readdir */
+    HYBRIS_CONSTANT( "DT_BLK",   static_cast<long>(DT_BLK)  ),
+    HYBRIS_CONSTANT( "DT_CHR",   static_cast<long>(DT_CHR)  ),
+    HYBRIS_CONSTANT( "DT_DIR",   static_cast<long>(DT_DIR)  ),
+    HYBRIS_CONSTANT( "DT_FIFO",  static_cast<long>(DT_FIFO) ),
+    HYBRIS_CONSTANT( "DT_LNK",   static_cast<long>(DT_LNK)  ),
+    HYBRIS_CONSTANT( "DT_REG",   static_cast<long>(DT_REG)  ),
+    HYBRIS_CONSTANT( "DT_SOCK",  static_cast<long>(DT_SOCK) )
 };
 
 #define NCONSTANTS sizeof(HSTATICCONSTANTS) / sizeof(HSTATICCONSTANTS[0])
