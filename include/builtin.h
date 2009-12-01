@@ -57,7 +57,7 @@ typedef void (*initializer_t)( vmem_t *vm, vcode_t *vc );
 
 /* module structure definition */
 typedef struct{
-    string               name;
+    string              name;
     initializer_t       initializer;
     vector<builtin_t *> functions;
 }

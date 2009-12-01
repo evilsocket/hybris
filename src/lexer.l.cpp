@@ -149,6 +149,7 @@ include          BEGIN(INCLUSION);
 "$"             return DOLLAR;
 "->"            return MAPS;
 "while"         return WHILE;
+"do"            return DO;
 "for"		    return FOR;
 "foreach"       return FOREACH;
 "of"            return OF;

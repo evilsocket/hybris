@@ -89,7 +89,7 @@ hybris_globals_t HGLOBALS;
 
 
 %token EOSTMT DOT DOTE PLUS PLUSE MINUS MINUSE DIV DIVE MUL MULE MOD MODE XOR XORE NOT AND ANDE OR ORE SHIFTL SHIFTLE SHIFTR SHIFTRE ASSIGN REGEX_OP
-%token SUBSCRIPTADD SUBSCRIPTSET SUBSCRIPTGET WHILE FOR FOREACH FOREACHM OF TO IF QUESTION DOLLAR MAPS PTR OBJ
+%token SUBSCRIPTADD SUBSCRIPTSET SUBSCRIPTGET WHILE DO FOR FOREACH FOREACHM OF TO IF QUESTION DOLLAR MAPS PTR OBJ
 %token RETURN CALL
 %nonassoc IFX
 %nonassoc SBX
@@ -127,6 +127,7 @@ statement  : EOSTMT                                                   { $$ = Tre
            | expression '[' expression ']' ASSIGN expression EOSTMT   { $$ = Tree::addOperator( SUBSCRIPTSET, 3, $1, $3, $6 ); }
            /* conditional and loops */
            | WHILE '(' expression ')' statement                       { $$ = Tree::addOperator( WHILE, 2, $3, $5 ); }
+           | DO statement WHILE '(' expression ')' EOSTMT             { $$ = Tree::addOperator( DO, 2, $2, $5 ); }
 		   | FOR '(' statement statement expression ')' statement     { $$ = Tree::addOperator( FOR, 4, $3, $4, $5, $7 ); }
 		   | FOREACH '(' IDENT OF expression ')' statement            { $$ = Tree::addOperator( FOREACH, 3, Tree::addIdentifier($3), $5, $7 ); free($3); }
 		   | FOREACH '(' IDENT MAPS IDENT OF expression ')' statement {
@@ -491,6 +492,18 @@ Object *htree_execute( vmem_t *stackframe, Node *node ){
                             htree_execute( stackframe, body );
                         }
                         return H_UNDEFINED;
+
+                    /* do{ body }while( condition ); */
+                    case DO  :
+                        body      = node->child(0);
+                        condition = node->child(1);
+                        do{
+                            htree_execute( stackframe, body );
+                        }
+                        while( htree_execute( stackframe, condition )->lvalue() );
+
+                        return H_UNDEFINED;
+
                     /* for( initialization; condition; variance ){ body } */
                     case FOR    :
                         tmp       = htree_execute( stackframe, node->child(0) )->lvalue();
