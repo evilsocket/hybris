@@ -77,21 +77,7 @@ void hybris_vm_release( vmem_t *mem, vgarbage_t *garbage ){
                  i;
     Object      *o;
 
-    if( garbage != NULL ){
-        size = garbage->size();
-        for( i = 0; i < size; i++ ){
-            o = garbage->at(i);
-            if( o && o->xsize > 0 && hybris_vg_isgarbage( mem, o ) ){
-                #ifdef MEM_DEBUG
-                printf( "[MEM DEBUG] !!! releasing '%s' garbage at 0x%X (- %d bytes)\n", Object::type(o), o,  o->xsize );
-                #endif
-                delete o;
-                /* update garbage size upon new item removal */
-                size = garbage->size();
-            }
-        }
-        garbage->clear();
-    }
+    hybris_vg_release( mem, garbage );
 
     size = mem->size();
     for( i = 0; i < size; i++ ){
@@ -157,6 +143,28 @@ void hybris_vg_del( vgarbage_t *garbage, Object *o ){
             garbage->erase( garbage->begin() + i );
             return;
         }
+    }
+}
+
+void hybris_vg_release( vmem_t *mem, vgarbage_t *garbage ){
+    unsigned int size,
+                 i;
+    Object      *o;
+
+    if( garbage != NULL ){
+        size = garbage->size();
+        for( i = 0; i < size; i++ ){
+            o = garbage->at(i);
+            if( o && o->xsize > 0 && hybris_vg_isgarbage( mem, o ) ){
+                #ifdef MEM_DEBUG
+                printf( "[MEM DEBUG] !!! releasing '%s' garbage at 0x%X (- %d bytes)\n", Object::type(o), o,  o->xsize );
+                #endif
+                delete o;
+                /* update garbage size upon new item removal */
+                size = garbage->size();
+            }
+        }
+        garbage->clear();
     }
 }
 #endif

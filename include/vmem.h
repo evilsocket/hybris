@@ -51,6 +51,7 @@ void    hybris_vm_release( vmem_t *mem );
 void    hybris_vg_add( vgarbage_t *garbage, Object *o );
 void    hybris_vg_del( vgarbage_t *garbage, Object *o );
 int     hybris_vg_isgarbage( vmem_t *mem, Object *o );
+void    hybris_vg_release( vmem_t *mem, vgarbage_t *garbage );
 #endif
 
 Node   *hybris_vc_add( vcode_t *code, Node *function );

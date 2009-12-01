@@ -40,7 +40,7 @@ typedef Object * (*function_t)( vmem_t * );
 
 /* builtins definition list item structure */
 typedef struct {
-    string      identifier;
+    string     identifier;
     function_t function;
 }
 builtin_t;

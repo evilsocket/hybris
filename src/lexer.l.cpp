@@ -27,10 +27,10 @@
 
 void yyerror(char *);
 
-void              h_skip_comment();
-void              h_skip_line();
-char             *h_handle_string( char delimiter );
-char              h_handle_char( char delimiter );
+void             h_skip_comment();
+void             h_skip_line();
+char            *h_handle_string( char delimiter );
+char             h_handle_char( char delimiter );
 function_decl_t *h_handle_function( char * text );
 
 extern int yylineno;

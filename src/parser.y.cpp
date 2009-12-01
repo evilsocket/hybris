@@ -408,7 +408,15 @@ Object *htree_execute( vmem_t *stackframe, Node *node ){
 						object = new Object((unsigned int)idx);
 					}
 					else{
-                    	hybris_syntax_error( "'%s' undeclared identifier", node->_identifier );
+					    /* check for a global defined object if the frame is not the main one */
+					    if( reinterpret_cast<long>(stackframe) != reinterpret_cast<long>(&HVM) ){
+                            if( (object = hybris_vm_get( &HVM, (char *)node->_identifier.c_str() )) == H_UNDEFINED ){
+                                hybris_syntax_error( "'%s' undeclared identifier", node->_identifier );
+                            }
+					    }
+                        else{
+                            hybris_syntax_error( "'%s' undeclared identifier", node->_identifier );
+                        }
 					}
                 }
                 return object;
@@ -736,7 +744,7 @@ void h_env_release( int onerror = 0 ){
 
         #ifdef GC_SUPPORT
             hybris_vm_release( &HVM, &HVG );
-            hybris_vc_release(&HVC);
+            hybris_vc_release( &HVC );
         #else
             hybris_vm_release( &HVM );
         #endif
