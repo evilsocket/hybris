@@ -103,6 +103,7 @@ include          BEGIN(INCLUSION);
 
 ";" 		    return EOSTMT;
 
+".."            return DDOT;
 "."             return DOT;
 ".="            return DOTE;
 

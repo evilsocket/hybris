@@ -140,6 +140,7 @@ public  :
     Object *at( Object *index );
 	Object *at( char *map );
     Object& at( Object *index, Object *set );
+    Object* range( Object *to );
 
     Object&  operator = ( Object *o );
     Object * operator - ();

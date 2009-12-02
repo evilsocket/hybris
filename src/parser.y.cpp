@@ -88,8 +88,8 @@ hybris_globals_t HGLOBALS;
 %token <function>   FUNCTION_PROTOTYPE;
 
 
-%token EOSTMT DOT DOTE PLUS PLUSE MINUS MINUSE DIV DIVE MUL MULE MOD MODE FACT XOR XORE NOT AND ANDE OR ORE SHIFTL SHIFTLE SHIFTR SHIFTRE ASSIGN REGEX_OP
-%token SUBSCRIPTADD SUBSCRIPTSET SUBSCRIPTGET WHILE DO FOR FOREACH FOREACHM OF TO IF QUESTION DOLLAR MAPS PTR OBJ
+%token EOSTMT DDOT DOT DOTE PLUS PLUSE MINUS MINUSE DIV DIVE MUL MULE MOD MODE FACT XOR XORE NOT AND ANDE OR ORE SHIFTL SHIFTLE SHIFTR SHIFTRE ASSIGN REGEX_OP
+%token RANGE SUBSCRIPTADD SUBSCRIPTSET SUBSCRIPTGET WHILE DO FOR FOREACH FOREACHM OF TO IF QUESTION DOLLAR MAPS PTR OBJ
 %token RETURN CALL
 %nonassoc IFX
 %nonassoc SBX
@@ -142,8 +142,8 @@ statement  : EOSTMT                                                   { $$ = Tre
            /* function declaration */
            | FUNCTION_PROTOTYPE '{' statements '}'                    { $$ = Tree::addFunction( $1, 1, $3 ); };
 
-arglist    : expression MAPS arglist { $$ = $3;                  $$->push_front($1); }
-           | expression ',' arglist  { $$ = $3;                  $$->push_front($1); }
+arglist    : expression MAPS arglist { $$ = $3;                 $$->push_front($1); }
+           | expression ',' arglist  { $$ = $3;                 $$->push_front($1); }
            | expression              { $$ = Tree::createList(); $$->push_back($1);  }
            | /* empty */             { $$ = Tree::createList(); };
 
@@ -165,6 +165,8 @@ expression : INTEGER                                 { $$ = Tree::addInt($1); }
 		   | IDENT ASSIGN expression                 { $$ = Tree::addOperator( ASSIGN, 2, Tree::addIdentifier($1), $3 ); }
            /* a single subscript could be an expression itself */
            | expression '[' expression ']' %prec SBX { $$ = Tree::addOperator( SUBSCRIPTGET, 2, $1, $3 ); }
+           /* range evaluation */
+           | expression DDOT expression              { $$ = Tree::addOperator( RANGE, 2, $1, $3 ); }
            /* arithmetic */
            | MINUS expression %prec UMINUS           { $$ = Tree::addOperator( UMINUS, 1, $2 ); }
            | expression DOT expression               { $$ = Tree::addOperator( DOT, 2, $1, $3 ); }
@@ -460,6 +462,9 @@ Object *htree_execute( vmem_t *stackframe, Node *node ){
                     /* return */
                     case RETURN :
                         return new Object( htree_execute( stackframe, node->child(0) ) );
+                    /* expression .. expression */
+                    case RANGE :
+                        return htree_execute( stackframe, node->child(0) )->range( htree_execute( stackframe, node->child(1) ) );
                     /* array[] = object; */
 					case SUBSCRIPTADD :
 						destination = htree_execute( stackframe, node->child(0) );

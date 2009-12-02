@@ -870,6 +870,45 @@ Object& Object::at( Object *index, Object *set ){
 	return *this;
 }
 
+Object* Object::range( Object *to ){
+    if( assert_type( this, to, 2, H_OT_CHAR, H_OT_INT ) == 0 ){
+		hybris_syntax_error( "invalid type for range operator" );
+	}
+	if( xtype != to->xtype ){
+        hybris_syntax_error( "types must be the same for range operator" );
+    }
+
+    Object *range = new Object();
+    long i;
+
+    if( xtype == H_OT_CHAR ){
+        if( xchar < to->xchar ){
+            for( i = xchar; i <= to->xchar; i++ ){
+                range->push( new Object( (char)i ) );
+            }
+        }
+        else{
+            for( i = xchar; i >= to->xchar; i-- ){
+                range->push( new Object( (char)i ) );
+            }
+        }
+    }
+    else if( xtype == H_OT_INT ){
+        if( xint < to->xint ){
+            for( i = xint; i <= to->xint; i++ ){
+                range->push( new Object( i ) );
+            }
+        }
+        else{
+            for( i = xint; i >= to->xint; i-- ){
+                range->push( new Object( i ) );
+            }
+        }
+    }
+
+    return range;
+}
+
 Object& Object::operator = ( Object *o ){
 	unsigned int i, j;
 
