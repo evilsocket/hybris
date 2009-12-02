@@ -144,6 +144,7 @@ public  :
     Object&  operator = ( Object *o );
     Object * operator - ();
     Object * operator ! ();
+    Object * factorial();
     Object&  operator ++ ();
     Object&  operator -- ();
     Object * operator + ( Object *o );

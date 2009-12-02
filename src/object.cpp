@@ -935,6 +935,38 @@ Object * Object::operator ! (){
 	}
 }
 
+Object * Object::factorial(){
+    double db_num,
+           db_fact = 1.0;
+    long   ln_num,
+           ln_fact = 1,
+           i;
+
+    switch(xtype){
+		case H_OT_INT    :
+		case H_OT_CHAR   :
+             ln_num = lvalue();
+             for( i = 1; i <= ln_num; ++i ){
+                ln_fact *= i;
+             }
+             return new Object(ln_fact);
+        break;
+
+		case H_OT_FLOAT  :
+             db_num = xfloat;
+             for( i = 1; i <= db_num; ++i ){
+                db_fact *= i;
+             }
+             return new Object(db_fact);
+		break;
+
+		case H_OT_ALIAS  :
+		case H_OT_STRING :
+		case H_OT_ARRAY  :
+		case H_OT_MAP    : hybris_syntax_error( "unexpected type for factorial operator" );
+	}
+}
+
 Object& Object::operator ++ (){
 	switch(xtype){
 		case H_OT_INT    : xint++;   break;

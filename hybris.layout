@@ -7,44 +7,44 @@
 	<File name="examples/libtest.cc" open="0" top="0" tabpos="0">
 		<Cursor position="64" topLine="0" />
 	</File>
-	<File name="include/builtin.h" open="1" top="1" tabpos="1">
-		<Cursor position="4911" topLine="186" />
+	<File name="include/builtin.h" open="1" top="0" tabpos="1">
+		<Cursor position="966" topLine="292" />
 	</File>
-	<File name="include/cmdline.h" open="0" top="0" tabpos="1">
-		<Cursor position="744" topLine="0" />
+	<File name="include/cmdline.h" open="1" top="0" tabpos="37">
+		<Cursor position="844" topLine="0" />
 	</File>
 	<File name="include/common.h" open="1" top="0" tabpos="32">
-		<Cursor position="1055" topLine="9" />
+		<Cursor position="926" topLine="10" />
 	</File>
 	<File name="include/config.h" open="1" top="0" tabpos="31">
-		<Cursor position="970" topLine="0" />
+		<Cursor position="744" topLine="0" />
 	</File>
 	<File name="include/map.h" open="1" top="0" tabpos="16">
 		<Cursor position="2655" topLine="105" />
 	</File>
-	<File name="include/node.h" open="0" top="0" tabpos="0">
+	<File name="include/node.h" open="1" top="0" tabpos="36">
 		<Cursor position="744" topLine="0" />
 	</File>
 	<File name="include/object.h" open="1" top="0" tabpos="7">
-		<Cursor position="2464" topLine="118" />
+		<Cursor position="2464" topLine="0" />
 	</File>
 	<File name="include/tree.h" open="1" top="0" tabpos="12">
 		<Cursor position="995" topLine="0" />
 	</File>
 	<File name="include/vmem.h" open="1" top="0" tabpos="15">
-		<Cursor position="1339" topLine="0" />
+		<Cursor position="973" topLine="0" />
 	</File>
 	<File name="src/builtin.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="1695" topLine="32" />
+		<Cursor position="1234" topLine="29" />
 	</File>
 	<File name="src/builtins/array.cc" open="1" top="0" tabpos="22">
 		<Cursor position="828" topLine="15" />
 	</File>
 	<File name="src/builtins/conio.cc" open="1" top="0" tabpos="25">
-		<Cursor position="1175" topLine="0" />
+		<Cursor position="554" topLine="0" />
 	</File>
 	<File name="src/builtins/dll.cc" open="1" top="0" tabpos="4">
-		<Cursor position="1090" topLine="34" />
+		<Cursor position="1090" topLine="43" />
 	</File>
 	<File name="src/builtins/encoding.cc" open="1" top="0" tabpos="9">
 		<Cursor position="1608" topLine="0" />
@@ -53,7 +53,7 @@
 		<Cursor position="1645" topLine="26" />
 	</File>
 	<File name="src/builtins/http.cc" open="1" top="0" tabpos="28">
-		<Cursor position="1213" topLine="163" />
+		<Cursor position="1213" topLine="91" />
 	</File>
 	<File name="src/builtins/map.cc" open="1" top="0" tabpos="23">
 		<Cursor position="2336" topLine="15" />
@@ -91,25 +91,28 @@
 	<File name="src/builtins/xml.cc" open="1" top="0" tabpos="19">
 		<Cursor position="744" topLine="60" />
 	</File>
+	<File name="src/cmdline.cpp" open="1" top="0" tabpos="35">
+		<Cursor position="0" topLine="0" />
+	</File>
 	<File name="src/common.cpp" open="1" top="0" tabpos="30">
-		<Cursor position="900" topLine="46" />
+		<Cursor position="2308" topLine="46" />
 	</File>
 	<File name="src/lexer.l.cpp" open="1" top="0" tabpos="18">
-		<Cursor position="2276" topLine="39" />
+		<Cursor position="3681" topLine="114" />
 	</File>
 	<File name="src/node.cpp" open="1" top="0" tabpos="17">
-		<Cursor position="1372" topLine="0" />
+		<Cursor position="1372" topLine="26" />
 	</File>
 	<File name="src/object.cpp" open="1" top="0" tabpos="21">
-		<Cursor position="38630" topLine="1424" />
+		<Cursor position="19449" topLine="1414" />
 	</File>
-	<File name="src/parser.y.cpp" open="1" top="0" tabpos="5">
-		<Cursor position="37383" topLine="747" />
+	<File name="src/parser.y.cpp" open="1" top="1" tabpos="5">
+		<Cursor position="17254" topLine="441" />
 	</File>
-	<File name="src/tree.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="847" topLine="0" />
+	<File name="src/tree.cpp" open="1" top="0" tabpos="34">
+		<Cursor position="2550" topLine="66" />
 	</File>
 	<File name="src/vmem.cpp" open="1" top="0" tabpos="14">
-		<Cursor position="2170" topLine="35" />
+		<Cursor position="3477" topLine="91" />
 	</File>
 </CodeBlocks_layout_file>

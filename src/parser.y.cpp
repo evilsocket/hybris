@@ -88,7 +88,7 @@ hybris_globals_t HGLOBALS;
 %token <function>   FUNCTION_PROTOTYPE;
 
 
-%token EOSTMT DOT DOTE PLUS PLUSE MINUS MINUSE DIV DIVE MUL MULE MOD MODE XOR XORE NOT AND ANDE OR ORE SHIFTL SHIFTLE SHIFTR SHIFTRE ASSIGN REGEX_OP
+%token EOSTMT DOT DOTE PLUS PLUSE MINUS MINUSE DIV DIVE MUL MULE MOD MODE FACT XOR XORE NOT AND ANDE OR ORE SHIFTL SHIFTLE SHIFTR SHIFTRE ASSIGN REGEX_OP
 %token SUBSCRIPTADD SUBSCRIPTSET SUBSCRIPTGET WHILE DO FOR FOREACH FOREACHM OF TO IF QUESTION DOLLAR MAPS PTR OBJ
 %token RETURN CALL
 %nonassoc IFX
@@ -192,6 +192,7 @@ expression : INTEGER                                 { $$ = Tree::addInt($1); }
 		   | expression SHIFTLE expression           { $$ = Tree::addOperator( SHIFTLE, 2, $1, $3 ); }
 		   | expression SHIFTR expression            { $$ = Tree::addOperator( SHIFTR, 2, $1, $3 ); }
 		   | expression SHIFTRE expression           { $$ = Tree::addOperator( SHIFTRE, 2, $1, $3 ); }
+		   | expression LNOT                         { $$ = Tree::addOperator( FACT, 1, $1 ); }
            /* logic */
 		   | LNOT expression                         { $$ = Tree::addOperator( LNOT, 1, $2 ); }
            | expression LESS expression              { $$ = Tree::addOperator( LESS, 2, $1, $3 ); }
@@ -492,7 +493,6 @@ Object *htree_execute( vmem_t *stackframe, Node *node ){
                             htree_execute( stackframe, body );
                         }
                         return H_UNDEFINED;
-
                     /* do{ body }while( condition ); */
                     case DO  :
                         body      = node->child(0);
@@ -503,7 +503,6 @@ Object *htree_execute( vmem_t *stackframe, Node *node ){
                         while( htree_execute( stackframe, condition )->lvalue() );
 
                         return H_UNDEFINED;
-
                     /* for( initialization; condition; variance ){ body } */
                     case FOR    :
                         tmp       = htree_execute( stackframe, node->child(0) )->lvalue();
@@ -696,6 +695,10 @@ Object *htree_execute( vmem_t *stackframe, Node *node ){
                         }
                         (*object) >>= htree_execute(stackframe, node->child(1));
                         return object;
+                    /* expression! */
+                    case FACT :
+                        object = htree_execute( stackframe, node->child(0) );
+                        return object->factorial();
 					/* ~expression */
                     case NOT    :
                         return ~(*htree_execute( stackframe, node->child(0) ));
