@@ -3,7 +3,7 @@ OPTIMIZATION= -O3
 CFLAGS= -Iinclude/ $(OPTIMIZATION) $(WFLAGS) `xml2-config --cflags --libs` -funroll-loops -ffast-math -fno-stack-protector
 LFLAGS= -ldl -lpcrecpp -lcurl -lpthread
 LIBXML= `xml2-config --cflags --libs`
-PREFIX=/usr/local
+PREFIX=/usr
 TARGET=hybris
 
 all: hybris
@@ -20,6 +20,7 @@ hybris: builtins
 	g++ -c src/tree.cpp $(CFLAGS)
 	g++ -c src/node.cpp $(CFLAGS)
 	g++ -c src/vmem.cpp $(CFLAGS)
+	g++ -c src/hybris.cpp $(CFLAGS)
 	g++ src/parser.cpp *.o src/builtins/*.o -o $(TARGET) $(CFLAGS) $(LFLAGS)
 
 builtins: parser
@@ -52,7 +53,7 @@ lexer:
 clean:
 	rm -f src/lexer.cpp src/parser.hpp src/parser.cpp *.o src/*.o src/builtins/*.o $(TARGET)
 	cd examples && make clean
-
+	
 install:
 	install -m 0755 $(TARGET) $(PREFIX)/bin/
 	mkdir -p $(PREFIX)/lib/$(TARGET)

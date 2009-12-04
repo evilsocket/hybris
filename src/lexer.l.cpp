@@ -64,8 +64,8 @@ include          BEGIN(INCLUSION);
 
     string mod = yytext;
     if( (yyin = fopen( mod.c_str(), "r" )) == NULL ){
-        /* attempt to load from /usr/lib/hybris/modules/ */
-        if( (yyin = fopen( (MODS_PATH + mod).c_str(), "r" )) == NULL ){
+        /* attempt to load from /usr/lib/hybris/libs/ */
+        if( (yyin = fopen( (LIBS_PATH + mod).c_str(), "r" )) == NULL ){
             hybris_generic_error( "Could not open '%s' for inclusion", yytext );
         }
     }
@@ -84,7 +84,7 @@ include          BEGIN(INCLUSION);
 
 "import"[ \n\t]+{identifier}[ \n\t]*";" {
     char *sptr = yytext + strlen( "import " );
-    string module = LIBS_PATH;
+    string module = MODS_PATH + string("mod_");
 
     while( *sptr != ';' ){
         module += *sptr;
