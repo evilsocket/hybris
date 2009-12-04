@@ -45,12 +45,15 @@ void hmodule_load( char *module ){
         initializer( &HVM, &HVC );
     }
     /* number of functions exported */
-    unsigned long nfunctions = reinterpret_cast<unsigned long>( dlsym( hmodule, "hybris_module_nfunctions" ) );
-    if(!nfunctions){
+    unsigned long * nfunctions_ptr = reinterpret_cast<unsigned long *>( dlsym( hmodule, "hybris_module_nfunctions" ) ),
+                    nfunctions;
+    if(!nfunctions_ptr){
         dlclose(hmodule);
         hybris_generic_warning( "could not find number of functions exported by '%s'", module );
         return;
     }
+    nfunctions = *nfunctions_ptr;
+
     /* exported functions vector */
     builtin_t *functions = (builtin_t *)dlsym( hmodule, "hybris_module_functions" );
     if(!functions){
@@ -71,7 +74,7 @@ void hmodule_load( char *module ){
     }
 
     HDYNAMICMODULES.push_back(hmod);
-    dlclose(hmodule);
+    //dlclose(hmodule);
 }
 
 function_t hfunction_search( char *identifier ){
@@ -82,12 +85,18 @@ function_t hfunction_search( char *identifier ){
             return HSTATICBUILTINS[i].function;
         }
     }
+
     /* then search it in dynamic loaded modules */
     for( i = 0; i < ndyns; i++ ){
         /* for each function of the module */
         nfuncs = HDYNAMICMODULES[i]->functions.size();
         for( j = 0; j < nfuncs; j++ ){
             if( HDYNAMICMODULES[i]->functions[j]->identifier == identifier ){
+                if( HDYNAMICMODULES[i]->initializer ){
+                    extern vmem_t  HVM;
+                    extern vcode_t HVC;
+                    HDYNAMICMODULES[i]->initializer( &HVM, &HVC );
+                }
                 return HDYNAMICMODULES[i]->functions[j]->function;
             }
         }

@@ -52,6 +52,14 @@ public  :
 		return m_map.size();
 	}
 
+    inline void assign( Map<value_t> *m ){
+        unsigned int i, size = m->size();
+        clear();
+        for( i = 0; i < size; i++ ){
+            insert( (char *)m->label(i), m->at(i) );
+        }
+    }
+
     inline value_t *at( unsigned int index ){
 		return m_map[index]->value;
 	}

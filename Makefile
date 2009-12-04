@@ -6,6 +6,7 @@ LIBXML= `xml2-config --cflags --libs`
 PREFIX=/usr
 TARGET=hybris
 
+
 all: hybris
 	cd examples && make
 
@@ -21,7 +22,9 @@ hybris: builtins
 	g++ -c src/node.cpp $(CFLAGS)
 	g++ -c src/vmem.cpp $(CFLAGS)
 	g++ -c src/hybris.cpp $(CFLAGS)
-	g++ src/parser.cpp *.o src/builtins/*.o -o $(TARGET) $(CFLAGS) $(LFLAGS)
+	g++ -c src/parser.cpp $(CFLAGS)
+	g++ *.o src/builtins/*.o -o $(TARGET) $(CFLAGS) $(LFLAGS)
+	ar rcs lib$(TARGET).a *.o src/builtins/*.o
 
 builtins: parser
 	g++ -c src/builtins/type.cc -o src/builtins/type.o $(CFLAGS)
@@ -52,11 +55,16 @@ lexer:
 
 clean:
 	rm -f src/lexer.cpp src/parser.hpp src/parser.cpp *.o src/*.o src/builtins/*.o $(TARGET)
+	rm -f lib$(TARGET).a
 	cd examples && make clean
-	
+
 install:
 	install -m 0755 $(TARGET) $(PREFIX)/bin/
+	mkdir -p $(PREFIX)/include/$(TARGET)
+	cp include/*.h $(PREFIX)/include/$(TARGET)/
 	mkdir -p $(PREFIX)/lib/$(TARGET)
 	mkdir -p $(PREFIX)/lib/$(TARGET)/libs
 	mkdir -p $(PREFIX)/lib/$(TARGET)/modules
 	chmod -R 777 $(PREFIX)/lib/$(TARGET)/
+	install -m 0644 lib$(TARGET).a $(PREFIX)/lib
+	ldconfig

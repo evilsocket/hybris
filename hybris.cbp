@@ -124,6 +124,7 @@
 			<Option target="all" />
 		</Unit>
 		<Unit filename="include/config.h" />
+		<Unit filename="include/hybris.h" />
 		<Unit filename="include/map.h">
 			<Option target="all" />
 		</Unit>
@@ -196,6 +197,7 @@
 		<Unit filename="src/common.cpp">
 			<Option target="all" />
 		</Unit>
+		<Unit filename="src/hybris.cpp" />
 		<Unit filename="src/lexer.l.cpp">
 			<Option target="all" />
 		</Unit>
