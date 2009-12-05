@@ -35,6 +35,7 @@ foreach( item of a ){
 
 // rimuovo gli elementi residui di a
 println( "\nSvuoto 'a' :\n" );
+elems = elements(a);
 for( i = 0; i < elems; i++ ){
 	pop(a);
 	println(a);	
