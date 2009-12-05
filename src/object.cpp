@@ -767,6 +767,12 @@ Object *Object::pop(){
 	if( xtype != H_OT_ARRAY ){
 		hybris_generic_error( "could not pop an element from a non array type" );
 	}
+	#ifdef BOUNDS_CHECK
+	else if( xarray.size() <= 0 ){
+	    hybris_generic_error( "could not pop an element from an empty array" );
+	}
+	#endif
+
 	Object *element = xarray[ xarray.size() - 1 ];
 	xarray.pop_back();
 	xsize = xarray.size();
@@ -777,6 +783,12 @@ Object *Object::mapPop(){
 	if( xtype != H_OT_MAP ){
 		hybris_generic_error( "could not pop an element from a non map type" );
 	}
+	#ifdef BOUNDS_CHECK
+	else if( xarray.size() <= 0 || xmap.size() <= 0 ){
+	    hybris_generic_error( "could not pop an element from an empty map" );
+	}
+	#endif
+
 	Object *element = xarray[ xarray.size() - 1 ];
 	xarray.pop_back();
 	xmap.pop_back();
@@ -788,6 +800,12 @@ Object *Object::remove( Object *index ){
 	if( xtype != H_OT_ARRAY ){
 		hybris_generic_error( "could not remove an element from a non array type" );
 	}
+	#ifdef BOUNDS_CHECK
+	else if( index->lvalue() >= xarray.size() ){
+	    hybris_generic_error( "index out of bounds" );
+	}
+	#endif
+
 	unsigned int i = index->lvalue();
 	Object *element = xarray[i];
 	xarray.erase( xarray.begin() + i );
@@ -812,9 +830,19 @@ Object *Object::unmap( Object *map ){
 
 Object *Object::at( Object *index ){
 	if( xtype == H_OT_STRING ){
+        #ifdef BOUNDS_CHECK
+        if( index->lvalue() >= xstring.size() ){
+            hybris_generic_error( "index out of bounds" );
+        }
+        #endif
 		return new Object( xstring[ index->lvalue() ] );
 	}
 	else if( xtype == H_OT_ARRAY ){
+        #ifdef BOUNDS_CHECK
+        if( index->lvalue() >= xarray.size() ){
+            hybris_generic_error( "index out of bounds" );
+        }
+        #endif
 		return xarray[ index->lvalue() ];
 	}
 	else if( xtype == H_OT_MAP ){
@@ -827,6 +855,11 @@ Object *Object::at( Object *index ){
 		}
 	}
 	else if( xtype == H_OT_MATRIX ){
+	    #ifdef BOUNDS_CHECK
+        if( index->lvalue() >= xcolumns ){
+            hybris_generic_error( "index out of bounds" );
+        }
+        #endif
         Object *array    = new Object();
         unsigned int x = index->lvalue(),
                      y;
@@ -842,14 +875,31 @@ Object *Object::at( Object *index ){
 
 Object *Object::at( char *map ){
 	Object tmp(map);
-	return xarray[mapFind(&tmp)];
+	int i = mapFind(&tmp);
+
+	if( i != -1 ){
+        return xarray[i];
+	}
+	else{
+        hybris_generic_error( "no mapped values for label '%s'", map );
+	}
 }
 
 Object& Object::at( Object *index, Object *set ){
 	if( xtype == H_OT_STRING ){
+	    #ifdef BOUNDS_CHECK
+        if( index->lvalue() >= xstring.size() ){
+            hybris_generic_error( "index out of bounds" );
+        }
+        #endif
 		xstring[ index->lvalue() ] = (char)set->lvalue();
 	}
 	else if( xtype == H_OT_ARRAY ){
+	    #ifdef BOUNDS_CHECK
+        if( index->lvalue() >= xarray.size() ){
+            hybris_generic_error( "index out of bounds" );
+        }
+        #endif
 		delete xarray[ index->lvalue() ];
 		xarray[ index->lvalue() ] = new Object(set);
 	}
