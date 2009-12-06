@@ -44,15 +44,6 @@ void hmodule_load( char *module ){
         extern vcode_t HVC;
         initializer( &HVM, &HVC );
     }
-    /* number of functions exported */
-    unsigned long * nfunctions_ptr = reinterpret_cast<unsigned long *>( dlsym( hmodule, "hybris_module_nfunctions" ) ),
-                    nfunctions;
-    if(!nfunctions_ptr){
-        dlclose(hmodule);
-        hybris_generic_warning( "could not find number of functions exported by '%s'", module );
-        return;
-    }
-    nfunctions = *nfunctions_ptr;
 
     /* exported functions vector */
     builtin_t *functions = (builtin_t *)dlsym( hmodule, "hybris_module_functions" );
@@ -65,12 +56,14 @@ void hmodule_load( char *module ){
     module_t *hmod   = new module_t;
     hmod->name        = modname;
     hmod->initializer = initializer;
-    unsigned long i;
-    for( i = 0; i < nfunctions; i++ ){
+    unsigned long i   = 0;
+
+    while( functions[i].function != NULL ){
         builtin_t *function = new builtin_t;
         function->identifier = functions[i].identifier;
         function->function   = functions[i].function;
         hmod->functions.push_back(function);
+        i++;
     }
 
     HDYNAMICMODULES.push_back(hmod);
