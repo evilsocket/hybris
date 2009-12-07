@@ -42,7 +42,7 @@ void hmodule_load( char *module ){
     if(initializer){
         extern vmem_t  HVM;
         extern vcode_t HVC;
-        initializer( &HVM, &HVC );
+        initializer( &HVM, &HVC, &HDYNAMICMODULES );
     }
 
     /* exported functions vector */
@@ -88,7 +88,7 @@ function_t hfunction_search( char *identifier ){
                 if( HDYNAMICMODULES[i]->initializer ){
                     extern vmem_t  HVM;
                     extern vcode_t HVC;
-                    HDYNAMICMODULES[i]->initializer( &HVM, &HVC );
+                    HDYNAMICMODULES[i]->initializer( &HVM, &HVC, &HDYNAMICMODULES );
                 }
                 return HDYNAMICMODULES[i]->functions[j]->function;
             }

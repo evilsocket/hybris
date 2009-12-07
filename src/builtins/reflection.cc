@@ -59,6 +59,22 @@ HYBRIS_BUILTIN(hcore_functions){
 	return array;
 }
 
+HYBRIS_BUILTIN(hdyn_functions){
+    unsigned int i, j, mods = HDYNAMICMODULES.size(), dyns;
+
+    Object *map = new Object();
+    for( i = 0; i < mods; i++ ){
+        module_t *mod = HDYNAMICMODULES[i];
+        Object   *dyn = new Object();
+        dyns          = mod->functions.size();
+        for( j = 0; j < dyns; j++ ){
+            dyn->push( new Object( (char *)mod->functions[j]->identifier.c_str() ) );
+        }
+        map->map( new Object( (char *)mod->name.c_str() ), dyn );
+    }
+    return map;
+}
+
 #ifndef _LP64
 HYBRIS_BUILTIN(hcall){
 	if( data->size() < 1 ){

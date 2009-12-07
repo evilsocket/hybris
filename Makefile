@@ -6,7 +6,6 @@ LIBXML= `xml2-config --cflags --libs`
 PREFIX=/usr
 TARGET=hybris
 
-
 all: hybris
 	cd examples && make
 

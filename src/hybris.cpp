@@ -19,14 +19,6 @@
 #include "hybris.h"
 #include "parser.hpp"
 
-vector<string>   HSTACKTRACE;
-vmem_t           HVM;
-#ifdef GC_SUPPORT
-vgarbage_t       HVG;
-#endif
-vcode_t          HVC;
-hybris_globals_t HGLOBALS;
-
 string hbuild_function_trace( char *function, vmem_t *stack, int identifiers ){
     string trace = function + string("(");
     unsigned int i;

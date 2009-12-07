@@ -26,6 +26,14 @@
 extern int yyparse(void);
 extern int yylex(void);
 
+vector<string>   HSTACKTRACE;
+vmem_t           HVM;
+#ifdef GC_SUPPORT
+vgarbage_t       HVG;
+#endif
+vcode_t          HVC;
+hybris_globals_t HGLOBALS;
+
 %}
 
 %union {

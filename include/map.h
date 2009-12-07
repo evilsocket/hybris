@@ -60,6 +60,10 @@ public  :
         }
     }
 
+    inline void operator = ( Map<value_t> *m ){
+        assign(m);
+    }
+
     inline value_t *at( unsigned int index ){
 		return m_map[index]->value;
 	}

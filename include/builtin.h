@@ -52,16 +52,16 @@ typedef struct {
 }
 builtin_constant_t;
 
-/* module initializer function pointer prototype */
-typedef void (*initializer_t)( vmem_t *vm, vcode_t *vc );
-
 /* module structure definition */
-typedef struct{
+typedef struct _module_t {
     string              name;
-    initializer_t       initializer;
+    void (*initializer)( vmem_t *vm, vcode_t *vc, vector<struct _module_t *> *dyns );
     vector<builtin_t *> functions;
 }
 module_t;
+
+/* module initializer function pointer prototype */
+typedef void (*initializer_t)( vmem_t *vm, vcode_t *vc, vector<module_t *> *dyns );
 
 /* type.cc */
 HYBRIS_BUILTIN(hisint);
@@ -145,6 +145,7 @@ HYBRIS_BUILTIN(hvar_names);
 HYBRIS_BUILTIN(hvar_values);
 HYBRIS_BUILTIN(huser_functions);
 HYBRIS_BUILTIN(hcore_functions);
+HYBRIS_BUILTIN(hdyn_functions);
 #ifndef _LP64
 HYBRIS_BUILTIN(hcall);
 #endif
@@ -295,6 +296,7 @@ static builtin_t HSTATICBUILTINS[] = {
 	{ "var_values", hvar_values },
 	{ "user_functions", huser_functions },
 	{ "core_functions", hcore_functions },
+	{ "dyn_functions",  hdyn_functions },
 	#ifndef _LP64
 	{ "call", hcall },
 	{ "dllopen", hdllopen },
@@ -348,7 +350,7 @@ static builtin_t HSTATICBUILTINS[] = {
 
 #define NBUILTINS sizeof(HSTATICBUILTINS) / sizeof(HSTATICBUILTINS[0])
 
-static vector<module_t *> HDYNAMICMODULES;
+static     vector<module_t *> HDYNAMICMODULES;
 
 void       hmodule_load( char *module );
 function_t hfunction_search( char *identifier );

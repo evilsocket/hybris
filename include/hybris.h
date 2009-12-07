@@ -48,7 +48,6 @@ extern vgarbage_t       HVG;
 extern vcode_t          HVC;
 extern hybris_globals_t HGLOBALS;
 
-
 Object *htree_function_call( vmem_t *stackframe, Node *call, int threaded = 0 );
 Object *htree_execute( vmem_t *stackframe, Node *node );
 

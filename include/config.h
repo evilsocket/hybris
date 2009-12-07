@@ -20,7 +20,7 @@
 #   define _HCONFIG_H_
 
 #define AUTHOR  "The Hybris Dev Team [http://www.hybris-lang.org/]"
-#define VERSION "0.3b"
+#define VERSION "0.6b"
 
 // system path for libraries (.so dynamic libs)
 #define LIBS_PATH "/usr/lib/hybris/libs/"
