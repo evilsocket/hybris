@@ -19,15 +19,13 @@
 #include "builtin.h"
 #include "tree.h"
 
-extern vmem_t         HVM;
-extern vcode_t        HVC;
-extern Object *htree_function_call( vmem_t *stackframe, Node *call, int threaded = 0 );
+extern Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, int threaded );
 
 HYBRIS_BUILTIN(hvar_names){
 	unsigned int i;
 	Object *array = new Object();
-	for( i = 0; i < HVM.size(); i++ ){
-		array->push( new Object((char *)HVM.label(i)) );
+	for( i = 0; i < ctx->HVM.size(); i++ ){
+		array->push( new Object((char *)ctx->HVM.label(i)) );
 	}
 	return array;
 }
@@ -35,8 +33,8 @@ HYBRIS_BUILTIN(hvar_names){
 HYBRIS_BUILTIN(hvar_values){
 	unsigned int i;
 	Object *array = new Object();
-	for( i = 0; i < HVM.size(); i++ ){
-		array->push( HVM.at(i) );
+	for( i = 0; i < ctx->HVM.size(); i++ ){
+		array->push( ctx->HVM.at(i) );
 	}
 	return array;
 }
@@ -44,27 +42,29 @@ HYBRIS_BUILTIN(hvar_values){
 HYBRIS_BUILTIN(huser_functions){
 	unsigned int i;
 	Object *array = new Object();
-	for( i = 0; i < HVC.size(); i++ ){
-		array->push( new Object((char *)HVC.label(i)) );
+	for( i = 0; i < ctx->HVC.size(); i++ ){
+		array->push( new Object((char *)ctx->HVC.label(i)) );
 	}
 	return array;
 }
 
 HYBRIS_BUILTIN(hcore_functions){
-	unsigned int i;
+	unsigned int i = 0;
 	Object *array = new Object();
-	for( i = 0; i < NBUILTINS; i++ ){
-		array->push( new Object((char *)HSTATICBUILTINS[i].identifier.c_str()) );
-	}
+
+    for( i = 0; i < ctx->HSTATICBUILTINS.size(); i++ ){
+        array->push( new Object((char *)ctx->HSTATICBUILTINS[i]->identifier.c_str()) );
+    }
+
 	return array;
 }
 
 HYBRIS_BUILTIN(hdyn_functions){
-    unsigned int i, j, mods = HDYNAMICMODULES.size(), dyns;
+    unsigned int i, j, mods = ctx->HDYNAMICMODULES.size(), dyns;
 
     Object *map = new Object();
     for( i = 0; i < mods; i++ ){
-        module_t *mod = HDYNAMICMODULES[i];
+        module_t *mod = ctx->HDYNAMICMODULES[i];
         Object   *dyn = new Object();
         dyns          = mod->functions.size();
         for( j = 0; j < dyns; j++ ){
@@ -97,7 +97,7 @@ HYBRIS_BUILTIN(hcall){
 		}
 	}
 
-	Object *_return = htree_function_call( data, call );
+	Object *_return = htree_function_call( ctx, data, call, 0 );
 	delete call;
 
 	return _return;

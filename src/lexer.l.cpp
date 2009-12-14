@@ -34,7 +34,8 @@ char             h_handle_char( char delimiter );
 function_decl_t *h_handle_function( char * text );
 
 extern int yylineno;
-extern hybris_globals_t HGLOBALS;
+//extern h_args_t HARGS;
+extern h_context_t HCTX;
 
 %}
 
@@ -94,7 +95,7 @@ include          BEGIN(INCLUSION);
 
     yytext = sptr;
 
-    hmodule_load( (char *)module.c_str() );
+    hmodule_load( &HCTX, (char *)module.c_str() );
 }
 
 "#"             { h_skip_line();    }

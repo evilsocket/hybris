@@ -61,7 +61,7 @@ typedef struct {
     FILE    *compiled;
     int      stacktrace;
 }
-hybris_globals_t;
+h_args_t;
 
 void yyerror( char *error );
 void hybris_generic_warning( const char *format, ... );

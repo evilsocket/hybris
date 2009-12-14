@@ -19,47 +19,33 @@
 #ifndef _HHYBRIS_H_
 #   define _HHYBRIS_H_
 
+#include "builtin.h"
 #include "object.h"
 #include "vmem.h"
 #include "tree.h"
 #include "common.h"
-#include "builtin.h"
 
 #define HMAGIC "XCS\x10\x12\x19\x85"
 
-extern vector<pthread_t> h_thread_pool;
-extern pthread_mutex_t   h_thread_pool_mutex;
-
-
-#define POOL_DEL(tid) pthread_mutex_lock( &h_thread_pool_mutex ); \
-                        for( int pool_i = 0; pool_i < h_thread_pool.size(); pool_i++ ){ \
-                            if( h_thread_pool[pool_i] == tid ){ \
-                                h_thread_pool.erase( h_thread_pool.begin() + pool_i ); \
+#define POOL_DEL(tid) pthread_mutex_lock( &ctx->h_thread_pool_mutex ); \
+                        for( int pool_i = 0; pool_i < ctx->h_thread_pool.size(); pool_i++ ){ \
+                            if( ctx->h_thread_pool[pool_i] == tid ){ \
+                                ctx->h_thread_pool.erase( ctx->h_thread_pool.begin() + pool_i ); \
                                 break; \
                             } \
                         } \
-                      pthread_mutex_unlock( &h_thread_pool_mutex )
+                      pthread_mutex_unlock( &ctx->h_thread_pool_mutex )
 
-extern vector<string>   HSTACKTRACE;
-extern vmem_t           HVM;
-#ifdef GC_SUPPORT
-extern vgarbage_t       HVG;
-#endif
-extern vcode_t          HVC;
-extern hybris_globals_t HGLOBALS;
+void    h_env_init    ( h_context_t *ctx, int argc, char *argv[] );
+void    h_env_release ( h_context_t *ctx, int onerror = 0 );
 
-Object *htree_function_call( vmem_t *stackframe, Node *call, int threaded = 0 );
-Object *htree_execute( vmem_t *stackframe, Node *node );
-
-/*
-void    htree_compile( Node *node, FILE *output );
-Node   *htree_load( FILE *input );
-*/
+string  hbuild_function_trace ( char *function, vmem_t *stack, int identifiers );
+Node   *hresolve_call         ( h_context_t *ctx, vmem_t *stackframe, Node *call, char *name );
+Object *htree_function_call   ( h_context_t *ctx, vmem_t *stackframe, Node *call, int threaded = 0 );
+Object *htree_execute         ( h_context_t *ctx, vmem_t *stackframe, Node *node );
 
 int  h_file_exists( char *filename );
-void h_env_init( int argc, char *argv[] );
-int  h_changepath();
-void h_env_release( int onerror = 0 );
+int  h_changepath( h_context_t *ctx );
 
 #endif
 

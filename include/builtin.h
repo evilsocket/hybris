@@ -19,49 +19,96 @@
 #ifndef _HBUILTIN_H_
 #   define _HBUILTIN_H_
 
-#include "common.h"
-#include "vmem.h"
 #include <vector>
 #include <string>
 #include <dlfcn.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include "object.h"
+#include "vmem.h"
 
 using std::string;
 using std::vector;
 
+typedef vector<string> vstr_t;
+
+/* pre declaration of struct _h_context */
+struct _h_context;
+
 /* builtin function pointer prototype */
-typedef Object * (*function_t)( vmem_t * );
+typedef Object * (*function_t)( struct _h_context *, vmem_t * );
+
+/* helper macro to declare a builtin function */
+#define HYBRIS_BUILTIN(name) Object *name( h_context_t *ctx, vmem_t *data )
 
 /* helper macro to define a builtin function */
-#define HYBRIS_BUILTIN(name) Object *name( vmem_t *data )
+#define HYBRIS_DEFINE_BUILTIN( ctx, name, func ) ctx->HSTATICBUILTINS.push_back( new builtin_t( name, func ) )
 /* helper macro to define a builtin constant */
-#define HYBRIS_CONSTANT( name, value ) { name, new Object(value) }
+#define HYBRIS_DEFINE_CONSTANT( ctx, name, value ) ctx->HSTATICCONSTANTS.push_back( new builtin_constant_t( name, new Object( value  ) ) )
 
 /* builtins definition list item structure */
-typedef struct {
+typedef struct _builtin {
     string     identifier;
     function_t function;
+
+    _builtin( string _id, function_t _fun ){
+        identifier = _id;
+        function   = _fun;
+    }
 }
 builtin_t;
 
 /* builtins' constants definition structure */
-typedef struct {
+typedef struct _builtin_constant {
     string identifier;
     Object *value;
+
+    _builtin_constant( string _id, Object *_v ){
+        identifier = _id;
+        value      = _v;
+    }
 }
 builtin_constant_t;
 
 /* module structure definition */
 typedef struct _module_t {
     string              name;
-    void (*initializer)( vmem_t *vm, vcode_t *vc, vector<struct _module_t *> *dyns );
+    void (*initializer)( struct _h_context * );
     vector<builtin_t *> functions;
 }
 module_t;
 
 /* module initializer function pointer prototype */
-typedef void (*initializer_t)( vmem_t *vm, vcode_t *vc, vector<module_t *> *dyns );
+typedef void (*initializer_t)( struct _h_context * );
+
+/* hybris execution contest structure */
+typedef struct _h_context {
+    /* function call trace vector */
+    vector<string> HSTACKTRACE;
+    /* data segment */
+    vmem_t         HVM;
+    /* garbage segment */
+    #ifdef GC_SUPPORT
+    vgarbage_t     HVG;
+    #endif
+    /* code segment */
+    vcode_t        HVC;
+    /* execution arguments */
+    h_args_t       HARGS;
+    /* default constants */
+    vector<builtin_constant_t *> HSTATICCONSTANTS;
+    /* builtin functions */
+    vector<builtin_t *>          HSTATICBUILTINS;
+    /* dynamically loaded modules */
+    vector<module_t *>           HDYNAMICMODULES;
+    #ifdef MT_SUPPORT
+    /* running threads pool vector */
+    vector<pthread_t> h_thread_pool;
+    /* threads mutex */
+    pthread_mutex_t   h_thread_pool_mutex;
+    #endif
+}
+h_context_t;
 
 /* type.cc */
 HYBRIS_BUILTIN(hisint);
@@ -200,159 +247,15 @@ HYBRIS_BUILTIN(hurlencode);
 HYBRIS_BUILTIN(hurldecode);
 HYBRIS_BUILTIN(hbase64encode);
 HYBRIS_BUILTIN(hbase64decode);
+
+#ifdef MT_SUPPORT
 /* pthreads.cc */
 HYBRIS_BUILTIN(hpthread_create);
 HYBRIS_BUILTIN(hpthread_exit);
 HYBRIS_BUILTIN(hpthread_join);
+#endif
 
-static builtin_constant_t HSTATICCONSTANTS[] = {
-    /* fileio.cc::fseek */
-    HYBRIS_CONSTANT( "SEEK_SET", static_cast<long>(SEEK_SET) ),
-    HYBRIS_CONSTANT( "SEEK_CUR", static_cast<long>(SEEK_CUR) ),
-    HYBRIS_CONSTANT( "SEEK_END", static_cast<long>(SEEK_END) ),
-    /* fileio.cc::readdir */
-    HYBRIS_CONSTANT( "DT_BLK",   static_cast<long>(DT_BLK)  ),
-    HYBRIS_CONSTANT( "DT_CHR",   static_cast<long>(DT_CHR)  ),
-    HYBRIS_CONSTANT( "DT_DIR",   static_cast<long>(DT_DIR)  ),
-    HYBRIS_CONSTANT( "DT_FIFO",  static_cast<long>(DT_FIFO) ),
-    HYBRIS_CONSTANT( "DT_LNK",   static_cast<long>(DT_LNK)  ),
-    HYBRIS_CONSTANT( "DT_REG",   static_cast<long>(DT_REG)  ),
-    HYBRIS_CONSTANT( "DT_SOCK",  static_cast<long>(DT_SOCK) )
-};
-
-#define NCONSTANTS sizeof(HSTATICCONSTANTS) / sizeof(HSTATICCONSTANTS[0])
-
-static builtin_t HSTATICBUILTINS[] = {
-	{ "isint", hisint },
-	{ "isfloat", hisfloat },
-	{ "ischar", hischar },
-	{ "isstring", hisstring },
-	{ "isarray", hisarray },
-	{ "ismap", hismap },
-	{ "isalias", hisalias },
-	{ "typeof", htypeof },
-	{ "sizeof", hsizeof },
-	{ "toint", htoint },
-	{ "tostring", htostring },
-	{ "toxml", htoxml },
-	{ "fromxml", hfromxml },
-	{ "acos", hacos },
-    { "asin", hasin },
-    { "atan", hatan },
-    { "atan2", hatan2 },
-    { "ceil", hceil },
-    { "cos", hcos },
-    { "cosh", hcosh },
-    { "exp", hexp },
-    { "fabs", hfabs },
-    { "floor", hfloor },
-    { "fmod", hfmod },
-    { "log", hlog },
-    { "log10", hlog10 },
-    { "pow", hpow },
-    { "sin", hsin },
-    { "sinh", hsinh },
-    { "sqrt", hsqrt },
-    { "tan", htan },
-    { "tanh", htanh },
-	{ "array", harray },
-	{ "elements", helements },
-	{ "pop", hpop },
-	{ "remove", hremove },
-	{ "contains", hcontains },
-	{ "struct", hmap },
-	{ "map", hmap },
-	{ "mapelements", hmapelements },
-	{ "mappop", hmappop },
-	{ "unmap", hunmap },
-	{ "ismapped", hismapped },
-	{ "strlen", hstrlen },
-	{ "strfind", hstrfind },
-	{ "substr", hsubstr },
-	{ "strreplace", hstrreplace },
-	{ "strsplit", hstrsplit },
-
-    { "matrix",  hmatrix },
-    { "columns", hcolumns },
-    { "rows",    hrows },
-
-	#ifdef PCRE_SUPPORT
-	{ "rex_match", hrex_match },
-	{ "rex_matches", hrex_matches },
-	{ "rex_replace", hrex_replace },
-	#endif
-
-	{ "print", hprint },
-	{ "println", hprintln },
-	{ "input", hinput },
-	{ "exec", hexec },
-	{ "fork", hfork },
-	{ "getpid", hgetpid },
-	{ "wait", hwait },
-	{ "popen", hpopen },
-	{ "pclose", hpclose },
-    { "exit", hexit },
-	{ "var_names", hvar_names },
-	{ "var_values", hvar_values },
-	{ "user_functions", huser_functions },
-	{ "core_functions", hcore_functions },
-	{ "dyn_functions",  hdyn_functions },
-	#ifndef _LP64
-	{ "call", hcall },
-	{ "dllopen", hdllopen },
-    { "dlllink", hdlllink },
-    { "dllcall", hdllcall },
-    { "dllclose", hdllclose },
-	#endif
-	{ "ticks", hticks },
-	{ "usleep", husleep },
-	{ "sleep", hsleep },
-	{ "time", htime },
-	{ "strtime", hstrtime },
-	{ "strdate", hstrdate },
-	{ "fopen", hfopen },
-	{ "fseek", hfseek },
-	{ "ftell", hftell },
-	{ "fsize", hfsize },
-	{ "fread", hfread },
-	{ "fgets", hfgets },
-	{ "fwrite", hfwrite },
-	{ "fclose", hfclose },
-	{ "file", hfile },
-    { "readdir", hreaddir },
-	{ "settimeout", hsettimeout },
-	{ "connect", hconnect },
-	{ "server", hserver },
-	{ "accept", haccept },
-	{ "recv", hrecv },
-	{ "send", hsend },
-	{ "close", hclose },
-
-	#ifdef HTTP_SUPPORT
-	{ "http_get", hhttp_get },
-	{ "http_post", hhttp_post },
-    #endif
-
-	#ifdef XML_SUPPORT
-	{ "xml_load", hxml_load },
-	{ "xml_parse", hxml_parse },
-    #endif
-
-    { "urlencode", hurlencode },
-	{ "urldecode", hurldecode },
-    { "base64encode", hbase64encode },
-	{ "base64decode", hbase64decode },
-
-	{ "pthread_create", hpthread_create },
-    { "pthread_exit",   hpthread_exit },
-    { "pthread_join",   hpthread_join }
-};
-
-#define NBUILTINS sizeof(HSTATICBUILTINS) / sizeof(HSTATICBUILTINS[0])
-
-static     vector<module_t *> HDYNAMICMODULES;
-
-void       hmodule_load( char *module );
-function_t hfunction_search( char *identifier );
+void       hmodule_load     ( h_context_t *ctx, char *module );
+function_t hfunction_search ( h_context_t *ctx, char *identifier );
 
 #endif

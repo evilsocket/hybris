@@ -5,6 +5,8 @@ LFLAGS= -ldl -lpcrecpp -lcurl -lpthread
 LIBXML= `xml2-config --cflags --libs`
 PREFIX=/usr
 TARGET=hybris
+LIBOBJ= builtin.o common.o hybris.o node.o object.o tree.o  vmem.o src/builtins/*.o
+
 
 all: hybris
 	cd examples && make
@@ -23,7 +25,7 @@ hybris: builtins
 	g++ -c src/hybris.cpp $(CFLAGS)
 	g++ -c src/parser.cpp $(CFLAGS)
 	g++ *.o src/builtins/*.o -o $(TARGET) $(CFLAGS) $(LFLAGS)
-	ar rcs lib$(TARGET).a *.o src/builtins/*.o
+	ar rcs lib$(TARGET).a *.o $(LIBOBJ)
 
 builtins: parser
 	g++ -c src/builtins/type.cc -o src/builtins/type.o $(CFLAGS)

@@ -20,7 +20,7 @@
 #   define _HCONFIG_H_
 
 #define AUTHOR  "The Hybris Dev Team [http://www.hybris-lang.org/]"
-#define VERSION "0.6b"
+#define VERSION "0.7b"
 
 // system path for libraries (.so dynamic libs)
 #define LIBS_PATH "/usr/lib/hybris/libs/"
@@ -42,7 +42,8 @@
 #define HTTP_SUPPORT 1
 // xml parsing support
 #define XML_SUPPORT  1
-
+// multi threading support
+#define MT_SUPPORT   1
 
 #endif
 

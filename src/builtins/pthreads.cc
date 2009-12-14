@@ -21,32 +21,36 @@
 #include "builtin.h"
 #include "tree.h"
 
-extern Object *htree_function_call( vmem_t *stackframe, Node *call, int threaded = 0 );
+extern Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, int threaded = 0 );
+
+extern h_context_t HCTX;
 
 
-typedef vector<pthread_t> thread_pool_t;
+#define POOL_ADD(tid) pthread_mutex_lock( &HCTX.h_thread_pool_mutex ); \
+                        HCTX.h_thread_pool.push_back(tid); \
+                      pthread_mutex_unlock( &HCTX.h_thread_pool_mutex )
 
-thread_pool_t   h_thread_pool;
-pthread_mutex_t h_thread_pool_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-#define POOL_ADD(tid) pthread_mutex_lock( &h_thread_pool_mutex ); \
-                        h_thread_pool.push_back(tid); \
-                      pthread_mutex_unlock( &h_thread_pool_mutex )
-
-#define POOL_DEL(tid) pthread_mutex_lock( &h_thread_pool_mutex ); \
-                        for( int pool_i = 0; pool_i < h_thread_pool.size(); pool_i++ ){ \
-                            if( h_thread_pool[pool_i] == tid ){ \
-                                h_thread_pool.erase( h_thread_pool.begin() + pool_i ); \
+#define POOL_DEL(tid) pthread_mutex_lock( &HCTX.h_thread_pool_mutex ); \
+                        for( int pool_i = 0; pool_i < HCTX.h_thread_pool.size(); pool_i++ ){ \
+                            if( HCTX.h_thread_pool[pool_i] == tid ){ \
+                                HCTX.h_thread_pool.erase( HCTX.h_thread_pool.begin() + pool_i ); \
                                 break; \
                             } \
                         } \
-                      pthread_mutex_unlock( &h_thread_pool_mutex )
+                      pthread_mutex_unlock( &HCTX.h_thread_pool_mutex )
+
+typedef struct {
+    vmem_t      *data;
+    h_context_t *ctx;
+}
+thread_args_t;
 
 void * hybris_pthread_worker( void *arg ){
     pthread_t tid = pthread_self();
     POOL_ADD(tid);
 
-    vmem_t *data = (vmem_t *)arg;
+    thread_args_t *args = (thread_args_t *)arg;
+    vmem_t *data = args->data;
 
     Node *call  = new Node(H_NT_CALL);
     call->_call = data->at(0)->xstring;
@@ -65,15 +69,17 @@ void * hybris_pthread_worker( void *arg ){
 		}
 	}
 
-	Object *_return = htree_function_call( data, call, 1 );
+	Object *_return = htree_function_call( args->ctx, data, call, 1 );
 	delete call;
     delete _return;
 
     #ifdef GC_SUPPORT
-        hybris_vm_release( data, NULL );
+        hybris_vm_release( args->data, NULL );
     #else
-        hybris_vm_release( data );
+        hybris_vm_release( args->data );
     #endif
+
+    delete args;
 
     POOL_DEL(tid);
 
@@ -87,7 +93,11 @@ HYBRIS_BUILTIN(hpthread_create){
 	htype_assert( data->at(0), H_OT_STRING );
 
     pthread_t tid;
-    pthread_create( &tid, NULL, hybris_pthread_worker, (void *)hybris_vm_clone(data) );
+    thread_args_t *args = new thread_args_t;
+
+    args->data = hybris_vm_clone(data);
+    args->ctx  = ctx;
+    pthread_create( &tid, NULL, hybris_pthread_worker, (void *)args );
 
     return new Object( static_cast<long>(tid) );
 }

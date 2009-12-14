@@ -18,7 +18,7 @@
 */
 #include "builtin.h"
 
-void hmodule_load( char *module ){
+void hmodule_load( h_context_t *ctx, char *module ){
     void *hmodule = dlopen( module, RTLD_NOW );
     if( !hmodule ){
         char *error = dlerror();
@@ -40,9 +40,7 @@ void hmodule_load( char *module ){
     /* load initialization routine, usually used for constants definition, etc */
     initializer_t initializer = (initializer_t)dlsym( hmodule, "hybris_module_init" );
     if(initializer){
-        extern vmem_t  HVM;
-        extern vcode_t HVC;
-        initializer( &HVM, &HVC, &HDYNAMICMODULES );
+        initializer( ctx );
     }
 
     /* exported functions vector */
@@ -53,44 +51,36 @@ void hmodule_load( char *module ){
         return;
     }
 
-    module_t *hmod   = new module_t;
+    module_t *hmod    = new module_t;
     hmod->name        = modname;
     hmod->initializer = initializer;
     unsigned long i   = 0;
 
     while( functions[i].function != NULL ){
-        builtin_t *function = new builtin_t;
-        function->identifier = functions[i].identifier;
-        function->function   = functions[i].function;
+        builtin_t *function = new builtin_t( functions[i].identifier, functions[i].function );
         hmod->functions.push_back(function);
         i++;
     }
 
-    HDYNAMICMODULES.push_back(hmod);
-    //dlclose(hmodule);
+    ctx->HDYNAMICMODULES.push_back(hmod);
 }
 
-function_t hfunction_search( char *identifier ){
-    unsigned int i, j, nbuiltins = NBUILTINS, ndyns = HDYNAMICMODULES.size(), nfuncs;
+function_t hfunction_search( h_context_t *ctx, char *identifier ){
+    unsigned int i = 0, j = 0, ndyns = ctx->HDYNAMICMODULES.size(), nfuncs;
     /* firs search the function in builtins symbols */
-    for( i = 0; i < nbuiltins; i++ ){
-        if( HSTATICBUILTINS[i].identifier == identifier ){
-            return HSTATICBUILTINS[i].function;
+    for( i = 0; i < ctx->HSTATICBUILTINS.size(); i++ ){
+        if( ctx->HSTATICBUILTINS[i]->identifier == identifier ){
+            return ctx->HSTATICBUILTINS[i]->function;
         }
     }
 
     /* then search it in dynamic loaded modules */
     for( i = 0; i < ndyns; i++ ){
         /* for each function of the module */
-        nfuncs = HDYNAMICMODULES[i]->functions.size();
+        nfuncs = ctx->HDYNAMICMODULES[i]->functions.size();
         for( j = 0; j < nfuncs; j++ ){
-            if( HDYNAMICMODULES[i]->functions[j]->identifier == identifier ){
-                if( HDYNAMICMODULES[i]->initializer ){
-                    extern vmem_t  HVM;
-                    extern vcode_t HVC;
-                    HDYNAMICMODULES[i]->initializer( &HVM, &HVC, &HDYNAMICMODULES );
-                }
-                return HDYNAMICMODULES[i]->functions[j]->function;
+            if( ctx->HDYNAMICMODULES[i]->functions[j]->identifier == identifier ){
+                return ctx->HDYNAMICMODULES[i]->functions[j]->function;
             }
         }
     }

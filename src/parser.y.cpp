@@ -26,13 +26,7 @@
 extern int yyparse(void);
 extern int yylex(void);
 
-vector<string>   HSTACKTRACE;
-vmem_t           HVM;
-#ifdef GC_SUPPORT
-vgarbage_t       HVG;
-#endif
-vcode_t          HVC;
-hybris_globals_t HGLOBALS;
+h_context_t HCTX;
 
 %}
 
@@ -81,13 +75,15 @@ hybris_globals_t HGLOBALS;
 
 program    : body { };
 
-body       : body statement { switch( HGLOBALS.action ){
-                                case H_EXECUTE : htree_execute( &HVM, $2 );              break;
-                                /* case H_COMPILE : htree_compile( $2, HGLOBALS.compiled ); break; */
+body       : body statement { /*
+                              switch( HARGS.action ){
+                                case H_EXECUTE : htree_execute( &HVM, $2 );           break;
+                                case H_COMPILE : htree_compile( $2, HARGS.compiled ); break;
                                 default :
                                     hybris_generic_error( "action not yet implemented" );
                               }
-
+                              */
+                              htree_execute( &HCTX, &HCTX.HVM, $2 );
                               Tree::release($2);
                             }
            | /* empty */ ;
@@ -202,15 +198,16 @@ int h_banner(){
 
 int h_usage( char *argvz ){
     h_banner();
-    printf("\nUsage: %s (action) (-o output) file (--trace)\n"
+    printf( /*"\nUsage: %s (action) (-o output) file (--trace)\n"*/
+           "\nUsage: %s (action) file (--trace)\n"
            "Where action could be :\n"
-           "\t-e : Execute the script as an interpreter .\n"
-           "\t-c : Compile the script in x-byte-code and save it to 'output' .\n"
-           "\t-r : Load the x-byte-code from 'file' and run it .\n\n"
+           "\t-e : Execute the script as an interpreter .\n\n"
+           /*"\t-c : Compile the script in x-byte-code and save it to 'output' .\n"
+           "\t-r : Load the x-byte-code from 'file' and run it .\n\n"*/
            "\t--trace : Will enable stack trace report on errors .\n\n"
            "Notes :\n"
-           "If no action is specified, it's assumed as '-e file' .\n"
-           "If -c is set and no output is specified, the file will be compiled into 'output.ch' .\n\n", argvz );
+           "If no action is specified, it's assumed as '-e file' .\n\n"
+           /* "If -c is set and no output is specified, the file will be compiled into 'output.ch' .\n\n" */ , argvz );
     return 0;
 }
 
@@ -225,45 +222,45 @@ int main( int argc, char *argv[] ){
             return h_usage( argv[0] );
         }
 
-        memset( &HGLOBALS, 0x00, sizeof(hybris_globals_t) );
+        memset( &HCTX.HARGS, 0x00, sizeof(h_args_t) );
         if( cmdline.isset( "-e" ) ){
-            cmdline.get( "-e", HGLOBALS.source );
-            HGLOBALS.action = H_EXECUTE;
+            cmdline.get( "-e", HCTX.HARGS.source );
+            HCTX.HARGS.action = H_EXECUTE;
         }
         else if( cmdline.isset( "-c" ) ){
-            cmdline.get( "-c", HGLOBALS.source );
-            HGLOBALS.action = H_COMPILE;
+            cmdline.get( "-c", HCTX.HARGS.source );
+            HCTX.HARGS.action = H_COMPILE;
             if( cmdline.isset( "-o" ) ){
-                cmdline.get( "-o", HGLOBALS.destination );
+                cmdline.get( "-o", HCTX.HARGS.destination );
             }
             else{
-                strcpy( HGLOBALS.destination, "output.ch" );
+                strcpy( HCTX.HARGS.destination, "output.ch" );
             }
         }
         else if( cmdline.isset( "-r" ) ){
-            cmdline.get( "-r", HGLOBALS.source );
-            HGLOBALS.action = H_RUN;
+            cmdline.get( "-r", HCTX.HARGS.source );
+            HCTX.HARGS.action = H_RUN;
         }
         else{
-            cmdline.nonFlaggedArg( HGLOBALS.source );
-            HGLOBALS.action = H_EXECUTE;
+            cmdline.nonFlaggedArg( HCTX.HARGS.source );
+            HCTX.HARGS.action = H_EXECUTE;
         }
 
-        HGLOBALS.stacktrace = cmdline.isset("--trace");
+        HCTX.HARGS.stacktrace = cmdline.isset("--trace");
 
-        if( h_file_exists(HGLOBALS.source) == 0 ){
-            printf( "Error :'%s' no such file or directory .\n\n", HGLOBALS.source );
+        if( h_file_exists(HCTX.HARGS.source) == 0 ){
+            printf( "Error :'%s' no such file or directory .\n\n", HCTX.HARGS.source );
             return h_usage( argv[0] );
         }
 
-        h_env_init( argc, argv );
+        h_env_init( &HCTX, argc, argv );
 
 		/* compile or execute */
-        if( HGLOBALS.action != H_RUN ){
+        if( HCTX.HARGS.action != H_RUN ){
             extern FILE *yyin;
-            yyin = fopen( HGLOBALS.source, "r");
+            yyin = fopen( HCTX.HARGS.source, "r");
 
-			h_changepath();
+			h_changepath( &HCTX );
             while( !feof(yyin) ){
                 yyparse();
             }
@@ -271,12 +268,12 @@ int main( int argc, char *argv[] ){
         }
 		/* run pseudo-compiled byte code
         else{
-            FILE *input = fopen( HGLOBALS.source, "rb" );
+            FILE *input = fopen( HARGS.source, "rb" );
 
 			h_changepath();
             if( h_check_header(input) == 0 ){
                 fclose(input);
-                hybris_generic_error( "'%s' damaged or invalid file", HGLOBALS.source );
+                hybris_generic_error( "'%s' damaged or invalid file", HARGS.source );
             }
 
             while( !feof(input) ){
@@ -287,7 +284,7 @@ int main( int argc, char *argv[] ){
             fclose(input);
         }
         */
-        h_env_release();
+        h_env_release(&HCTX);
     }
 
     return 0;
