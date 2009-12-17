@@ -21,12 +21,10 @@
 #include "vmem.h"
 #include "builtin.h"
 
-//extern void h_env_release( int onerror );
-
-void hprint_stacktrace(){
+void hprint_stacktrace( int force /* = 0 */ ){
     extern h_context_t HCTX;
 
-    if( HCTX.HARGS.stacktrace && HCTX.HSTACKTRACE.size() ){
+    if( (HCTX.HARGS.stacktrace && HCTX.HSTACKTRACE.size()) || force ){
         int tail = HCTX.HSTACKTRACE.size() - 1;
         printf( "\nSTACK TRACE :\n\n" );
         for( int i = tail; i >= 0; i-- ){
@@ -45,7 +43,7 @@ void yyerror( char *error ){
 		extern int yylineno;
 		extern h_context_t HCTX;
 
-		fprintf( stderr, "Line %d : %s .\n", yylineno, error );
+		fprintf( stderr, "[LINE %d] %s .\n", yylineno, error );
 		hprint_stacktrace();
         h_env_release( &HCTX, 1 );
     	exit(-1);
@@ -62,7 +60,7 @@ void hybris_generic_warning( const char *format, ... ){
     vsprintf( message, format, ap );
     va_end(ap);
 
-    sprintf( error, "Warning : %s .\n", message );
+    sprintf( error, "\033[01;33mWARNING : %s .\n\033[00m", message );
     yyerror(error);
 }
 
@@ -76,7 +74,7 @@ void hybris_generic_error( const char *format, ... ){
     vsprintf( message, format, ap );
     va_end(ap);
 
-    sprintf( error, "Error : %s .\n", message );
+    sprintf( error, "\033[22;31mERROR : %s .\n\033[00m", message );
     yyerror(error);
     hprint_stacktrace();
     h_env_release( &HCTX, 1 );
@@ -94,7 +92,7 @@ void hybris_syntax_error( const char *format, ... ){
     vsprintf( message, format, ap );
     va_end(ap);
 
-    sprintf( error, "Syntax error on line %d : %s .\n", yylineno, message );
+    sprintf( error, "\033[22;31mSyntax error on line %d : %s .\n\033[00m", yylineno, message );
     yyerror(error);
     hprint_stacktrace();
     h_env_release( &HCTX, 1 );

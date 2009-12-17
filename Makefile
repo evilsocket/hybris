@@ -52,10 +52,10 @@ parser: lexer
 	bison -y -d -o src/parser.cpp src/parser.y.cpp
 
 lexer:
-	flex -o src/lexer.cpp src/lexer.l.cpp
+	flex --header-file=include/lexer.h -o src/lexer.cpp src/lexer.l.cpp
 
 clean:
-	rm -f src/lexer.cpp src/parser.hpp src/parser.cpp *.o src/*.o src/builtins/*.o $(TARGET)
+	rm -f src/lexer.cpp include/lexer.h include/parser.h src/parser.hpp src/parser.cpp *.o src/*.o src/builtins/*.o $(TARGET)
 	rm -f lib$(TARGET).a
 	cd examples && make clean
 

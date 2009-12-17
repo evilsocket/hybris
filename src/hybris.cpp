@@ -554,24 +554,9 @@ Object *htree_execute( h_context_t *ctx, vmem_t *stackframe, Node *node ){
 
 void hsignal_handler( int signo ) {
     if( signo == SIGSEGV ){
-        printf( "!!! SIGSEGV SIGNAL CATCHED !!!\n" );
-/*
-        printf( "\n-- DATA AREA -------------------------------------\n" );
-        unsigned int i, size = HVM.size();
-        for( i = 0; i < size; i++ ){
-            Object *o = HVM.at(i);
-            if( o ){
-                printf( "\t<%s> : [%s] [%d bytes]\n", HVM.label(i), Object::type( o ), o->xsize );
-            }
-        }
-        printf( "-------------------------------------------------\n" );
-
-        HARGS.stacktrace = 1;
-        hprint_stacktrace();
-
-        h_env_release();
-*/
-        exit(signo);
+        extern h_context_t HCTX;
+        HCTX.HARGS.stacktrace = 1;
+        hybris_generic_error( "SIGSEGV Signal Catched" );
     }
 }
 
@@ -593,6 +578,9 @@ void h_env_init( h_context_t *ctx, int argc, char *argv[] ){
     }
 
     /** initialize builtins' constants **/
+    /* misc */
+    HYBRIS_DEFINE_CONSTANT( ctx, "true",  static_cast<long>(1) );
+    HYBRIS_DEFINE_CONSTANT( ctx, "false", static_cast<long>(0) );
     /* fileio.cc::fseek */
     HYBRIS_DEFINE_CONSTANT( ctx, "SEEK_SET", static_cast<long>(SEEK_SET) );
     HYBRIS_DEFINE_CONSTANT( ctx, "SEEK_CUR", static_cast<long>(SEEK_CUR) );

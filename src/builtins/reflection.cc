@@ -18,6 +18,7 @@
 */
 #include "builtin.h"
 #include "tree.h"
+#include "lexer.h"
 
 extern Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, int threaded );
 
