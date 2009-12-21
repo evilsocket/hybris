@@ -125,6 +125,7 @@ public  :
 
     void input();
 	Object * toString();
+    Object * toInt();
 
 	long lvalue();
     Object * dot( Object *o );

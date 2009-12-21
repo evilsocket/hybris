@@ -85,7 +85,7 @@ HYBRIS_BUILTIN(htoint){
 	if( data->size() != 1 ){
 		hybris_syntax_error( "function 'toint' requires 1 parameter (called with %d)", data->size() );
 	}
-	return new Object( static_cast<long>( data->at(0)->lvalue() ) );
+	return new Object( data->at(0)->toInt() );
 }
 
 HYBRIS_BUILTIN(htostring){

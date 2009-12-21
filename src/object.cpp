@@ -726,6 +726,21 @@ Object * Object::toString(){
 	return new Object( (char *)ret.str().c_str() );
 }
 
+Object * Object::toInt(){
+    long ret;
+    switch(xtype){
+		case H_OT_INT    : ret = xint;                  break;
+		case H_OT_FLOAT  : ret = (long)xfloat;          break;
+		case H_OT_CHAR   : ret = (long)xchar;           break;
+		case H_OT_STRING : ret = atol(xstring.c_str()); break;
+		case H_OT_ALIAS  :
+		case H_OT_ARRAY  :
+		case H_OT_MAP    :
+		case H_OT_MATRIX : hybris_generic_error( "could not convert '%s' to int", type(this) ); break;
+	}
+	return new Object( ret );
+}
+
 string Object::svalue(){
 	stringstream ret;
 	switch(xtype){
