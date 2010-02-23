@@ -231,10 +231,16 @@ HYBRIS_BUILTIN(hfile){
 }
 
 void readdir_recurse( char *root, char *dir, Object *vector ){
-    char path[0xFF] = {0};
-    sprintf( path, "%s/%s", root, dir );
+    char 		   path[0xFF] = {0};
     DIR           *dirh;
     struct dirent *ent;
+    
+    if( root[strlen(root) - 1] != '/' && dir[0] != '/' ){
+		sprintf( path, "%s/%s", root, dir );
+    }
+    else{
+		sprintf( path, "%s%s", root, dir );
+	}
 
     if( (dirh = opendir(path)) == NULL ) {
         hybris_generic_error( "could not open directory '%s' for reading", path );
@@ -242,7 +248,13 @@ void readdir_recurse( char *root, char *dir, Object *vector ){
 
     while( (ent = readdir(dirh)) != NULL ){
         Object *file = new Object();
-        string name = string(path) + "/" + string(ent->d_name);
+        string name  = "";
+        if( path[strlen(path) - 1] != '/' && ent->d_name[0] != '/' ){
+			name = string(path) + "/" + string(ent->d_name);
+		}
+		else{
+			name = string(path) + string(ent->d_name); 
+		}	
         file->map( new Object((char *)"name"), new Object((char *)name.c_str()) );
         file->map( new Object((char *)"type"), new Object(static_cast<long>(ent->d_type)) );
         vector->push(file);
@@ -267,14 +279,14 @@ HYBRIS_BUILTIN(hreaddir){
         hybris_generic_error( "could not open directory '%s' for reading", data->at(0)->xstring.c_str() );
     }
 
-    Object *files = new Object();
-
+    Object *files 	  = new Object();
+	int     recursive = ( data->size() > 1 && data->at(1)->lvalue() );
     while( (ent = readdir(dir)) != NULL ){
         Object *file = new Object();
         file->map( new Object((char *)"name"), new Object((char *)ent->d_name) );
         file->map( new Object((char *)"type"), new Object(static_cast<long>(ent->d_type)) );
         files->push(file);
-        if( data->size() > 1 && data->at(1)->lvalue() ){
+        if( recursive ){
             if( ent->d_type == DT_DIR && strcmp( ent->d_name, ".." ) != 0 && strcmp( ent->d_name, "." ) != 0 ){
                 readdir_recurse( (char *)data->at(0)->xstring.c_str(), ent->d_name, files );
             }
