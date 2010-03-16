@@ -38,7 +38,7 @@ typedef struct {
 function_decl_t;
 
 typedef enum {
-    H_NONE,
+    H_NONE = 0,
     H_EXECUTE,
     H_COMPILE,
     H_RUN

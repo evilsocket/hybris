@@ -16,7 +16,6 @@ hybris: builtins
 	g++ -c src/lexer.cpp $(CFLAGS)
 	g++ -c src/builtin.cpp $(CFLAGS)
 	g++ -c src/vmem.cpp $(CFLAGS)
-	g++ -c src/cmdline.cpp $(CFLAGS)
 	g++ -c src/node.cpp $(CFLAGS)
 	g++ -c src/object.cpp $(CFLAGS)
 	g++ -c src/tree.cpp $(CFLAGS)

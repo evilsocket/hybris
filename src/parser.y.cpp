@@ -19,7 +19,6 @@
 */
 
 #include "hybris.h"
-#include "cmdline.h"
 
 #define YY_(s) (char *)s
 
@@ -198,92 +197,50 @@ int h_banner(){
 
 int h_usage( char *argvz ){
     h_banner();
-    printf( /*"\nUsage: %s (action) (-o output) file (--trace)\n"*/
-           "\nUsage: %s (action) file (--trace)\n"
-           "Where action could be :\n"
-           "\t-e : Execute the script as an interpreter .\n\n"
-           /*"\t-c : Compile the script in x-byte-code and save it to 'output' .\n"
-           "\t-r : Load the x-byte-code from 'file' and run it .\n\n"*/
-           "\t--trace : Will enable stack trace report on errors .\n\n"
-           "Notes :\n"
-           "If no action is specified, it's assumed as '-e file' .\n\n"
-           /* "If -c is set and no output is specified, the file will be compiled into 'output.ch' .\n\n" */ , argvz );
+    printf( "\nUsage: %s file (--trace)\n"
+           "\t--trace : Will enable stack trace report on errors .\n\n", argvz );
     return 0;
 }
 
 int main( int argc, char *argv[] ){
     if( argc < 2 ){
-        return h_banner();
+        return h_usage( argv[0] );
     }
     else{
-        CmdLine cmdline( argc, argv );
 
-        if( cmdline.isset("-h") || cmdline.isset("--help") ){
-            return h_usage( argv[0] );
-        }
-
-        memset( &HCTX.HARGS, 0x00, sizeof(h_args_t) );
-        if( cmdline.isset( "-e" ) ){
-            cmdline.get( "-e", HCTX.HARGS.source );
-            HCTX.HARGS.action = H_EXECUTE;
-        }
-        else if( cmdline.isset( "-c" ) ){
-            cmdline.get( "-c", HCTX.HARGS.source );
-            HCTX.HARGS.action = H_COMPILE;
-            if( cmdline.isset( "-o" ) ){
-                cmdline.get( "-o", HCTX.HARGS.destination );
+        int i, f_offset = 0;
+        for( i = 0; i < argc; i++ ){
+            if( strcmp( argv[i], "--trace" ) == 0 ){
+                HCTX.HARGS.stacktrace = 1;
             }
             else{
-                strcpy( HCTX.HARGS.destination, "output.ch" );
+                f_offset = i;
             }
         }
-        else if( cmdline.isset( "-r" ) ){
-            cmdline.get( "-r", HCTX.HARGS.source );
-            HCTX.HARGS.action = H_RUN;
-        }
-        else{
-            cmdline.nonFlaggedArg( HCTX.HARGS.source );
-            HCTX.HARGS.action = H_EXECUTE;
-        }
 
-        HCTX.HARGS.stacktrace = cmdline.isset("--trace");
+        HCTX.HARGS.action = H_EXECUTE;
+        strncpy( HCTX.HARGS.source, argv[f_offset], sizeof(HCTX.HARGS.source) );
 
-        if( h_file_exists(HCTX.HARGS.source) == 0 ){
-            printf( "Error :'%s' no such file or directory .\n\n", HCTX.HARGS.source );
-            return h_usage( argv[0] );
+        if( f_offset > 0 ){
+            if( h_file_exists(HCTX.HARGS.source) == 0 ){
+                printf( "Error :'%s' no such file or directory .\n\n", HCTX.HARGS.source );
+                return h_usage( argv[0] );
+            }
         }
 
         h_env_init( &HCTX, argc, argv );
 
-		/* compile or execute */
-        if( HCTX.HARGS.action != H_RUN ){
-            extern FILE *yyin;
-            yyin = fopen( HCTX.HARGS.source, "r");
+        extern FILE *yyin;
+        yyin = f_offset > 0 ? fopen( HCTX.HARGS.source, "r") : stdin;
 
-			h_changepath( &HCTX );
-            while( !feof(yyin) ){
-                yyparse();
-            }
+        h_changepath( &HCTX );
+        while( !feof(yyin) ){
+            yyparse();
+        }
+        if( f_offset > 0 ){
             fclose(yyin);
         }
-		/* run pseudo-compiled byte code
-        else{
-            FILE *input = fopen( HARGS.source, "rb" );
 
-			h_changepath();
-            if( h_check_header(input) == 0 ){
-                fclose(input);
-                hybris_generic_error( "'%s' damaged or invalid file", HARGS.source );
-            }
-
-            while( !feof(input) ){
-                Node *tree = htree_load(input);
-                htree_execute(&HVM,tree);
-                Tree::release(tree);
-            }
-            fclose(input);
-        }
-        */
         h_env_release(&HCTX);
     }
 
