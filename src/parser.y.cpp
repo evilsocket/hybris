@@ -203,46 +203,45 @@ int h_usage( char *argvz ){
 }
 
 int main( int argc, char *argv[] ){
-    if( argc < 2 ){
-        return h_usage( argv[0] );
+
+    int i, f_offset = 0;
+    for( i = 0; i < argc; i++ ){
+        if( strcmp( argv[i], "--trace" ) == 0 ){
+            HCTX.HARGS.stacktrace = 1;
+        }
+        else if( strcmp( argv[i], "--help" ) == 0 || strcmp( argv[i], "-h" ) == 0 ){
+            return h_usage(argv[0]);
+        }
+        else{
+            f_offset = i;
+        }
     }
-    else{
 
-        int i, f_offset = 0;
-        for( i = 0; i < argc; i++ ){
-            if( strcmp( argv[i], "--trace" ) == 0 ){
-                HCTX.HARGS.stacktrace = 1;
-            }
-            else{
-                f_offset = i;
-            }
+    HCTX.HARGS.action = H_EXECUTE;
+    strncpy( HCTX.HARGS.source, argv[f_offset], sizeof(HCTX.HARGS.source) );
+
+    if( f_offset > 0 ){
+        if( h_file_exists(HCTX.HARGS.source) == 0 ){
+            printf( "Error :'%s' no such file or directory .\n\n", HCTX.HARGS.source );
+            return h_usage( argv[0] );
         }
-
-        HCTX.HARGS.action = H_EXECUTE;
-        strncpy( HCTX.HARGS.source, argv[f_offset], sizeof(HCTX.HARGS.source) );
-
-        if( f_offset > 0 ){
-            if( h_file_exists(HCTX.HARGS.source) == 0 ){
-                printf( "Error :'%s' no such file or directory .\n\n", HCTX.HARGS.source );
-                return h_usage( argv[0] );
-            }
-        }
-
-        h_env_init( &HCTX, argc, argv );
-
-        extern FILE *yyin;
-        yyin = f_offset > 0 ? fopen( HCTX.HARGS.source, "r") : stdin;
-
-        h_changepath( &HCTX );
-        while( !feof(yyin) ){
-            yyparse();
-        }
-        if( f_offset > 0 ){
-            fclose(yyin);
-        }
-
-        h_env_release(&HCTX);
     }
+
+    h_env_init( &HCTX, argc, argv );
+
+    extern FILE *yyin;
+    yyin = f_offset > 0 ? fopen( HCTX.HARGS.source, "r") : stdin;
+
+    h_changepath( &HCTX );
+    while( !feof(yyin) ){
+        yyparse();
+    }
+    if( f_offset > 0 ){
+        fclose(yyin);
+    }
+
+    h_env_release(&HCTX);
+
 
     return 0;
 }
