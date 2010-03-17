@@ -87,7 +87,7 @@ public  :
 	unsigned int     xcolumns;
 	Object       *** xmatrix;
 
-    #ifdef GC_SUPPORT
+	#ifdef MEM_DEBUG
     void* operator new (size_t size);
     #endif
 

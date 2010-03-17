@@ -25,8 +25,6 @@
 #include "tree.h"
 #include "common.h"
 
-#define HMAGIC "XCS\x10\x12\x19\x85"
-
 #define POOL_DEL(tid) pthread_mutex_lock( &ctx->h_thread_pool_mutex ); \
                         for( int pool_i = 0; pool_i < ctx->h_thread_pool.size(); pool_i++ ){ \
                             if( ctx->h_thread_pool[pool_i] == tid ){ \

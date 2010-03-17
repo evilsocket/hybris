@@ -74,15 +74,7 @@ h_context_t HCTX;
 
 program    : body { };
 
-body       : body statement { /*
-                              switch( HARGS.action ){
-                                case H_EXECUTE : htree_execute( &HVM, $2 );           break;
-                                case H_COMPILE : htree_compile( $2, HARGS.compiled ); break;
-                                default :
-                                    hybris_generic_error( "action not yet implemented" );
-                              }
-                              */
-                              htree_execute( &HCTX, &HCTX.HVM, $2 );
+body       : body statement { htree_execute( &HCTX, &HCTX.HVM, $2 );
                               Tree::release($2);
                             }
            | /* empty */ ;
