@@ -600,6 +600,9 @@ void h_env_init( h_context_t *ctx, int argc, char *argv[] ){
     HYBRIS_DEFINE_CONSTANT( ctx, "DT_LNK",   static_cast<long>(DT_LNK)  );
     HYBRIS_DEFINE_CONSTANT( ctx, "DT_REG",   static_cast<long>(DT_REG)  );
     HYBRIS_DEFINE_CONSTANT( ctx, "DT_SOCK",  static_cast<long>(DT_SOCK) );
+    /* http.cc::http */
+    HYBRIS_DEFINE_CONSTANT( ctx, "GET",  static_cast<long>(0) );
+    HYBRIS_DEFINE_CONSTANT( ctx, "POST", static_cast<long>(1) );
 
     for( i = 0; i < ctx->HSTATICCONSTANTS.size(); i++ ){
         hybris_vm_add( &ctx->HVM, (char *)ctx->HSTATICCONSTANTS[i]->identifier.c_str(), ctx->HSTATICCONSTANTS[i]->value );
@@ -708,6 +711,7 @@ void h_env_init( h_context_t *ctx, int argc, char *argv[] ){
 	HYBRIS_DEFINE_BUILTIN( ctx, "send", hsend );
 	HYBRIS_DEFINE_BUILTIN( ctx, "close", hclose );
 	#ifdef HTTP_SUPPORT
+	HYBRIS_DEFINE_BUILTIN( ctx, "http",     hhttp );
 	HYBRIS_DEFINE_BUILTIN( ctx, "http_get", hhttp_get );
 	HYBRIS_DEFINE_BUILTIN( ctx, "http_post", hhttp_post );
     #endif

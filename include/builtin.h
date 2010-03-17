@@ -232,6 +232,7 @@ HYBRIS_BUILTIN(hclose);
 
 #ifdef HTTP_SUPPORT
 /* http.cc */
+HYBRIS_BUILTIN(hhttp);
 HYBRIS_BUILTIN(hhttp_get);
 HYBRIS_BUILTIN(hhttp_post);
 #endif

@@ -23,6 +23,9 @@
 #include <curl/types.h>
 #include <curl/easy.h>
 
+#define HTTP_GET  0
+#define HTTP_POST 1
+
 static size_t http_append_callback( void *ptr, size_t size, size_t nmemb, void *data ){
 	string *buffer = (string *)data;
 	(*buffer) += (char *)ptr;
@@ -225,3 +228,34 @@ HYBRIS_BUILTIN(hhttp_post){
 	}
 }
 
+HYBRIS_BUILTIN(hhttp){
+    if( data->size() < 1 ){
+		hybris_syntax_error( "function 'http' requires at least 1 parameter (called with %d)", data->size() );
+	}
+    htype_assert( data->at(0), H_OT_INT );
+
+    vmem_t hdata;
+    int    method = data->at(0)->xint,
+           i;
+
+    if( method == HTTP_GET && data->size() < 3 ){
+        hybris_syntax_error( "function 'http' requires at least 2 parameters if method=GET (called with %d)", data->size() );
+    }
+    else if( method == HTTP_POST && data->size() < 4 ){
+        hybris_syntax_error( "function 'http' requires at least 3 parameters if method=POST (called with %d)", data->size() );
+    }
+
+    for( i = 1; i < data->size(); i++ ){
+        hdata.insert( HANONYMOUSIDENTIFIER, data->at(i) );
+    }
+
+    if( method == HTTP_GET ){
+        return hhttp_get( ctx, &hdata );
+    }
+    else if( method == HTTP_POST ){
+        return hhttp_post( ctx, &hdata );
+    }
+    else{
+        hybris_syntax_error( "function 'http', unknown method" );
+    }
+}
