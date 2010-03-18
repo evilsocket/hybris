@@ -35,14 +35,17 @@ void hprint_stacktrace( int force /* = 0 */ ){
 }
 
 void yyerror( char *error ){
+    extern int yylineno;
+    extern h_context_t HCTX;
+
     fflush(stderr);
-	if( error[strlen(error) - 1] == '\n' ){
-    	fprintf( stderr, "%s", error );
+	if( strchr( error, '\n' ) ){
+		fprintf( stderr, "[LINE %d] %s", yylineno, error );
+		hprint_stacktrace();
+        h_env_release( &HCTX, 1 );
+    	exit(-1);
 	}
 	else{
-		extern int yylineno;
-		extern h_context_t HCTX;
-
 		fprintf( stderr, "[LINE %d] %s .\n", yylineno, error );
 		hprint_stacktrace();
         h_env_release( &HCTX, 1 );

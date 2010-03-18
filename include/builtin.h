@@ -88,9 +88,7 @@ typedef struct _h_context {
     /* data segment */
     vmem_t         HVM;
     /* garbage segment */
-    #ifdef GC_SUPPORT
     vgarbage_t     HVG;
-    #endif
     /* code segment */
     vcode_t        HVC;
     /* execution arguments */

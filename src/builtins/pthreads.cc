@@ -73,11 +73,7 @@ void * hybris_pthread_worker( void *arg ){
 	delete call;
     delete _return;
 
-    #ifdef GC_SUPPORT
-        hybris_vm_release( args->data, NULL );
-    #else
-        hybris_vm_release( args->data );
-    #endif
+    hybris_vm_release( args->data );
 
     delete args;
 

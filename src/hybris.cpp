@@ -18,6 +18,7 @@
 */
 #include "hybris.h"
 #include "parser.hpp"
+#include "executors.h"
 
 string hbuild_function_trace( char *function, vmem_t *stack, int identifiers ){
     string trace = function + string("(");
@@ -204,57 +205,16 @@ Object *htree_execute( h_context_t *ctx, vmem_t *stackframe, Node *node ){
         return H_UNDEFINED;
     }
 
-    /* some helper variables */
-    Object *object      = NULL,
-           *destination = NULL,
-           *to          = NULL;
-    Node   *condition   = NULL,
-           *variance    = NULL,
-           *body        = NULL;
-    int tmp, idx;
-
-    #ifdef GC_SUPPORT
-    hybris_vc_release( &ctx->HVC );
-    #endif
-
     switch(node->type()){
         /* constant value */
         case H_NT_CONSTANT   :
             return node->_constant;
         /* identifier */
         case H_NT_IDENTIFIER :
-            if( (object = hybris_vm_get( stackframe, (char *)node->_identifier.c_str() )) == H_UNDEFINED ){
-                /* check if the identifier is a function name */
-                if( (idx = ctx->HVC.index( (char *)node->_identifier.c_str() )) != -1 ){
-                    /* create alias */
-                    object = new Object((unsigned int)idx);
-                }
-                else{
-                    /* check for a global defined object if the frame is not the main one */
-                    if( reinterpret_cast<long>(stackframe) != reinterpret_cast<long>(&ctx->HVM) ){
-                        object = hybris_vm_get( &ctx->HVM, (char *)node->_identifier.c_str() );
-                        if( object == H_UNDEFINED ){
-                            hybris_syntax_error( "'%s' undeclared identifier", node->_identifier.c_str() );
-                        }
-                    }
-                    else{
-                        hybris_syntax_error( "'%s' undeclared identifier", node->_identifier.c_str() );
-                    }
-                }
-            }
-            return object;
+            return hexc_identifier( ctx, stackframe, node );
         /* function definition */
         case H_NT_FUNCTION   :
-            /* check for double definition */
-            if( hybris_vc_get( &ctx->HVC, (char *)node->_function.c_str() ) != H_UNDEFINED ){
-                hybris_syntax_error( "function '%s' already defined", node->_function.c_str() );
-            }
-            else if( hfunction_search( ctx, (char *)node->_function.c_str() ) != H_UNDEFINED ){
-                hybris_syntax_error( "function '%s' already defined as a language builtin", node->_function.c_str() );
-            }
-            /* add the function to the code segment */
-            hybris_vc_add( &ctx->HVC, node );
-            return H_UNDEFINED;
+            return hexc_function( ctx, stackframe, node );
         /* function call */
         case H_NT_CALL       :
             return htree_function_call( ctx, stackframe, node );
@@ -263,296 +223,166 @@ Object *htree_execute( h_context_t *ctx, vmem_t *stackframe, Node *node ){
             switch( node->_operator ){
                 /* $ */
                 case DOLLAR :
-                    object = htree_execute( ctx,  stackframe, node->child(0) )->toString();
-                    if( (destination = hybris_vm_get( stackframe, (char *)object->xstring.c_str() )) == H_UNDEFINED ){
-                        hybris_syntax_error( "'%s' undeclared identifier", (char *)object->xstring.c_str() );
-                    }
-                    return destination;
-
+                    return hexc_dollar( ctx, stackframe, node );
+                /* * */
                 case PTR :
-                    object = htree_execute( ctx,  stackframe, node->child(0) );
-                    return new Object( (unsigned int)( reinterpret_cast<unsigned long>(new Object(object)) ) );
-
+                    return hexc_pointer( ctx, stackframe, node );
                 case OBJ :
-                    object = htree_execute( ctx,  stackframe, node->child(0) );
-                    return object->getObject();
-
-
+                    return hexc_object( ctx, stackframe, node );
                 /* return */
                 case RETURN :
-                    return new Object( htree_execute( ctx,  stackframe, node->child(0) ) );
+                    return hexc_return( ctx, stackframe, node );
                 /* expression .. expression */
                 case RANGE :
-                    return htree_execute( ctx,  stackframe, node->child(0) )->range( htree_execute( ctx,  stackframe, node->child(1) ) );
+                    return hexc_range( ctx, stackframe, node );
                 /* array[] = object; */
                 case SUBSCRIPTADD :
-                    destination = htree_execute( ctx,  stackframe, node->child(0) );
-                    object      = htree_execute( ctx,  stackframe, node->child(1) );
-                    return destination->push(object);
-                break;
-
+                    return hexc_subscript_add( ctx, stackframe, node );
                 /* (identifier)? = object[ expression ]; */
                 case SUBSCRIPTGET :
-                    if( node->children() == 3 ){
-                        destination    = htree_execute( ctx,  stackframe, node->child(0) );
-                        object         = htree_execute( ctx,  stackframe, node->child(1) );
-                        (*destination) = object->at( htree_execute( ctx, stackframe, node->child(2)) );
-                        return destination;
-                    }
-                    else{
-                        object = htree_execute( ctx,  stackframe, node->child(0) );
-                        return object->at( htree_execute( ctx, stackframe, node->child(1)) );
-                    }
+                    return hexc_subscript_get( ctx, stackframe, node );
                 /* object[ expression ] = expression */
                 case SUBSCRIPTSET :
-                    destination = htree_execute( ctx,  stackframe, node->child(0) );
-                    object      = htree_execute( ctx,  stackframe, node->child(2) );
-                    destination->at( htree_execute( ctx, stackframe, node->child(1)), object );
-                    return destination;
+                    return hexc_subscript_set( ctx, stackframe, node );
                 /* while( condition ){ body } */
                 case WHILE  :
-                    condition = node->child(0);
-                    body      = node->child(1);
-                    while( htree_execute( ctx,  stackframe, condition )->lvalue() ){
-                        htree_execute( ctx,  stackframe, body );
-                    }
-                    return H_UNDEFINED;
+                    return hexc_while( ctx, stackframe, node );
                 /* do{ body }while( condition ); */
                 case DO  :
-                    body      = node->child(0);
-                    condition = node->child(1);
-                    do{
-                        htree_execute( ctx,  stackframe, body );
-                    }
-                    while( htree_execute( ctx,  stackframe, condition )->lvalue() );
-
-                    return H_UNDEFINED;
+                    return hexc_do( ctx, stackframe, node );
                 /* for( initialization; condition; variance ){ body } */
                 case FOR    :
-                    tmp       = htree_execute( ctx,  stackframe, node->child(0) )->lvalue();
-                    condition = node->child(1);
-                    variance  = node->child(2);
-                    body      = node->child(3);
-                    for( tmp;
-                         htree_execute( ctx,  stackframe, condition )->lvalue();
-                         htree_execute( ctx,  stackframe, variance )->lvalue() ){
-                        htree_execute( ctx,  stackframe, body );
-                    }
-                    return H_UNDEFINED;
+                    return hexc_for( ctx, stackframe, node );
                 /* foreach( item of array ) */
                 case FOREACH :
-                    body   = node->child(2);
-                    object = htree_execute( ctx,  stackframe, node->child(1) );
-                    for( tmp = 0; tmp < object->xarray.size(); tmp++ ){
-                        hybris_vm_add( stackframe, (char *)node->child(0)->_identifier.c_str(), object->xarray[tmp] );
-                        htree_execute( ctx,  stackframe, body );
-                    }
-                    return H_UNDEFINED;
+                    return hexc_foreach( ctx, stackframe, node );
                 /* foreach( label -> item of map ) */
                 case FOREACHM :
-                    body   = node->child(3);
-                    object = htree_execute( ctx,  stackframe, node->child(2) );
-                    for( tmp = 0; tmp < object->xmap.size(); tmp++ ){
-                        hybris_vm_add( stackframe, (char *)node->child(0)->_identifier.c_str(), object->xmap[tmp] );
-                        hybris_vm_add( stackframe, (char *)node->child(1)->_identifier.c_str(), object->xarray[tmp] );
-                        htree_execute( ctx,  stackframe, body );
-                    }
-                    return H_UNDEFINED;
+                    return hexc_foreachm( ctx, stackframe, node );
                 break;
                 /* if( condition ) */
                 case IF     :
-                    if( htree_execute( ctx,  stackframe, node->child(0) )->lvalue() ){
-                        htree_execute( ctx,  stackframe, node->child(1) );
-                    }
-                    else if( node->children() > 2 ){
-                        htree_execute( ctx,  stackframe, node->child(2) );
-                    }
-                    return H_UNDEFINED;
+                    return hexc_if( ctx, stackframe, node );
                 /* (condition ? expression : expression) */
                 case QUESTION :
-                    if( htree_execute( ctx,  stackframe, node->child(0) )->lvalue() ){
-                        return htree_execute( ctx,  stackframe, node->child(1) );
-                    }
-                    else{
-                        return htree_execute( ctx,  stackframe, node->child(2) );
-                    }
+                    return hexc_question( ctx, stackframe, node );
                 /* expression ; */
                 case EOSTMT  :
-                    htree_execute( ctx,  stackframe, node->child(0) );
-                    return htree_execute( ctx,  stackframe, node->child(1) );
+                    return hexc_eostmt( ctx, stackframe, node );
                 /* expression.expression */
                 case DOT    :
-                    object = htree_execute( ctx,  stackframe, node->child(0) );
-                    return object->dot( htree_execute( ctx,  stackframe, node->child(1) ) );
+                    return hexc_dot( ctx, stackframe, node );
                 /* expression .= expression */
                 case DOTE   :
-                    if( (object = hybris_vm_get( stackframe, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-                        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->_identifier.c_str() );
-                    }
-                    return object->dotequal( htree_execute( ctx, stackframe, node->child(1)) );
+                    return hexc_dote( ctx, stackframe, node );
                 /* identifier = expression */
                 case ASSIGN    :
-                    object      = htree_execute( ctx,  stackframe, node->child(1) );
-                    destination = hybris_vm_add( stackframe, (char *)node->child(0)->_identifier.c_str(), object );
-                    return destination;
+                    return hexc_assign( ctx, stackframe, node );
                 /* -expression */
                 case UMINUS :
-                    object = htree_execute( ctx, stackframe, node->child(0));
-                    return -(*object);
-
+                    return hexc_uminus( ctx, stackframe, node );
                 /* expression ~= expression */
                 case REGEX_OP :
-                    return hrex_operator(  htree_execute( ctx,  stackframe, node->child(0) ),  htree_execute( ctx,  stackframe, node->child(1) ) );
-                break;
-
+                    return hexc_regex( ctx, stackframe, node );
                 /* expression + expression */
                 case PLUS    :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) + htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_plus( ctx, stackframe, node );
                 /* expression += expression */
                 case PLUSE   :
-                    if( (object = hybris_vm_get( stackframe, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-                        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->_identifier.c_str() );
-                    }
-                    (*object) += htree_execute( ctx, stackframe, node->child(1));
-                    return object;
+                    return hexc_pluse( ctx, stackframe, node );
                 /* expression - expression */
                 case MINUS    :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) - htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_minus( ctx, stackframe, node );
                 /* expression -= expression */
                 case MINUSE   :
-                    if( (object = hybris_vm_get( stackframe, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-                        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->_identifier.c_str() );
-                    }
-                    (*object) -= htree_execute( ctx, stackframe, node->child(1));
-                    return object;
+                    return hexc_minuse( ctx, stackframe, node );
                 /* expression * expression */
                 case MUL	:
-                    return (*htree_execute( ctx, stackframe, node->child(0))) * htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_mul( ctx, stackframe, node );
                 /* expression *= expression */
                 case MULE	:
-                    if( (object = hybris_vm_get( stackframe, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-                        hybris_syntax_error( "'%s' undeclared identifier", (char *)node->child(0)->_identifier.c_str() );
-                    }
-                    (*object) *= htree_execute( ctx, stackframe, node->child(1));
-                    return object;
+                    return hexc_mule( ctx, stackframe, node );
                 /* expression / expression */
                 case DIV    :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) / htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_div( ctx, stackframe, node );
                 /* expression /= expression */
                 case DIVE   :
-                    if( (object = hybris_vm_get( stackframe, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-                        hybris_syntax_error( "'%s' undeclared identifier", (char *)node->child(0)->_identifier.c_str() );
-                    }
-                    (*object) /= htree_execute( ctx, stackframe, node->child(1));
-                    return object;
+                    return hexc_dive( ctx, stackframe, node );
                 /* expression % expression */
                 case MOD    :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) % htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_mod( ctx, stackframe, node );
                 /* expression %= expression */
                 case MODE   :
-                    if( (object = hybris_vm_get( stackframe, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-                        hybris_syntax_error( "'%s' undeclared identifier", (char *)node->child(0)->_identifier.c_str() );
-                    }
-                    (*object) %= htree_execute( ctx, stackframe, node->child(1));
-                    return object;
+                    return hexc_mode( ctx, stackframe, node );
                 /* expression++ */
                 case INC    :
-                    if( (object = hybris_vm_get( stackframe, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-                        hybris_syntax_error( "'%s' undeclared identifier", (char *)node->child(0)->_identifier.c_str() );
-                    }
-                    ++(*object);
-                    return object;
+                    return hexc_inc( ctx, stackframe, node );
                 /* expression-- */
                 case DEC    :
-                    if( (object = hybris_vm_get( stackframe, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-                        hybris_syntax_error( "'%s' undeclared identifier", (char *)node->child(0)->_identifier.c_str() );
-                    }
-                    --(*object);
-                    return object;
+                    return hexc_dec( ctx, stackframe, node );
                 /* expression ^ expression */
                 case XOR    :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) ^ htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_xor( ctx, stackframe, node );
                 /* expression ^= expression */
                 case XORE   :
-                    if( (object = hybris_vm_get( stackframe, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-                        hybris_syntax_error( "'%s' undeclared identifier", (char *)node->child(0)->_identifier.c_str() );
-                    }
-                    (*object) ^= htree_execute( ctx, stackframe, node->child(1));
-                    return object;
+                    return hexc_xore( ctx, stackframe, node );
                 /* expression & expression */
                 case AND    :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) & htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_and( ctx, stackframe, node );
                 /* expression &= expression */
                 case ANDE   :
-                    if( (object = hybris_vm_get( stackframe, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-                        hybris_syntax_error( "'%s' undeclared identifier", (char *)node->child(0)->_identifier.c_str() );
-                    }
-                    (*object) &= htree_execute( ctx, stackframe, node->child(1));
-                    return object;
+                    return hexc_ande( ctx, stackframe, node );
                 /* expression | expression */
                 case OR     :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) | htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_or( ctx, stackframe, node );
                 /* expression |= expression */
                 case ORE    :
-                    if( (object = hybris_vm_get( stackframe, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-                        hybris_syntax_error( "'%s' undeclared identifier", (char *)node->child(0)->_identifier.c_str() );
-                    }
-                    (*object) |= htree_execute( ctx, stackframe, node->child(1));
-                    return object;
+                    return hexc_ore( ctx, stackframe, node );
                 /* expression << expression */
                 case SHIFTL  :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) << htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_shiftl( ctx, stackframe, node );
                 /* expression <<= expression */
                 case SHIFTLE :
-                    if( (object = hybris_vm_get( stackframe, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-                        hybris_syntax_error( "'%s' undeclared identifier", (char *)node->child(0)->_identifier.c_str() );
-                    }
-                    (*object) <<= htree_execute( ctx, stackframe, node->child(1));
-                    return object;
+                    return hexc_shiftle( ctx, stackframe, node );
                 /* expression >> expression */
                 case SHIFTR  :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) >> htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_shiftr( ctx, stackframe, node );
                 /* expression >>= expression */
                 case SHIFTRE :
-                    if( (object = hybris_vm_get( stackframe, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-                        hybris_syntax_error( "'%s' undeclared identifier", (char *)node->child(0)->_identifier.c_str() );
-                    }
-                    (*object) >>= htree_execute( ctx, stackframe, node->child(1));
-                    return object;
+                    return hexc_shiftre( ctx, stackframe, node );
                 /* expression! */
                 case FACT :
-                    object = htree_execute( ctx,  stackframe, node->child(0) );
-                    return object->factorial();
+                    return hexc_fact( ctx, stackframe, node );
                 /* ~expression */
                 case NOT    :
-                    return ~(*htree_execute( ctx,  stackframe, node->child(0) ));
+                    return hexc_not( ctx, stackframe, node );
                 /* !expression */
                 case LNOT   :
-                    return htree_execute( ctx,  stackframe, node->child(0) )->lnot();
+                    return hexc_lnot( ctx, stackframe, node );
                 /* expression < expression */
                 case LESS    :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) < htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_less( ctx, stackframe, node );
                 /* expression > expression */
                 case GREATER    :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) > htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_greater( ctx, stackframe, node );
                 /* expression >= expression */
                 case GE     :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) >= htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_ge( ctx, stackframe, node );
                 /* expression <= expression */
                 case LE     :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) <= htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_le( ctx, stackframe, node );
                 /* expression != expression */
                 case NE     :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) != htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_ne( ctx, stackframe, node );
                 /* expression == expression */
                 case EQ     :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) == htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_eq( ctx, stackframe, node );
                 /* expression && expression */
                 case LAND   :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) && htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_land( ctx, stackframe, node );
                 /* expression || expression */
                 case LOR    :
-                    return (*htree_execute( ctx, stackframe, node->child(0))) || htree_execute( ctx, stackframe, node->child(1));
+                    return hexc_lor( ctx, stackframe, node );
             }
     }
 
@@ -754,12 +584,8 @@ void h_env_release( h_context_t *ctx, int onerror /*= 0*/ ){
         pthread_mutex_unlock( &ctx->h_thread_pool_mutex );
         #endif
 
-        #ifdef GC_SUPPORT
-            hybris_vm_release( &ctx->HVM, &ctx->HVG );
-            hybris_vc_release( &ctx->HVC );
-        #else
-            hybris_vm_release( &ctx->HVM );
-        #endif
+        hybris_vm_release( &ctx->HVM );
+        hybris_vc_release( &ctx->HVC );
     }
     else{
         fclose(ctx->HARGS.compiled);

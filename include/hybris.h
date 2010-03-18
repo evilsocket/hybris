@@ -42,8 +42,8 @@ Node   *hresolve_call         ( h_context_t *ctx, vmem_t *stackframe, Node *call
 Object *htree_function_call   ( h_context_t *ctx, vmem_t *stackframe, Node *call, int threaded = 0 );
 Object *htree_execute         ( h_context_t *ctx, vmem_t *stackframe, Node *node );
 
-int  h_file_exists( char *filename );
-int  h_changepath( h_context_t *ctx );
+int     h_file_exists( char *filename );
+int     h_changepath( h_context_t *ctx );
 
 #endif
 

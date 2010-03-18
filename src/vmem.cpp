@@ -71,26 +71,6 @@ vmem_t *hybris_vm_clone( vmem_t *mem ){
     return clone;
 }
 
-#ifdef GC_SUPPORT
-void hybris_vm_release( vmem_t *mem, vgarbage_t *garbage ){
-    unsigned int size,
-                 i;
-    Object      *o;
-
-    hybris_vg_release( mem, garbage );
-
-    size = mem->size();
-    for( i = 0; i < size; i++ ){
-        o = mem->at(i);
-         #ifdef MEM_DEBUG
-        printf( "[MEM DEBUG] !!! releasing '%s' value at 0x%X (- %d bytes)\n", Object::type(o), o,  o->xsize );
-        #endif
-        delete o;
-    }
-
-    mem->clear();
-}
-#else
 void hybris_vm_release( vmem_t *mem ){
     unsigned int size,
                  i;
@@ -107,14 +87,16 @@ void hybris_vm_release( vmem_t *mem ){
 
     mem->clear();
 }
-#endif
 
-#ifdef GC_SUPPORT
-int hybris_vg_isgarbage( vmem_t *mem, Object *o ){
+int hybris_vg_isgarbage( vmem_t *mem, Object **o ){
+    if( o == H_UNDEFINED ){
+        return 0;
+    }
+
     unsigned int size = mem->size(),
                  i;
 
-    unsigned long ob_address = reinterpret_cast<unsigned long>(o),
+    unsigned long ob_address = reinterpret_cast<unsigned long>(*o),
                   vm_address;
 
     for( i = 0; i < size; i++ ){
@@ -124,6 +106,10 @@ int hybris_vg_isgarbage( vmem_t *mem, Object *o ){
         }
     }
     return 1;
+}
+
+int hybris_vg_isgarbage( vmem_t *frame, vmem_t *mem, Object **o ){
+    return hybris_vg_isgarbage( frame, o ) || hybris_vg_isgarbage( mem, o );
 }
 
 void hybris_vg_add( vgarbage_t *garbage, Object *o ){
@@ -155,7 +141,7 @@ void hybris_vg_release( vmem_t *mem, vgarbage_t *garbage ){
         size = garbage->size();
         for( i = 0; i < size; i++ ){
             o = garbage->at(i);
-            if( o && o->xsize > 0 && hybris_vg_isgarbage( mem, o ) ){
+            if( o && o->xsize > 0 && hybris_vg_isgarbage( mem, &o ) ){
                 #ifdef MEM_DEBUG
                 printf( "[MEM DEBUG] !!! releasing '%s' garbage at 0x%X (- %d bytes)\n", Object::type(o), o,  o->xsize );
                 #endif
@@ -167,7 +153,7 @@ void hybris_vg_release( vmem_t *mem, vgarbage_t *garbage ){
         garbage->clear();
     }
 }
-#endif
+
 
 Node *hybris_vc_clone( Node *function ){
     Node *node = Tree::clone( function, node );
