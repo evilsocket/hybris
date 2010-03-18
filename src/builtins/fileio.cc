@@ -1,20 +1,20 @@
 /*
- * This file is part of hybris.
+ * This file is part of the Hybris programming language interpreter.
  *
  * Copyleft of Simone Margaritelli aka evilsocket <evilsocket@gmail.com>
  *
- * hybris is free software: you can redistribute it and/or modify
+ * Hybris is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * hybris is distributed in the hope that it will be useful,
+ * Hybris is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with hybris.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "common.h"
 #include "vmem.h"
@@ -234,7 +234,7 @@ void readdir_recurse( char *root, char *dir, Object *vector ){
     char 		   path[0xFF] = {0};
     DIR           *dirh;
     struct dirent *ent;
-    
+
     if( root[strlen(root) - 1] != '/' && dir[0] != '/' ){
 		sprintf( path, "%s/%s", root, dir );
     }
@@ -253,8 +253,8 @@ void readdir_recurse( char *root, char *dir, Object *vector ){
 			name = string(path) + "/" + string(ent->d_name);
 		}
 		else{
-			name = string(path) + string(ent->d_name); 
-		}	
+			name = string(path) + string(ent->d_name);
+		}
         file->map( new Object((char *)"name"), new Object((char *)name.c_str()) );
         file->map( new Object((char *)"type"), new Object(static_cast<long>(ent->d_type)) );
         vector->push(file);
