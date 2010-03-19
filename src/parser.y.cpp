@@ -74,7 +74,7 @@ h_context_t HCTX;
 
 program    : body { };
 
-body       : body statement { htree_execute( &HCTX, &HCTX.HVM, $2 );
+body       : body statement { htree_execute( &HCTX, &HCTX.vmem, $2 );
                               Tree::release($2);
                             }
            | /* empty */ ;
@@ -199,7 +199,7 @@ int main( int argc, char *argv[] ){
     int i, f_offset = 0;
     for( i = 0; i < argc; i++ ){
         if( strcmp( argv[i], "--trace" ) == 0 ){
-            HCTX.HARGS.stacktrace = 1;
+            HCTX.args.stacktrace = 1;
         }
         else if( strcmp( argv[i], "--help" ) == 0 || strcmp( argv[i], "-h" ) == 0 ){
             return h_usage(argv[0]);
@@ -209,11 +209,11 @@ int main( int argc, char *argv[] ){
         }
     }
 
-    strncpy( HCTX.HARGS.source, argv[f_offset], sizeof(HCTX.HARGS.source) );
+    strncpy( HCTX.args.source, argv[f_offset], sizeof(HCTX.args.source) );
 
     if( f_offset > 0 ){
-        if( h_file_exists(HCTX.HARGS.source) == 0 ){
-            printf( "Error :'%s' no such file or directory .\n\n", HCTX.HARGS.source );
+        if( h_file_exists(HCTX.args.source) == 0 ){
+            printf( "Error :'%s' no such file or directory .\n\n", HCTX.args.source );
             return h_usage( argv[0] );
         }
     }
@@ -221,7 +221,7 @@ int main( int argc, char *argv[] ){
     h_env_init( &HCTX, argc, argv );
 
     extern FILE *yyin;
-    yyin = f_offset > 0 ? fopen( HCTX.HARGS.source, "r") : stdin;
+    yyin = f_offset > 0 ? fopen( HCTX.args.source, "r") : stdin;
 
     h_changepath( &HCTX );
     while( !feof(yyin) ){

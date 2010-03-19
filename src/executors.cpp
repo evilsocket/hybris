@@ -19,24 +19,24 @@
 #include "executors.h"
 
 #ifdef GC_SUPPORT
-#   define H_GC_COLLECT(o) if( hybris_vg_isgarbage( frame, &ctx->HVM, &o ) ){ delete o; }
+#   define H_GC_COLLECT(o) if( hybris_vg_isgarbage( frame, &ctx->vmem, &o ) ){ delete o; }
 #else
 #   define H_GC_COLLECT(o) // o
 #endif
 
-Object *hexc_identifier( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_identifier( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
     int     idx;
 
     // search for the identifier on the function frame
     o =  hybris_vm_get( frame, (char *)node->_identifier.c_str() );
-    if( o == H_UNDEFINED && H_ADDRESS_OF(frame) != H_ADDRESS_OF(&ctx->HVM) ){
+    if( o == H_UNDEFINED && H_ADDRESS_OF(frame) != H_ADDRESS_OF(&ctx->vmem) ){
         // search it on the global frame if it's different from local frame
-        o = hybris_vm_get( &ctx->HVM, (char *)node->_identifier.c_str() );
+        o = hybris_vm_get( &ctx->vmem, (char *)node->_identifier.c_str() );
     }
     // search for it as a function name
     if( o == H_UNDEFINED ){
-        idx = ctx->HVC.index( (char *)node->_identifier.c_str() );
+        idx = ctx->vcode.index( (char *)node->_identifier.c_str() );
         if( idx != -1 ){
             o = new Object((unsigned int)idx);
         }
@@ -49,21 +49,21 @@ Object *hexc_identifier( h_context_t *ctx, vmem_t *frame, Node *node ){
     return o;
 }
 
-Object *hexc_function( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_function( h_context_t *ctx, vmem_t *frame, Node *node ){
     /* check for double definition */
-    if( hybris_vc_get( &ctx->HVC, (char *)node->_function.c_str() ) != H_UNDEFINED ){
+    if( hybris_vc_get( &ctx->vcode, (char *)node->_function.c_str() ) != H_UNDEFINED ){
         hybris_syntax_error( "function '%s' already defined", node->_function.c_str() );
     }
     else if( hfunction_search( ctx, (char *)node->_function.c_str() ) != H_UNDEFINED ){
         hybris_syntax_error( "function '%s' already defined as a language builtin", node->_function.c_str() );
     }
     /* add the function to the code segment */
-    hybris_vc_add( &ctx->HVC, node );
+    hybris_vc_add( &ctx->vcode, node );
 
     return H_UNDEFINED;
 }
 
-Object *hexc_dollar( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_dollar( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *o    = H_UNDEFINED,
            *name = H_UNDEFINED;
 
@@ -81,7 +81,7 @@ Object *hexc_dollar( h_context_t *ctx, vmem_t *frame, Node *node ){
     return o;
 }
 
-Object *hexc_pointer( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_pointer( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *o   = H_UNDEFINED,
            *res = H_UNDEFINED;
 
@@ -93,7 +93,7 @@ Object *hexc_pointer( h_context_t *ctx, vmem_t *frame, Node *node ){
     return res;
 }
 
-Object *hexc_object( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_object( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *o   = H_UNDEFINED,
            *res = H_UNDEFINED;
 
@@ -105,14 +105,14 @@ Object *hexc_object( h_context_t *ctx, vmem_t *frame, Node *node ){
     return res;
 }
 
-Object *hexc_return( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_return( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
     o = htree_execute( ctx,  frame, node->child(0) );
     return o;
 }
 
-Object *hexc_range( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_range( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *range = H_UNDEFINED,
            *from  = H_UNDEFINED,
            *to    = H_UNDEFINED;
@@ -127,7 +127,7 @@ Object *hexc_range( h_context_t *ctx, vmem_t *frame, Node *node ){
     return range;
 }
 
-Object *hexc_subscript_add( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_subscript_add( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *array  = H_UNDEFINED,
            *object = H_UNDEFINED,
            *res    = H_UNDEFINED;
@@ -142,7 +142,7 @@ Object *hexc_subscript_add( h_context_t *ctx, vmem_t *frame, Node *node ){
     return res;
 }
 
-Object *hexc_subscript_get( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_subscript_get( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *identifier = H_UNDEFINED,
            *array      = H_UNDEFINED,
            *index      = H_UNDEFINED,
@@ -168,7 +168,7 @@ Object *hexc_subscript_get( h_context_t *ctx, vmem_t *frame, Node *node ){
     return result;
 }
 
-Object *hexc_subscript_set( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_subscript_set( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *array  = H_UNDEFINED,
            *index  = H_UNDEFINED,
            *object = H_UNDEFINED;
@@ -185,7 +185,7 @@ Object *hexc_subscript_set( h_context_t *ctx, vmem_t *frame, Node *node ){
     return array;
 }
 
-Object *hexc_while( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_while( h_context_t *ctx, vmem_t *frame, Node *node ){
     Node *condition,
          *body;
 
@@ -205,7 +205,7 @@ Object *hexc_while( h_context_t *ctx, vmem_t *frame, Node *node ){
     return H_UNDEFINED;
 }
 
-Object *hexc_do( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_do( h_context_t *ctx, vmem_t *frame, Node *node ){
     Node *condition,
          *body;
 
@@ -227,7 +227,7 @@ Object *hexc_do( h_context_t *ctx, vmem_t *frame, Node *node ){
     return H_UNDEFINED;
 }
 
-Object *hexc_for( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_for( h_context_t *ctx, vmem_t *frame, Node *node ){
     Node *condition,
          *increment,
          *body;
@@ -258,7 +258,7 @@ Object *hexc_for( h_context_t *ctx, vmem_t *frame, Node *node ){
     return H_UNDEFINED;
 }
 
-Object *hexc_foreach( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_foreach( h_context_t *ctx, vmem_t *frame, Node *node ){
     int     i, size;
     Node   *body;
     Object *map    = H_UNDEFINED,
@@ -281,7 +281,7 @@ Object *hexc_foreach( h_context_t *ctx, vmem_t *frame, Node *node ){
     return H_UNDEFINED;
 }
 
-Object *hexc_foreachm( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_foreachm( h_context_t *ctx, vmem_t *frame, Node *node ){
     int     i, size;
     Node   *body;
     Object *map    = H_UNDEFINED,
@@ -307,7 +307,7 @@ Object *hexc_foreachm( h_context_t *ctx, vmem_t *frame, Node *node ){
     return H_UNDEFINED;
 }
 
-Object *hexc_if( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_if( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *boolean = H_UNDEFINED,
            *result  = H_UNDEFINED;
 
@@ -327,7 +327,7 @@ Object *hexc_if( h_context_t *ctx, vmem_t *frame, Node *node ){
     return H_UNDEFINED;
 }
 
-Object *hexc_question( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_question( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *boolean = H_UNDEFINED,
            *result  = H_UNDEFINED;
 
@@ -345,7 +345,7 @@ Object *hexc_question( h_context_t *ctx, vmem_t *frame, Node *node ){
     return result;
 }
 
-Object *hexc_eostmt( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_eostmt( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *res_1 = H_UNDEFINED,
            *res_2 = H_UNDEFINED;
 
@@ -357,7 +357,7 @@ Object *hexc_eostmt( h_context_t *ctx, vmem_t *frame, Node *node ){
     return res_2;
 }
 
-Object *hexc_dot( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_dot( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a      = H_UNDEFINED,
            *b      = H_UNDEFINED,
            *result = H_UNDEFINED;
@@ -372,7 +372,7 @@ Object *hexc_dot( h_context_t *ctx, vmem_t *frame, Node *node ){
     return result;
 }
 
-Object *hexc_dote( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_dote( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a      = H_UNDEFINED,
            *b      = H_UNDEFINED,
            *result = H_UNDEFINED;
@@ -390,7 +390,7 @@ Object *hexc_dote( h_context_t *ctx, vmem_t *frame, Node *node ){
     return result;
 }
 
-Object *hexc_assign( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_assign( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *object = H_UNDEFINED,
            *value  = H_UNDEFINED;
 
@@ -402,7 +402,7 @@ Object *hexc_assign( h_context_t *ctx, vmem_t *frame, Node *node ){
     return object;
 }
 
-Object *hexc_uminus( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_uminus( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *o      = H_UNDEFINED,
            *result = H_UNDEFINED;
 
@@ -414,7 +414,7 @@ Object *hexc_uminus( h_context_t *ctx, vmem_t *frame, Node *node ){
     return result;
 }
 
-Object *hexc_regex( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_regex( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *o      = H_UNDEFINED,
            *regexp = H_UNDEFINED,
            *result = H_UNDEFINED;
@@ -429,7 +429,7 @@ Object *hexc_regex( h_context_t *ctx, vmem_t *frame, Node *node ){
     return result;
 }
 
-Object *hexc_plus( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_plus( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -444,7 +444,7 @@ Object *hexc_plus( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_pluse( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_pluse( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -461,7 +461,7 @@ Object *hexc_pluse( h_context_t *ctx, vmem_t *frame, Node *node ){
     return a;
 }
 
-Object *hexc_minus( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_minus( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -476,7 +476,7 @@ Object *hexc_minus( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_minuse( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_minuse( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -493,7 +493,7 @@ Object *hexc_minuse( h_context_t *ctx, vmem_t *frame, Node *node ){
     return a;
 }
 
-Object *hexc_mul( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_mul( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -508,7 +508,7 @@ Object *hexc_mul( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_mule( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_mule( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -525,7 +525,7 @@ Object *hexc_mule( h_context_t *ctx, vmem_t *frame, Node *node ){
     return a;
 }
 
-Object *hexc_div( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_div( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -540,7 +540,7 @@ Object *hexc_div( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_dive( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_dive( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -557,7 +557,7 @@ Object *hexc_dive( h_context_t *ctx, vmem_t *frame, Node *node ){
     return a;
 }
 
-Object *hexc_mod( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_mod( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -572,7 +572,7 @@ Object *hexc_mod( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_mode( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_mode( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -589,7 +589,7 @@ Object *hexc_mode( h_context_t *ctx, vmem_t *frame, Node *node ){
     return a;
 }
 
-Object *hexc_inc( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_inc( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
     if( (o = hybris_vm_get( frame, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
@@ -599,7 +599,7 @@ Object *hexc_inc( h_context_t *ctx, vmem_t *frame, Node *node ){
     return o;
 }
 
-Object *hexc_dec( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_dec( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
     if( (o = hybris_vm_get( frame, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
@@ -609,7 +609,7 @@ Object *hexc_dec( h_context_t *ctx, vmem_t *frame, Node *node ){
     return o;
 }
 
-Object *hexc_xor( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_xor( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -624,7 +624,7 @@ Object *hexc_xor( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_xore( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_xore( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -641,7 +641,7 @@ Object *hexc_xore( h_context_t *ctx, vmem_t *frame, Node *node ){
     return a;
 }
 
-Object *hexc_and( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_and( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -656,7 +656,7 @@ Object *hexc_and( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_ande( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_ande( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -673,7 +673,7 @@ Object *hexc_ande( h_context_t *ctx, vmem_t *frame, Node *node ){
     return a;
 }
 
-Object *hexc_or( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_or( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -688,7 +688,7 @@ Object *hexc_or( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_ore( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_ore( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -705,7 +705,7 @@ Object *hexc_ore( h_context_t *ctx, vmem_t *frame, Node *node ){
     return a;
 }
 
-Object *hexc_shiftl( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_shiftl( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -720,7 +720,7 @@ Object *hexc_shiftl( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_shiftle( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_shiftle( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -737,7 +737,7 @@ Object *hexc_shiftle( h_context_t *ctx, vmem_t *frame, Node *node ){
     return a;
 }
 
-Object *hexc_shiftr( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_shiftr( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -752,7 +752,7 @@ Object *hexc_shiftr( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_shiftre( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_shiftre( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -769,7 +769,7 @@ Object *hexc_shiftre( h_context_t *ctx, vmem_t *frame, Node *node ){
     return a;
 }
 
-Object *hexc_fact( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_fact( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *o = H_UNDEFINED,
            *r = H_UNDEFINED;
 
@@ -781,7 +781,7 @@ Object *hexc_fact( h_context_t *ctx, vmem_t *frame, Node *node ){
     return r;
 }
 
-Object *hexc_not( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_not( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *o = H_UNDEFINED,
            *r = H_UNDEFINED;
 
@@ -793,7 +793,7 @@ Object *hexc_not( h_context_t *ctx, vmem_t *frame, Node *node ){
     return r;
 }
 
-Object *hexc_lnot( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_lnot( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *o = H_UNDEFINED,
            *r = H_UNDEFINED;
 
@@ -805,7 +805,7 @@ Object *hexc_lnot( h_context_t *ctx, vmem_t *frame, Node *node ){
     return r;
 }
 
-Object *hexc_less( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_less( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -820,7 +820,7 @@ Object *hexc_less( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_greater( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_greater( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -835,7 +835,7 @@ Object *hexc_greater( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_ge( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_ge( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -850,7 +850,7 @@ Object *hexc_ge( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_le( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_le( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -865,7 +865,7 @@ Object *hexc_le( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_ne( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_ne( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -880,7 +880,7 @@ Object *hexc_ne( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_eq( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_eq( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -895,7 +895,7 @@ Object *hexc_eq( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_land( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_land( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -910,7 +910,7 @@ Object *hexc_land( h_context_t *ctx, vmem_t *frame, Node *node ){
     return c;
 }
 
-Object *hexc_lor( h_context_t *ctx, vmem_t *frame, Node *node ){
+Object *exec_lor( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;

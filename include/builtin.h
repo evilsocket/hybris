@@ -42,9 +42,9 @@ typedef Object * (*function_t)( struct _h_context *, vmem_t * );
 #define HYBRIS_BUILTIN(name) Object *name( h_context_t *ctx, vmem_t *data )
 
 /* helper macro to define a builtin function */
-#define HYBRIS_DEFINE_BUILTIN( ctx, name, func ) ctx->HSTATICBUILTINS.push_back( new builtin_t( name, func ) )
+#define HYBRIS_DEFINE_BUILTIN( ctx, name, func ) ctx->builtins.push_back( new builtin_t( name, func ) )
 /* helper macro to define a builtin constant */
-#define HYBRIS_DEFINE_CONSTANT( ctx, name, value ) ctx->HSTATICCONSTANTS.push_back( new builtin_constant_t( name, new Object( value  ) ) )
+#define HYBRIS_DEFINE_CONSTANT( ctx, name, value ) ctx->constants.push_back( new builtin_constant_t( name, new Object( value  ) ) )
 
 /* builtins definition list item structure */
 typedef struct _builtin {
@@ -81,29 +81,31 @@ module_t;
 /* module initializer function pointer prototype */
 typedef void (*initializer_t)( struct _h_context * );
 
+typedef vector<builtin_constant_t *> h_constants_t;
+typedef vector<builtin_t *>          h_builtins_t;
+typedef vector<module_t *>           h_modules_t;
+
 /* hybris execution contest structure */
 typedef struct _h_context {
     /* function call trace vector */
-    vector<string> HSTACKTRACE;
+    vector<string> stack_trace;
     /* data segment */
-    vmem_t         HVM;
-    /* garbage segment */
-    vgarbage_t     HVG;
+    vmem_t         vmem;
     /* code segment */
-    vcode_t        HVC;
+    vcode_t        vcode;
     /* execution arguments */
-    h_args_t       HARGS;
+    h_args_t       args;
     /* default constants */
-    vector<builtin_constant_t *> HSTATICCONSTANTS;
+    h_constants_t  constants;
     /* builtin functions */
-    vector<builtin_t *>          HSTATICBUILTINS;
+    h_builtins_t   builtins;
     /* dynamically loaded modules */
-    vector<module_t *>           HDYNAMICMODULES;
+    h_modules_t    modules;
     #ifdef MT_SUPPORT
     /* running threads pool vector */
-    vector<pthread_t> h_thread_pool;
+    vector<pthread_t> th_pool;
     /* threads mutex */
-    pthread_mutex_t   h_thread_pool_mutex;
+    pthread_mutex_t   th_mutex;
     #endif
 }
 h_context_t;

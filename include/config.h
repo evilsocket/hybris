@@ -30,7 +30,7 @@
 // memory allocation debug messages
 // #define MEM_DEBUG 1
 
-// basic garbage collection, VERY EXPERIMENTAL AND UNSTABLE !!!
+// basic garbage collection
 #define GC_SUPPORT 1
 
 // security check on bounds for array/map/matrix access

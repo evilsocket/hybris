@@ -62,25 +62,25 @@ void hmodule_load( h_context_t *ctx, char *module ){
         i++;
     }
 
-    ctx->HDYNAMICMODULES.push_back(hmod);
+    ctx->modules.push_back(hmod);
 }
 
 function_t hfunction_search( h_context_t *ctx, char *identifier ){
-    unsigned int i = 0, j = 0, ndyns = ctx->HDYNAMICMODULES.size(), nfuncs;
+    unsigned int i = 0, j = 0, ndyns = ctx->modules.size(), nfuncs;
     /* firs search the function in builtins symbols */
-    for( i = 0; i < ctx->HSTATICBUILTINS.size(); i++ ){
-        if( ctx->HSTATICBUILTINS[i]->identifier == identifier ){
-            return ctx->HSTATICBUILTINS[i]->function;
+    for( i = 0; i < ctx->builtins.size(); i++ ){
+        if( ctx->builtins[i]->identifier == identifier ){
+            return ctx->builtins[i]->function;
         }
     }
 
     /* then search it in dynamic loaded modules */
     for( i = 0; i < ndyns; i++ ){
         /* for each function of the module */
-        nfuncs = ctx->HDYNAMICMODULES[i]->functions.size();
+        nfuncs = ctx->modules[i]->functions.size();
         for( j = 0; j < nfuncs; j++ ){
-            if( ctx->HDYNAMICMODULES[i]->functions[j]->identifier == identifier ){
-                return ctx->HDYNAMICMODULES[i]->functions[j]->function;
+            if( ctx->modules[i]->functions[j]->identifier == identifier ){
+                return ctx->modules[i]->functions[j]->function;
             }
         }
     }

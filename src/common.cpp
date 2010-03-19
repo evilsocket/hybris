@@ -24,11 +24,11 @@
 void hprint_stacktrace( int force /* = 0 */ ){
     extern h_context_t HCTX;
 
-    if( (HCTX.HARGS.stacktrace && HCTX.HSTACKTRACE.size()) || force ){
-        int tail = HCTX.HSTACKTRACE.size() - 1;
+    if( (HCTX.args.stacktrace && HCTX.stack_trace.size()) || force ){
+        int tail = HCTX.stack_trace.size() - 1;
         printf( "\nSTACK TRACE :\n\n" );
         for( int i = tail; i >= 0; i-- ){
-            printf( "\t%.3d : %s\n", i, HCTX.HSTACKTRACE[i].c_str() );
+            printf( "\t%.3d : %s\n", i, HCTX.stack_trace[i].c_str() );
         }
         printf( "\n" );
     }

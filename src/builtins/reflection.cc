@@ -25,8 +25,8 @@ extern Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *
 HYBRIS_BUILTIN(hvar_names){
 	unsigned int i;
 	Object *array = new Object();
-	for( i = 0; i < ctx->HVM.size(); i++ ){
-		array->push( new Object((char *)ctx->HVM.label(i)) );
+	for( i = 0; i < ctx->vmem.size(); i++ ){
+		array->push( new Object((char *)ctx->vmem.label(i)) );
 	}
 	return array;
 }
@@ -34,8 +34,8 @@ HYBRIS_BUILTIN(hvar_names){
 HYBRIS_BUILTIN(hvar_values){
 	unsigned int i;
 	Object *array = new Object();
-	for( i = 0; i < ctx->HVM.size(); i++ ){
-		array->push( ctx->HVM.at(i) );
+	for( i = 0; i < ctx->vmem.size(); i++ ){
+		array->push( ctx->vmem.at(i) );
 	}
 	return array;
 }
@@ -43,8 +43,8 @@ HYBRIS_BUILTIN(hvar_values){
 HYBRIS_BUILTIN(huser_functions){
 	unsigned int i;
 	Object *array = new Object();
-	for( i = 0; i < ctx->HVC.size(); i++ ){
-		array->push( new Object((char *)ctx->HVC.label(i)) );
+	for( i = 0; i < ctx->vcode.size(); i++ ){
+		array->push( new Object((char *)ctx->vcode.label(i)) );
 	}
 	return array;
 }
@@ -53,19 +53,19 @@ HYBRIS_BUILTIN(hcore_functions){
 	unsigned int i = 0;
 	Object *array = new Object();
 
-    for( i = 0; i < ctx->HSTATICBUILTINS.size(); i++ ){
-        array->push( new Object((char *)ctx->HSTATICBUILTINS[i]->identifier.c_str()) );
+    for( i = 0; i < ctx->builtins.size(); i++ ){
+        array->push( new Object((char *)ctx->builtins[i]->identifier.c_str()) );
     }
 
 	return array;
 }
 
 HYBRIS_BUILTIN(hdyn_functions){
-    unsigned int i, j, mods = ctx->HDYNAMICMODULES.size(), dyns;
+    unsigned int i, j, mods = ctx->modules.size(), dyns;
 
     Object *map = new Object();
     for( i = 0; i < mods; i++ ){
-        module_t *mod = ctx->HDYNAMICMODULES[i];
+        module_t *mod = ctx->modules[i];
         Object   *dyn = new Object();
         dyns          = mod->functions.size();
         for( j = 0; j < dyns; j++ ){

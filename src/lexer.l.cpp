@@ -34,7 +34,7 @@ char             h_handle_char( char delimiter );
 function_decl_t *h_handle_function( char * text );
 
 extern int yylineno;
-//extern h_args_t HARGS;
+//extern h_args_t args;
 extern h_context_t HCTX;
 
 %}

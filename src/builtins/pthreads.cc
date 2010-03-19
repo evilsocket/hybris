@@ -26,18 +26,18 @@ extern Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *
 extern h_context_t HCTX;
 
 
-#define POOL_ADD(tid) pthread_mutex_lock( &HCTX.h_thread_pool_mutex ); \
-                        HCTX.h_thread_pool.push_back(tid); \
-                      pthread_mutex_unlock( &HCTX.h_thread_pool_mutex )
+#define POOL_ADD(tid) pthread_mutex_lock( &HCTX.th_mutex ); \
+                        HCTX.th_pool.push_back(tid); \
+                      pthread_mutex_unlock( &HCTX.th_mutex )
 
-#define POOL_DEL(tid) pthread_mutex_lock( &HCTX.h_thread_pool_mutex ); \
-                        for( int pool_i = 0; pool_i < HCTX.h_thread_pool.size(); pool_i++ ){ \
-                            if( HCTX.h_thread_pool[pool_i] == tid ){ \
-                                HCTX.h_thread_pool.erase( HCTX.h_thread_pool.begin() + pool_i ); \
+#define POOL_DEL(tid) pthread_mutex_lock( &HCTX.th_mutex ); \
+                        for( int pool_i = 0; pool_i < HCTX.th_pool.size(); pool_i++ ){ \
+                            if( HCTX.th_pool[pool_i] == tid ){ \
+                                HCTX.th_pool.erase( HCTX.th_pool.begin() + pool_i ); \
                                 break; \
                             } \
                         } \
-                      pthread_mutex_unlock( &HCTX.h_thread_pool_mutex )
+                      pthread_mutex_unlock( &HCTX.th_mutex )
 
 typedef struct {
     vmem_t      *data;

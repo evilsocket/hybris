@@ -95,11 +95,9 @@ int hybris_vg_isgarbage( vmem_t *mem, Object **o ){
     }
 
     Object *object = H_UNDEFINED;
-    unsigned int size = mem->size(),
-                 i;
+    unsigned int i, size = mem->size();
     unsigned long ob_address = H_ADDRESS_OF(*o),
                   vm_address;
-
 
     for( i = 0; i < size; i++ ){
         object     = mem->at(i);
@@ -113,51 +111,37 @@ int hybris_vg_isgarbage( vmem_t *mem, Object **o ){
 }
 
 int hybris_vg_isgarbage( vmem_t *frame, vmem_t *mem, Object **o ){
-    return hybris_vg_isgarbage( frame, o ) && hybris_vg_isgarbage( mem, o );
-}
+    /* null objects and constants are obviously not deletable */
+    if( o == H_UNDEFINED || *o == H_UNDEFINED || (*o)->is_constant ){
+        return 0;
+    }
 
-void hybris_vg_add( vgarbage_t *garbage, Object *o ){
-    garbage->push_back(o);
-}
-
-void hybris_vg_del( vgarbage_t *garbage, Object *o ){
-    unsigned int size = garbage->size(),
-                 i;
-
-    unsigned long ob_address = H_ADDRESS_OF(o),
+    Object *object = H_UNDEFINED;
+    unsigned int i, size = mem->size();
+    unsigned long ob_address = H_ADDRESS_OF(*o),
                   vm_address;
 
     for( i = 0; i < size; i++ ){
-        vm_address = H_ADDRESS_OF( garbage->at(i) );
-        if( ob_address == vm_address ){
-            garbage->erase( garbage->begin() + i );
-            return;
+        object     = mem->at(i);
+        vm_address = H_ADDRESS_OF(object);
+        /* if 'o' is a declared variable or some variable owns 'o' then we can not delete it */
+        if( ob_address == vm_address || object->owns(o) ){
+            return 0;
         }
     }
-}
 
-void hybris_vg_release( vmem_t *mem, vgarbage_t *garbage ){
-    unsigned int size,
-                 i;
-    Object      *o;
-
-    if( garbage != NULL ){
-        size = garbage->size();
-        for( i = 0; i < size; i++ ){
-            o = garbage->at(i);
-            if( o && o->xsize > 0 && hybris_vg_isgarbage( mem, &o ) ){
-                #ifdef MEM_DEBUG
-                printf( "[MEM DEBUG] !!! releasing '%s' garbage at 0x%X (- %d bytes)\n", Object::type(o), o,  o->xsize );
-                #endif
-                delete o;
-                /* update garbage size upon new item removal */
-                size = garbage->size();
-            }
+    size = frame->size();
+    for( i = 0; i < size; i++ ){
+        object     = frame->at(i);
+        vm_address = H_ADDRESS_OF(object);
+        /* if 'o' is a declared variable or some variable owns 'o' then we can not delete it */
+        if( ob_address == vm_address || object->owns(o) ){
+            return 0;
         }
-        garbage->clear();
     }
-}
 
+    return 1;
+}
 
 Node *hybris_vc_clone( Node *function ){
     Node *node = Tree::clone( function, node );

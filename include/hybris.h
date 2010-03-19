@@ -25,14 +25,14 @@
 #include "tree.h"
 #include "common.h"
 
-#define POOL_DEL(tid) pthread_mutex_lock( &ctx->h_thread_pool_mutex ); \
-                        for( int pool_i = 0; pool_i < ctx->h_thread_pool.size(); pool_i++ ){ \
-                            if( ctx->h_thread_pool[pool_i] == tid ){ \
-                                ctx->h_thread_pool.erase( ctx->h_thread_pool.begin() + pool_i ); \
+#define POOL_DEL(tid) pthread_mutex_lock( &ctx->th_mutex ); \
+                        for( int pool_i = 0; pool_i < ctx->th_pool.size(); pool_i++ ){ \
+                            if( ctx->th_pool[pool_i] == tid ){ \
+                                ctx->th_pool.erase( ctx->th_pool.begin() + pool_i ); \
                                 break; \
                             } \
                         } \
-                      pthread_mutex_unlock( &ctx->h_thread_pool_mutex )
+                      pthread_mutex_unlock( &ctx->th_mutex )
 
 void    h_env_init    ( h_context_t *ctx, int argc, char *argv[] );
 void    h_env_release ( h_context_t *ctx, int onerror = 0 );
