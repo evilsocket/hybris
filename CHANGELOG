@@ -1,7 +1,0 @@
-New in 0.7.1 beta :
-
-- Added this changelog file.
-- All .hs files renamed to .hy (sorry haskell guys :P).
-- Improved command line parsing and removed code redundancies.
-- Implemented standard input code parsing & execution.
-- Fixed file perms.
