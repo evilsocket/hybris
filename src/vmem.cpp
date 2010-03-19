@@ -89,19 +89,23 @@ void hybris_vm_release( vmem_t *mem ){
 }
 
 int hybris_vg_isgarbage( vmem_t *mem, Object **o ){
-    if( o == H_UNDEFINED ){
+    /* null objects and constants are obviously not deletable */
+    if( o == H_UNDEFINED || *o == H_UNDEFINED || (*o)->is_constant ){
         return 0;
     }
 
+    Object *object = H_UNDEFINED;
     unsigned int size = mem->size(),
                  i;
-
-    unsigned long ob_address = reinterpret_cast<unsigned long>(*o),
+    unsigned long ob_address = H_ADDRESS_OF(*o),
                   vm_address;
 
+
     for( i = 0; i < size; i++ ){
-        vm_address = reinterpret_cast<unsigned long>( mem->at(i) );
-        if( ob_address == vm_address ){
+        object     = mem->at(i);
+        vm_address = H_ADDRESS_OF(object);
+        /* if 'o' is a declared variable or some variable owns 'o' then we can not delete it */
+        if( ob_address == vm_address || object->owns(o) ){
             return 0;
         }
     }
@@ -109,7 +113,7 @@ int hybris_vg_isgarbage( vmem_t *mem, Object **o ){
 }
 
 int hybris_vg_isgarbage( vmem_t *frame, vmem_t *mem, Object **o ){
-    return hybris_vg_isgarbage( frame, o ) || hybris_vg_isgarbage( mem, o );
+    return hybris_vg_isgarbage( frame, o ) && hybris_vg_isgarbage( mem, o );
 }
 
 void hybris_vg_add( vgarbage_t *garbage, Object *o ){
@@ -120,11 +124,11 @@ void hybris_vg_del( vgarbage_t *garbage, Object *o ){
     unsigned int size = garbage->size(),
                  i;
 
-    unsigned long ob_address = reinterpret_cast<unsigned long>(o),
+    unsigned long ob_address = H_ADDRESS_OF(o),
                   vm_address;
 
     for( i = 0; i < size; i++ ){
-        vm_address = reinterpret_cast<unsigned long>( garbage->at(i) );
+        vm_address = H_ADDRESS_OF( garbage->at(i) );
         if( ob_address == vm_address ){
             garbage->erase( garbage->begin() + i );
             return;

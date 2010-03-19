@@ -41,7 +41,7 @@ class Node {
 
 private :
 
-    H_NODE_TYPE     m_type;
+    H_NODE_TYPE    m_type;
     vector<Node *> m_children;
 
 public  :

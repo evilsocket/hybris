@@ -25,24 +25,28 @@ HNodeList *Tree::createList(){
 Node *Tree::addInt( long value ){
 	Node *node      = new Node(H_NT_CONSTANT);
 	node->_constant = new Object(value);
+	node->_constant->is_constant = 1;
 	return node;
 }
 
 Node *Tree::addFloat( double value ){
 	Node *node      = new Node(H_NT_CONSTANT);
 	node->_constant = new Object(value);
+	node->_constant->is_constant = 1;
 	return node;
 }
 
 Node *Tree::addChar( char value ){
 	Node *node      = new Node(H_NT_CONSTANT);
 	node->_constant = new Object(value);
+	node->_constant->is_constant = 1;
 	return node;
 }
 
 Node *Tree::addString( char *value ){
 	Node *node      = new Node(H_NT_CONSTANT);
 	node->_constant = new Object(value);
+	node->_constant->is_constant = 1;
 	return node;
 }
 
@@ -159,48 +163,7 @@ void Tree::print( Node *node, int tabs /*= 0*/ ){
 		}
 	}
 }
-/*
-void Tree::compile( Node *node, FILE *fp ){
-	H_NODE_TYPE type = node->type();
-	fwrite( &type, 1, sizeof(H_NODE_TYPE), fp );
-	unsigned int n;
 
-	switch(type){
-		case H_NT_CONSTANT   :
-			node->_constant->compile(fp);
-		break;
-		case H_NT_IDENTIFIER :
-			n = strlen(node->_identifier) + 1;
-			fwrite( &n , 1, sizeof(unsigned int), fp );
-			fwrite( node->_identifier, 1, n, fp );
-		break;
-		case H_NT_OPERATOR   :
-			n = node->_operator;
-			fwrite( &n, 1, sizeof(long), fp );
-		break;
-		case H_NT_FUNCTION   :
-			n = strlen(node->_function) + 1;
-			fwrite( &n , 1, sizeof(unsigned int), fp );
-			fwrite( node->_function, 1, n, fp );
-		break;
-		case H_NT_CALL       :
-			n = strlen(node->_call) + 1;
-			fwrite( &n , 1, sizeof(unsigned int), fp );
-			fwrite( node->_call, 1, n, fp );
-		break;
-	}
-
-	unsigned int children = node->children(), i;
-	fwrite( &children, 1, sizeof(long), fp );
-	for( i = 0; i < children; i++ ){
-		Tree::compile( node->child(i), fp );
-	}
-}
-
-Node * Tree::load( FILE *fp ){
-	return new Node(fp);
-}
-*/
 Node *Tree::clone( Node *root, Node *clone ){
 	if( root ){
 		int i;
@@ -257,6 +220,7 @@ void Tree::release( Node *node ){
 				Tree::release( node->child(i) );
 			}
 		}
+		delete node;
 	}
 }
 

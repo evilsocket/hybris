@@ -21,6 +21,10 @@
 
 #include "config.h"
 
+#ifndef H_ADDRESS_OF
+#   define H_ADDRESS_OF(o) reinterpret_cast<unsigned long>(o)
+#endif
+
 #include <string>
 #include <sstream>
 #include <vector>
@@ -74,6 +78,7 @@ public  :
     H_OBJECT_TYPE    xtype;
     unsigned int     xsize;
     unsigned int     is_extern;
+    unsigned int     is_constant;
 
     long             xint;
     double           xfloat;
@@ -100,9 +105,9 @@ public  :
 	Object( unsigned int value );
 	Object( unsigned int rows, unsigned int columns, vector<Object *>& data );
     Object( Object *o );
-    Object( FILE *fp );
 
     void release();
+    int  owns( Object **o );
 
     ~Object();
 

@@ -20,7 +20,7 @@
 #   define _HCONFIG_H_
 
 #define AUTHOR  "The Hybris Dev Team [http://www.hybris-lang.org/]"
-#define VERSION "0.7.1b"
+#define VERSION "0.8b"
 
 // system path for libraries (.so dynamic libs)
 #define LIBS_PATH "/usr/lib/hybris/libs/"
@@ -29,6 +29,9 @@
 
 // memory allocation debug messages
 // #define MEM_DEBUG 1
+
+// basic garbage collection, VERY EXPERIMENTAL AND UNSTABLE !!!
+#define GC_SUPPORT 1
 
 // security check on bounds for array/map/matrix access
 #define BOUNDS_CHECK 1

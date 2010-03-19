@@ -115,7 +115,7 @@ statements : /* empty */          { $$ = 0;  }
 expression : INTEGER                                 { $$ = Tree::addInt($1); }
            | REAL                                    { $$ = Tree::addFloat($1); }
            | CHAR                                    { $$ = Tree::addChar($1); }
-           | STRING                                  { $$ = Tree::addString($1); free($1); }
+           | STRING                                  { $$ = Tree::addString($1);     free($1); }
            | IDENT                                   { $$ = Tree::addIdentifier($1); free($1); }
            /* expression evaluation returns an identifier */
            | DOLLAR expression                       { $$ = Tree::addOperator( DOLLAR, 1, $2 ); }
@@ -209,7 +209,6 @@ int main( int argc, char *argv[] ){
         }
     }
 
-    HCTX.HARGS.action = H_EXECUTE;
     strncpy( HCTX.HARGS.source, argv[f_offset], sizeof(HCTX.HARGS.source) );
 
     if( f_offset > 0 ){

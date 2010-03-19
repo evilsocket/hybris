@@ -1,5 +1,3 @@
-import does_not_exist;
-
 start = ticks();
 print( "usleep per un secondo\n" );
 usleep( 1 * 1000000 );

@@ -185,28 +185,32 @@ Object::Object( long value ) {
 	xtype = H_OT_INT;
 	xint  = value;
 	xsize = sizeof(long);
-	is_extern = 0;
+	is_extern   = 0;
+	is_constant = 0;
 }
 
 Object::Object( long value, unsigned int _is_extern ) {
 	xtype = H_OT_INT;
 	xint  = value;
 	xsize = sizeof(long);
-	is_extern = _is_extern;
+	is_extern   = _is_extern;
+	is_constant = 0;
 }
 
 Object::Object( double value ) {
 	xtype  = H_OT_FLOAT;
 	xfloat = value;
 	xsize  = sizeof(double);
-	is_extern = 0;
+	is_extern   = 0;
+	is_constant = 0;
 }
 
 Object::Object( char value ) {
 	xtype = H_OT_CHAR;
 	xchar = value;
 	xsize = sizeof(char);
-	is_extern = 0;
+	is_extern   = 0;
+	is_constant = 0;
 }
 
 Object::Object( char *value ) {
@@ -214,28 +218,32 @@ Object::Object( char *value ) {
 	xstring = value;
 	parse_string( xstring );
 	xsize   = strlen(xstring.c_str()) + 1;
-	is_extern = 0;
+	is_extern   = 0;
+	is_constant = 0;
 }
 
 Object::Object(){
 	xtype = H_OT_ARRAY;
 	xsize = 0;
-	is_extern = 0;
+	is_extern   = 0;
+	is_constant = 0;
 }
 
 Object::Object( unsigned int value ){
 	xtype  = H_OT_ALIAS;
 	xsize  = sizeof(unsigned int);
 	xalias = value;
-	is_extern = 0;
+	is_extern   = 0;
+	is_constant = 0;
 }
 
 Object::Object( unsigned int rows, unsigned int columns, vector<Object *>& data ){
-    xtype     = H_OT_MATRIX;
-    xsize     = 0;
-    xrows     = rows;
-    xcolumns  = columns;
-    is_extern = 0;
+    xtype       = H_OT_MATRIX;
+    xsize       = 0;
+    xrows       = rows;
+    xcolumns    = columns;
+    is_extern   = 0;
+    is_constant = 0;
 
     unsigned int x, y;
 
@@ -298,38 +306,8 @@ Object::Object( Object *o ) {
              }
 		break;
 	}
-	is_extern = o->is_extern;
-}
-
-Object::Object( FILE *fp ) {
-	fread( &xtype, 1, sizeof(xtype), fp );
-	fread( &xsize, 1, sizeof(xsize), fp );
-	fread( &is_extern, 1, sizeof(is_extern), fp );
-	char c;
-	unsigned int i;
-	switch( xtype ){
-		case H_OT_INT    : fread( &xint, 1, xsize, fp );   break;
-		case H_OT_ALIAS  : fread( &xalias, 1, xsize, fp ); break;
-		case H_OT_FLOAT  : fread( &xfloat, 1, xsize, fp ); break;
-		case H_OT_CHAR   : fread( &xchar, 1, xsize, fp );  break;
-		case H_OT_STRING :
-			for( i = 0; i < xsize; i++ ){
-				fread( &c, 1, sizeof(char), fp );
-				xstring += c;
-			}
-		break;
-		case H_OT_ARRAY  :
-			for( i = 0; i < xsize; i++ ){
-				xarray.push_back( new Object(fp) );
-			}
-		break;
-		case H_OT_MAP    :
-			for( i = 0; i < xsize; i++ ){
-				xmap.push_back( new Object(fp) );
-				xarray.push_back( new Object(fp) );
-			}
-		break;
-	}
+	is_extern   = o->is_extern;
+	is_constant = o->is_constant;
 }
 
 void Object::release(){
@@ -385,6 +363,57 @@ void Object::release(){
     }
     xsize = 0;
     xtype = H_OT_NONE;
+}
+
+int Object::owns( Object **o ){
+    unsigned long ob_address = H_ADDRESS_OF(*o);
+    unsigned int i, j;
+
+    switch( xtype ){
+        case H_OT_ARRAY  :
+            for( i = 0; i < xsize && i < xarray.size(); i++ ){
+                if( ob_address == H_ADDRESS_OF(xarray[i]) ){
+                    return 1;
+                }
+                else if( xarray[i]->owns(o) ){
+                    return 1;
+                }
+            }
+            return 0;
+        break;
+
+        case H_OT_MAP    :
+            for( i = 0; i < xsize && i < xmap.size() && i < xarray.size(); i++ ){
+                if( ob_address == H_ADDRESS_OF(xarray[i]) || ob_address == H_ADDRESS_OF(xmap[i]) ){
+                    return 1;
+                }
+                else if( xarray[i]->owns(o) ){
+                    return 1;
+                }
+                else if( xmap[i]->owns(o) ){
+                    return 1;
+                }
+            }
+            return 0;
+        break;
+
+        case H_OT_MATRIX :
+            for( i = 0; i < xrows; i++ ){
+                for( j = 0; j < xcolumns; j++ ){
+                    if( ob_address == H_ADDRESS_OF(xmatrix[i][j]) ){
+                        return 1;
+                    }
+                    else if( xmatrix[i][j]->owns(o) ){
+                        return 1;
+                    }
+                }
+            }
+            return 0;
+        break;
+
+        default :
+            return 0;
+    }
 }
 
 Object::~Object(){
@@ -1551,7 +1580,7 @@ Object * Object::operator != ( Object *o ){
 
 Object * Object::operator < ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hybris_syntax_error( "invalid type for comparision operator" );
+		hybris_syntax_error( "invalid types for '<' comparision operator (%s, %s)", Object::type(this), Object::type(o) );
 	}
 
 	return new Object( static_cast<long>(lvalue() < o->lvalue()) );
@@ -1559,7 +1588,7 @@ Object * Object::operator < ( Object *o ){
 
 Object * Object::operator > ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hybris_syntax_error( "invalid type for comparision operator" );
+		hybris_syntax_error( "invalid types for '>' comparision operator (%s, %s)", Object::type(this), Object::type(o) );
 	}
 
 	return new Object( static_cast<long>(lvalue() > o->lvalue()) );
@@ -1567,7 +1596,7 @@ Object * Object::operator > ( Object *o ){
 
 Object * Object::operator <= ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hybris_syntax_error( "invalid type for comparision operator" );
+		hybris_syntax_error( "invalid types for '<=' comparision operator (%s, %s)", Object::type(this), Object::type(o) );
 	}
 
 	return new Object( static_cast<long>(lvalue() <= o->lvalue()) );
@@ -1575,7 +1604,7 @@ Object * Object::operator <= ( Object *o ){
 
 Object * Object::operator >= ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hybris_syntax_error( "invalid type for comparision operator" );
+		hybris_syntax_error( "invalid types for '>=' comparision operator (%s, %s)", Object::type(this), Object::type(o) );
 	}
 
 	return new Object( static_cast<long>(lvalue() >= o->lvalue()) );
@@ -1583,7 +1612,7 @@ Object * Object::operator >= ( Object *o ){
 
 Object * Object::operator || ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hybris_syntax_error( "invalid type for logical operator" );
+		hybris_syntax_error( "invalid type for '||' logical operator" );
 	}
 
 	return new Object( static_cast<long>(lvalue() || o->lvalue()) );
@@ -1591,7 +1620,7 @@ Object * Object::operator || ( Object *o ){
 
 Object * Object::operator && ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hybris_syntax_error( "invalid type for logical operator" );
+		hybris_syntax_error( "invalid type for '&&' logical operator" );
 	}
 
 	return new Object( static_cast<long>(lvalue() && o->lvalue()) );

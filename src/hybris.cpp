@@ -59,9 +59,10 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
     vmem_t stack;
     char function_name[0xFF] = {0};
     function_t builtin;
-    Node *function, *id;
+    Node *function, *id, *clone;
     unsigned int i = 0;
     vector<Node *> garbage;
+    Object *value = H_UNDEFINED;
 
     /* check if function is a builtin */
     if( (builtin = hfunction_search( ctx, (char *)call->_call.c_str() )) != H_UNDEFINED ){
@@ -120,8 +121,8 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         }
 
         for( i = 0; i < call->children(); i++ ){
-            Node   *clone = Tree::clone( call->child(i), clone );
-            Object *value = htree_execute( ctx, stackframe, clone );
+            clone = Tree::clone( call->child(i), clone );
+            value = htree_execute( ctx, stackframe, clone );
             stack.insert( (char *)identifiers[i].c_str(), value );
             garbage.push_back(clone);
         }
@@ -168,8 +169,8 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         /* at this point we're sure that it's an external, so build the frame for hdllcall */
         stack.insert( HANONYMOUSIDENTIFIER, external );
         for( i = 0; i < call->children(); i++ ){
-            Node   *clone = Tree::clone( call->child(i), clone );
-            Object *value = htree_execute( ctx, stackframe, clone );
+            clone = Tree::clone( call->child(i), clone );
+            value = htree_execute( ctx, stackframe, clone );
             stack.insert( HANONYMOUSIDENTIFIER, value );
             garbage.push_back(clone);
         }
@@ -570,29 +571,26 @@ void h_env_init( h_context_t *ctx, int argc, char *argv[] ){
 }
 
 void h_env_release( h_context_t *ctx, int onerror /*= 0*/ ){
-    if( ctx->HARGS.action != H_COMPILE ){
-        #ifdef MT_SUPPORT
-        pthread_mutex_lock( &ctx->h_thread_pool_mutex );
-            if( ctx->h_thread_pool.size() > 0 ){
-                printf( "[WARNING] Hard killing remaining running threads ... " );
-                for( int pool_i = 0; pool_i < ctx->h_thread_pool.size(); pool_i++ ){
-                    pthread_kill( ctx->h_thread_pool[pool_i], SIGTERM );
-                }
-                ctx->h_thread_pool.clear();
-                printf( "done .\n" );
+    #ifdef MT_SUPPORT
+    pthread_mutex_lock( &ctx->h_thread_pool_mutex );
+        if( ctx->h_thread_pool.size() > 0 ){
+            printf( "[WARNING] Hard killing remaining running threads ... " );
+            for( int pool_i = 0; pool_i < ctx->h_thread_pool.size(); pool_i++ ){
+                pthread_kill( ctx->h_thread_pool[pool_i], SIGTERM );
             }
-        pthread_mutex_unlock( &ctx->h_thread_pool_mutex );
-        #endif
-
-        hybris_vm_release( &ctx->HVM );
-        hybris_vc_release( &ctx->HVC );
-    }
-    else{
-        fclose(ctx->HARGS.compiled);
-        if( onerror ){
-            unlink(ctx->HARGS.destination);
+            ctx->h_thread_pool.clear();
+            printf( "done .\n" );
         }
+    pthread_mutex_unlock( &ctx->h_thread_pool_mutex );
+    #endif
+
+    for( int i = 0; i < ctx->HSTATICBUILTINS.size(); i++ ){
+        delete ctx->HSTATICBUILTINS[i];
     }
+    ctx->HSTATICBUILTINS.clear();
+
+    hybris_vm_release( &ctx->HVM );
+    hybris_vc_release( &ctx->HVC );
 }
 
 int h_file_exists( char *filename ){

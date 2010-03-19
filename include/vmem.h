@@ -25,6 +25,8 @@
 #include "object.h"
 #include "map.h"
 
+#define H_ADDRESS_OF(o)      reinterpret_cast<unsigned long>(o)
+
 #define H_UNDEFINED          NULL
 #define HANONYMOUSIDENTIFIER (char *)"HANONYMOUSIDENTIFIER"
 

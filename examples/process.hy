@@ -15,7 +15,7 @@ buffer = ' ';
 line   = "";
 while( fread( pd, buffer ) ){
 	if( buffer == '\n' ){ 
-		matches = preg_matches( "\((.*)\)", line );
+		matches = rex_matches( "\((.*)\)", line );
 		if( elements(matches) ){
 			println( "HOP : ".matches[0] );
 		}

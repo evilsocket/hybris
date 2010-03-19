@@ -37,29 +37,10 @@ typedef struct {
 }
 function_decl_t;
 
-typedef enum {
-    H_NONE = 0,
-    H_EXECUTE,
-    H_COMPILE,
-    H_RUN
-}
-H_ACTION;
-
-typedef unsigned char byte;
-
 typedef struct {
-    byte magic[7];
-    byte compressed;
-}
-hybris_header_t;
-
-typedef struct {
-    H_ACTION action;
-    char     source[0xFF];
-    char     destination[0xFF];
-    char     rootpath[0xFF];
-    FILE    *compiled;
-    int      stacktrace;
+    char source[0xFF];
+    char rootpath[0xFF];
+    int  stacktrace;
 }
 h_args_t;
 
