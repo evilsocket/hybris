@@ -1,0 +1,14 @@
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache/
+config.h
+config.h.in
+config.log
+config.status
+configure
+install-sh
+ltmain.sh
+src/builtins/Makefile
+src/builtins/Makefile.in
+stamp-h1
