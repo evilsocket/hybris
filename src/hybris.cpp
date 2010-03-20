@@ -74,17 +74,27 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
             /* add the node to the garbage vector to be released after the function call */
             garbage.push_back(node);
         }
-        if( !threaded ){
-            /* fill the stack traceing system */
-            ctx->stack_trace.push_back( hbuild_function_trace( (char *)call->_call.c_str(), &stack, 0 ) );
-        }
+
+        #ifdef MT_SUPPORT
+        pthread_mutex_lock( &ctx->th_mutex );
+        #endif
+        /* fill the stack traceing system */
+        ctx->stack_trace.push_back( hbuild_function_trace( (char *)call->_call.c_str(), &stack, 0 ) );
+        #ifdef MT_SUPPORT
+        pthread_mutex_unlock( &ctx->th_mutex );
+        #endif
+
         /* call the function */
         Object *_return = builtin( ctx, &stack );
 
-        if( !threaded ){
-            /* remove the call from the stack trace */
-            ctx->stack_trace.pop_back();
-        }
+        #ifdef MT_SUPPORT
+        pthread_mutex_lock( &ctx->th_mutex );
+        #endif
+        /* remove the call from the stack trace */
+        ctx->stack_trace.pop_back();
+        #ifdef MT_SUPPORT
+        pthread_mutex_unlock( &ctx->th_mutex );
+        #endif
 
         /* free cloned nodes */
         for( i = 0; i < garbage.size(); i++ ){
@@ -126,18 +136,27 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
             stack.insert( (char *)identifiers[i].c_str(), value );
             garbage.push_back(clone);
         }
-        if( !threaded ){
-            /* fill the stack traceing system */
-            ctx->stack_trace.push_back( hbuild_function_trace( function_name, &stack, 1 ) );
-        }
+
+        #ifdef MT_SUPPORT
+        pthread_mutex_lock( &ctx->th_mutex );
+        #endif
+        /* fill the stack traceing system */
+        ctx->stack_trace.push_back( hbuild_function_trace( (char *)call->_call.c_str(), &stack, 0 ) );
+        #ifdef MT_SUPPORT
+        pthread_mutex_unlock( &ctx->th_mutex );
+        #endif
 
         /* call the function */
         Object *_return = htree_execute( ctx, &stack, function->child(body) );
 
-        if( !threaded ){
-            /* remove the call from the stack trace */
-            ctx->stack_trace.pop_back();
-        }
+        #ifdef MT_SUPPORT
+        pthread_mutex_lock( &ctx->th_mutex );
+        #endif
+        /* remove the call from the stack trace */
+        ctx->stack_trace.pop_back();
+        #ifdef MT_SUPPORT
+        pthread_mutex_unlock( &ctx->th_mutex );
+        #endif
 
         /* free cloned nodes */
         for( i = 0; i < garbage.size(); i++ ){
@@ -175,19 +194,25 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
             garbage.push_back(clone);
         }
 
-        if( !threaded ){
-            /* fill the stack traceing system */
-            ctx->stack_trace.push_back( hbuild_function_trace( (char *)call->_call.c_str(), &stack, 0 ) );
-        }
+        #ifdef MT_SUPPORT
+        pthread_mutex_lock( &ctx->th_mutex );
+        #endif
+        /* fill the stack traceing system */
+        ctx->stack_trace.push_back( hbuild_function_trace( (char *)call->_call.c_str(), &stack, 0 ) );
+        #ifdef MT_SUPPORT
+        pthread_mutex_unlock( &ctx->th_mutex );
+        #endif
 
         /* call the function */
         Object *_return = hdllcall( ctx, &stack );
 
         #ifdef MT_SUPPORT
-        if( !threaded ){
-            /* remove the call from the stack trace */
-            ctx->stack_trace.pop_back();
-        }
+        pthread_mutex_lock( &ctx->th_mutex );
+        #endif
+        /* remove the call from the stack trace */
+        ctx->stack_trace.pop_back();
+        #ifdef MT_SUPPORT
+        pthread_mutex_unlock( &ctx->th_mutex );
         #endif
 
         /* free cloned nodes */
