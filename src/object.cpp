@@ -185,32 +185,31 @@ Object::Object( long value ) {
 	xtype = H_OT_INT;
 	xint  = value;
 	xsize = sizeof(long);
-	is_extern   = 0;
-	is_constant = 0;
+    attributes = H_OA_NONE | H_OA_GARBAGE;
 }
 
 Object::Object( long value, unsigned int _is_extern ) {
 	xtype = H_OT_INT;
 	xint  = value;
 	xsize = sizeof(long);
-	is_extern   = _is_extern;
-	is_constant = 0;
+	attributes = H_OA_NONE | H_OA_GARBAGE;
+	if( _is_extern ){
+        attributes |= H_OA_EXTERN;
+	}
 }
 
 Object::Object( double value ) {
 	xtype  = H_OT_FLOAT;
 	xfloat = value;
 	xsize  = sizeof(double);
-	is_extern   = 0;
-	is_constant = 0;
+	attributes = H_OA_NONE | H_OA_GARBAGE;
 }
 
 Object::Object( char value ) {
 	xtype = H_OT_CHAR;
 	xchar = value;
 	xsize = sizeof(char);
-	is_extern   = 0;
-	is_constant = 0;
+	attributes = H_OA_NONE | H_OA_GARBAGE;
 }
 
 Object::Object( char *value ) {
@@ -218,23 +217,20 @@ Object::Object( char *value ) {
 	xstring = value;
 	parse_string( xstring );
 	xsize   = strlen(xstring.c_str()) + 1;
-	is_extern   = 0;
-	is_constant = 0;
+	attributes = H_OA_NONE | H_OA_GARBAGE;
 }
 
 Object::Object(){
 	xtype = H_OT_ARRAY;
 	xsize = 0;
-	is_extern   = 0;
-	is_constant = 0;
+	attributes = H_OA_NONE | H_OA_GARBAGE;
 }
 
 Object::Object( unsigned int value ){
 	xtype  = H_OT_ALIAS;
 	xsize  = sizeof(unsigned int);
 	xalias = value;
-	is_extern   = 0;
-	is_constant = 0;
+	attributes = H_OA_NONE | H_OA_GARBAGE;
 }
 
 Object::Object( unsigned int rows, unsigned int columns, vector<Object *>& data ){
@@ -242,8 +238,7 @@ Object::Object( unsigned int rows, unsigned int columns, vector<Object *>& data 
     xsize       = 0;
     xrows       = rows;
     xcolumns    = columns;
-    is_extern   = 0;
-    is_constant = 0;
+    attributes = H_OA_NONE | H_OA_GARBAGE;
 
     unsigned int x, y;
 
@@ -306,8 +301,44 @@ Object::Object( Object *o ) {
              }
 		break;
 	}
-	is_extern   = o->is_extern;
-	is_constant = o->is_constant;
+	attributes = o->attributes;
+}
+
+void Object::setGarbageAttribute( H_OBJECT_ATTRIBUTE mask ){
+    unsigned int i, j;
+
+    /* not garbage */
+    if( mask == ~H_OA_GARBAGE ){
+        attributes &= mask;
+    }
+    /* garbage */
+    else{
+        attributes |= mask;
+    }
+
+    /* eventually handle children */
+    switch( xtype ){
+        case H_OT_ARRAY  :
+            for( i = 0; i < xsize && i < xarray.size(); i++ ){
+                xarray[i]->setGarbageAttribute(mask);
+            }
+        break;
+
+        case H_OT_MAP    :
+            for( i = 0; i < xsize && i < xmap.size() && i < xarray.size(); i++ ){
+                xarray[i]->setGarbageAttribute(mask);
+                xmap[i]->setGarbageAttribute(mask);
+            }
+        break;
+
+        case H_OT_MATRIX :
+            for( i = 0; i < xrows; i++ ){
+                for( j = 0; j < xcolumns; j++ ){
+                    xmatrix[i][j]->setGarbageAttribute(mask);
+                }
+            }
+        break;
+    }
 }
 
 void Object::release(){
@@ -361,8 +392,9 @@ void Object::release(){
             xcolumns = 0;
         break;
     }
-    xsize = 0;
-    xtype = H_OT_NONE;
+    xsize      = 0;
+    xtype      = H_OT_NONE;
+    attributes = H_OA_NONE | H_OA_GARBAGE;
 }
 
 int Object::owns( Object **o ){
@@ -484,31 +516,6 @@ Object * Object::getObject(){
 		hybris_generic_error( "invalid pointer reference" );
 	}
 	return (Object *)xalias;
-}
-
-void Object::compile( FILE *fp ){
-	fwrite( &xtype, 1, sizeof(H_OBJECT_TYPE), fp );
-	fwrite( &xsize, 1, sizeof(unsigned int), fp );
-	fwrite( &is_extern, 1, sizeof(unsigned int), fp );
-	unsigned int i;
-	switch( xtype ){
-		case H_OT_INT    : fwrite( &xint, 1, xsize, fp );           break;
-		case H_OT_ALIAS  : fwrite( &xalias, 1, xsize, fp );         break;
-		case H_OT_FLOAT  : fwrite( &xfloat, 1, xsize, fp );         break;
-		case H_OT_CHAR   : fwrite( &xchar, 1, xsize, fp );          break;
-		case H_OT_STRING : fwrite( xstring.c_str(), 1, xsize, fp ); break;
-		case H_OT_ARRAY  :
-			for( i = 0; i < xsize; i++ ){
-				xarray[i]->compile(fp);
-			}
-		break;
-		case H_OT_MAP    :
-			for( i = 0; i < xsize; i++ ){
-				xmap[i]->compile(fp);
-				xarray[i]->compile(fp);
-			}
-		break;
-	}
 }
 
 unsigned char *Object::serialize(){
@@ -770,7 +777,8 @@ string Object::svalue(){
 }
 
 Object *Object::push( Object *o ){
-	xarray.push_back( new Object(o) );
+    Object *item = new Object(o);
+    xarray.push_back( item );
 	xtype = H_OT_ARRAY;
 	xsize = xarray.size();
 	return this;

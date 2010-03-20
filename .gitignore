@@ -1,3 +1,4 @@
+# Autotools generated files
 Makefile
 Makefile.in
 aclocal.m4
@@ -12,3 +13,12 @@ ltmain.sh
 src/builtins/Makefile
 src/builtins/Makefile.in
 stamp-h1
+# Flex, bison and compiler generated files
+*.o
+*.so
+*.a
+hybris
+include/lexer.h
+src/lexer.cpp
+
+

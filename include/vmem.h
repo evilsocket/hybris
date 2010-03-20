@@ -41,9 +41,6 @@ Object *hybris_vm_get( vmem_t *mem, char *identifier );
 vmem_t *hybris_vm_clone( vmem_t *mem );
 void    hybris_vm_release( vmem_t *mem );
 
-int     hybris_vg_isgarbage( vmem_t *mem, Object **o );
-int     hybris_vg_isgarbage( vmem_t *frame, vmem_t *mem, Object **o );
-
 Node   *hybris_vc_add( vcode_t *code, Node *function );
 Node   *hybris_vc_set( vcode_t *code, Node *function );
 Node   *hybris_vc_get( vcode_t *code, char  *function );

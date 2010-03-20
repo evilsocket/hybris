@@ -158,7 +158,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
             #endif
             hybris_syntax_error( "'%s' undeclared function identifier", (char *)call->_call.c_str() );
         }
-        else if( external->is_extern == 0 ){
+        else if( (external->attributes & H_OA_EXTERN) == H_OA_EXTERN ){
             #ifdef MT_SUPPORT
             if( threaded ){
                 POOL_DEL( pthread_self() );

@@ -19,9 +19,29 @@
 #include "executors.h"
 
 #ifdef GC_SUPPORT
-#   define H_GC_COLLECT(o) if( hybris_vg_isgarbage( frame, &ctx->vmem, &o ) ){ delete o; }
+#   define H_FREE_GARBAGE(o) if( hvm_is_garbage( o ) ){ delete o; }
+
+inline int hvm_is_garbage( Object *o ){
+    /* null objects are obviously not deletable */
+    if( o == H_UNDEFINED ){
+        return 0;
+    }
+    /* explicitly set to non deletable */
+    else if( (o->attributes & H_OA_GARBAGE) != H_OA_GARBAGE ){
+        return 0;
+    }
+    /* constants */
+    else if( (o->attributes & H_OA_CONSTANT) == H_OA_CONSTANT ){
+        return 0;
+    }
+    /* deletable */
+    else {
+        return 1;
+    }
+}
+
 #else
-#   define H_GC_COLLECT(o) // o
+#   define H_FREE_GARBAGE(o) // o
 #endif
 
 Object *exec_identifier( h_context_t *ctx, vmem_t *frame, Node *node ){
@@ -70,13 +90,13 @@ Object *exec_dollar( h_context_t *ctx, vmem_t *frame, Node *node ){
     o    = htree_execute( ctx,  frame, node->child(0) );
     name = o->toString();
 
-    H_GC_COLLECT(o);
+    H_FREE_GARBAGE(o);
 
     if( (o = hybris_vm_get( frame, (char *)name->xstring.c_str() )) == H_UNDEFINED ){
         hybris_syntax_error( "'%s' undeclared identifier", (char *)name->xstring.c_str() );
     }
 
-    H_GC_COLLECT(name);
+    H_FREE_GARBAGE(name);
 
     return o;
 }
@@ -88,7 +108,7 @@ Object *exec_pointer( h_context_t *ctx, vmem_t *frame, Node *node ){
     o   = htree_execute( ctx, frame, node->child(0) );
     res = new Object( (unsigned int)( H_ADDRESS_OF(o) ) );
 
-    H_GC_COLLECT(o);
+    H_FREE_GARBAGE(o);
 
     return res;
 }
@@ -100,7 +120,7 @@ Object *exec_object( h_context_t *ctx, vmem_t *frame, Node *node ){
     o   = htree_execute( ctx, frame, node->child(0) );
     res = o->getObject();
 
-    H_GC_COLLECT(o);
+    H_FREE_GARBAGE(o);
 
     return res;
 }
@@ -121,8 +141,8 @@ Object *exec_range( h_context_t *ctx, vmem_t *frame, Node *node ){
     to    = htree_execute( ctx,  frame, node->child(1) );
     range = from->range( to );
 
-    H_GC_COLLECT(from);
-    H_GC_COLLECT(to);
+    H_FREE_GARBAGE(from);
+    H_FREE_GARBAGE(to);
 
     return range;
 }
@@ -136,8 +156,8 @@ Object *exec_subscript_add( h_context_t *ctx, vmem_t *frame, Node *node ){
     object = htree_execute( ctx, frame, node->child(1) );
     res    = array->push(object);
 
-    H_GC_COLLECT(array);
-    H_GC_COLLECT(object);
+    H_FREE_GARBAGE(array);
+    H_FREE_GARBAGE(object);
 
     return res;
 }
@@ -155,7 +175,7 @@ Object *exec_subscript_get( h_context_t *ctx, vmem_t *frame, Node *node ){
         (*identifier) = array->at( index );
         result        = identifier;
 
-        H_GC_COLLECT(array);
+        H_FREE_GARBAGE(array);
     }
     else{
         array  = htree_execute( ctx, frame, node->child(0) );
@@ -163,7 +183,7 @@ Object *exec_subscript_get( h_context_t *ctx, vmem_t *frame, Node *node ){
         result = array->at( index );
     }
 
-    H_GC_COLLECT(index);
+    H_FREE_GARBAGE(index);
 
     return result;
 }
@@ -179,8 +199,8 @@ Object *exec_subscript_set( h_context_t *ctx, vmem_t *frame, Node *node ){
 
     array->at( index, object );
 
-    H_GC_COLLECT(object);
-    H_GC_COLLECT(index);
+    H_FREE_GARBAGE(object);
+    H_FREE_GARBAGE(index);
 
     return array;
 }
@@ -197,10 +217,10 @@ Object *exec_while( h_context_t *ctx, vmem_t *frame, Node *node ){
 
     while( (boolean = htree_execute( ctx,  frame, condition ))->lvalue() ){
         result = htree_execute( ctx, frame, body );
-        H_GC_COLLECT(result);
-        H_GC_COLLECT(boolean);
+        H_FREE_GARBAGE(result);
+        H_FREE_GARBAGE(boolean);
     }
-    H_GC_COLLECT(boolean);
+    H_FREE_GARBAGE(boolean);
 
     return H_UNDEFINED;
 }
@@ -216,13 +236,13 @@ Object *exec_do( h_context_t *ctx, vmem_t *frame, Node *node ){
     condition = node->child(1);
     do{
         result = htree_execute( ctx, frame, body );
-        H_GC_COLLECT(result);
-        H_GC_COLLECT(boolean);
+        H_FREE_GARBAGE(result);
+        H_FREE_GARBAGE(boolean);
     }
     while( (boolean = htree_execute( ctx,  frame, condition ))->lvalue() );
 
-    H_GC_COLLECT(result);
-    H_GC_COLLECT(boolean);
+    H_FREE_GARBAGE(result);
+    H_FREE_GARBAGE(boolean);
 
     return H_UNDEFINED;
 }
@@ -246,14 +266,14 @@ Object *exec_for( h_context_t *ctx, vmem_t *frame, Node *node ){
          (inc     = htree_execute( ctx,  frame, increment )) ){
 
         result = htree_execute( ctx, frame, body );
-        H_GC_COLLECT(result);
-        H_GC_COLLECT(boolean);
-        H_GC_COLLECT(inc);
+        H_FREE_GARBAGE(result);
+        H_FREE_GARBAGE(boolean);
+        H_FREE_GARBAGE(inc);
     }
 
-    H_GC_COLLECT(boolean);
-    H_GC_COLLECT(inc);
-    H_GC_COLLECT(init);
+    H_FREE_GARBAGE(boolean);
+    H_FREE_GARBAGE(inc);
+    H_FREE_GARBAGE(init);
 
     return H_UNDEFINED;
 }
@@ -273,10 +293,10 @@ Object *exec_foreach( h_context_t *ctx, vmem_t *frame, Node *node ){
     for( i = 0; i < size; i++ ){
         hybris_vm_add( frame, identifier, map->xarray[i] );
         result = htree_execute( ctx, frame, body );
-        H_GC_COLLECT(result);
+        H_FREE_GARBAGE(result);
     }
 
-    H_GC_COLLECT(map);
+    H_FREE_GARBAGE(map);
 
     return H_UNDEFINED;
 }
@@ -299,10 +319,10 @@ Object *exec_foreachm( h_context_t *ctx, vmem_t *frame, Node *node ){
         hybris_vm_add( frame, key_identifier,   map->xmap[i] );
         hybris_vm_add( frame, value_identifier, map->xarray[i] );
         result = htree_execute( ctx,  frame, body );
-        H_GC_COLLECT(result);
+        H_FREE_GARBAGE(result);
     }
 
-    H_GC_COLLECT(map);
+    H_FREE_GARBAGE(map);
 
     return H_UNDEFINED;
 }
@@ -321,8 +341,8 @@ Object *exec_if( h_context_t *ctx, vmem_t *frame, Node *node ){
         result = htree_execute( ctx, frame, node->child(2) );
     }
 
-    H_GC_COLLECT(boolean);
-    H_GC_COLLECT(result);
+    H_FREE_GARBAGE(boolean);
+    H_FREE_GARBAGE(result);
 
     return H_UNDEFINED;
 }
@@ -340,7 +360,7 @@ Object *exec_question( h_context_t *ctx, vmem_t *frame, Node *node ){
         result = htree_execute( ctx, frame, node->child(2) );
     }
 
-    H_GC_COLLECT(boolean);
+    H_FREE_GARBAGE(boolean);
 
     return result;
 }
@@ -352,7 +372,7 @@ Object *exec_eostmt( h_context_t *ctx, vmem_t *frame, Node *node ){
     res_1 = htree_execute( ctx, frame, node->child(0) );
     res_2 = htree_execute( ctx, frame, node->child(1) );
 
-    H_GC_COLLECT(res_1);
+    H_FREE_GARBAGE(res_1);
 
     return res_2;
 }
@@ -366,8 +386,8 @@ Object *exec_dot( h_context_t *ctx, vmem_t *frame, Node *node ){
     b      = htree_execute( ctx, frame, node->child(1) );
     result = a->dot( b );
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return result;
 }
@@ -384,8 +404,8 @@ Object *exec_dote( h_context_t *ctx, vmem_t *frame, Node *node ){
     b      = htree_execute( ctx, frame, node->child(1) );
     result = a->dotequal( b );
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return result;
 }
@@ -397,7 +417,7 @@ Object *exec_assign( h_context_t *ctx, vmem_t *frame, Node *node ){
     value  = htree_execute( ctx,  frame, node->child(1) );
     object = hybris_vm_add( frame, (char *)node->child(0)->_identifier.c_str(), value );
 
-    H_GC_COLLECT(value);
+    H_FREE_GARBAGE(value);
 
     return object;
 }
@@ -409,7 +429,7 @@ Object *exec_uminus( h_context_t *ctx, vmem_t *frame, Node *node ){
     o      = htree_execute( ctx, frame, node->child(0) );
     result = -(*o);
 
-    H_GC_COLLECT(o);
+    H_FREE_GARBAGE(o);
 
     return result;
 }
@@ -423,8 +443,8 @@ Object *exec_regex( h_context_t *ctx, vmem_t *frame, Node *node ){
     regexp = htree_execute( ctx,  frame, node->child(1) );
     result = hrex_operator( o, regexp );
 
-    H_GC_COLLECT(o);
-    H_GC_COLLECT(regexp);
+    H_FREE_GARBAGE(o);
+    H_FREE_GARBAGE(regexp);
 
     return result;
 }
@@ -438,8 +458,8 @@ Object *exec_plus( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) + b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -456,7 +476,7 @@ Object *exec_pluse( h_context_t *ctx, vmem_t *frame, Node *node ){
 
     (*a) += b;
 
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(b);
 
     return a;
 }
@@ -470,8 +490,8 @@ Object *exec_minus( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) - b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -488,7 +508,7 @@ Object *exec_minuse( h_context_t *ctx, vmem_t *frame, Node *node ){
 
     (*a) -= b;
 
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(b);
 
     return a;
 }
@@ -502,8 +522,8 @@ Object *exec_mul( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) * b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -520,7 +540,7 @@ Object *exec_mule( h_context_t *ctx, vmem_t *frame, Node *node ){
 
     (*a) *= b;
 
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(b);
 
     return a;
 }
@@ -534,8 +554,8 @@ Object *exec_div( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) / b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -552,7 +572,7 @@ Object *exec_dive( h_context_t *ctx, vmem_t *frame, Node *node ){
 
     (*a) /= b;
 
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(b);
 
     return a;
 }
@@ -566,8 +586,8 @@ Object *exec_mod( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) % b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -584,7 +604,7 @@ Object *exec_mode( h_context_t *ctx, vmem_t *frame, Node *node ){
 
     (*a) %= b;
 
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(b);
 
     return a;
 }
@@ -618,8 +638,8 @@ Object *exec_xor( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) ^ b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -636,7 +656,7 @@ Object *exec_xore( h_context_t *ctx, vmem_t *frame, Node *node ){
 
     (*a) ^= b;
 
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(b);
 
     return a;
 }
@@ -650,8 +670,8 @@ Object *exec_and( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) & b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -668,7 +688,7 @@ Object *exec_ande( h_context_t *ctx, vmem_t *frame, Node *node ){
 
     (*a) &= b;
 
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(b);
 
     return a;
 }
@@ -682,8 +702,8 @@ Object *exec_or( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) | b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -700,7 +720,7 @@ Object *exec_ore( h_context_t *ctx, vmem_t *frame, Node *node ){
 
     (*a) |= b;
 
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(b);
 
     return a;
 }
@@ -714,8 +734,8 @@ Object *exec_shiftl( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) << b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -732,7 +752,7 @@ Object *exec_shiftle( h_context_t *ctx, vmem_t *frame, Node *node ){
 
     (*a) <<= b;
 
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(b);
 
     return a;
 }
@@ -746,8 +766,8 @@ Object *exec_shiftr( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) >> b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -764,7 +784,7 @@ Object *exec_shiftre( h_context_t *ctx, vmem_t *frame, Node *node ){
 
     (*a) >>= b;
 
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(b);
 
     return a;
 }
@@ -776,7 +796,7 @@ Object *exec_fact( h_context_t *ctx, vmem_t *frame, Node *node ){
     o = htree_execute( ctx,  frame, node->child(0) );
     r = o->factorial();
 
-    H_GC_COLLECT(o);
+    H_FREE_GARBAGE(o);
 
     return r;
 }
@@ -788,7 +808,7 @@ Object *exec_not( h_context_t *ctx, vmem_t *frame, Node *node ){
     o = htree_execute( ctx,  frame, node->child(0) );
     r = ~(*o);
 
-    H_GC_COLLECT(o);
+    H_FREE_GARBAGE(o);
 
     return r;
 }
@@ -800,7 +820,7 @@ Object *exec_lnot( h_context_t *ctx, vmem_t *frame, Node *node ){
     o = htree_execute( ctx,  frame, node->child(0) );
     r = o->lnot();
 
-    H_GC_COLLECT(o);
+    H_FREE_GARBAGE(o);
 
     return r;
 }
@@ -814,8 +834,8 @@ Object *exec_less( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) < b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -829,8 +849,8 @@ Object *exec_greater( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) > b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -844,8 +864,8 @@ Object *exec_ge( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) >= b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -859,8 +879,8 @@ Object *exec_le( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) <= b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -874,8 +894,8 @@ Object *exec_ne( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) != b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -889,8 +909,8 @@ Object *exec_eq( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) == b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -904,8 +924,8 @@ Object *exec_land( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) && b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }
@@ -919,8 +939,8 @@ Object *exec_lor( h_context_t *ctx, vmem_t *frame, Node *node ){
     b = htree_execute( ctx, frame, node->child(1) );
     c = (*a) || b;
 
-    H_GC_COLLECT(a);
-    H_GC_COLLECT(b);
+    H_FREE_GARBAGE(a);
+    H_FREE_GARBAGE(b);
 
     return c;
 }

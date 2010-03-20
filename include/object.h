@@ -46,6 +46,7 @@ using std::cin;
 
 typedef unsigned short H_OBJECT_TYPE;
 
+/* object types */
 #define H_OT_NONE   0
 #define H_OT_INT    1
 #define H_OT_FLOAT  2
@@ -55,6 +56,14 @@ typedef unsigned short H_OBJECT_TYPE;
 #define H_OT_MAP    6
 #define H_OT_ALIAS  7
 #define H_OT_MATRIX 8
+
+typedef unsigned char H_OBJECT_ATTRIBUTE;
+
+/* object attributes */
+#define H_OA_NONE     0 // 00000000
+#define H_OA_EXTERN   1 // 00000001
+#define H_OA_CONSTANT 2 // 00000010
+#define H_OA_GARBAGE  4 // 00000100
 
 class Object {
 public  :
@@ -75,10 +84,10 @@ public  :
 
     static void parse_string( string& s );
 
-    H_OBJECT_TYPE    xtype;
-    unsigned int     xsize;
-    unsigned int     is_extern;
-    unsigned int     is_constant;
+    H_OBJECT_TYPE      xtype;
+    unsigned int       xsize;
+
+    H_OBJECT_ATTRIBUTE attributes;
 
     long             xint;
     double           xfloat;
@@ -106,6 +115,8 @@ public  :
 	Object( unsigned int rows, unsigned int columns, vector<Object *>& data );
     Object( Object *o );
 
+    void setGarbageAttribute( H_OBJECT_ATTRIBUTE mask );
+
     void release();
     int  owns( Object **o );
 
@@ -117,7 +128,6 @@ public  :
 
 	Object * getObject();
 
-    void compile( FILE *fp );
     unsigned char *serialize();
 
     void print( unsigned int tabs = 0 );

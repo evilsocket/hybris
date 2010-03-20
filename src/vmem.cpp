@@ -24,6 +24,7 @@ Object *hybris_vm_add( vmem_t *mem, char *identifier, Object *object ){
         Object *o = H_UNDEFINED;
         if( object != H_UNDEFINED ){
             o = new Object(object);
+            o->setGarbageAttribute( ~H_OA_GARBAGE );
             mem->insert( identifier, o );
         }
         else{
@@ -40,12 +41,19 @@ Object *hybris_vm_add( vmem_t *mem, char *identifier, Object *object ){
 }
 
 Object *hybris_vm_set( vmem_t *mem, char *identifier, Object *object ){
+    Object *new_object = H_UNDEFINED,
+           *old_object = H_UNDEFINED;
+
 	int idx = mem->quick_search(identifier);
 	if( idx != -1 ){
-	    /* delete old value */
-	    mem->at(idx)->release();
+	    /* release old value */
+	    old_object = mem->at(idx);
+	    old_object->release();
 	    /* assign new value */
-		return mem->set( (unsigned int)idx, new Object(object) );
+	    new_object = new Object(object);
+	    new_object->setGarbageAttribute( ~H_OA_GARBAGE );
+
+		return mem->set( (unsigned int)idx, new_object );
 	}
 	else{
 		return hybris_vm_add( mem, identifier, object );
@@ -79,68 +87,13 @@ void hybris_vm_release( vmem_t *mem ){
     size = mem->size();
     for( i = 0; i < size; i++ ){
         o = mem->at(i);
-         #ifdef MEM_DEBUG
+        #ifdef MEM_DEBUG
         printf( "[MEM DEBUG] !!! releasing '%s' value at 0x%X (- %d bytes)\n", Object::type(o), o,  o->xsize );
         #endif
         delete o;
     }
 
     mem->clear();
-}
-
-int hybris_vg_isgarbage( vmem_t *mem, Object **o ){
-    /* null objects and constants are obviously not deletable */
-    if( o == H_UNDEFINED || *o == H_UNDEFINED || (*o)->is_constant ){
-        return 0;
-    }
-
-    Object *object = H_UNDEFINED;
-    unsigned int i, size = mem->size();
-    unsigned long ob_address = H_ADDRESS_OF(*o),
-                  vm_address;
-
-    for( i = 0; i < size; i++ ){
-        object     = mem->at(i);
-        vm_address = H_ADDRESS_OF(object);
-        /* if 'o' is a declared variable or some variable owns 'o' then we can not delete it */
-        if( ob_address == vm_address || object->owns(o) ){
-            return 0;
-        }
-    }
-    return 1;
-}
-
-int hybris_vg_isgarbage( vmem_t *frame, vmem_t *mem, Object **o ){
-    /* null objects and constants are obviously not deletable */
-    if( o == H_UNDEFINED || *o == H_UNDEFINED || (*o)->is_constant ){
-        return 0;
-    }
-
-    Object *object = H_UNDEFINED;
-    unsigned int i, size = mem->size();
-    unsigned long ob_address = H_ADDRESS_OF(*o),
-                  vm_address;
-
-    for( i = 0; i < size; i++ ){
-        object     = mem->at(i);
-        vm_address = H_ADDRESS_OF(object);
-        /* if 'o' is a declared variable or some variable owns 'o' then we can not delete it */
-        if( ob_address == vm_address || object->owns(o) ){
-            return 0;
-        }
-    }
-
-    size = frame->size();
-    for( i = 0; i < size; i++ ){
-        object     = frame->at(i);
-        vm_address = H_ADDRESS_OF(object);
-        /* if 'o' is a declared variable or some variable owns 'o' then we can not delete it */
-        if( ob_address == vm_address || object->owns(o) ){
-            return 0;
-        }
-    }
-
-    return 1;
 }
 
 Node *hybris_vc_clone( Node *function ){
