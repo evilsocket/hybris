@@ -44,20 +44,17 @@ Object *hybris_vm_set( vmem_t *mem, char *identifier, Object *object ){
     Object *new_object = H_UNDEFINED,
            *old_object = H_UNDEFINED;
 
-	int idx = mem->quick_search(identifier);
-	if( idx != -1 ){
-	    /* release old value */
-	    old_object = mem->at(idx);
-	    old_object->release();
-	    /* assign new value */
-	    new_object = new Object(object);
-	    new_object->setGarbageAttribute( ~H_OA_GARBAGE );
+    new_object = new Object(object);
+    new_object->setGarbageAttribute( ~H_OA_GARBAGE );
 
-		return mem->set( (unsigned int)idx, new_object );
-	}
-	else{
-		return hybris_vm_add( mem, identifier, object );
-	}
+    if( (old_object = mem->replace( identifier, new_object )) != vmem_t::null ){
+        old_object->release();
+        return new_object;
+    }
+    else{
+        delete new_object;
+        return hybris_vm_add( mem, identifier, object );
+    }
 }
 
 Object *hybris_vm_get( vmem_t *mem, char *identifier ){

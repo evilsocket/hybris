@@ -22,28 +22,11 @@
 #include "hybris.h"
 
 #ifdef GC_SUPPORT
-
-inline int hvm_is_garbage( Object *o ){
-    /* null objects are obviously not deletable */
-    if( o == H_UNDEFINED ){
-        return 0;
-    }
-    /* explicitly set to non deletable */
-    else if( (o->attributes & H_OA_GARBAGE) != H_OA_GARBAGE ){
-        return 0;
-    }
-    /* constants */
-    else if( (o->attributes & H_OA_CONSTANT) == H_OA_CONSTANT ){
-        return 0;
-    }
-    /* deletable */
-    else {
-        return 1;
-    }
-}
-
-#define H_FREE_GARBAGE(o) if( hvm_is_garbage( o ) ){ delete o; o = H_UNDEFINED; }
-
+/* determine whenever an object is garbage or a constant */
+#   define H_IS_GARBAGE(o)  ((o->attributes & H_OA_GARBAGE)  == H_OA_GARBAGE)
+#   define H_IS_CONSTANT(o) ((o->attributes & H_OA_CONSTANT) == H_OA_CONSTANT)
+/* deallocate garbage and non constant objects */
+#   define H_FREE_GARBAGE(o) if( o != H_UNDEFINED && H_IS_GARBAGE(o) && !H_IS_CONSTANT(o) ){ delete o; o = H_UNDEFINED; }
 #else
 #   define H_FREE_GARBAGE(o) // o
 #endif

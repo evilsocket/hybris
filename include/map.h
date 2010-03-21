@@ -84,6 +84,17 @@ public  :
 		return -1;
 	}
 
+	inline value_t *replace( char *label, value_t *new_value ){
+        int idx = quick_search(label);
+        value_t *old_object = null;
+        if( idx != -1 ){
+            old_object = m_map[idx]->value;
+            m_map[idx]->value = new_value;
+        }
+
+        return old_object;
+	}
+
     value_t *insert( char *label, value_t *value );
     value_t *set( char *label, value_t *value );
     value_t *set( unsigned int index, value_t *value );
@@ -93,7 +104,6 @@ public  :
     void     remove( char *label );
     void     pop();
     void     clear();
-
 };
 
 template<typename value_t>

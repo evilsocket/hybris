@@ -180,11 +180,38 @@ expression : INTEGER                                 { $$ = Tree::addInt($1); }
 
 int h_banner(){
     printf( "Hybris %s (built: %s %s)\n"
-            "Copyright (c) by %s\n",
+            "Copyright (c) by %s\n"
+            "Compiled with :\n"
+            "\tModules path      : %s\n"
+            "\tInclude path      : %s\n"
+            #ifdef MEM_DEBUG
+            "\tMemory Debug      : ON\n"
+            #endif
+            #ifdef GC_SUPPORT
+            "\tGarbage collector : ON\n"
+            #endif
+            #ifdef BOUNDS_CHECK
+            "\tBoundaries check  : ON\n"
+            #endif
+            #ifdef PCRE_SUPPORT
+            "\tPCRE              : ON\n"
+            #endif
+            #ifdef HTTP_SUPPORT
+            "\tHTTP              : ON\n"
+            #endif
+            #ifdef XML_SUPPORT
+            "\tXML               : ON\n"
+            #endif
+            #ifdef MT_SUPPORT
+            "\tMulti threading   : ON\n"
+            #endif
+            ,
             VERSION,
             __DATE__,
             __TIME__,
-            AUTHOR );
+            AUTHOR,
+            LIBS_PATH,
+            MODS_PATH );
 }
 
 int h_usage( char *argvz ){
