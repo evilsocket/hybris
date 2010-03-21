@@ -20,5 +20,6 @@ stamp-h1
 hybris
 include/lexer.h
 src/lexer.cpp
-
+src/parser.cpp
+src/parser.hpp
 

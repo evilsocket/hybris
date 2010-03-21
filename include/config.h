@@ -29,13 +29,10 @@
 
 // memory allocation debug messages
 // #define MEM_DEBUG 1
-
 // basic garbage collection
 #define GC_SUPPORT 1
-
 // security check on bounds for array/map/matrix access
 #define BOUNDS_CHECK 1
-
 // support for regular expressions
 #define PCRE_SUPPORT 1
 // get/post http(s) methos support

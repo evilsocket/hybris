@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+/* helper macro to obtain the address of a pointer */
 #ifndef H_ADDRESS_OF
 #   define H_ADDRESS_OF(o) reinterpret_cast<unsigned long>(o)
 #endif
@@ -81,7 +82,7 @@ public  :
 	static unsigned int assert_type( Object *a, Object *b, unsigned int ntypes, ... );
     /* replace each occurrence of "find" in "source" with "replace" */
     static void replace( string &source, const string find, string replace );
-
+    /* parse a string for escape and special characters encoding */
     static void parse_string( string& s );
 
     H_OBJECT_TYPE      xtype;
@@ -118,7 +119,6 @@ public  :
     void setGarbageAttribute( H_OBJECT_ATTRIBUTE mask );
 
     void release();
-    int  owns( Object **o );
 
     ~Object();
 
@@ -131,7 +131,6 @@ public  :
     unsigned char *serialize();
 
     void print( unsigned int tabs = 0 );
-
     void println( unsigned int tabs = 0 );
 
     #ifdef XML_SUPPORT

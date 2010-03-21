@@ -87,10 +87,12 @@ void hybris_vm_release( vmem_t *mem ){
     size = mem->size();
     for( i = 0; i < size; i++ ){
         o = mem->at(i);
-        #ifdef MEM_DEBUG
-        printf( "[MEM DEBUG] !!! releasing '%s' value at 0x%X (- %d bytes)\n", Object::type(o), o,  o->xsize );
-        #endif
-        delete o;
+        if( o != H_UNDEFINED && o->xsize ){
+            #ifdef MEM_DEBUG
+            printf( "[MEM DEBUG] !!! releasing '%s' value at 0x%X (- %d bytes)\n", Object::type(o), o,  o->xsize );
+            #endif
+            delete o;
+        }
     }
 
     mem->clear();

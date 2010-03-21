@@ -25,22 +25,26 @@
 #include "object.h"
 #include "map.h"
 
+/* helper macro to obtain the address of a pointer */
 #define H_ADDRESS_OF(o)      reinterpret_cast<unsigned long>(o)
-
+/* default null value for an Object pointer */
 #define H_UNDEFINED          NULL
-#define HANONYMOUSIDENTIFIER (char *)"HANONYMOUSIDENTIFIER"
+/* anonymous identifier to be used upon temporary stacks creation */
+#define HANONYMOUSIDENTIFIER     (char *)"HANONYMOUSIDENTIFIER"
+#define HANONYMOUSIDENTIFIER_FTM (char *)"HANONYMOUSIDENTIFIER%d"
 
 /* data segment descriptor <identifier, object> */
-typedef Map<Object>      vmem_t;
+typedef Map<Object> vmem_t;
 /* code segment descriptor <function, abstract tree> */
-typedef Map<Node>        vcode_t;
+typedef Map<Node>   vcode_t;
 
+/* memory segment management functions */
 Object *hybris_vm_add( vmem_t *mem, char *identifier, Object *object );
 Object *hybris_vm_set( vmem_t *mem, char *identifier, Object *object );
 Object *hybris_vm_get( vmem_t *mem, char *identifier );
 vmem_t *hybris_vm_clone( vmem_t *mem );
 void    hybris_vm_release( vmem_t *mem );
-
+/* code segment management functions */
 Node   *hybris_vc_add( vcode_t *code, Node *function );
 Node   *hybris_vc_set( vcode_t *code, Node *function );
 Node   *hybris_vc_get( vcode_t *code, char  *function );

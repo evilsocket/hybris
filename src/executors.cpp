@@ -18,32 +18,6 @@
 */
 #include "executors.h"
 
-#ifdef GC_SUPPORT
-#   define H_FREE_GARBAGE(o) if( hvm_is_garbage( o ) ){ delete o; }
-
-inline int hvm_is_garbage( Object *o ){
-    /* null objects are obviously not deletable */
-    if( o == H_UNDEFINED ){
-        return 0;
-    }
-    /* explicitly set to non deletable */
-    else if( (o->attributes & H_OA_GARBAGE) != H_OA_GARBAGE ){
-        return 0;
-    }
-    /* constants */
-    else if( (o->attributes & H_OA_CONSTANT) == H_OA_CONSTANT ){
-        return 0;
-    }
-    /* deletable */
-    else {
-        return 1;
-    }
-}
-
-#else
-#   define H_FREE_GARBAGE(o) // o
-#endif
-
 Object *exec_identifier( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
     int     idx;

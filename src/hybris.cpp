@@ -59,7 +59,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
     vmem_t stack;
     char function_name[0xFF] = {0};
     function_t builtin;
-    Node *function, *id, *clone;
+    Node *node, *function, *id, *clone;
     unsigned int i = 0;
     vector<Node *> garbage;
     Object *value = H_UNDEFINED;
@@ -69,8 +69,11 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         /* do object assignment */
         for( i = 0; i < call->children(); i++ ){
             /* create a clone of the statements node */
-            Node *node = Tree::clone( call->child(i), node );
-            stack.insert( HANONYMOUSIDENTIFIER, htree_execute( ctx, stackframe, node ) );
+            node  = Tree::clone( call->child(i), node );
+            /* create temporary stack value */
+            value = htree_execute( ctx, stackframe, node );
+            value->setGarbageAttribute( ~H_OA_GARBAGE );
+            stack.insert( HANONYMOUSIDENTIFIER, value );
             /* add the node to the garbage vector to be released after the function call */
             garbage.push_back(node);
         }
@@ -133,6 +136,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         for( i = 0; i < call->children(); i++ ){
             clone = Tree::clone( call->child(i), clone );
             value = htree_execute( ctx, stackframe, clone );
+            value->setGarbageAttribute( ~H_OA_GARBAGE );
             stack.insert( (char *)identifiers[i].c_str(), value );
             garbage.push_back(clone);
         }
@@ -162,6 +166,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         for( i = 0; i < garbage.size(); i++ ){
             Tree::release( garbage[i] );
         }
+
         /* return function evaluation value */
         return _return;
     }
@@ -177,7 +182,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
             #endif
             hybris_syntax_error( "'%s' undeclared function identifier", (char *)call->_call.c_str() );
         }
-        else if( (external->attributes & H_OA_EXTERN) == H_OA_EXTERN ){
+        else if( (external->attributes & H_OA_EXTERN) != H_OA_EXTERN ){
             #ifdef MT_SUPPORT
             if( threaded ){
                 POOL_DEL( pthread_self() );
@@ -191,6 +196,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
             clone = Tree::clone( call->child(i), clone );
             value = htree_execute( ctx, stackframe, clone );
             stack.insert( HANONYMOUSIDENTIFIER, value );
+            value->setGarbageAttribute( ~H_OA_GARBAGE );
             garbage.push_back(clone);
         }
 
@@ -219,6 +225,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         for( i = 0; i < garbage.size(); i++ ){
             Tree::release( garbage[i] );
         }
+
         /* return function evaluation value */
         return _return;
     }
@@ -422,7 +429,6 @@ void hsignal_handler( int signo ) {
         hybris_generic_error( "SIGSEGV Signal Catched" );
     }
 }
-
 
 void h_env_init( h_context_t *ctx, int argc, char *argv[] ){
     int i;

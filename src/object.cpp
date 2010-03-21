@@ -234,10 +234,10 @@ Object::Object( unsigned int value ){
 }
 
 Object::Object( unsigned int rows, unsigned int columns, vector<Object *>& data ){
-    xtype       = H_OT_MATRIX;
-    xsize       = 0;
-    xrows       = rows;
-    xcolumns    = columns;
+    xtype      = H_OT_MATRIX;
+    xsize      = 0;
+    xrows      = rows;
+    xcolumns   = columns;
     attributes = H_OA_NONE | H_OA_GARBAGE;
 
     unsigned int x, y;
@@ -315,17 +315,16 @@ void Object::setGarbageAttribute( H_OBJECT_ATTRIBUTE mask ){
     else{
         attributes |= mask;
     }
-
     /* eventually handle children */
     switch( xtype ){
         case H_OT_ARRAY  :
-            for( i = 0; i < xsize && i < xarray.size(); i++ ){
+            for( i = 0; i < xsize; i++ ){
                 xarray[i]->setGarbageAttribute(mask);
             }
         break;
 
         case H_OT_MAP    :
-            for( i = 0; i < xsize && i < xmap.size() && i < xarray.size(); i++ ){
+            for( i = 0; i < xsize; i++ ){
                 xarray[i]->setGarbageAttribute(mask);
                 xmap[i]->setGarbageAttribute(mask);
             }
@@ -351,7 +350,7 @@ void Object::release(){
         break;
 
         case H_OT_ARRAY  :
-            for( i = 0; i < xsize && i < xarray.size(); i++ ){
+            for( i = 0; i < xsize; i++ ){
                 o = xarray[i];
                 if( o ){
                     delete o;
@@ -362,7 +361,7 @@ void Object::release(){
         break;
 
         case H_OT_MAP    :
-            for( i = 0; i < xsize && i < xmap.size() && i < xarray.size(); i++ ){
+            for( i = 0; i < xsize; i++ ){
                 o = xmap[i];
                 if( o ){
                     delete o;
@@ -395,57 +394,6 @@ void Object::release(){
     xsize      = 0;
     xtype      = H_OT_NONE;
     attributes = H_OA_NONE | H_OA_GARBAGE;
-}
-
-int Object::owns( Object **o ){
-    unsigned long ob_address = H_ADDRESS_OF(*o);
-    unsigned int i, j;
-
-    switch( xtype ){
-        case H_OT_ARRAY  :
-            for( i = 0; i < xsize && i < xarray.size(); i++ ){
-                if( ob_address == H_ADDRESS_OF(xarray[i]) ){
-                    return 1;
-                }
-                else if( xarray[i]->owns(o) ){
-                    return 1;
-                }
-            }
-            return 0;
-        break;
-
-        case H_OT_MAP    :
-            for( i = 0; i < xsize && i < xmap.size() && i < xarray.size(); i++ ){
-                if( ob_address == H_ADDRESS_OF(xarray[i]) || ob_address == H_ADDRESS_OF(xmap[i]) ){
-                    return 1;
-                }
-                else if( xarray[i]->owns(o) ){
-                    return 1;
-                }
-                else if( xmap[i]->owns(o) ){
-                    return 1;
-                }
-            }
-            return 0;
-        break;
-
-        case H_OT_MATRIX :
-            for( i = 0; i < xrows; i++ ){
-                for( j = 0; j < xcolumns; j++ ){
-                    if( ob_address == H_ADDRESS_OF(xmatrix[i][j]) ){
-                        return 1;
-                    }
-                    else if( xmatrix[i][j]->owns(o) ){
-                        return 1;
-                    }
-                }
-            }
-            return 0;
-        break;
-
-        default :
-            return 0;
-    }
 }
 
 Object::~Object(){
