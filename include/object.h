@@ -118,7 +118,7 @@ public  :
 
     void setGarbageAttribute( H_OBJECT_ATTRIBUTE mask );
 
-    void release();
+    void release( bool reset_attributes = true );
 
     ~Object();
 

@@ -340,7 +340,7 @@ void Object::setGarbageAttribute( H_OBJECT_ATTRIBUTE mask ){
     }
 }
 
-void Object::release(){
+void Object::release( bool reset_attributes /*= true*/ ){
     unsigned int i, j;
     Object *o;
 
@@ -393,7 +393,9 @@ void Object::release(){
     }
     xsize      = 0;
     xtype      = H_OT_NONE;
-    attributes = H_OA_NONE | H_OA_GARBAGE;
+    if( reset_attributes ){
+        attributes = H_OA_NONE | H_OA_GARBAGE;
+    }
 }
 
 Object::~Object(){
@@ -669,12 +671,12 @@ Object * Object::dotequal( Object *o ){
 		case H_OT_MATRIX : hybris_syntax_error( "'%s' is an invalid type for '.=' operator", type(o) ); break;
 	}
 
-	release();
+	release(false);
 
 	xtype   = H_OT_STRING;
 	xstring = ret.str();
 	parse_string( xstring );
-	xsize   = strlen(xstring.c_str()) + 1;
+	xsize   = strlen( xstring.c_str() ) + 1;
 
 	return this;
 }
@@ -946,7 +948,7 @@ Object* Object::range( Object *to ){
 Object& Object::operator = ( Object *o ){
 	unsigned int i, j;
 
-	release();
+	release(false);
 
     xtype = o->xtype;
     xsize = o->xsize;
@@ -1302,7 +1304,7 @@ Object * Object::operator *= ( Object *o ){
                 }
             }
         }
-        release();
+        release(false);
         (*this) = matrix;
 	}
 	else{
