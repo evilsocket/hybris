@@ -1,7 +1,6 @@
 AC_PREREQ([2.65])
-AC_INIT(src/hybris.cpp,0.9b)
-AM_INIT_AUTOMAKE(hybris,0.9b)
-#AC_CONFIG_SRCDIR([config.h.in])
+AC_INIT( [Hybris Scripting Language], [0.9b], [evilsocket@gmail.com], [hybris] )
+AM_INIT_AUTOMAKE( hybris, 0.9b )
 AC_CONFIG_HEADERS([include/config.h])
 
 AC_DEFINE( AUTHOR,    "The Hybris Dev Team [http://www.hybris-lang.org/]", [] )
@@ -105,7 +104,6 @@ AC_CHECK_HEADERS( [sys/types.h], [], [AC_MSG_ERROR([sys/types.h header missing])
 AC_CHECK_HEADERS( [sys/wait.h], [], [AC_MSG_ERROR([sys/wait.h header missing])] )
 AC_CHECK_HEADERS( [time.h], [], [AC_MSG_ERROR([time.h header missing])] )
 AC_CHECK_HEADERS( [unistd.h], [], [AC_MSG_ERROR([unistd.h header missing])] )
-
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
 AC_C_INLINE
@@ -116,7 +114,6 @@ AC_TYPE_SIZE_T
 AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT8_T
-
 # Checks for library functions.
 AC_FUNC_FORK
 AC_FUNC_MALLOC
@@ -125,6 +122,5 @@ AC_FUNC_STRTOD
 AC_CHECK_FUNCS([bzero floor getcwd gethostbyname gettimeofday memset pow socket sqrt strchr strdup strrchr strtol])
 
 AC_CONFIG_FILES( [Makefile src/builtins/Makefile])
-
 
 AC_OUTPUT
