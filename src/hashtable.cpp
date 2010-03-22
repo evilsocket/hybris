@@ -221,9 +221,9 @@ inline static void HTSetupKeyTrunc(void)
 {
    int i, j;
 
-   for ( i = 0; i < sizeof(unsigned long); i++ )
-      for ( j = 0; j < sizeof(unsigned long); j++ )
-	 grgKeyTruncMask[i][j] = j < i ? 255 : 0;   /* chars have 8 bits */
+   for ( i = 0; i < sizeof(unsigned long); ++i )
+      for ( j = 0; j < sizeof(unsigned long); ++j )
+        grgKeyTruncMask[i][j] = j < i ? 255 : 0;   /* chars have 8 bits */
 }
 
 
@@ -333,7 +333,7 @@ inline static hash_item_t *DenseTableInsert(dense_bin_t *bin, hash_item_t *bckIn
 
 inline static hash_item_t *DenseTableNextBucket(dense_iterator_t *iter)
 {
-   for ( iter->pos++; iter->pos < iter->cBuckets; iter->pos++ )
+   for ( ++iter->pos; iter->pos < iter->cBuckets; ++iter->pos )
       if ( !DenseTableIsEmpty(iter->bin, iter->pos) )
 	 return iter->bin->rgBuckets + iter->pos;
    return NULL;                        /* all remaining groups were empty */
@@ -646,7 +646,7 @@ inline static hash_item_t *Insert(hash_table_t *ht, ulong key, ulong data, int f
    item = DenseTableInsert(ht->table, &bckInsert, iEmpty, &fOverwrite);
    if ( fOverwrite )                    /* we overwrote a deleted bucket */
       ht->cDeletedItems--;
-   ht->cItems++;                        /* insert couldn't have overwritten */
+   ++ht->cItems;                        /* insert couldn't have overwritten */
    if ( ht->cDeltaGoalSize > 0 )  /* closer to our goal size */
       ht->cDeltaGoalSize--;
    if ( ht->cItems + ht->cDeletedItems >= ht->cBuckets * OCCUPANCY_PCT || ht->cDeltaGoalSize < 0 ) /* we must've overestimated # of deletes */
@@ -674,10 +674,10 @@ inline static int Delete(hash_table_t *ht, ulong key, int fShrink, int fLastFind
    if ( !fLastFindSet && !Find(ht, key, NULL) )
       return 0;
    SET_BCK_DELETED(ht, ht->posLastFind);       /* find set this, how nice */
-   ht->cItems--;
-   ht->cDeletedItems++;
+   --ht->cItems;
+   ++ht->cDeletedItems;
    if ( ht->cDeltaGoalSize < 0 )  /* heading towards our goal of deletion */
-      ht->cDeltaGoalSize++;
+      ++ht->cDeltaGoalSize;
 
    if ( fShrink && ht->cItems < ht->cBuckets * OCCUPANCY_PCT*0.4
         && ht->cDeltaGoalSize >= 0       /* wait until we're done deleting */

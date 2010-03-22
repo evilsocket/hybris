@@ -23,7 +23,7 @@
 string hbuild_function_trace( char *function, vmem_t *stack, int identifiers ){
     string trace = function + string("(");
     unsigned int i;
-    for( i = 0; i < stack->size(); i++ ){
+    for( i = 0; i < stack->size(); ++i ){
         trace += " " + (identifiers ? string(stack->label(i)) + "=" : string("")) +  stack->at(i)->svalue() + (i < (stack->size() - 1) ? "," : "");
     }
     trace += " )";
@@ -67,7 +67,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
     /* check if function is a builtin */
     if( (builtin = hfunction_search( ctx, (char *)call->_call.c_str() )) != H_UNDEFINED ){
         /* do object assignment */
-        for( i = 0; i < call->children(); i++ ){
+        for( i = 0; i < call->children(); ++i ){
             /* create a clone of the statements node */
             node  = Tree::clone( call->child(i), node );
             /* create temporary stack value */
@@ -100,7 +100,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         #endif
 
         /* free cloned nodes */
-        for( i = 0; i < garbage.size(); i++ ){
+        for( i = 0; i < garbage.size(); ++i ){
             Tree::release( garbage[i] );
         }
 
@@ -113,7 +113,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         unsigned int body = 0;
         /* a function could be without arguments */
         if( function->child(0)->type() == H_NT_IDENTIFIER ){
-            for( i = 0, id = function->child(0); id->type() == H_NT_IDENTIFIER; i++ ){
+            for( i = 0, id = function->child(0); id->type() == H_NT_IDENTIFIER; ++i ){
                 id = function->child(i);
                 identifiers.push_back( id->_identifier );
             }
@@ -133,7 +133,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
                                  call->children() );
         }
 
-        for( i = 0; i < call->children(); i++ ){
+        for( i = 0; i < call->children(); ++i ){
             clone = Tree::clone( call->child(i), clone );
             value = htree_execute( ctx, stackframe, clone );
             value->setGarbageAttribute( ~H_OA_GARBAGE );
@@ -163,7 +163,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         #endif
 
         /* free cloned nodes */
-        for( i = 0; i < garbage.size(); i++ ){
+        for( i = 0; i < garbage.size(); ++i ){
             Tree::release( garbage[i] );
         }
 
@@ -192,7 +192,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         }
         /* at this point we're sure that it's an external, so build the frame for hdllcall */
         stack.insert( HANONYMOUSIDENTIFIER, external );
-        for( i = 0; i < call->children(); i++ ){
+        for( i = 0; i < call->children(); ++i ){
             clone = Tree::clone( call->child(i), clone );
             value = htree_execute( ctx, stackframe, clone );
             stack.insert( HANONYMOUSIDENTIFIER, value );
@@ -222,7 +222,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         #endif
 
         /* free cloned nodes */
-        for( i = 0; i < garbage.size(); i++ ){
+        for( i = 0; i < garbage.size(); ++i ){
             Tree::release( garbage[i] );
         }
 
@@ -239,12 +239,12 @@ Object *htree_execute( h_context_t *ctx, vmem_t *stackframe, Node *node ){
     }
 
     switch(node->type()){
-        /* constant value */
-        case H_NT_CONSTANT   :
-            return node->_constant;
         /* identifier */
         case H_NT_IDENTIFIER :
             return exec_identifier( ctx, stackframe, node );
+        /* constant value */
+        case H_NT_CONSTANT   :
+            return node->_constant;
         /* function definition */
         case H_NT_FUNCTION   :
             return exec_function( ctx, stackframe, node );
@@ -254,6 +254,18 @@ Object *htree_execute( h_context_t *ctx, vmem_t *stackframe, Node *node ){
         /* unary, binary or ternary operator */
         case H_NT_OPERATOR   :
             switch( node->_operator ){
+                /* identifier = expression */
+                case ASSIGN    :
+                    return exec_assign( ctx, stackframe, node );
+                /* expression ; */
+                case EOSTMT  :
+                    return exec_eostmt( ctx, stackframe, node );
+                /* if( condition ) */
+                case IF     :
+                    return exec_if( ctx, stackframe, node );
+                /* return */
+                case RETURN :
+                    return exec_return( ctx, stackframe, node );
                 /* $ */
                 case DOLLAR :
                     return exec_dollar( ctx, stackframe, node );
@@ -262,9 +274,6 @@ Object *htree_execute( h_context_t *ctx, vmem_t *stackframe, Node *node ){
                     return exec_pointer( ctx, stackframe, node );
                 case OBJ :
                     return exec_object( ctx, stackframe, node );
-                /* return */
-                case RETURN :
-                    return exec_return( ctx, stackframe, node );
                 /* expression .. expression */
                 case RANGE :
                     return exec_range( ctx, stackframe, node );
@@ -293,24 +302,15 @@ Object *htree_execute( h_context_t *ctx, vmem_t *stackframe, Node *node ){
                 case FOREACHM :
                     return exec_foreachm( ctx, stackframe, node );
                 break;
-                /* if( condition ) */
-                case IF     :
-                    return exec_if( ctx, stackframe, node );
                 /* (condition ? expression : expression) */
                 case QUESTION :
                     return exec_question( ctx, stackframe, node );
-                /* expression ; */
-                case EOSTMT  :
-                    return exec_eostmt( ctx, stackframe, node );
                 /* expression.expression */
                 case DOT    :
                     return exec_dot( ctx, stackframe, node );
                 /* expression .= expression */
                 case DOTE   :
                     return exec_dote( ctx, stackframe, node );
-                /* identifier = expression */
-                case ASSIGN    :
-                    return exec_assign( ctx, stackframe, node );
                 /* -expression */
                 case UMINUS :
                     return exec_uminus( ctx, stackframe, node );
@@ -439,7 +439,7 @@ void h_env_init( h_context_t *ctx, int argc, char *argv[] ){
     o = new Object( static_cast<long>(argc - 1) );
     hybris_vm_add( &ctx->vmem, (char *)"argc", o );
     delete o;
-    for( i = 1; i < argc; i++ ){
+    for( i = 1; i < argc; ++i ){
         sprintf( name, "%d", i - 1 );
         o = new Object(argv[i]);
         hybris_vm_add( &ctx->vmem, name, o );
@@ -466,7 +466,7 @@ void h_env_init( h_context_t *ctx, int argc, char *argv[] ){
     HYBRIS_DEFINE_CONSTANT( ctx, "GET",  static_cast<long>(0) );
     HYBRIS_DEFINE_CONSTANT( ctx, "POST", static_cast<long>(1) );
 
-    for( i = 0; i < ctx->constants.size(); i++ ){
+    for( i = 0; i < ctx->constants.size(); ++i ){
         hybris_vm_add( &ctx->vmem, (char *)ctx->constants[i]->identifier.c_str(), ctx->constants[i]->value );
     }
 
@@ -606,7 +606,7 @@ void h_env_release( h_context_t *ctx, int onerror /*= 0*/ ){
     pthread_mutex_lock( &ctx->th_mutex );
         if( ctx->th_pool.size() > 0 ){
             printf( "[WARNING] Hard killing remaining running threads ... " );
-            for( int pool_i = 0; pool_i < ctx->th_pool.size(); pool_i++ ){
+            for( int pool_i = 0; pool_i < ctx->th_pool.size(); ++pool_i ){
                 pthread_kill( ctx->th_pool[pool_i], SIGTERM );
             }
             ctx->th_pool.clear();
@@ -615,7 +615,7 @@ void h_env_release( h_context_t *ctx, int onerror /*= 0*/ ){
     pthread_mutex_unlock( &ctx->th_mutex );
     #endif
 
-    for( int i = 0; i < ctx->builtins.size(); i++ ){
+    for( int i = 0; i < ctx->builtins.size(); ++i ){
         delete ctx->builtins[i];
     }
     ctx->builtins.clear();

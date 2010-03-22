@@ -225,7 +225,7 @@ int h_usage( char *argvz ){
 int main( int argc, char *argv[] ){
 
     int i, f_offset = 0;
-    for( i = 0; i < argc; i++ ){
+    for( i = 0; i < argc; ++i ){
         if( strcmp( argv[i], "--trace" ) == 0 || strcmp( argv[i], "-t" ) == 0 ){
             HCTX.args.stacktrace = 1;
         }

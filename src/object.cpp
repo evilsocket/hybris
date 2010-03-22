@@ -110,11 +110,11 @@ unsigned int Object::assert_type( Object *a, Object *b, unsigned int ntypes, ...
 	Object *objects[] = { a, b };
 	va_list ap;
 
-	for( o = 0; o < 2; o++ ){
+	for( o = 0; o < 2; ++o ){
 		if( objects[o] != NULL ){
 			valid = 0;
 			va_start( ap, ntypes );
-			for( i = 0; i < ntypes && valid == 0; i++ ){
+			for( i = 0; i < ntypes && valid == 0; ++i ){
 				if( objects[o]->xtype == va_arg( ap, int ) ){
 					valid = 1;
 				}
@@ -158,7 +158,7 @@ void Object::parse_string( string& s ){
 	for( ; (j = s.find( "\\x" )) != string::npos; ){
 		string s_hex, repl;
 		long   l_hex;
-		for( i = j + 2; i < s.length(); i++ ){
+		for( i = j + 2; i < s.length(); ++i ){
             // hex digit ?
             if( (s[i] >= 'A' && s[i] <= 'F') || (s[i] >= 'a' && s[i] <= 'f') || (s[i] >= '0' && s[i] <= '9') ){
                 s_hex += s[i];
@@ -181,75 +181,87 @@ void * Object::operator new (size_t size){
 }
 #endif
 
-Object::Object( long value ) {
-	xtype = H_OT_INT;
-	xint  = value;
-	xsize = sizeof(long);
-    attributes = H_OA_NONE | H_OA_GARBAGE;
+Object::Object( long value ) :
+    xtype(H_OT_INT),
+    xint(value),
+    xsize(sizeof(long)),
+    attributes(H_OA_NONE | H_OA_GARBAGE)
+{
+
 }
 
-Object::Object( long value, unsigned int _is_extern ) {
-	xtype = H_OT_INT;
-	xint  = value;
-	xsize = sizeof(long);
-	attributes = H_OA_NONE | H_OA_GARBAGE;
+Object::Object( long value, unsigned int _is_extern ) :
+    xtype(H_OT_INT),
+    xint(value),
+    xsize(sizeof(long)),
+    attributes(H_OA_NONE | H_OA_GARBAGE)
+{
 	if( _is_extern ){
         attributes |= H_OA_EXTERN;
 	}
 }
 
-Object::Object( double value ) {
-	xtype  = H_OT_FLOAT;
-	xfloat = value;
-	xsize  = sizeof(double);
-	attributes = H_OA_NONE | H_OA_GARBAGE;
+Object::Object( double value ) :
+    xtype(H_OT_FLOAT),
+    xfloat(value),
+    xsize(sizeof(double)),
+    attributes(H_OA_NONE | H_OA_GARBAGE)
+{
+
 }
 
-Object::Object( char value ) {
-	xtype = H_OT_CHAR;
-	xchar = value;
-	xsize = sizeof(char);
-	attributes = H_OA_NONE | H_OA_GARBAGE;
+Object::Object( char value ) :
+    xtype(H_OT_CHAR),
+    xchar(value),
+    xsize(sizeof(char)),
+    attributes(H_OA_NONE | H_OA_GARBAGE)
+{
+
 }
 
-Object::Object( char *value ) {
-	xtype   = H_OT_STRING;
-	xstring = value;
+Object::Object( char *value ) :
+    xtype(H_OT_STRING),
+    xstring(value),
+    attributes(H_OA_NONE | H_OA_GARBAGE)
+{
 	parse_string( xstring );
 	xsize   = strlen(xstring.c_str()) + 1;
-	attributes = H_OA_NONE | H_OA_GARBAGE;
 }
 
-Object::Object(){
-	xtype = H_OT_ARRAY;
-	xsize = 0;
-	attributes = H_OA_NONE | H_OA_GARBAGE;
+Object::Object() :
+    xtype(H_OT_ARRAY),
+    xsize(0),
+    attributes(H_OA_NONE | H_OA_GARBAGE)
+{
+
 }
 
-Object::Object( unsigned int value ){
-	xtype  = H_OT_ALIAS;
-	xsize  = sizeof(unsigned int);
-	xalias = value;
-	attributes = H_OA_NONE | H_OA_GARBAGE;
+Object::Object( unsigned int value ) :
+    xtype(H_OT_ALIAS),
+    xsize(sizeof(unsigned int)),
+    xalias(value),
+    attributes(H_OA_NONE | H_OA_GARBAGE)
+{
+
 }
 
-Object::Object( unsigned int rows, unsigned int columns, vector<Object *>& data ){
-    xtype      = H_OT_MATRIX;
-    xsize      = 0;
-    xrows      = rows;
-    xcolumns   = columns;
-    attributes = H_OA_NONE | H_OA_GARBAGE;
-
+Object::Object( unsigned int rows, unsigned int columns, vector<Object *>& data ) :
+    xtype(H_OT_MATRIX),
+    xsize(0),
+    xrows(rows),
+    xcolumns(columns),
+    attributes(H_OA_NONE | H_OA_GARBAGE)
+{
     unsigned int x, y;
 
     xmatrix = new Object ** [rows];
-    for( x = 0; x < rows; x++ ){
+    for( x = 0; x < rows; ++x ){
         xmatrix[x] = new Object * [columns];
     }
 
     if( data.size() ){
-        for( x = 0; x < rows; x++ ){
-            for( y = 0; y < columns; y++ ){
+        for( x = 0; x < rows; ++x ){
+            for( y = 0; y < columns; ++y ){
                 Object * o    = data[ x * columns + y ];
                 xmatrix[x][y] = o;
                 xsize        += o->xsize;
@@ -257,8 +269,8 @@ Object::Object( unsigned int rows, unsigned int columns, vector<Object *>& data 
         }
     }
     else{
-        for( x = 0; x < rows; x++ ){
-            for( y = 0; y < columns; y++ ){
+        for( x = 0; x < rows; ++x ){
+            for( y = 0; y < columns; ++y ){
                 Object * o    = new Object( static_cast<long>(0) );
                 xmatrix[x][y] = o;
                 xsize        += o->xsize;
@@ -267,22 +279,26 @@ Object::Object( unsigned int rows, unsigned int columns, vector<Object *>& data 
     }
 }
 
-Object::Object( Object *o ) {
+Object::Object( Object *o ) :
+    xsize(o->xsize),
+    xtype(o->xtype),
+    attributes(o->attributes)
+{
 	unsigned int i, j;
-	xsize = o->xsize;
-	switch( (xtype = o->xtype) ){
+
+	switch( xtype ){
 		case H_OT_INT    : xint    = o->xint;    break;
 		case H_OT_ALIAS  : xalias  = o->xalias;  break;
 		case H_OT_FLOAT  : xfloat  = o->xfloat;  break;
 		case H_OT_CHAR   : xchar   = o->xchar;   break;
 		case H_OT_STRING : xstring = o->xstring; break;
 		case H_OT_ARRAY  :
-			for( i = 0; i < xsize; i++ ){
+			for( i = 0; i < xsize; ++i ){
 				xarray.push_back( new Object( o->xarray[i] ) );
 			}
 		break;
 		case H_OT_MAP    :
-			for( i = 0; i < xsize; i++ ){
+			for( i = 0; i < xsize; ++i ){
 				xmap.push_back( new Object( o->xmap[i] ) );
 				xarray.push_back( new Object( o->xarray[i] ) );
 			}
@@ -291,11 +307,11 @@ Object::Object( Object *o ) {
             xrows    = o->xrows;
             xcolumns = o->xcolumns;
             xmatrix  = new Object ** [xrows];
-            for( i = 0; i < xrows; i++ ){
+            for( i = 0; i < xrows; ++i ){
                 xmatrix[i] = new Object * [xcolumns];
             }
-            for( i = 0; i < xrows; i++ ){
-                for( j = 0; j < xcolumns; j++ ){
+            for( i = 0; i < xrows; ++i ){
+                for( j = 0; j < xcolumns; ++j ){
                     xmatrix[i][j] = new Object( o->xmatrix[i][j] );
                 }
              }
@@ -318,21 +334,21 @@ void Object::setGarbageAttribute( H_OBJECT_ATTRIBUTE mask ){
     /* eventually handle children */
     switch( xtype ){
         case H_OT_ARRAY  :
-            for( i = 0; i < xsize; i++ ){
+            for( i = 0; i < xsize; ++i ){
                 xarray[i]->setGarbageAttribute(mask);
             }
         break;
 
         case H_OT_MAP    :
-            for( i = 0; i < xsize; i++ ){
+            for( i = 0; i < xsize; ++i ){
                 xarray[i]->setGarbageAttribute(mask);
                 xmap[i]->setGarbageAttribute(mask);
             }
         break;
 
         case H_OT_MATRIX :
-            for( i = 0; i < xrows; i++ ){
-                for( j = 0; j < xcolumns; j++ ){
+            for( i = 0; i < xrows; ++i ){
+                for( j = 0; j < xcolumns; ++j ){
                     xmatrix[i][j]->setGarbageAttribute(mask);
                 }
             }
@@ -354,12 +370,12 @@ Object& Object::assign( Object *o ){
 		case H_OT_CHAR   : xchar   = o->xchar;   break;
 		case H_OT_STRING : xstring = o->xstring; break;
 		case H_OT_ARRAY  :
-			for( i = 0; i < xsize; i++ ){
+			for( i = 0; i < xsize; ++i ){
 				xarray.push_back( new Object( o->xarray[i] ) );
 			}
 		break;
 		case H_OT_MAP    :
-			for( i = 0; i < xsize; i++ ){
+			for( i = 0; i < xsize; ++i ){
 				xmap.push_back( new Object( o->xmap[i] ) );
 				xarray.push_back( new Object( o->xarray[i] ) );
 			}
@@ -368,11 +384,11 @@ Object& Object::assign( Object *o ){
             xrows    = o->xrows;
             xcolumns = o->xcolumns;
             xmatrix  = new Object ** [xrows];
-            for( i = 0; i < xrows; i++ ){
+            for( i = 0; i < xrows; ++i ){
                 xmatrix[i] = new Object * [xcolumns];
             }
-            for( i = 0; i < xrows; i++ ){
-                for( j = 0; j < xcolumns; j++ ){
+            for( i = 0; i < xrows; ++i ){
+                for( j = 0; j < xcolumns; ++j ){
                     xmatrix[i][j] = new Object( o->xmatrix[i][j] );
                 }
              }
@@ -392,7 +408,7 @@ void Object::release( bool reset_attributes /*= true*/ ){
         break;
 
         case H_OT_ARRAY  :
-            for( i = 0; i < xsize; i++ ){
+            for( i = 0; i < xsize; ++i ){
                 o = xarray[i];
                 if( o ){
                     delete o;
@@ -403,7 +419,7 @@ void Object::release( bool reset_attributes /*= true*/ ){
         break;
 
         case H_OT_MAP    :
-            for( i = 0; i < xsize; i++ ){
+            for( i = 0; i < xsize; ++i ){
                 o = xmap[i];
                 if( o ){
                     delete o;
@@ -420,8 +436,8 @@ void Object::release( bool reset_attributes /*= true*/ ){
         break;
 
         case H_OT_MATRIX :
-            for( i = 0; i < xrows; i++ ){
-                for( j = 0; j < xcolumns; j++ ){
+            for( i = 0; i < xrows; ++i ){
+                for( j = 0; j < xcolumns; ++j ){
                     o = xmatrix[i][j];
                     delete o;
                     xmatrix[i][j] = NULL;
@@ -462,7 +478,7 @@ int Object::equals( Object *o ){
 		case H_OT_CHAR   : return xchar   == o->xchar;
 		case H_OT_STRING : return xstring == o->xstring;
 		case H_OT_ARRAY  :
-			for( i = 0; i < xsize; i++ ){
+			for( i = 0; i < xsize; ++i ){
 				if( xarray[i]->equals( o->xarray[i] ) == 0 ){
 					return 0;
 				}
@@ -470,7 +486,7 @@ int Object::equals( Object *o ){
 			return 1;
 		break;
 		case H_OT_MAP    :
-			for( i = 0; i < xsize; i++ ){
+			for( i = 0; i < xsize; ++i ){
 				if( xmap[i]->equals( o->xmap[i] ) == 0 ){
 					return 0;
 				}
@@ -484,8 +500,8 @@ int Object::equals( Object *o ){
             if( xrows != o->xrows || xcolumns != o->xcolumns ){
                 return 0;
             }
-            for( i = 0; i < xrows; i++ ){
-                for( j = 0; j < xcolumns; j++ ){
+            for( i = 0; i < xrows; ++i ){
+                for( j = 0; j < xcolumns; ++j ){
                     if( xmatrix[i][j]->equals( o->xmatrix[i][j] ) == 0 ){
                         return 0;
                     }
@@ -498,7 +514,7 @@ int Object::equals( Object *o ){
 
 int Object::mapFind( Object *map ){
 	unsigned int i;
-	for( i = 0; i < xsize; i++ ){
+	for( i = 0; i < xsize; ++i ){
 		if( xmap[i]->equals(map) ){
 			return i;
 		}
@@ -526,7 +542,7 @@ unsigned char *Object::serialize(){
 		case H_OT_STRING : memcpy( buffer, xstring.c_str(), xsize ); break;
 		case H_OT_MAP    :
 			// compute the map objects size
-			for( i = 0; i < xsize; i++ ){
+			for( i = 0; i < xsize; ++i ){
 				switch( xarray[i]->xtype ){
 					case H_OT_INT    : xmapsize += xarray[i]->xsize; break;
 					case H_OT_ALIAS  : xmapsize += xarray[i]->getObject()->xsize; break;
@@ -543,7 +559,7 @@ unsigned char *Object::serialize(){
 			buffer = new unsigned char[ xmapsize ];
 
 			// create the serialized stream looping each map's object
-			for( i = 0; i < xsize; i++ ){
+			for( i = 0; i < xsize; ++i ){
 				memcpy( (buffer + offset), xarray[i]->serialize(), xarray[i]->xsize );
 				offset += xarray[i]->xsize;
 			}
@@ -558,7 +574,7 @@ unsigned char *Object::serialize(){
 
 void Object::print( unsigned int tabs /*= 0*/ ){
 	unsigned int i, j;
-	for( i = 0; i < tabs; i++ ) printf( "\t" );
+	for( i = 0; i < tabs; ++i ) printf( "\t" );
 	switch(xtype){
 		case H_OT_INT    : printf( "%d",  xint );           break;
 		case H_OT_ALIAS  : printf( "0x%X", xalias );        break;
@@ -567,28 +583,28 @@ void Object::print( unsigned int tabs /*= 0*/ ){
 		case H_OT_STRING : printf( "%s", xstring.c_str() ); break;
 		case H_OT_ARRAY  :
 			printf( "array {\n" );
-			for( i = 0; i < xsize; i++ ){
+			for( i = 0; i < xsize; ++i ){
 				xarray[i]->println(tabs + 1);
 			}
-			for( i = 0; i < tabs; i++ ) printf( "\t" );
+			for( i = 0; i < tabs; ++i ) printf( "\t" );
 			printf( "}\n" );
 			return;
 		break;
 		case H_OT_MAP  :
 			printf( "map {\n" );
-			for( i = 0; i < xsize; i++ ){
+			for( i = 0; i < xsize; ++i ){
 				xmap[i]->print(tabs + 1);
 				printf( " -> " );
 				xarray[i]->println(tabs + 1);
 			}
-			for( i = 0; i < tabs; i++ ) printf( "\t" );
+			for( i = 0; i < tabs; ++i ) printf( "\t" );
 			printf( "}\n" );
 			return;
 		break;
 		case H_OT_MATRIX :
             printf( "matrix [%dx%d] {\n", xrows, xcolumns );
-            for( i = 0; i < xrows; i++ ){
-                for( j = 0; j < xcolumns; j++ ){
+            for( i = 0; i < xrows; ++i ){
+                for( j = 0; j < xcolumns; ++j ){
                     xmatrix[i][j]->print( tabs + 1 );
                 }
                 printf( "\n" );
@@ -609,7 +625,7 @@ string Object::toxml( unsigned int tabs /*= 0*/ ){
 	string       xtabs;
 	stringstream xml;
 
-	for( i = 0; i < tabs; i++ ){ xtabs += "\t"; }
+	for( i = 0; i < tabs; ++i ){ xtabs += "\t"; }
 	switch(xtype){
 		case H_OT_INT    : xml << xtabs << "<int>"    << xint    << "</int>\n";    break;
 		case H_OT_ALIAS  : xml << xtabs << "<alias>"  << xalias  << "</alias>\n";  break;
@@ -618,14 +634,14 @@ string Object::toxml( unsigned int tabs /*= 0*/ ){
 		case H_OT_STRING : xml << xtabs << "<string>" << xstring << "</string>\n"; break;
 		case H_OT_ARRAY  :
 			xml << xtabs << "<array>\n";
-			for( i = 0; i < xsize; i++ ){
+			for( i = 0; i < xsize; ++i ){
 				xml << xarray[i]->toxml( tabs + 1 );
 			}
 			xml << xtabs << "</array>\n";
 		break;
 		case H_OT_MAP  :
 			xml << xtabs << "<map>\n";
-			for( i = 0; i < xsize; i++ ){
+			for( i = 0; i < xsize; ++i ){
 				xml << xmap[i]->toxml( tabs + 1 );
 				xml << xarray[i]->toxml( tabs + 1 );
 			}
@@ -894,7 +910,7 @@ Object *Object::at( Object *index ){
         Object *array    = new Object();
         unsigned int x = index->lvalue(),
                      y;
-        for( y = 0; y < xrows; y++ ){
+        for( y = 0; y < xrows; ++y ){
             array->push_ref( xmatrix[x][y] );
         }
         return array;
@@ -964,7 +980,7 @@ Object* Object::range( Object *to ){
 
     if( xtype == H_OT_CHAR ){
         if( xchar < to->xchar ){
-            for( i = xchar; i <= to->xchar; i++ ){
+            for( i = xchar; i <= to->xchar; ++i ){
                 range->push( new Object( (char)i ) );
             }
         }
@@ -976,7 +992,7 @@ Object* Object::range( Object *to ){
     }
     else if( xtype == H_OT_INT ){
         if( xint < to->xint ){
-            for( i = xint; i <= to->xint; i++ ){
+            for( i = xint; i <= to->xint; ++i ){
                 range->push( new Object( i ) );
             }
         }
@@ -1095,15 +1111,15 @@ Object * Object::operator + ( Object *o ){
             if( xrows != o->xrows || xcolumns != o->xcolumns ){
                 hybris_syntax_error( "matrices have to be the same size" );
             }
-            for( x = 0; x < xrows; x++ ){
-                for( y = 0; y < xcolumns; y++ ){
+            for( x = 0; x < xrows; ++x ){
+                for( y = 0; y < xcolumns; ++y ){
                     (*matrix->xmatrix[x][y]) += o->xmatrix[x][y];
                 }
             }
         }
         else{
-            for( x = 0; x < xrows; x++ ){
-                for( y = 0; y < xcolumns; y++ ){
+            for( x = 0; x < xrows; ++x ){
+                for( y = 0; y < xcolumns; ++y ){
                     (*matrix->xmatrix[x][y]) += o;
                 }
             }
@@ -1133,15 +1149,15 @@ Object * Object::operator += ( Object *o ){
             if( xrows != o->xrows || xcolumns != o->xcolumns ){
                 hybris_syntax_error( "matrices have to be the same size" );
             }
-            for( x = 0; x < xrows; x++ ){
-                for( y = 0; y < xcolumns; y++ ){
+            for( x = 0; x < xrows; ++x ){
+                for( y = 0; y < xcolumns; ++y ){
                     (*this->xmatrix[x][y]) += o->xmatrix[x][y];
                 }
             }
         }
         else{
-            for( x = 0; x < xrows; x++ ){
-                for( y = 0; y < xcolumns; y++ ){
+            for( x = 0; x < xrows; ++x ){
+                for( y = 0; y < xcolumns; ++y ){
                     (*this->xmatrix[x][y]) += o;
                 }
             }
@@ -1173,15 +1189,15 @@ Object * Object::operator - ( Object *o ){
             if( xrows != o->xrows || xcolumns != o->xcolumns ){
                 hybris_syntax_error( "matrices have to be the same size" );
             }
-            for( x = 0; x < xrows; x++ ){
-                for( y = 0; y < xcolumns; y++ ){
+            for( x = 0; x < xrows; ++x ){
+                for( y = 0; y < xcolumns; ++y ){
                     (*matrix->xmatrix[x][y]) -= o->xmatrix[x][y];
                 }
             }
         }
         else{
-            for( x = 0; x < xrows; x++ ){
-                for( y = 0; y < xcolumns; y++ ){
+            for( x = 0; x < xrows; ++x ){
+                for( y = 0; y < xcolumns; ++y ){
                     (*matrix->xmatrix[x][y]) -= o;
                 }
             }
@@ -1211,15 +1227,15 @@ Object * Object::operator -= ( Object *o ){
             if( xrows != o->xrows || xcolumns != o->xcolumns ){
                 hybris_syntax_error( "matrices have to be the same size" );
             }
-            for( x = 0; x < xrows; x++ ){
-                for( y = 0; y < xcolumns; y++ ){
+            for( x = 0; x < xrows; ++x ){
+                for( y = 0; y < xcolumns; ++y ){
                     (*this->xmatrix[x][y]) -= o->xmatrix[x][y];
                 }
             }
         }
         else{
-            for( x = 0; x < xrows; x++ ){
-                for( y = 0; y < xcolumns; y++ ){
+            for( x = 0; x < xrows; ++x ){
+                for( y = 0; y < xcolumns; ++y ){
                     (*this->xmatrix[x][y]) -= o;
                 }
             }
@@ -1252,8 +1268,8 @@ Object * Object::operator * ( Object *o ){
             }
             vector<Object *> dummy;
             matrix = new Object( this->xcolumns, o->xrows, dummy );
-            for( x = 0; x < xrows; x++ ){
-                for( y = 0; y < o->xcolumns; y++ ){
+            for( x = 0; x < xrows; ++x ){
+                for( y = 0; y < o->xcolumns; ++y ){
                     for( z = 0; z < xcolumns; z++ ){
                         (*matrix->xmatrix[x][y]) = (*xmatrix[x][z]) * o->xmatrix[z][y];
                     }
@@ -1262,8 +1278,8 @@ Object * Object::operator * ( Object *o ){
         }
         else{
             matrix = new Object( this );
-            for( x = 0; x < xrows; x++ ){
-                for( y = 0; y < xcolumns; y++ ){
+            for( x = 0; x < xrows; ++x ){
+                for( y = 0; y < xcolumns; ++y ){
                     (*matrix->xmatrix[x][y]) *= o;
                 }
             }
@@ -1296,8 +1312,8 @@ Object * Object::operator *= ( Object *o ){
             }
             vector<Object *> dummy;
             matrix = new Object( this->xcolumns, o->xrows, dummy );
-            for( x = 0; x < xrows; x++ ){
-                for( y = 0; y < o->xcolumns; y++ ){
+            for( x = 0; x < xrows; ++x ){
+                for( y = 0; y < o->xcolumns; ++y ){
                     for( z = 0; z < xcolumns; z++ ){
                         (*matrix->xmatrix[x][y]) = (*xmatrix[x][z]) * o->xmatrix[z][y];
                     }
@@ -1306,8 +1322,8 @@ Object * Object::operator *= ( Object *o ){
         }
         else{
             matrix = new Object( this );
-            for( x = 0; x < xrows; x++ ){
-                for( y = 0; y < xcolumns; y++ ){
+            for( x = 0; x < xrows; ++x ){
+                for( y = 0; y < xcolumns; ++y ){
                     (*matrix->xmatrix[x][y]) *= o;
                 }
             }

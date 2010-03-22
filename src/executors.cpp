@@ -264,7 +264,7 @@ Object *exec_foreach( h_context_t *ctx, vmem_t *frame, Node *node ){
     body       = node->child(2);
     size       = map->xarray.size();
 
-    for( i = 0; i < size; i++ ){
+    for( i = 0; i < size; ++i ){
         hybris_vm_add( frame, identifier, map->xarray[i] );
         result = htree_execute( ctx, frame, body );
         H_FREE_GARBAGE(result);
@@ -289,7 +289,7 @@ Object *exec_foreachm( h_context_t *ctx, vmem_t *frame, Node *node ){
     body             = node->child(3);
     size             = map->xmap.size();
 
-    for( i = 0; i < size; i++ ){
+    for( i = 0; i < size; ++i ){
         hybris_vm_add( frame, key_identifier,   map->xmap[i] );
         hybris_vm_add( frame, value_identifier, map->xarray[i] );
         result = htree_execute( ctx,  frame, body );

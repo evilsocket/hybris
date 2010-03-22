@@ -60,7 +60,7 @@ vmem_t *hybris_vm_clone( vmem_t *mem ){
 
     vmem_t *clone = new vmem_t;
 
-    for( i = 0; i < size; i++ ){
+    for( i = 0; i < size; ++i ){
         Object *o = mem->at(i);
         clone->insert( (char *)mem->label(i), new Object(o) );
     }
@@ -74,7 +74,7 @@ void hybris_vm_release( vmem_t *mem ){
     Object      *o;
 
     size = mem->size();
-    for( i = 0; i < size; i++ ){
+    for( i = 0; i < size; ++i ){
         o = mem->at(i);
         if( o != H_UNDEFINED && o->xsize ){
             #ifdef MEM_DEBUG
@@ -112,7 +112,7 @@ Node *hybris_vc_get( vcode_t *code, char *function ){
 void hybris_vc_release( vcode_t *code ){
     unsigned int i;
 
-    for( i = 0; i < code->size(); i++ ){
+    for( i = 0; i < code->size(); ++i ){
         Tree::release( code->at(i) );
     }
     code->clear();

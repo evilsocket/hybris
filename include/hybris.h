@@ -26,7 +26,7 @@
 #include "common.h"
 
 #define POOL_DEL(tid) pthread_mutex_lock( &ctx->th_mutex ); \
-                        for( int pool_i = 0; pool_i < ctx->th_pool.size(); pool_i++ ){ \
+                        for( int pool_i = 0; pool_i < ctx->th_pool.size(); ++pool_i ){ \
                             if( ctx->th_pool[pool_i] == tid ){ \
                                 ctx->th_pool.erase( ctx->th_pool.begin() + pool_i ); \
                                 break; \

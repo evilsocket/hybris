@@ -70,7 +70,7 @@ Node *Tree::addOperator( int op, int argc, ... ){
 	node->_operator = op;
 
 	va_start( ap, argc );
-	for( i = 0; i < argc; i++ ){
+	for( i = 0; i < argc; ++i ){
 		node->addChild( va_arg( ap, Node * ) );
 	}
 	va_end(ap);
@@ -92,12 +92,12 @@ Node *Tree::addFunction( function_decl_t *declaration, int argc, ... ){
 	node->_function = declaration->function;
 
 	/* add function prototype args children */
-	for( i = 0; i < declaration->argc; i++ ){
+	for( i = 0; i < declaration->argc; ++i ){
 		node->addChild( Tree::addIdentifier( declaration->argv[i] ) );
 	}
 	/* add function body statements node */
 	va_start( ap, argc );
-	for( i = 0; i < argc; i++ ){
+	for( i = 0; i < argc; ++i ){
 		node->addChild( va_arg( ap, Node * ) );
 	}
 	va_end(ap);
@@ -114,7 +114,7 @@ Node *Tree::addFunction( char *name, int argc, ... ){
 
 	/* add function body statements node */
 	va_start( ap, argc );
-	for( i = 0; i < argc; i++ ){
+	for( i = 0; i < argc; ++i ){
 		node->addChild( va_arg( ap, Node * ) );
 	}
 	va_end(ap);
@@ -170,7 +170,7 @@ void Tree::print( Node *node, int tabs /*= 0*/ ){
 	printf( "%s\n", Tree::type(node) );
 	if( node->children() > 0 ){
 		int i;
-		for( i = 0; i < node->children(); i++ ){
+		for( i = 0; i < node->children(); ++i ){
 			Tree::print( node->child(i), t + 1 );
 		}
 	}
@@ -196,14 +196,14 @@ Node *Tree::clone( Node *root, Node *clone ){
 
 			case H_NT_OPERATOR   :
 				clone = Tree::addOperator( root->_operator, 0 );
-				for( i = 0; i < root->children(); i++ ){
+				for( i = 0; i < root->children(); ++i ){
 					clone->addChild( Tree::clone( root->child(i), &node ) );
 				}
 				break;
 
 			case H_NT_FUNCTION   :
 				clone = Tree::addFunction( (char *)root->_function.c_str(), 0 );
-				for( i = 0; i < root->children(); i++ ){
+				for( i = 0; i < root->children(); ++i ){
 					clone->addChild( Tree::clone( root->child(i), &node ) );
 				}
 				break;
@@ -215,7 +215,7 @@ Node *Tree::clone( Node *root, Node *clone ){
 				else{
 					clone = Tree::addCall( root->_aliascall, NULL );
 				}
-				for( i = 0; i < root->children(); i++ ){
+				for( i = 0; i < root->children(); ++i ){
 					clone->addChild( Tree::clone( root->child(i), &node ) );
 				}
 				break;
@@ -228,7 +228,7 @@ void Tree::release( Node *node ){
 	if(node){
 		int i;
 		if( node->children() > 0 ){
-			for( i = 0; i < node->children(); i++ ){
+			for( i = 0; i < node->children(); ++i ){
 				Tree::release( node->child(i) );
 			}
 		}

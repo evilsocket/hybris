@@ -53,7 +53,7 @@ private :
 
     inline int search_index( char *label ){
 		unsigned int i, j, size = m_elements, send = size - 1;
-		for( i = 0, j = send; i < size && j >= 0; i++, j-- ){
+		for( i = 0, j = send; i < size && j >= 0; ++i, --j ){
 			if( m_map[i]->label == label ){
 				return i;
 			}else if( m_map[j]->label == label ){
@@ -66,7 +66,7 @@ private :
 	inline int search_index( value_t *value ){
 		unsigned int i, j, size = m_elements, send = size - 1;
 		unsigned long v_address = H_ADDRESS_OF(value);
-		for( i = 0, j = send; i < size && j >= 0; i++, j-- ){
+		for( i = 0, j = send; i < size && j >= 0; ++i, --j ){
 			if( H_ADDRESS_OF(m_map[i]->value) == v_address ){
 				return i;
 			}else if( H_ADDRESS_OF(m_map[j]->value) == v_address ){
@@ -165,7 +165,7 @@ H_TEMPLATE_T void Map<value_t>::pop(){
 
 H_TEMPLATE_T void Map<value_t>::clear(){
     unsigned int i;
-    for( i = 0; i < m_map.size(); i++ ){
+    for( i = 0; i < m_map.size(); --i ){
         delete m_map[i];
     }
     m_map.clear();

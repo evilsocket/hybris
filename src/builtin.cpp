@@ -59,7 +59,7 @@ void hmodule_load( h_context_t *ctx, char *module ){
     while( functions[i].function != NULL ){
         builtin_t *function = new builtin_t( functions[i].identifier, functions[i].function );
         hmod->functions.push_back(function);
-        i++;
+        ++i;
     }
 
     ctx->modules.push_back(hmod);
@@ -68,17 +68,17 @@ void hmodule_load( h_context_t *ctx, char *module ){
 function_t hfunction_search( h_context_t *ctx, char *identifier ){
     unsigned int i = 0, j = 0, ndyns = ctx->modules.size(), nfuncs;
     /* firs search the function in builtins symbols */
-    for( i = 0; i < ctx->builtins.size(); i++ ){
+    for( i = 0; i < ctx->builtins.size(); ++i ){
         if( ctx->builtins[i]->identifier == identifier ){
             return ctx->builtins[i]->function;
         }
     }
 
     /* then search it in dynamic loaded modules */
-    for( i = 0; i < ndyns; i++ ){
+    for( i = 0; i < ndyns; ++i ){
         /* for each function of the module */
         nfuncs = ctx->modules[i]->functions.size();
-        for( j = 0; j < nfuncs; j++ ){
+        for( j = 0; j < nfuncs; ++j ){
             if( ctx->modules[i]->functions[j]->identifier == identifier ){
                 return ctx->modules[i]->functions[j]->function;
             }
