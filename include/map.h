@@ -19,14 +19,22 @@
 #ifndef _HMAP_H_
 #	define _HMAP_H_
 
+#include "hashtable.h"
+#include "vmem.h"
+
+#ifndef H_UNDEFINED
+#   define H_UNDEFINED NULL
+#endif
+
 #include <vector>
 #include <string>
 
 using std::vector;
 using std::string;
 
-template< typename value_t >
-class Map {
+#define H_TEMPLATE_T template< typename value_t >
+
+H_TEMPLATE_T class Map {
 private :
 
     struct map_pair {
@@ -39,40 +47,12 @@ private :
         }
     };
 
+    unsigned int       m_elements;
+
     vector<map_pair *> m_map;
+    hash_table_t      *m_table;
 
-public  :
-
-    static value_t * null;
-
-    Map();
-    ~Map();
-
-    inline unsigned int size(){
-		return m_map.size();
-	}
-
-    inline void assign( Map<value_t> *m ){
-        unsigned int i, size = m->size();
-        clear();
-        for( i = 0; i < size; i++ ){
-            insert( (char *)m->label(i), m->at(i) );
-        }
-    }
-
-    inline void operator = ( Map<value_t> *m ){
-        assign(m);
-    }
-
-    inline value_t *at( unsigned int index ){
-		return m_map[index]->value;
-	}
-
-	inline const char * label( unsigned int index ){
-		return m_map[index]->label.c_str();
-	}
-
-	inline int quick_search( char *label ){
+    inline int search_index( char *label ){
 		unsigned int i, j, size = m_map.size(), send = size - 1;
 		for( i = 0, j = send; i < size && j >= 0; i++, j-- ){
 			if( m_map[i]->label == label ){
@@ -84,114 +64,119 @@ public  :
 		return -1;
 	}
 
-	inline value_t *replace( char *label, value_t *new_value ){
-        int idx = quick_search(label);
-        value_t *old_object = null;
-        if( idx != -1 ){
-            old_object = m_map[idx]->value;
-            m_map[idx]->value = new_value;
-        }
+	inline int search_index( value_t *value ){
+		unsigned int i, j, size = m_map.size(), send = size - 1;
+		unsigned long v_address = H_ADDRESS_OF(value);
 
-        return old_object;
+		for( i = 0, j = send; i < size && j >= 0; i++, j-- ){
+			if( H_ADDRESS_OF(m_map[i]->value) == v_address ){
+				return i;
+			}else if( H_ADDRESS_OF(m_map[j]->value) == v_address ){
+				return j;
+			}
+		}
+		return -1;
+	}
+
+
+
+public  :
+
+    static value_t * null;
+
+    Map();
+    ~Map();
+
+    inline unsigned int size(){
+		return m_elements;
+	}
+
+    inline value_t *at( unsigned int index ){
+        return m_map[index]->value;
+	}
+
+	inline const char * label( unsigned int index ){
+		return m_map[index]->label.c_str();
+	}
+
+	inline value_t *replace( char *label, value_t *old_value, value_t *new_value ){
+        int idx = search_index( (value_t *)old_value );
+
+        m_map[idx]->value = new_value;
+        ht_insert( m_table, PTR_KEY( m_table, label ), (u_long)new_value );
+
+        return old_value;
 	}
 
     value_t *insert( char *label, value_t *value );
     value_t *set( char *label, value_t *value );
-    value_t *set( unsigned int index, value_t *value );
-    value_t *setlabel( char *oldlabel, char *label );
     value_t *find( char *label );
     int      index( char *label );
-    void     remove( char *label );
+
     void     pop();
     void     clear();
 };
 
-template<typename value_t>
-value_t * Map<value_t>::null = (value_t *)0xFFFFFFFF;
+H_TEMPLATE_T value_t * Map<value_t>::null = (value_t *)0xFFFFFFFF;
 
-template< typename value_t >
-Map<value_t>::Map(){ }
+H_TEMPLATE_T Map<value_t>::Map(){
+    m_table    = ht_alloc( 0, 1 );
+    m_elements = 0;
+}
 
-template< typename value_t >
-Map<value_t>::~Map(){
+H_TEMPLATE_T Map<value_t>::~Map(){
     clear();
 }
 
-template< typename value_t >
-value_t * Map<value_t>::insert( char *label, value_t *value ){
+H_TEMPLATE_T value_t * Map<value_t>::insert( char *label, value_t *value ){
     m_map.push_back( new map_pair(label, value) );
+    ht_insert( m_table, PTR_KEY( m_table, label ), (u_long)value );
+    m_elements++;
     return value;
 }
 
-template< typename value_t >
-value_t * Map<value_t>::set( char *label, value_t *value ){
-    int i = quick_search(label);
+H_TEMPLATE_T value_t * Map<value_t>::set( char *label, value_t *value ){
+    int i = search_index(label);
 	if( i != -1 ){
+	    ht_insert( m_table, PTR_KEY( m_table, label ), (u_long)value );
 		m_map[i]->label = label;
 		m_map[i]->value = value;
 		return value;
 	}
+
     return null;
 }
 
-template< typename value_t >
-value_t * Map<value_t>::set( unsigned int index, value_t *value ){
-    if( index < m_map.size() && index >= 0 ){
-        return m_map[index]->value = value;
+H_TEMPLATE_T value_t * Map<value_t>::find( char *label ){
+    hash_item_t *item = ht_find( m_table, PTR_KEY( m_table, label ) );
+    if( item ){
+        return (value_t *)item->data;
     }
-    return null;
+    return H_UNDEFINED;
 }
 
-template< typename value_t >
-value_t * Map<value_t>::setlabel( char *oldlabel, char *label ){
-    int i = quick_search(oldlabel);
-	if( i != -1 ){
-		m_map[i]->label = label;
-        return m_map[i]->value;
-	}
-    return null;
+H_TEMPLATE_T int Map<value_t>::index( char *label ){
+	return search_index(label);
 }
 
-template< typename value_t >
-value_t * Map<value_t>::find( char *label ){
-	int i = quick_search(label);
-	if( i != -1 ){
-        return m_map[i]->value;
-	}
-    return null;
-}
-
-template< typename value_t >
-int Map<value_t>::index( char *label ){
-	return quick_search(label);
-}
-
-template< typename value_t >
-void Map<value_t>::remove( char *label ){
-	int i = quick_search(label);
-	if( i != -1 ){
-		delete m_map[i];
-		m_map.erase( m_map.begin() + i );
-		return;
-	}
-}
-
-template< typename value_t >
-void Map<value_t>::pop(){
+H_TEMPLATE_T void Map<value_t>::pop(){
     if( m_map.size() > 0 ){
+        m_elements--;
         int index = m_map.size() - 1;
+        ht_delete( m_table, PTR_KEY( m_table, m_map[index]->label ) );
         delete m_map[ index ];
         m_map.pop_back();
     }
 }
 
-template< typename value_t >
-void Map<value_t>::clear(){
+H_TEMPLATE_T void Map<value_t>::clear(){
     unsigned int i;
     for( i = 0; i < m_map.size(); i++ ){
         delete m_map[i];
     }
     m_map.clear();
+    m_elements = 0;
+    ht_clear( m_table );
 }
 
 #endif

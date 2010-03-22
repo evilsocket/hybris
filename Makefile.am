@@ -7,8 +7,8 @@ CFLAGS= -Iinclude/ $(OPTIMIZATION) $(WFLAGS) $(LIBXML_CFLAGS) -funroll-loops -ff
 LFLAGS= -ldl -lpcrecpp -lcurl -lpthread $(LIBXML_LFLAGS)
 PREFIX=/usr
 TARGET=hybris
-LIBOBJ= src/builtin.o src/common.o src/hybris.o src/executors.o src/node.o src/object.o src/tree.o src/vmem.o src/builtins/*.o
-SOURCES=src/common.cpp src/lexer.cpp src/builtin.cpp src/vmem.cpp src/node.cpp src/object.cpp src/tree.cpp \
+LIBOBJ= src/builtin.o src/common.o src/hybris.o src/executors.o src/node.o src/object.o src/tree.o src/hashtable.o src/vmem.o src/builtins/*.o
+SOURCES=src/common.cpp src/lexer.cpp src/builtin.cpp src/hashtable.cpp src/vmem.cpp src/node.cpp src/object.cpp src/tree.cpp \
 		src/executors.cpp src/hybris.cpp src/parser.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 

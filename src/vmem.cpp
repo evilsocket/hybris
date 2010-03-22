@@ -19,9 +19,11 @@
 #include "vmem.h"
 
 Object *hybris_vm_add( vmem_t *mem, char *identifier, Object *object ){
+    Object *o   = H_UNDEFINED,
+           *old = H_UNDEFINED;
+
     /* if object does not exist yet, create a new one */
-    if( hybris_vm_get( mem, identifier ) == H_UNDEFINED ){
-        Object *o = H_UNDEFINED;
+    if( (old = hybris_vm_get( mem, identifier )) == H_UNDEFINED ){
         if( object != H_UNDEFINED ){
             o = new Object(object);
             o->setGarbageAttribute( ~H_OA_GARBAGE );
@@ -34,32 +36,19 @@ Object *hybris_vm_add( vmem_t *mem, char *identifier, Object *object ){
     }
     /* else set the new value */
     else{
-        return hybris_vm_set( mem, identifier, object );
-    }
+        o = new Object(object);
+        o->setGarbageAttribute( ~H_OA_GARBAGE );
 
-    return object;
-}
+        mem->replace( identifier, old, o );
 
-Object *hybris_vm_set( vmem_t *mem, char *identifier, Object *object ){
-    Object *new_object = H_UNDEFINED,
-           *old_object = H_UNDEFINED;
+        old->release();
 
-    new_object = new Object(object);
-    new_object->setGarbageAttribute( ~H_OA_GARBAGE );
-
-    if( (old_object = mem->replace( identifier, new_object )) != vmem_t::null ){
-        old_object->release();
-        return new_object;
-    }
-    else{
-        delete new_object;
-        return hybris_vm_add( mem, identifier, object );
+        return o;
     }
 }
 
 Object *hybris_vm_get( vmem_t *mem, char *identifier ){
-    Object *o = mem->find(identifier);
-    return (o == vmem_t::null ? H_UNDEFINED : o);
+    return mem->find(identifier);
 }
 
 vmem_t *hybris_vm_clone( vmem_t *mem ){

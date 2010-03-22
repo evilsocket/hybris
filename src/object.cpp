@@ -340,6 +340,48 @@ void Object::setGarbageAttribute( H_OBJECT_ATTRIBUTE mask ){
     }
 }
 
+Object& Object::assign( Object *o ){
+    unsigned int i, j;
+
+	release(false);
+
+    xtype = o->xtype;
+    xsize = o->xsize;
+	switch( o->xtype ){
+		case H_OT_INT    : xint    = o->xint;    break;
+		case H_OT_ALIAS  : xalias  = o->xalias;  break;
+		case H_OT_FLOAT  : xfloat  = o->xfloat;  break;
+		case H_OT_CHAR   : xchar   = o->xchar;   break;
+		case H_OT_STRING : xstring = o->xstring; break;
+		case H_OT_ARRAY  :
+			for( i = 0; i < xsize; i++ ){
+				xarray.push_back( new Object( o->xarray[i] ) );
+			}
+		break;
+		case H_OT_MAP    :
+			for( i = 0; i < xsize; i++ ){
+				xmap.push_back( new Object( o->xmap[i] ) );
+				xarray.push_back( new Object( o->xarray[i] ) );
+			}
+		break;
+		case H_OT_MATRIX :
+            xrows    = o->xrows;
+            xcolumns = o->xcolumns;
+            xmatrix  = new Object ** [xrows];
+            for( i = 0; i < xrows; i++ ){
+                xmatrix[i] = new Object * [xcolumns];
+            }
+            for( i = 0; i < xrows; i++ ){
+                for( j = 0; j < xcolumns; j++ ){
+                    xmatrix[i][j] = new Object( o->xmatrix[i][j] );
+                }
+             }
+		break;
+	}
+
+	return *this;
+}
+
 void Object::release( bool reset_attributes /*= true*/ ){
     unsigned int i, j;
     Object *o;
@@ -946,44 +988,7 @@ Object* Object::range( Object *to ){
 }
 
 Object& Object::operator = ( Object *o ){
-	unsigned int i, j;
-
-	release(false);
-
-    xtype = o->xtype;
-    xsize = o->xsize;
-	switch( o->xtype ){
-		case H_OT_INT    : xint    = o->xint;    break;
-		case H_OT_ALIAS  : xalias  = o->xalias;  break;
-		case H_OT_FLOAT  : xfloat  = o->xfloat;  break;
-		case H_OT_CHAR   : xchar   = o->xchar;   break;
-		case H_OT_STRING : xstring = o->xstring; break;
-		case H_OT_ARRAY  :
-			for( i = 0; i < xsize; i++ ){
-				xarray.push_back( new Object( o->xarray[i] ) );
-			}
-		break;
-		case H_OT_MAP    :
-			for( i = 0; i < xsize; i++ ){
-				xmap.push_back( new Object( o->xmap[i] ) );
-				xarray.push_back( new Object( o->xarray[i] ) );
-			}
-		break;
-		case H_OT_MATRIX :
-            xrows    = o->xrows;
-            xcolumns = o->xcolumns;
-            xmatrix  = new Object ** [xrows];
-            for( i = 0; i < xrows; i++ ){
-                xmatrix[i] = new Object * [xcolumns];
-            }
-            for( i = 0; i < xrows; i++ ){
-                for( j = 0; j < xcolumns; j++ ){
-                    xmatrix[i][j] = new Object( o->xmatrix[i][j] );
-                }
-             }
-		break;
-	}
-	return *this;
+	return assign(o);
 }
 
 Object * Object::operator - (){

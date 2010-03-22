@@ -40,7 +40,6 @@ typedef Map<Node>   vcode_t;
 
 /* memory segment management functions */
 Object *hybris_vm_add( vmem_t *mem, char *identifier, Object *object );
-Object *hybris_vm_set( vmem_t *mem, char *identifier, Object *object );
 Object *hybris_vm_get( vmem_t *mem, char *identifier );
 vmem_t *hybris_vm_clone( vmem_t *mem );
 void    hybris_vm_release( vmem_t *mem );
