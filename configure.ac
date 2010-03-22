@@ -1,11 +1,12 @@
-#                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
-
 AC_PREREQ([2.65])
-AC_INIT(src/hybris.cpp,0.7.1)
-AM_INIT_AUTOMAKE(hybris,0.7.1)
-AC_CONFIG_SRCDIR([config.h.in])
-AC_CONFIG_HEADERS([config.h])
+AC_INIT(src/hybris.cpp,0.9b)
+AM_INIT_AUTOMAKE(hybris,0.9b)
+#AC_CONFIG_SRCDIR([config.h.in])
+AC_CONFIG_HEADERS([include/config.h])
+
+AC_DEFINE( AUTHOR,    "The Hybris Dev Team [http://www.hybris-lang.org/]", [] )
+AC_DEFINE( LIBS_PATH, "/usr/lib/hybris/libs/", [system path for libraries (.so dynamic libs)] )
+AC_DEFINE( MODS_PATH, "/usr/lib/hybris/modules/", [system path for modules (hybris global scripts)] )
 
 LEX=flex
 YACC=bison
@@ -14,23 +15,96 @@ AC_PROG_CXX
 AC_PROG_AWK
 AC_PROG_CC
 AC_PROG_CPP
+AC_PROG_LEX
 AC_PROG_YACC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
-# Checks for libraries.
-AC_CHECK_LIB([curl], [curl_global_init])
-AC_CHECK_LIB([dl], [dlsym])
-AC_CHECK_LIB([pcrecpp], [CASELESS])
-AC_CHECK_LIB([pthread], [pthread_create])
-AC_CHECK_LIB([xml2], [xmlReadFile])
+# Checks for feature disable
+AC_ARG_ENABLE( gc, 
+    AS_HELP_STRING([--disable-gc], [Disable garbage collector support]),
+    [ ac_disable_gc=yes ], [] )
+ 
+AC_ARG_ENABLE( boundaries, 
+    AS_HELP_STRING([--disable-boundaries], [Disable boundaries check]),
+    [ ac_disable_bc=yes ], [] )
 
+AC_ARG_ENABLE( pcre, 
+    AS_HELP_STRING([--disable-pcre], [Disable pcre support]),
+    [ ac_disable_pcre=yes ], [] )
+
+AC_ARG_ENABLE( http, 
+    AS_HELP_STRING([--disable-http], [Disable http support]),
+    [ ac_disable_http=yes ], [] )
+
+AC_ARG_ENABLE( xml, 
+    AS_HELP_STRING([--disable-xml], [Disable xml support]),
+    [ ac_disable_xml=yes ], [] )
+
+AC_ARG_ENABLE( mt, 
+    AS_HELP_STRING([--disable-mt], [Disable multi threading support]),
+    [ ac_disable_mt=yes ], [] )
+
+AC_ARG_ENABLE( memdebug, 
+    AS_HELP_STRING([--enable-memdebug], [Enable memory debugging messages]),
+    [ ac_enble_mdbg=yes ], [] )
+
+if test "x${ac_disable_gc}" != xyes; then
+	AC_DEFINE( GC_SUPPORT, 1, [basic garbage collection] )
+fi
+if test "x${ac_disable_bc}" != xyes; then
+	AC_DEFINE( BOUNDS_CHECK, 1, [security check on bounds for array/map/matrix access] )
+fi
+if test "x${ac_disable_pcre}" != xyes; then
+	AC_DEFINE( PCRE_SUPPORT, 1, [support for regular expressions] )
+	AC_CHECK_LIB( [pcrecpp], [pcre_compile],     [], [AC_MSG_ERROR([libpcrecpp is missing])] ) 
+fi
+if test "x${ac_disable_http}" != xyes; then
+	AC_DEFINE( HTTP_SUPPORT, 1, [get/post http(s) methos support] )
+	AC_CHECK_LIB( [curl],    [curl_global_init], [], [AC_MSG_ERROR([libcurl is missing])] ) 
+	AC_CHECK_HEADERS( [curl/curl.h], [], [AC_MSG_ERROR([curl/curl.h header missing])] )
+fi
+if test "x${ac_disable_xml}" != xyes; then
+	AC_DEFINE( XML_SUPPORT, 1, [xml parsing support] )
+	AC_CHECK_LIB( [xml2],    [xmlReadFile],      [], [AC_MSG_ERROR([libxml2 is missing])] ) 
+fi
+if test "x${ac_disable_mt}" != xyes; then
+	AC_DEFINE( MT_SUPPORT, 1, [multi threading support] )
+	AC_CHECK_LIB( [pthread], [pthread_create], 	 [], [AC_MSG_ERROR([libpthread is missing])] ) 
+	AC_CHECK_HEADERS( [pthread.h], [], [AC_MSG_ERROR([pthread.h header missing])] )
+fi
+if test "x${ac_enble_mdbg}" == xyes; then
+	AC_DEFINE( MEM_DEBUG, 1, [memory allocation debug messages] )
+fi
+
+# Checks for libraries.
+AC_CHECK_LIB( [dl], [dlsym], [], [AC_MSG_ERROR([libdl is missing])] ) 
 # Checks for header files.
 AC_FUNC_ALLOCA
 AC_HEADER_RESOLV
-AC_CHECK_HEADERS([arpa/inet.h inttypes.h libintl.h malloc.h netdb.h netinet/in.h stddef.h stdlib.h string.h sys/socket.h sys/time.h unistd.h])
+AC_CHECK_HEADERS( [arpa/inet.h], [], [AC_MSG_ERROR([arpa/inet.h header missing])] )
+AC_CHECK_HEADERS( [assert.h], [], [AC_MSG_ERROR([assert.h header missing])] )
+AC_CHECK_HEADERS( [dirent.h], [], [AC_MSG_ERROR([dirent.h header missing])] )
+AC_CHECK_HEADERS( [dlfcn.h], [], [AC_MSG_ERROR([dlfcn.h header missing])] )
+AC_CHECK_HEADERS( [errno.h], [], [AC_MSG_ERROR([errno.h header missing])] )
+AC_CHECK_HEADERS( [math.h], [], [AC_MSG_ERROR([math.h header missing])] )
+AC_CHECK_HEADERS( [netdb.h], [], [AC_MSG_ERROR([netdb.h header missing])] )
+AC_CHECK_HEADERS( [netinet/in.h], [], [AC_MSG_ERROR([netinet/in.h header missing])] )
+AC_CHECK_HEADERS( [resolv.h], [], [AC_MSG_ERROR([resolv.h header missing])] )
+AC_CHECK_HEADERS( [setjmp.h], [], [AC_MSG_ERROR([setjmp.h header missing])] )
+AC_CHECK_HEADERS( [signal.h], [], [AC_MSG_ERROR([signal.h header missing])] )
+AC_CHECK_HEADERS( [stdarg.h], [], [AC_MSG_ERROR([stdarg.h header missing])] )
+AC_CHECK_HEADERS( [stdio.h], [], [AC_MSG_ERROR([stdio.h header missing])] )
+AC_CHECK_HEADERS( [stdlib.h], [], [AC_MSG_ERROR([stdlib.h header missing])] )
+AC_CHECK_HEADERS( [string.h], [], [AC_MSG_ERROR([string.h header missing])] )
+AC_CHECK_HEADERS( [sys/socket.h], [], [AC_MSG_ERROR([sys/socket.h header missing])] )
+AC_CHECK_HEADERS( [sys/time.h], [], [AC_MSG_ERROR([sys/time.h header missing])] )
+AC_CHECK_HEADERS( [sys/types.h], [], [AC_MSG_ERROR([sys/types.h header missing])] )
+AC_CHECK_HEADERS( [sys/wait.h], [], [AC_MSG_ERROR([sys/wait.h header missing])] )
+AC_CHECK_HEADERS( [time.h], [], [AC_MSG_ERROR([time.h header missing])] )
+AC_CHECK_HEADERS( [unistd.h], [], [AC_MSG_ERROR([unistd.h header missing])] )
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -50,9 +124,7 @@ AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS([bzero floor getcwd gethostbyname gettimeofday memset pow socket sqrt strchr strdup strrchr strtol])
 
-AC_CONFIG_FILES([Makefile
-                 src/builtins/Makefile])
-CPPFLAGS=''
-CXXFLAGS=''
-CFLAGS=''
+AC_CONFIG_FILES( [Makefile src/builtins/Makefile])
+
+
 AC_OUTPUT
