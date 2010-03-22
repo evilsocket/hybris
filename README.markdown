@@ -1,6 +1,6 @@
 #  Hybris
-	Copyleft by Simone Margaritelli <evilsocket@gmail.com> & The Hybris Dev Team
-	Infos & Documentation at <http://www.hybris-lang.org/>
+Copyleft by Simone Margaritelli <evilsocket@gmail.com> & The Hybris Dev Team
+Infos & Documentation at <http://www.hybris-lang.org/>
 
 # Cosa è Hybris ?
 
