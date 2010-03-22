@@ -45,7 +45,6 @@ vmem_t *hybris_vm_clone( vmem_t *mem );
 void    hybris_vm_release( vmem_t *mem );
 /* code segment management functions */
 Node   *hybris_vc_add( vcode_t *code, Node *function );
-Node   *hybris_vc_set( vcode_t *code, Node *function );
 Node   *hybris_vc_get( vcode_t *code, char  *function );
 void    hybris_vc_release( vcode_t *code );
 

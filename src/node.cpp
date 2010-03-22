@@ -20,6 +20,7 @@
 
 Node::Node( H_NODE_TYPE type ){
 	m_type      = type;
+	m_elements  = 0;
 	_constant   = NULL;
 	_aliascall  = NULL;
 	_identifier = "";
@@ -34,19 +35,8 @@ Node::~Node(){
 	}
 }
 
-H_NODE_TYPE Node::type(){
-	return m_type;
-}
-
-unsigned int Node::children(){
-	return m_children.size();
-}
-
-Node *Node::child( unsigned int i ){
-	return m_children[i];
-}
-
 void Node::addChild( Node *child ){
 	m_children.push_back(child);
+	m_elements++;
 }
 

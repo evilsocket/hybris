@@ -48,12 +48,11 @@ private :
     };
 
     unsigned int       m_elements;
-
     vector<map_pair *> m_map;
     hash_table_t      *m_table;
 
     inline int search_index( char *label ){
-		unsigned int i, j, size = m_map.size(), send = size - 1;
+		unsigned int i, j, size = m_elements, send = size - 1;
 		for( i = 0, j = send; i < size && j >= 0; i++, j-- ){
 			if( m_map[i]->label == label ){
 				return i;
@@ -65,9 +64,8 @@ private :
 	}
 
 	inline int search_index( value_t *value ){
-		unsigned int i, j, size = m_map.size(), send = size - 1;
+		unsigned int i, j, size = m_elements, send = size - 1;
 		unsigned long v_address = H_ADDRESS_OF(value);
-
 		for( i = 0, j = send; i < size && j >= 0; i++, j-- ){
 			if( H_ADDRESS_OF(m_map[i]->value) == v_address ){
 				return i;
@@ -81,8 +79,6 @@ private :
 
 
 public  :
-
-    static value_t * null;
 
     Map();
     ~Map();
@@ -117,8 +113,6 @@ public  :
     void     clear();
 };
 
-H_TEMPLATE_T value_t * Map<value_t>::null = (value_t *)0xFFFFFFFF;
-
 H_TEMPLATE_T Map<value_t>::Map(){
     m_table    = ht_alloc( 0, 1 );
     m_elements = 0;
@@ -144,7 +138,7 @@ H_TEMPLATE_T value_t * Map<value_t>::set( char *label, value_t *value ){
 		return value;
 	}
 
-    return null;
+    return H_UNDEFINED;
 }
 
 H_TEMPLATE_T value_t * Map<value_t>::find( char *label ){

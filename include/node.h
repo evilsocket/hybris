@@ -43,6 +43,7 @@ private :
 
     H_NODE_TYPE    m_type;
     vector<Node *> m_children;
+    unsigned int   m_elements;
 
 public  :
 
@@ -51,7 +52,17 @@ public  :
 
     ~Node();
 
-    H_NODE_TYPE type();
+    inline H_NODE_TYPE type(){
+        return m_type;
+    }
+
+    inline unsigned int children(){
+        return m_elements;
+    }
+
+    inline Node *child( unsigned int i ){
+        return m_children[i];
+    }
 
     Object       *_constant;
     string        _identifier;
@@ -60,8 +71,6 @@ public  :
     string        _call;
 	Node         *_aliascall;
 
-    unsigned int children();
-    Node *child( unsigned int i );
     void addChild( Node *child );
 };
 

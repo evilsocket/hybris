@@ -456,10 +456,10 @@ int Object::equals( Object *o ){
 	}
 	unsigned int i, j;
 	switch( xtype ){
-		case H_OT_INT    : return xint == o->xint;
-		case H_OT_ALIAS  : return xalias == o->xalias;
-		case H_OT_FLOAT  : return xfloat == o->xfloat;
-		case H_OT_CHAR   : return xchar == o->xchar;
+		case H_OT_INT    : return xint    == o->xint;
+		case H_OT_ALIAS  : return xalias  == o->xalias;
+		case H_OT_FLOAT  : return xfloat  == o->xfloat;
+		case H_OT_CHAR   : return xchar   == o->xchar;
 		case H_OT_STRING : return xstring == o->xstring;
 		case H_OT_ARRAY  :
 			for( i = 0; i < xsize; i++ ){
@@ -481,6 +481,9 @@ int Object::equals( Object *o ){
 			return 1;
 		break;
 		case H_OT_MATRIX :
+            if( xrows != o->xrows || xcolumns != o->xcolumns ){
+                return 0;
+            }
             for( i = 0; i < xrows; i++ ){
                 for( j = 0; j < xcolumns; j++ ){
                     if( xmatrix[i][j]->equals( o->xmatrix[i][j] ) == 0 ){

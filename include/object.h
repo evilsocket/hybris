@@ -58,13 +58,15 @@ typedef unsigned short H_OBJECT_TYPE;
 #define H_OT_ALIAS  7
 #define H_OT_MATRIX 8
 
-typedef unsigned char H_OBJECT_ATTRIBUTE;
+#ifdef GC_SUPPORT
+    typedef unsigned char H_OBJECT_ATTRIBUTE;
 
 /* object attributes */
-#define H_OA_NONE     0 // 00000000
-#define H_OA_EXTERN   1 // 00000001
-#define H_OA_CONSTANT 2 // 00000010
-#define H_OA_GARBAGE  4 // 00000100
+#   define H_OA_NONE     0 // 00000000
+#   define H_OA_EXTERN   1 // 00000001
+#   define H_OA_CONSTANT 2 // 00000010
+#   define H_OA_GARBAGE  4 // 00000100
+#endif
 
 class Object {
 public  :
@@ -88,7 +90,9 @@ public  :
     H_OBJECT_TYPE      xtype;
     unsigned int       xsize;
 
-    H_OBJECT_ATTRIBUTE attributes;
+    #ifdef GC_SUPPORT
+        H_OBJECT_ATTRIBUTE attributes;
+    #endif
 
     long             xint;
     double           xfloat;
@@ -116,7 +120,9 @@ public  :
 	Object( unsigned int rows, unsigned int columns, vector<Object *>& data );
     Object( Object *o );
 
-    void setGarbageAttribute( H_OBJECT_ATTRIBUTE mask );
+    #ifdef GC_SUPPORT
+        void setGarbageAttribute( H_OBJECT_ATTRIBUTE mask );
+    #endif
 
     Object& assign( Object *o );
 

@@ -26,7 +26,9 @@ Object *hybris_vm_add( vmem_t *mem, char *identifier, Object *object ){
     if( (old = hybris_vm_get( mem, identifier )) == H_UNDEFINED ){
         if( object != H_UNDEFINED ){
             o = new Object(object);
-            o->setGarbageAttribute( ~H_OA_GARBAGE );
+            #ifdef GC_SUPPORT
+                o->setGarbageAttribute( ~H_OA_GARBAGE );
+            #endif
             mem->insert( identifier, o );
         }
         else{
@@ -37,8 +39,9 @@ Object *hybris_vm_add( vmem_t *mem, char *identifier, Object *object ){
     /* else set the new value */
     else{
         o = new Object(object);
-        o->setGarbageAttribute( ~H_OA_GARBAGE );
-
+        #ifdef GC_SUPPORT
+            o->setGarbageAttribute( ~H_OA_GARBAGE );
+        #endif
         mem->replace( identifier, old, o );
 
         old->release();
@@ -96,25 +99,14 @@ Node *hybris_vc_add( vcode_t *code, Node *function ){
     }
     /* else set the new value */
     else{
-        return hybris_vc_set( code, function );
+        return code->set( (char *)function->_function.c_str(), function );
     }
 
     return function;
 }
 
-Node *hybris_vc_set( vcode_t *code, Node *function ){
-    Node *ptr = code->find( (char *)function->_function.c_str() );
-    if( ptr != vcode_t::null ){
-        return code->set( (char *)function->_function.c_str(), function );
-    }
-    else{
-        return H_UNDEFINED;
-    }
-}
-
 Node *hybris_vc_get( vcode_t *code, char *function ){
-    Node *tree = code->find(function);
-    return (tree == vcode_t::null ? H_UNDEFINED : tree);
+    return code->find(function);
 }
 
 void hybris_vc_release( vcode_t *code ){

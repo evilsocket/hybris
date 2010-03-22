@@ -25,32 +25,40 @@ HNodeList *Tree::createList(){
 Node *Tree::addInt( long value ){
 	Node *node      = new Node(H_NT_CONSTANT);
 	node->_constant = new Object(value);
-	node->_constant->attributes |= H_OA_CONSTANT;
-	node->_constant->attributes &= ~H_OA_GARBAGE;
+	#ifdef GC_SUPPORT
+        node->_constant->attributes |= H_OA_CONSTANT;
+        node->_constant->attributes &= ~H_OA_GARBAGE;
+	#endif
 	return node;
 }
 
 Node *Tree::addFloat( double value ){
 	Node *node      = new Node(H_NT_CONSTANT);
 	node->_constant = new Object(value);
-	node->_constant->attributes |= H_OA_CONSTANT;
-	node->_constant->attributes &= ~H_OA_GARBAGE;
+	#ifdef GC_SUPPORT
+        node->_constant->attributes |= H_OA_CONSTANT;
+        node->_constant->attributes &= ~H_OA_GARBAGE;
+	#endif
 	return node;
 }
 
 Node *Tree::addChar( char value ){
 	Node *node      = new Node(H_NT_CONSTANT);
 	node->_constant = new Object(value);
-	node->_constant->attributes |= H_OA_CONSTANT;
-	node->_constant->attributes &= ~H_OA_GARBAGE;
+	#ifdef GC_SUPPORT
+        node->_constant->attributes |= H_OA_CONSTANT;
+        node->_constant->attributes &= ~H_OA_GARBAGE;
+	#endif
 	return node;
 }
 
 Node *Tree::addString( char *value ){
 	Node *node      = new Node(H_NT_CONSTANT);
 	node->_constant = new Object(value);
-	node->_constant->attributes |= H_OA_CONSTANT;
-	node->_constant->attributes &= ~H_OA_GARBAGE;
+	#ifdef GC_SUPPORT
+        node->_constant->attributes |= H_OA_CONSTANT;
+        node->_constant->attributes &= ~H_OA_GARBAGE;
+	#endif
 	return node;
 }
 

@@ -217,7 +217,8 @@ int h_banner(){
 int h_usage( char *argvz ){
     h_banner();
     printf( "\nUsage: %s file (--trace)\n"
-           "\t--trace : Will enable stack trace report on errors .\n\n", argvz );
+            "\t-h (--help)  : Will print this menu .\n"
+            "\t-t (--trace) : Will enable stack trace report on errors .\n\n", argvz );
     return 0;
 }
 
@@ -225,13 +226,13 @@ int main( int argc, char *argv[] ){
 
     int i, f_offset = 0;
     for( i = 0; i < argc; i++ ){
-        if( strcmp( argv[i], "--trace" ) == 0 ){
+        if( strcmp( argv[i], "--trace" ) == 0 || strcmp( argv[i], "-t" ) == 0 ){
             HCTX.args.stacktrace = 1;
         }
         else if( strcmp( argv[i], "--help" ) == 0 || strcmp( argv[i], "-h" ) == 0 ){
             return h_usage(argv[0]);
         }
-        else{
+        else if( f_offset == 0 ){
             f_offset = i;
         }
     }

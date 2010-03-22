@@ -135,7 +135,7 @@ typedef ulong          HTOffset; /* something big enough to hold offsets */
 /* ht_safe_malloc() -- safe malloc
  *    allocates memory, or crashes if the allocation fails.
  */
-static void *ht_safe_malloc(unsigned long size)
+inline static void *ht_safe_malloc(unsigned long size)
 {
    void *retval;
 
@@ -155,7 +155,7 @@ static void *ht_safe_malloc(unsigned long size)
  *    allocates memory and initializes it to 0, or crashes if
  *    the allocation fails.
  */
-static void *ht_safe_calloc(unsigned long size)
+inline static void *ht_safe_calloc(unsigned long size)
 {
    void *retval;
 
@@ -173,7 +173,7 @@ static void *ht_safe_calloc(unsigned long size)
  *    grows the amount of memory from a source, or crashes if
  *    the allocation fails.
  */
-static void *ht_safe_realloc(void *ptr, unsigned long new_size, long delta)
+inline static void *ht_safe_realloc(void *ptr, unsigned long new_size, long delta)
 {
    if ( ptr == NULL )
       return ht_safe_malloc(new_size);
@@ -191,7 +191,7 @@ static void *ht_safe_realloc(void *ptr, unsigned long new_size, long delta)
  *    frees memory using free, but updates count of how much memory
  *    is being used.
  */
-static void ht_free(void *ptr, unsigned long size)
+inline static void ht_free(void *ptr, unsigned long size)
 {
    if ( size > 0 )         /* some systems seem to not like freeing NULL */
       free(ptr);
@@ -217,7 +217,7 @@ unsigned long ht_copy(char *ul)
 |     sizeof(ulong), this cuts off the bits at the end.                   |
 \*************************************************************************/
 
-static void HTSetupKeyTrunc(void)
+inline static void HTSetupKeyTrunc(void)
 {
    int i, j;
 
@@ -277,45 +277,45 @@ dense_iterator_t;
 #define DENSE_SET_EMPTY(bin, i)    (bin)[i].data = EMPTY      /* fks-hash.h */
 #define DENSE_SET_OCCUPIED(bin, i) (bin)[i].data = 1          /* not EMPTY */
 
-static void DenseClear(dense_bin_t *bin, ulong cBuckets)
+inline static void DenseTableClear(dense_bin_t *bin, ulong cBuckets)
 {
    while ( cBuckets-- )
       DENSE_SET_EMPTY(bin->rgBuckets, cBuckets);
 }
 
-static ulong DenseAllocate(dense_bin_t **pbin, ulong cBuckets)
+inline static ulong DenseTableAllocate(dense_bin_t **pbin, ulong cBuckets)
 {
    *pbin = (dense_bin_t *) ht_safe_malloc(sizeof(*pbin));
    (*pbin)->rgBuckets = (hash_item_t *) ht_safe_malloc(sizeof(*(*pbin)->rgBuckets)
 						  * cBuckets);
-   DenseClear(*pbin, cBuckets);
+   DenseTableClear(*pbin, cBuckets);
    return cBuckets;
 }
 
-static dense_bin_t *DenseFree(dense_bin_t *bin, ulong cBuckets)
+inline static dense_bin_t *DenseTableFree(dense_bin_t *bin, ulong cBuckets)
 {
    ht_free(bin->rgBuckets, sizeof(*bin->rgBuckets) * cBuckets);
    ht_free(bin, sizeof(*bin));
    return NULL;
 }
 
-static int DenseIsEmpty(dense_bin_t *bin, ulong location)
+inline static int DenseTableIsEmpty(dense_bin_t *bin, ulong location)
 {
    return DENSE_IS_EMPTY(bin->rgBuckets, location);
 }
 
-static hash_item_t *DenseFind(dense_bin_t *bin, ulong location)
+inline static hash_item_t *DenseTableFind(dense_bin_t *bin, ulong location)
 {
-   if ( DenseIsEmpty(bin, location) )
+   if ( DenseTableIsEmpty(bin, location) )
       return NULL;
    return bin->rgBuckets + location;
 }
 
-static hash_item_t *DenseInsert(dense_bin_t *bin, hash_item_t *bckInsert, ulong location, int *pfOverwrite)
+inline static hash_item_t *DenseTableInsert(dense_bin_t *bin, hash_item_t *bckInsert, ulong location, int *pfOverwrite)
 {
    hash_item_t *bckPlace;
 
-   bckPlace = DenseFind(bin, location);
+   bckPlace = DenseTableFind(bin, location);
    if ( bckPlace )                /* means something is already there */
    {
       if ( *pfOverwrite )
@@ -331,23 +331,23 @@ static hash_item_t *DenseInsert(dense_bin_t *bin, hash_item_t *bckInsert, ulong 
    }
 }
 
-static hash_item_t *DenseNextBucket(dense_iterator_t *iter)
+inline static hash_item_t *DenseTableNextBucket(dense_iterator_t *iter)
 {
    for ( iter->pos++; iter->pos < iter->cBuckets; iter->pos++ )
-      if ( !DenseIsEmpty(iter->bin, iter->pos) )
+      if ( !DenseTableIsEmpty(iter->bin, iter->pos) )
 	 return iter->bin->rgBuckets + iter->pos;
    return NULL;                        /* all remaining groups were empty */
 }
 
-static hash_item_t *DenseFirstBucket(dense_iterator_t *iter, dense_bin_t *bin, ulong cBuckets)
+inline static hash_item_t *DenseTableFirstBucket(dense_iterator_t *iter, dense_bin_t *bin, ulong cBuckets)
 {
    iter->bin = bin;                    /* set it up for NextBucket() */
    iter->cBuckets = cBuckets;
    iter->pos = -1;                     /* thus the next bucket will be 0 */
-   return DenseNextBucket(iter);
+   return DenseTableNextBucket(iter);
 }
 
-static ulong DenseMemory(ulong cBuckets, ulong cOccupied)
+inline static ulong DenseTableMemory(ulong cBuckets, ulong cOccupied)
 {
    return cBuckets * sizeof(hash_item_t);
 }
@@ -442,7 +442,7 @@ static ulong DenseMemory(ulong cBuckets, ulong cOccupied)
 #error This hash function can only hash 32 or 64 bit words.  Sorry.
 #endif
 
-static ulong Hash(hash_table_t *ht, char *key, ulong cBuckets)
+inline static ulong Hash(hash_table_t *ht, char *key, ulong cBuckets)
 {
    ulong a, b, c, cchKey, cchKeyOrig;
 
@@ -516,7 +516,7 @@ static ulong Hash(hash_table_t *ht, char *key, ulong cBuckets)
 |     (If you pass in NULL, I return an arbitrary pointer.)               |
 \*************************************************************************/
 
-static hash_item_t *Rehash(hash_table_t *ht, ulong cNewBuckets, hash_item_t *bckWatch)
+inline static hash_item_t *Rehash(hash_table_t *ht, ulong cNewBuckets, hash_item_t *bckWatch)
 {
    dense_bin_t *tableNew;
    ulong iBucketFirst;
@@ -525,7 +525,7 @@ static hash_item_t *Rehash(hash_table_t *ht, ulong cNewBuckets, hash_item_t *bck
    int fOverwrite = 0;    /* not an issue: there can be no collisions */
 
    assert( ht->table );
-   cNewBuckets = DenseAllocate(&tableNew, cNewBuckets);
+   cNewBuckets = DenseTableAllocate(&tableNew, cNewBuckets);
       /* Since we RETURN the new position of bckWatch, we want  *
        * to make sure it doesn't get moved due to some table    *
        * rehashing that comes after it's inserted.  Thus, we    *
@@ -543,13 +543,13 @@ static hash_item_t *Rehash(hash_table_t *ht, ulong cNewBuckets, hash_item_t *bck
 
       offset = 0;                              /* a new i for a new bucket */
       for ( iBucketFirst = Hash(ht, KEY_PTR(ht, bck->key), cNewBuckets);
-            !DenseIsEmpty(tableNew, iBucketFirst);
+            !DenseTableIsEmpty(tableNew, iBucketFirst);
             iBucketFirst = (iBucketFirst + JUMP(KEY_PTR(ht,bck->key), offset)) & (cNewBuckets-1) );
-        bckNew = DenseInsert(tableNew, bck, iBucketFirst, &fOverwrite);
+        bckNew = DenseTableInsert(tableNew, bck, iBucketFirst, &fOverwrite);
       if ( bck == bckWatch )       /* we're done with the last thing to do */
 	 break;
    }
-   DenseFree(ht->table, ht->cBuckets);
+   DenseTableFree(ht->table, ht->cBuckets);
    ht->table = tableNew;
    ht->cBuckets = cNewBuckets;
    ht->cDeletedItems = 0;
@@ -565,7 +565,7 @@ static hash_item_t *Rehash(hash_table_t *ht, ulong cNewBuckets, hash_item_t *bck
 |     doing a later insert if the search fails, for instance.             |
 \*************************************************************************/
 
-static hash_item_t *Find(hash_table_t *ht, ulong key, ulong *piEmpty)
+inline static hash_item_t *Find(hash_table_t *ht, ulong key, ulong *piEmpty)
 {
    ulong iBucketFirst;
    hash_item_t *item;
@@ -579,7 +579,7 @@ static hash_item_t *Find(hash_table_t *ht, ulong key, ulong *piEmpty)
    iBucketFirst = Hash(ht, KEY_PTR(ht, key), ht->cBuckets);
    while ( 1 )                    /* now try all i > 0 */
    {
-      item = DenseFind(ht->table, iBucketFirst);
+      item = DenseTableFind(ht->table, iBucketFirst);
       if ( item == NULL )         /* it's not in the table */
       {
 	 if ( piEmpty && !fFoundEmpty ) *piEmpty = iBucketFirst;
@@ -616,7 +616,7 @@ static hash_item_t *Find(hash_table_t *ht, ulong key, ulong *piEmpty)
 |     fullness, because they slow down searching.                         |
 \*************************************************************************/
 
-static ulong NextPow2(ulong x)    /* returns next power of 2 > x, or 2^31 */
+inline static ulong NextPow2(ulong x)    /* returns next power of 2 > x, or 2^31 */
 {
    if ( ((x << 1) >> 1) != x )    /* next power of 2 overflows */
       x >>= 1;                    /* so we return highest power of 2 we can */
@@ -625,7 +625,7 @@ static ulong NextPow2(ulong x)    /* returns next power of 2 > x, or 2^31 */
    return x << 1;                 /* makes it the *next* power of 2 */
 }
 
-static hash_item_t *Insert(hash_table_t *ht, ulong key, ulong data, int fOverwrite)
+inline static hash_item_t *Insert(hash_table_t *ht, ulong key, ulong data, int fOverwrite)
 {
    hash_item_t *item, bckInsert;
    ulong iEmpty;                  /* first empty bucket key probes */
@@ -643,7 +643,7 @@ static hash_item_t *Insert(hash_table_t *ht, ulong key, ulong data, int fOverwri
 
    COPY_KEY(ht, bckInsert.key, key);    /* make our own copy of the key */
    bckInsert.data = data;               /* oh, and the data too */
-   item = DenseInsert(ht->table, &bckInsert, iEmpty, &fOverwrite);
+   item = DenseTableInsert(ht->table, &bckInsert, iEmpty, &fOverwrite);
    if ( fOverwrite )                    /* we overwrote a deleted bucket */
       ht->cDeletedItems--;
    ht->cItems++;                        /* insert couldn't have overwritten */
@@ -669,7 +669,7 @@ static hash_item_t *Insert(hash_table_t *ht, ulong key, ulong data, int fOverwri
 |     DeleteLastFind.                                                     |
 \*************************************************************************/
 
-static int Delete(hash_table_t *ht, ulong key, int fShrink, int fLastFindSet)
+inline static int Delete(hash_table_t *ht, ulong key, int fShrink, int fLastFindSet)
 {
    if ( !fLastFindSet && !Find(ht, key, NULL) )
       return 0;
@@ -716,7 +716,7 @@ hash_table_t *ht_alloc(int cchKey, int fSaveKeys)
    hash_table_t *ht;
 
    ht = (hash_table_t *) ht_safe_malloc(sizeof(hash_table_t));   /* set everything to 0 */
-   ht->cBuckets = DenseAllocate(&ht->table, MIN_HASH_SIZE);
+   ht->cBuckets = DenseTableAllocate(&ht->table, MIN_HASH_SIZE);
    ht->cchKey = cchKey <= 0 ? NULL_TERMINATED : cchKey;
    ht->cItems = 0;
    ht->cDeletedItems = 0;
@@ -741,8 +741,8 @@ void ht_clear(hash_table_t *ht)
 	 if ( ht->fSaveKeys == 2 )  /* this means key stored in one block */
 	    break;                  /* ...so only free once */
       }
-   DenseFree(ht->table, ht->cBuckets);
-   ht->cBuckets = DenseAllocate(&ht->table, MIN_HASH_SIZE);
+   DenseTableFree(ht->table, ht->cBuckets);
+   ht->cBuckets = DenseTableAllocate(&ht->table, MIN_HASH_SIZE);
 
    ht->cItems = 0;
    ht->cDeletedItems = 0;
@@ -757,7 +757,7 @@ void ht_free(hash_table_t *ht)
 {
    ht_clear(ht);
    if ( ht->iter )    ht_free(ht->iter, sizeof(dense_iterator_t));
-   if ( ht->table )   DenseFree(ht->table, ht->cBuckets);
+   if ( ht->table )   DenseTableFree(ht->table, ht->cBuckets);
    free(ht);
 }
 
@@ -841,8 +841,8 @@ hash_item_t *ht_first_bucket(hash_table_t *ht)
 {
    hash_item_t *retval;
 
-   for ( retval = DenseFirstBucket(ht->iter, ht->table, ht->cBuckets);
-	 retval;  retval = DenseNextBucket(ht->iter) )
+   for ( retval = DenseTableFirstBucket(ht->iter, ht->table, ht->cBuckets);
+	 retval;  retval = DenseTableNextBucket(ht->iter) )
       if ( !IS_BCK_DELETED(retval) )
 	 LOAD_AND_RETURN(ht, retval);
    return NULL;
@@ -852,7 +852,7 @@ hash_item_t *ht_next_bucket(hash_table_t *ht)
 {
    hash_item_t *retval;
 
-   while ( (retval=DenseNextBucket(ht->iter)) )
+   while ( (retval=DenseTableNextBucket(ht->iter)) )
       if ( !IS_BCK_DELETED(retval) )
 	 LOAD_AND_RETURN(ht, retval);
    return NULL;
