@@ -1012,9 +1012,9 @@ Object& Object::operator = ( Object *o ){
 
 Object * Object::operator - (){
 	switch(xtype){
-		case H_OT_INT    : return new Object( static_cast<long>(-xint) );   break;
-		case H_OT_FLOAT  : return new Object( static_cast<double>(-xfloat) ); break;
-		case H_OT_CHAR   : return new Object( static_cast<char>(-xchar) );  break;
+		case H_OT_INT    : return new Object( static_cast<long>(~xint + 1) );   break;
+		case H_OT_FLOAT  : return new Object( static_cast<double>(~(int)xfloat + 1) ); break;
+		case H_OT_CHAR   : return new Object( static_cast<char>(~xchar + 1) );  break;
 		case H_OT_ALIAS  :
 		case H_OT_STRING :
 		case H_OT_ARRAY  :
@@ -1068,9 +1068,9 @@ Object * Object::factorial(){
 
 Object& Object::operator ++ (){
 	switch(xtype){
-		case H_OT_INT    : xint++;   break;
-		case H_OT_FLOAT  : xfloat++; break;
-		case H_OT_CHAR   : xchar++;  break;
+		case H_OT_INT    : ++xint;   break;
+		case H_OT_FLOAT  : ++xfloat; break;
+		case H_OT_CHAR   : ++xchar;  break;
 		case H_OT_ALIAS  :
 		case H_OT_STRING :
 		case H_OT_ARRAY  :
@@ -1081,9 +1081,9 @@ Object& Object::operator ++ (){
 
 Object& Object::operator -- (){
 	switch(xtype){
-		case H_OT_INT    : xint--;   break;
-		case H_OT_FLOAT  : xfloat--; break;
-		case H_OT_CHAR   : xchar--;  break;
+		case H_OT_INT    : --xint;   break;
+		case H_OT_FLOAT  : --xfloat; break;
+		case H_OT_CHAR   : --xchar;  break;
 		case H_OT_ALIAS  :
 		case H_OT_STRING :
 		case H_OT_ARRAY  :
@@ -1376,7 +1376,14 @@ Object * Object::operator % ( Object *o ){
 		hybris_syntax_error( "invalid type for modulus operator" );
 	}
 
-	return new Object( static_cast<long>(lvalue() % o->lvalue()) );
+	long a = lvalue(), b = o->lvalue();
+
+	if( b == 0 || b == 1 ){
+	    return new Object( static_cast<long>(0) );
+	}
+	else {
+        return new Object( static_cast<long>( a % b ) );
+	}
 }
 
 Object * Object::operator %= ( Object *o ){
@@ -1384,13 +1391,25 @@ Object * Object::operator %= ( Object *o ){
 		hybris_syntax_error( "invalid type for modulus operator" );
 	}
 
-	int val = lvalue() % o->lvalue();
-	if( xtype == H_OT_INT ){
-		xint = val;
-	}
-	else{
-		xchar = (char)val;
-	}
+    long a = lvalue(), b = o->lvalue();
+
+    if( b == 0 || b == 1 ){
+        if( xtype == H_OT_INT ){
+            xint = 0;
+        }
+        else{
+            xchar = (char)0;
+        }
+    }
+    else{
+        int mod = a % b;
+        if( xtype == H_OT_INT ){
+            xint = mod;
+        }
+        else{
+            xchar = (char)mod;
+        }
+    }
 }
 
 Object * Object::operator & ( Object *o ){
