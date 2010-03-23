@@ -119,7 +119,6 @@
 		<Unit filename="include/common.h">
 			<Option target="all" />
 		</Unit>
-		<Unit filename="include/config.h" />
 		<Unit filename="include/executors.h" />
 		<Unit filename="include/hashtable.h" />
 		<Unit filename="include/hybris.h" />
