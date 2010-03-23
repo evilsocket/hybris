@@ -1376,14 +1376,20 @@ Object * Object::operator % ( Object *o ){
 		hybris_syntax_error( "invalid type for modulus operator" );
 	}
 
-	long a = lvalue(), b = o->lvalue();
+	long a = lvalue(), b = o->lvalue(), mod;
+	/* b is 0 or 1 */
+    if( b == 0 || b == 1 ){
+        mod = 0;
+    }
+    /* b is a power of 2 */
+    else if( (b & (b - 1)) == 0 ){
+        mod = a & (b - 1);
+    }
+    else{
+        mod = a % b;
+    }
 
-	if( b == 0 || b == 1 ){
-	    return new Object( static_cast<long>(0) );
-	}
-	else {
-        return new Object( static_cast<long>( a % b ) );
-	}
+    return new Object( mod );
 }
 
 Object * Object::operator %= ( Object *o ){
@@ -1391,24 +1397,24 @@ Object * Object::operator %= ( Object *o ){
 		hybris_syntax_error( "invalid type for modulus operator" );
 	}
 
-    long a = lvalue(), b = o->lvalue();
-
+    long a = lvalue(), b = o->lvalue(), mod;
+    /* b is 0 or 1 */
     if( b == 0 || b == 1 ){
-        if( xtype == H_OT_INT ){
-            xint = 0;
-        }
-        else{
-            xchar = (char)0;
-        }
+        mod = 0;
+    }
+    /* b is a power of 2 */
+    else if( (b & (b - 1)) == 0 ){
+        mod = a & (b - 1);
     }
     else{
-        int mod = a % b;
-        if( xtype == H_OT_INT ){
-            xint = mod;
-        }
-        else{
-            xchar = (char)mod;
-        }
+        mod = a % b;
+    }
+
+    if( xtype == H_OT_INT ){
+        xint = mod;
+    }
+    else{
+        xchar = (char)mod;
     }
 }
 

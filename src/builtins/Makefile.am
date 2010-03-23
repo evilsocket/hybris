@@ -3,7 +3,7 @@ WFLAGS= -w
 OPTIMIZATION= -O3
 LIBXML_CFLAGS= `xml2-config --cflags`
 LIBXML_LFLAGS= `xml2-config --libs`
-CFLAGS= -I../../include/ $(OPTIMIZATION) $(WFLAGS) $(LIBXML_CFLAGS) -funroll-loops -ffast-math -fno-stack-protector
+CFLAGS= -I../../include/ $(OPTIMIZATION) $(WFLAGS) $(LIBXML_CFLAGS) -funroll-loops -fno-rtti -fomit-frame-pointer -ffast-math -fno-stack-protector -ffunction-sections
 LFLAGS= -ldl -lpcrecpp -lcurl -lpthread $(LIBXML_LFLAGS)
 SOURCES=array.cc dll.cc fileio.cc math.cc netio.cc process.cc reflection.cc time.cc xml.cc \
 		conio.cc encoding.cc http.cc map.cc matrix.cc pcre.cc pthreads.cc string.cc type.cc
