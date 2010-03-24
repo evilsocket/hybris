@@ -20,6 +20,8 @@
 #include "common.h"
 #include "vmem.h"
 #include "builtin.h"
+#include <time.h>
+#include <sys/time.h>
 
 void hprint_stacktrace( int force /* = 0 */ ){
     extern h_context_t HCTX;
@@ -113,3 +115,39 @@ void htype_assert( Object *o, H_OBJECT_TYPE type1, H_OBJECT_TYPE type2 ){
 		hybris_syntax_error( "'%s' is not a valid variable type", Object::type(o) );
 	}
 }
+
+unsigned long h_uticks(){
+    timeval ts;
+    gettimeofday(&ts,0);
+    return ((ts.tv_sec * 1000000) + ts.tv_usec);
+}
+
+const char * h_dtime( unsigned long uticks ){
+    #define MS_DELTA (1000.0)
+    #define SS_DELTA (MS_DELTA * 1000.0)
+    #define MM_DELTA (SS_DELTA * 60.0)
+    #define HH_DELTA (MM_DELTA * 60.0)
+
+    char delta[0xFF] = {0};
+
+    double ticks = (double)uticks;
+
+    if( ticks < MS_DELTA ){
+        sprintf( delta, "%lf us", ticks );
+    }
+    else if( ticks < SS_DELTA ){
+        sprintf( delta, "%lf ms", ticks / MS_DELTA );
+    }
+    else if( ticks < MM_DELTA ){
+        sprintf( delta, "%lf s", ticks / SS_DELTA );
+    }
+    else if( ticks < HH_DELTA ){
+        sprintf( delta, "%lf m", ticks / MM_DELTA );
+    }
+    else{
+        sprintf( delta, "%lf h", ticks / HH_DELTA );
+    }
+
+    return delta;
+}
+

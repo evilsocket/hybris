@@ -25,8 +25,9 @@
 extern int yyparse(void);
 extern int yylex(void);
 
-h_context_t HCTX;
-
+h_context_t   HCTX;
+unsigned long t_start = 0,
+              t_end   = 0;
 %}
 
 %union {
@@ -72,9 +73,16 @@ h_context_t HCTX;
 
 %%
 
-program    : body { };
+program    : body { if( HCTX.args.do_timing == 1 ){
+                        t_end = h_uticks();
+                        printf( "\033[01;33m[TIME] Elapsed %s .\n\033[00m", h_dtime( t_end - t_start ) );
+                    }
+                  }
 
-body       : body statement { htree_execute( &HCTX, &HCTX.vmem, $2 );
+body       : body statement { if( HCTX.args.do_timing == 1 && t_start == 0 ){
+                                  t_start = h_uticks();
+                              }
+                              htree_execute( &HCTX, &HCTX.vmem, $2 );
                               Tree::release($2);
                             }
            | /* empty */ ;
@@ -180,7 +188,7 @@ expression : INTEGER                                 { $$ = Tree::addInt($1); }
 
 int h_banner(){
     printf( "Hybris %s (built: %s %s)\n"
-            "Copyright (c) by %s\n"
+            "Released under GPL v3.0 by %s\n"
             "Compiled with :\n"
             "\tModules path      : %s\n"
             "\tInclude path      : %s\n"
@@ -216,18 +224,25 @@ int h_banner(){
 
 int h_usage( char *argvz ){
     h_banner();
-    printf( "\nUsage: %s file (--trace)\n"
-            "\t-h (--help)  : Will print this menu .\n"
-            "\t-t (--trace) : Will enable stack trace report on errors .\n\n", argvz );
+    printf( "\nUsage: %s file (--trace) (--time)\n"
+            "\t-h  (--help)  : Will print this menu .\n"
+            "\t-tm (--time)  : Will print execution time in micro seconds .\n"
+            "\t-t  (--trace) : Will enable stack trace report on errors .\n\n", argvz );
     return 0;
 }
 
 int main( int argc, char *argv[] ){
-
     int i, f_offset = 0;
+
+    HCTX.args.do_timing  = 0;
+    HCTX.args.stacktrace = 0;
+
     for( i = 0; i < argc; ++i ){
         if( strcmp( argv[i], "--trace" ) == 0 || strcmp( argv[i], "-t" ) == 0 ){
             HCTX.args.stacktrace = 1;
+        }
+        else if( strcmp( argv[i], "--time" ) == 0 || strcmp( argv[i], "-tm" ) == 0 ){
+            HCTX.args.do_timing  = 1;
         }
         else if( strcmp( argv[i], "--help" ) == 0 || strcmp( argv[i], "-h" ) == 0 ){
             return h_usage(argv[0]);

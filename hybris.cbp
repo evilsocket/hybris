@@ -8,7 +8,7 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="all">
-				<Option output="bin/Release/hybris" prefix_auto="1" extension_auto="1" />
+				<Option output="hybris" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />

@@ -166,32 +166,34 @@ public  :
     Object* range( Object *to );
 
     Object&  operator = ( Object *o );
-    Object * operator - ();
-    Object * operator ! ();
     Object * factorial();
     Object&  operator ++ ();
     Object&  operator -- ();
     Object * operator + ( Object *o );
-	Object * operator += ( Object *o );
     Object * operator - ( Object *o );
-	Object * operator -= ( Object *o );
+    Object * operator - ();
     Object * operator * ( Object *o );
-	Object * operator *= ( Object *o );
     Object * operator / ( Object *o );
-	Object * operator /= ( Object *o );
     Object * operator % ( Object *o );
+	Object * operator += ( Object *o );
+	Object * operator -= ( Object *o );
+	Object * operator *= ( Object *o );
+	Object * operator /= ( Object *o );
 	Object * operator %= ( Object *o );
+
     Object * operator & ( Object *o );
-	Object * operator &= ( Object *o );
     Object * operator | ( Object *o );
-	Object * operator |= ( Object *o );
-	Object * operator << ( Object *o );
-	Object * operator <<= ( Object *o );
-	Object * operator >> ( Object *o );
-	Object * operator >>= ( Object *o );
-    Object * operator ^ ( Object *o );
-	Object * operator ^= ( Object *o );
     Object * operator ~ ();
+    Object * operator ^ ( Object *o );
+    Object * operator << ( Object *o );
+    Object * operator >> ( Object *o );
+	Object * operator &= ( Object *o );
+    Object * operator |= ( Object *o );
+    Object * operator ^= ( Object *o );
+	Object * operator <<= ( Object *o );
+	Object * operator >>= ( Object *o );
+
+    Object * operator ! ();
 	Object * lnot ();
     Object * operator == ( Object *o );
     Object * operator != ( Object *o );

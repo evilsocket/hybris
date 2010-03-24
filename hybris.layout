@@ -4,8 +4,8 @@
 	<File name="examples/libtest.cc" open="0" top="0" tabpos="0">
 		<Cursor position="64" topLine="0" />
 	</File>
-	<File name="include/builtin.h" open="1" top="1" tabpos="9">
-		<Cursor position="2455" topLine="198" />
+	<File name="include/builtin.h" open="1" top="0" tabpos="9">
+		<Cursor position="5390" topLine="198" />
 	</File>
 	<File name="include/common.h" open="0" top="0" tabpos="12">
 		<Cursor position="986" topLine="0" />
@@ -20,13 +20,13 @@
 		<Cursor position="1063" topLine="0" />
 	</File>
 	<File name="include/map.h" open="1" top="0" tabpos="1">
-		<Cursor position="2980" topLine="80" />
+		<Cursor position="3753" topLine="99" />
 	</File>
 	<File name="include/node.h" open="1" top="0" tabpos="15">
 		<Cursor position="1639" topLine="14" />
 	</File>
 	<File name="include/object.h" open="1" top="0" tabpos="8">
-		<Cursor position="2950" topLine="112" />
+		<Cursor position="3623" topLine="136" />
 	</File>
 	<File name="include/tree.h" open="1" top="0" tabpos="13">
 		<Cursor position="732" topLine="0" />
@@ -95,7 +95,7 @@
 		<Cursor position="980" topLine="1" />
 	</File>
 	<File name="src/executors.cpp" open="1" top="0" tabpos="6">
-		<Cursor position="7827" topLine="234" />
+		<Cursor position="15100" topLine="521" />
 	</File>
 	<File name="src/hashtable.cpp" open="1" top="0" tabpos="3">
 		<Cursor position="29141" topLine="645" />
@@ -109,8 +109,8 @@
 	<File name="src/node.cpp" open="1" top="0" tabpos="14">
 		<Cursor position="955" topLine="0" />
 	</File>
-	<File name="src/object.cpp" open="1" top="0" tabpos="7">
-		<Cursor position="29986" topLine="1113" />
+	<File name="src/object.cpp" open="1" top="1" tabpos="7">
+		<Cursor position="25328" topLine="918" />
 	</File>
 	<File name="src/parser.y.cpp" open="1" top="0" tabpos="10">
 		<Cursor position="11364" topLine="195" />
