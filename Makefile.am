@@ -7,16 +7,17 @@ CFLAGS= -Iinclude/ $(OPTIMIZATION) $(WFLAGS) $(LIBXML_CFLAGS) -funroll-loops -fn
 LFLAGS= -ldl -lpcrecpp -lcurl -lpthread $(LIBXML_LFLAGS)
 PREFIX=/usr
 TARGET=hybris
-LIBOBJ= src/builtin.o src/common.o src/hybris.o src/executors.o src/node.o src/object.o src/tree.o src/hashtable.o src/vmem.o src/builtins/*.o
+LIBOBJ= src/builtin.lo src/common.lo src/hybris.lo src/executors.lo src/node.lo src/object.lo src/tree.lo src/hashtable.lo src/vmem.lo src/builtins/*.lo
 SOURCES=src/common.cpp src/lexer.cpp src/builtin.cpp src/hashtable.cpp src/vmem.cpp src/node.cpp src/object.cpp src/tree.cpp \
 		src/executors.cpp src/hybris.cpp src/parser.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
+LOBJECTS=$(SOURCES:.cpp=.lo)
 
-all: builtins hybris lib
+all: lib builtins hybris
 	cd examples && make
 
-lib: 
-	ar rcs lib$(TARGET).a src/*.o $(LIBOBJ)
+lib: lib_builtins $(LOBJECTS)
+	ar rcs lib$(TARGET).a src/*.lo $(LIBOBJ)
 
 hybris: $(OBJECTS)
 	$(CC) src/*.o src/builtins/*.o -o $(TARGET) $(CFLAGS) $(LFLAGS)
@@ -24,6 +25,12 @@ hybris: $(OBJECTS)
 .cpp.o: 
 	$(CC) -c $< -o $@ $(CFLAGS)
 	
+.cpp.lo:
+	$(CC) -c $< -o $@ $(CFLAGS) -fPIC
+
+lib_builtins: src/lexer.cpp src/parser.cpp
+	cd src/builtins && make lib
+
 builtins: src/lexer.cpp src/parser.cpp
 	cd src/builtins && make
 	
@@ -34,7 +41,7 @@ src/lexer.cpp: src/lexer.l.cpp
 	flex --header-file=include/lexer.h -o $@ $? 
 
 clean:
-	rm -f src/lexer.cpp include/lexer.h include/parser.h src/parser.hpp src/parser.cpp src/*.o $(TARGET)
+	rm -f src/lexer.cpp include/lexer.h include/parser.h src/parser.hpp src/parser.cpp src/*.o src/*.lo $(TARGET)
 	cd src/builtins && make clean
 	rm -f lib$(TARGET).a
 	cd examples && make clean

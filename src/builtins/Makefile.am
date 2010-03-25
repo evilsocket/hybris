@@ -8,14 +8,24 @@ LFLAGS= -ldl -lpcrecpp -lcurl -lpthread $(LIBXML_LFLAGS)
 SOURCES=array.cc dll.cc fileio.cc math.cc netio.cc process.cc reflection.cc time.cc xml.cc \
 		conio.cc encoding.cc http.cc map.cc matrix.cc pcre.cc pthreads.cc string.cc type.cc
 OBJECTS=$(SOURCES:.cc=.o)
+LOBJECTS=$(SOURCES:.cc=.lo)
 
 all: dll.o $(SOURCES) $(OBJECTS)
+
+lib: dll.lo $(SOURCES) $(LOBJECTS)
+
 # dllcall could not be optimized due to stack preservation issue
 dll.o: dll.cc
 	$(CC) -c -I../../include/ $(LIBXML_CFLAGS) $? -o $@
 
+dll.lo: dll.cc
+	$(CC) -c -I../../include/ -fPIC $(LIBXML_CFLAGS) $? -o $@
+
 .cc.o:
 	$(CC) -c $< -o $@ $(CFLAGS)
 
+.cc.lo:
+	$(CC) -c $< -o $@ $(CFLAGS) -fPIC
+	
 clean:
-	rm -f *.o
+	rm -f *.o *.lo
