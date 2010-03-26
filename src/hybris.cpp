@@ -60,14 +60,16 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
     char function_name[0xFF] = {0};
     function_t builtin;
     Node *node, *function, *id, *clone;
-    unsigned int i = 0;
+    unsigned int i = 0, children;
     vector<Node *> garbage;
     Object *value = H_UNDEFINED;
+    H_NODE_TYPE type;
 
     /* check if function is a builtin */
     if( (builtin = hfunction_search( ctx, (char *)call->_call.c_str() )) != H_UNDEFINED ){
+        children = call->children();
         /* do object assignment */
-        for( i = 0; i < call->children(); ++i ){
+        for( i = 0; i < children; ++i ){
             /* create a clone of the statements node */
             node  = Tree::clone( call->child(i), node );
             /* create temporary stack value */
@@ -100,7 +102,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         #endif
 
         /* free cloned nodes */
-        for( i = 0; i < garbage.size(); ++i ){
+        for( i = 0; i < children; ++i ){
             Tree::release( garbage[i] );
         }
 
@@ -113,7 +115,8 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         unsigned int body = 0;
         /* a function could be without arguments */
         if( function->child(0)->type() == H_NT_IDENTIFIER ){
-            for( i = 0, id = function->child(0); id->type() == H_NT_IDENTIFIER; ++i ){
+            type = id->type();
+            for( i = 0, id = function->child(0); type == H_NT_IDENTIFIER; ++i ){
                 id = function->child(i);
                 identifiers.push_back( id->_identifier );
             }
@@ -133,7 +136,8 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
                                  call->children() );
         }
 
-        for( i = 0; i < call->children(); ++i ){
+        children = call->children();
+        for( i = 0; i < children; ++i ){
             clone = Tree::clone( call->child(i), clone );
             value = htree_execute( ctx, stackframe, clone );
             value->setGarbageAttribute( ~H_OA_GARBAGE );
@@ -163,7 +167,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         #endif
 
         /* free cloned nodes */
-        for( i = 0; i < garbage.size(); ++i ){
+        for( i = 0; i < children; ++i ){
             Tree::release( garbage[i] );
         }
 
@@ -192,7 +196,8 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         }
         /* at this point we're sure that it's an external, so build the frame for hdllcall */
         stack.insert( HANONYMOUSIDENTIFIER, external );
-        for( i = 0; i < call->children(); ++i ){
+        children = call->children();
+        for( i = 0; i < children; ++i ){
             clone = Tree::clone( call->child(i), clone );
             value = htree_execute( ctx, stackframe, clone );
             stack.insert( HANONYMOUSIDENTIFIER, value );
@@ -222,7 +227,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         #endif
 
         /* free cloned nodes */
-        for( i = 0; i < garbage.size(); ++i ){
+        for( i = 0; i < children; ++i ){
             Tree::release( garbage[i] );
         }
 
@@ -231,7 +236,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
     }
     #endif
 }
-/* !!! This function is full of memory leaks and it should be improved !!! */
+
 Object *htree_execute( h_context_t *ctx, vmem_t *stackframe, Node *node ){
     /* skip undefined/null nodes */
     if( node == H_UNDEFINED ){

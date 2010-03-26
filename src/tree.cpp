@@ -179,8 +179,11 @@ void Tree::print( Node *node, int tabs /*= 0*/ ){
 Node *Tree::clone( Node *root, Node *clone ){
 	if( root ){
 		int i;
-		Node node(root->type());
-		switch( root->type() ){
+		H_NODE_TYPE rtype(root->type());
+		Node        node(rtype);
+        int         children;
+
+		switch( rtype ){
 			case H_NT_CONSTANT   :
 				switch( root->_constant->xtype ){
 					case H_OT_INT    : clone = Tree::addInt( root->_constant->xint ); break;
@@ -195,15 +198,17 @@ Node *Tree::clone( Node *root, Node *clone ){
 				break;
 
 			case H_NT_OPERATOR   :
-				clone = Tree::addOperator( root->_operator, 0 );
-				for( i = 0; i < root->children(); ++i ){
+				clone    = Tree::addOperator( root->_operator, 0 );
+				children = root->children();
+				for( i = 0; i < children; ++i ){
 					clone->addChild( Tree::clone( root->child(i), &node ) );
 				}
 				break;
 
 			case H_NT_FUNCTION   :
-				clone = Tree::addFunction( (char *)root->_function.c_str(), 0 );
-				for( i = 0; i < root->children(); ++i ){
+				clone    = Tree::addFunction( (char *)root->_function.c_str(), 0 );
+				children = root->children();
+				for( i = 0; i < children; ++i ){
 					clone->addChild( Tree::clone( root->child(i), &node ) );
 				}
 				break;
@@ -215,7 +220,8 @@ Node *Tree::clone( Node *root, Node *clone ){
 				else{
 					clone = Tree::addCall( root->_aliascall, NULL );
 				}
-				for( i = 0; i < root->children(); ++i ){
+				children = root->children();
+				for( i = 0; i < children; ++i ){
 					clone->addChild( Tree::clone( root->child(i), &node ) );
 				}
 				break;

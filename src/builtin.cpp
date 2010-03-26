@@ -66,9 +66,13 @@ void hmodule_load( h_context_t *ctx, char *module ){
 }
 
 function_t hfunction_search( h_context_t *ctx, char *identifier ){
-    unsigned int i = 0, j = 0, ndyns = ctx->modules.size(), nfuncs;
-    /* firs search the function in builtins symbols */
-    for( i = 0; i < ctx->builtins.size(); ++i ){
+    unsigned int i, j,
+                 nblts( ctx->builtins.size() ),
+                 ndyns( ctx->modules.size() ),
+                 nfuncs;
+
+    /* first search the function in builtins symbols */
+    for( i = 0; i < nblts; ++i ){
         if( ctx->builtins[i]->identifier == identifier ){
             return ctx->builtins[i]->function;
         }

@@ -18,19 +18,21 @@
 */
 #include "node.h"
 
-Node::Node( H_NODE_TYPE type ){
-	m_type      = type;
-	m_elements  = 0;
-	_constant   = NULL;
-	_aliascall  = NULL;
-	_identifier = "";
-	_function   = "";
-	_call       = "";
+Node::Node( H_NODE_TYPE type ) :
+    m_type(type),
+    m_elements(0),
+
+    _constant(NULL),
+    _aliascall(NULL),
+    _identifier(""),
+    _function(""),
+    _call("")
+{
+
 }
 
 Node::~Node(){
 	if( _constant ){
-		_constant->release();
         delete _constant;
 	}
 }

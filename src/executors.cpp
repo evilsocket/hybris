@@ -21,22 +21,23 @@
 Object *exec_identifier( h_context_t *ctx, vmem_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
     int     idx;
+    char   *identifier = (char *)node->_identifier.c_str();
 
     // search for the identifier on the function frame
-    o =  hybris_vm_get( frame, (char *)node->_identifier.c_str() );
+    o = hybris_vm_get( frame, identifier );
     if( o == H_UNDEFINED && H_ADDRESS_OF(frame) != H_ADDRESS_OF(&ctx->vmem) ){
         // search it on the global frame if it's different from local frame
-        o = hybris_vm_get( &ctx->vmem, (char *)node->_identifier.c_str() );
+        o = hybris_vm_get( &ctx->vmem, identifier );
     }
     // search for it as a function name
     if( o == H_UNDEFINED ){
-        idx = ctx->vcode.index( (char *)node->_identifier.c_str() );
+        idx = ctx->vcode.index( identifier );
         if( idx != -1 ){
             o = new Object((unsigned int)idx);
         }
         // identifier not found
         else{
-            hybris_syntax_error( "'%s' undeclared identifier", node->_identifier.c_str() );
+            hybris_syntax_error( "'%s' undeclared identifier", identifier );
         }
     }
 
