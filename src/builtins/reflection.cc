@@ -54,7 +54,7 @@ HYBRIS_BUILTIN(hcore_functions){
 	Object *array = new Object();
 
     for( i = 0; i < ctx->builtins.size(); i++ ){
-        array->push( new Object((char *)ctx->builtins[i]->identifier.c_str()) );
+        array->push( new Object((char *)ctx->builtins.label(i)) );
     }
 
 	return array;

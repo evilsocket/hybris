@@ -67,15 +67,13 @@ void hmodule_load( h_context_t *ctx, char *module ){
 
 function_t hfunction_search( h_context_t *ctx, char *identifier ){
     unsigned int i, j,
-                 nblts( ctx->builtins.size() ),
                  ndyns( ctx->modules.size() ),
                  nfuncs;
 
     /* first search the function in builtins symbols */
-    for( i = 0; i < nblts; ++i ){
-        if( ctx->builtins[i]->identifier == identifier ){
-            return ctx->builtins[i]->function;
-        }
+    builtin_t *b = ctx->builtins.find(identifier);
+    if( b != H_UNDEFINED ){
+        return b->function;
     }
 
     /* then search it in dynamic loaded modules */

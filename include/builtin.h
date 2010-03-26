@@ -40,9 +40,8 @@ typedef Object * (*function_t)( struct _h_context *, vmem_t * );
 
 /* helper macro to declare a builtin function */
 #define HYBRIS_BUILTIN(name) Object *name( h_context_t *ctx, vmem_t *data )
-
 /* helper macro to define a builtin function */
-#define HYBRIS_DEFINE_BUILTIN( ctx, name, func ) ctx->builtins.push_back( new builtin_t( name, func ) )
+#define HYBRIS_DEFINE_BUILTIN( ctx, name, func ) ctx->builtins.insert( name, new builtin_t( name, func ) )
 /* helper macro to define a builtin constant */
 #define HYBRIS_DEFINE_CONSTANT( ctx, name, value ) ctx->constants.push_back( new builtin_constant_t( name, new Object( value  ) ) )
 
@@ -82,7 +81,7 @@ module_t;
 typedef void (*initializer_t)( struct _h_context * );
 
 typedef vector<builtin_constant_t *> h_constants_t;
-typedef vector<builtin_t *>          h_builtins_t;
+typedef Map<builtin_t>               h_builtins_t;
 typedef vector<module_t *>           h_modules_t;
 
 /* hybris execution contest structure */

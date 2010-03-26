@@ -621,8 +621,9 @@ void h_env_release( h_context_t *ctx, int onerror /*= 0*/ ){
     #endif
 
     for( int i = 0; i < ctx->builtins.size(); ++i ){
-        delete ctx->builtins[i];
+        delete ctx->builtins.at(i);
     }
+
     ctx->builtins.clear();
 
     hybris_vm_release( &ctx->vmem );
