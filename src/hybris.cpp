@@ -74,6 +74,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
             /* create function stack value */
             node  = call->child(i);
             value = htree_execute( ctx, stackframe, node );
+            /* prevent value from being deleted, we'll take care of it */
             if( value != H_UNDEFINED ){
                 value->setGarbageAttribute( ~H_OA_GARBAGE );
             }
@@ -93,6 +94,13 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
 
         /* call the function */
         Object *_return = builtin( ctx, &stack );
+
+        for( i = 0; i < children; i++ ){
+            value = stack.at(i);
+            if( value != H_UNDEFINED && H_IS_NOT_CONSTANT(value) ){
+                delete value;
+            }
+        }
 
         #ifdef MT_SUPPORT
         pthread_mutex_lock( &ctx->th_mutex );
@@ -143,6 +151,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         for( i = 0; i < children; ++i ){
             clone = call->child(i);
             value = htree_execute( ctx, stackframe, clone );
+            /* prevent value from being deleted, we'll take care of it */
             if( value != H_UNDEFINED ){
                 value->setGarbageAttribute( ~H_OA_GARBAGE );
             }
@@ -162,6 +171,13 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
 
         /* call the function */
         Object *_return = htree_execute( ctx, &stack, function->child(body) );
+
+        for( i = 0; i < children; i++ ){
+            value = stack.at(i);
+            if( value != H_UNDEFINED && H_IS_NOT_CONSTANT(value) ){
+                delete value;
+            }
+        }
 
         #ifdef MT_SUPPORT
         pthread_mutex_lock( &ctx->th_mutex );
@@ -202,6 +218,7 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         for( i = 0; i < children; ++i ){
             clone = call->child(i);
             value = htree_execute( ctx, stackframe, clone );
+            /* prevent value from being deleted, we'll take care of it */
             if( value != H_UNDEFINED ){
                 value->setGarbageAttribute( ~H_OA_GARBAGE );
             }
@@ -220,6 +237,13 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
 
         /* call the function */
         Object *_return = hdllcall( ctx, &stack );
+
+        for( i = 0; i < children; i++ ){
+            value = stack.at(i);
+            if( value != H_UNDEFINED && H_IS_NOT_CONSTANT(value) ){
+                delete value;
+            }
+        }
 
         #ifdef MT_SUPPORT
         pthread_mutex_lock( &ctx->th_mutex );

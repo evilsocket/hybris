@@ -87,6 +87,43 @@ private :
 
 public  :
 
+    typedef typename vector<map_pair *>::iterator               iterator;
+    typedef typename vector<map_pair *>::const_iterator         const_iterator;
+    typedef typename vector<map_pair *>::reverse_iterator       reverse_iterator;
+    typedef typename vector<map_pair *>::const_reverse_iterator const_reverse_iterator;
+
+    inline iterator begin(){
+        return m_map.begin();
+    }
+
+    inline const_iterator begin() const {
+        return m_map.begin();
+    }
+
+    inline iterator end() {
+        return m_map.end();
+    }
+
+    inline const_iterator end() const {
+        return m_map.end();
+    }
+
+    inline reverse_iterator rbegin(){
+        return m_map.rbegin();
+    }
+
+    inline const_reverse_iterator rbegin() const {
+        return m_map.rbegin();
+    }
+
+    inline reverse_iterator rend() {
+        return m_map.rend();
+    }
+
+    inline const_reverse_iterator rend() const {
+        return m_map.rend();
+    }
+
     Map();
     ~Map();
 
