@@ -61,30 +61,32 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
     function_t builtin;
     Node *node, *function, *id, *clone;
     unsigned int i = 0, children;
-    vector<Node *> garbage;
     Object *value = H_UNDEFINED;
     H_NODE_TYPE type;
+    char *callname = (char *)call->_call.c_str();
 
     /* check if function is a builtin */
-    if( (builtin = hfunction_search( ctx, (char *)call->_call.c_str() )) != H_UNDEFINED ){
+    builtin = hfunction_search( ctx, callname );
+    if( builtin != H_UNDEFINED ){
         children = call->children();
         /* do object assignment */
         for( i = 0; i < children; ++i ){
-            /* create a clone of the statements node */
-            node  = Tree::clone( call->child(i), node );
-            /* create temporary stack value */
+            /* create function stack value */
+            node  = call->child(i);
             value = htree_execute( ctx, stackframe, node );
-            value->setGarbageAttribute( ~H_OA_GARBAGE );
+            if( value != H_UNDEFINED ){
+                value->setGarbageAttribute( ~H_OA_GARBAGE );
+            }
             stack.insert( HANONYMOUSIDENTIFIER, value );
-            /* add the node to the garbage vector to be released after the function call */
-            garbage.push_back(node);
         }
 
         #ifdef MT_SUPPORT
         pthread_mutex_lock( &ctx->th_mutex );
         #endif
+
         /* fill the stack traceing system */
-        ctx->stack_trace.push_back( hbuild_function_trace( (char *)call->_call.c_str(), &stack, 0 ) );
+        ctx->stack_trace.push_back( hbuild_function_trace( callname, &stack, 0 ) );
+
         #ifdef MT_SUPPORT
         pthread_mutex_unlock( &ctx->th_mutex );
         #endif
@@ -95,16 +97,13 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         #ifdef MT_SUPPORT
         pthread_mutex_lock( &ctx->th_mutex );
         #endif
+
         /* remove the call from the stack trace */
         ctx->stack_trace.pop_back();
+
         #ifdef MT_SUPPORT
         pthread_mutex_unlock( &ctx->th_mutex );
         #endif
-
-        /* free cloned nodes */
-        for( i = 0; i < children; ++i ){
-            Tree::release( garbage[i] );
-        }
 
         /* return function evaluation value */
         return _return;
@@ -115,11 +114,15 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         unsigned int body = 0;
         /* a function could be without arguments */
         if( function->child(0)->type() == H_NT_IDENTIFIER ){
-            type = id->type();
-            for( i = 0, id = function->child(0); type == H_NT_IDENTIFIER; ++i ){
+            id       = function->child(0);
+            children = function->children();
+            type     = id->type();
+
+            for( i = 0; type == H_NT_IDENTIFIER && i < children; ++i ){
                 id = function->child(i);
                 identifiers.push_back( id->_identifier );
             }
+
             body = i - 1;
             identifiers.pop_back();
 		}
@@ -138,18 +141,21 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
 
         children = call->children();
         for( i = 0; i < children; ++i ){
-            clone = Tree::clone( call->child(i), clone );
+            clone = call->child(i);
             value = htree_execute( ctx, stackframe, clone );
-            value->setGarbageAttribute( ~H_OA_GARBAGE );
+            if( value != H_UNDEFINED ){
+                value->setGarbageAttribute( ~H_OA_GARBAGE );
+            }
             stack.insert( (char *)identifiers[i].c_str(), value );
-            garbage.push_back(clone);
         }
 
         #ifdef MT_SUPPORT
         pthread_mutex_lock( &ctx->th_mutex );
         #endif
+
         /* fill the stack traceing system */
-        ctx->stack_trace.push_back( hbuild_function_trace( (char *)call->_call.c_str(), &stack, 0 ) );
+        ctx->stack_trace.push_back( hbuild_function_trace( callname, &stack, 0 ) );
+
         #ifdef MT_SUPPORT
         pthread_mutex_unlock( &ctx->th_mutex );
         #endif
@@ -160,16 +166,12 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         #ifdef MT_SUPPORT
         pthread_mutex_lock( &ctx->th_mutex );
         #endif
+
         /* remove the call from the stack trace */
         ctx->stack_trace.pop_back();
         #ifdef MT_SUPPORT
         pthread_mutex_unlock( &ctx->th_mutex );
         #endif
-
-        /* free cloned nodes */
-        for( i = 0; i < children; ++i ){
-            Tree::release( garbage[i] );
-        }
 
         /* return function evaluation value */
         return _return;
@@ -178,13 +180,13 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
     /* finally check if the function is an extern identifier loaded by dll importing routines */
     else{
         Object *external;
-        if( (external = hybris_vm_get( stackframe, (char *)call->_call.c_str() )) == H_UNDEFINED ){
+        if( (external = hybris_vm_get( stackframe, callname )) == H_UNDEFINED ){
             #ifdef MT_SUPPORT
             if( threaded ){
                 POOL_DEL( pthread_self() );
             }
             #endif
-            hybris_syntax_error( "'%s' undeclared function identifier", (char *)call->_call.c_str() );
+            hybris_syntax_error( "'%s' undeclared function identifier", callname );
         }
         else if( (external->attributes & H_OA_EXTERN) != H_OA_EXTERN ){
             #ifdef MT_SUPPORT
@@ -192,24 +194,26 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
                 POOL_DEL( pthread_self() );
             }
             #endif
-           hybris_syntax_error( "'%s' does not name a function", (char *)call->_call.c_str() );
+           hybris_syntax_error( "'%s' does not name a function", callname );
         }
         /* at this point we're sure that it's an external, so build the frame for hdllcall */
         stack.insert( HANONYMOUSIDENTIFIER, external );
         children = call->children();
         for( i = 0; i < children; ++i ){
-            clone = Tree::clone( call->child(i), clone );
+            clone = call->child(i);
             value = htree_execute( ctx, stackframe, clone );
+            if( value != H_UNDEFINED ){
+                value->setGarbageAttribute( ~H_OA_GARBAGE );
+            }
             stack.insert( HANONYMOUSIDENTIFIER, value );
-            value->setGarbageAttribute( ~H_OA_GARBAGE );
-            garbage.push_back(clone);
         }
 
         #ifdef MT_SUPPORT
         pthread_mutex_lock( &ctx->th_mutex );
         #endif
+
         /* fill the stack traceing system */
-        ctx->stack_trace.push_back( hbuild_function_trace( (char *)call->_call.c_str(), &stack, 0 ) );
+        ctx->stack_trace.push_back( hbuild_function_trace( callname, &stack, 0 ) );
         #ifdef MT_SUPPORT
         pthread_mutex_unlock( &ctx->th_mutex );
         #endif
@@ -220,16 +224,12 @@ Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, i
         #ifdef MT_SUPPORT
         pthread_mutex_lock( &ctx->th_mutex );
         #endif
+
         /* remove the call from the stack trace */
         ctx->stack_trace.pop_back();
         #ifdef MT_SUPPORT
         pthread_mutex_unlock( &ctx->th_mutex );
         #endif
-
-        /* free cloned nodes */
-        for( i = 0; i < children; ++i ){
-            Tree::release( garbage[i] );
-        }
 
         /* return function evaluation value */
         return _return;

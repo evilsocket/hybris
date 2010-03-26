@@ -48,8 +48,6 @@ private :
 public  :
 
     Node( H_NODE_TYPE type );
-    /* Node( FILE *fp ); */
-
     ~Node();
 
     inline H_NODE_TYPE type(){
