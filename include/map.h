@@ -174,4 +174,3 @@ H_TEMPLATE_T void Map<value_t>::clear(){
 }
 
 #endif
-

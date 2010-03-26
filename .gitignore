@@ -15,6 +15,7 @@ src/builtins/Makefile.in
 stamp-h1
 # Flex, bison and compiler generated files
 *.o
+*.lo
 *.so
 *.a
 hybris
