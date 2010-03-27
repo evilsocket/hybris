@@ -34,16 +34,14 @@
                         } \
                       pthread_mutex_unlock( &ctx->th_mutex )
 
+/* pre declaration of struct _h_context */
+typedef struct _h_context h_context_t;
+
 void    h_env_init    ( h_context_t *ctx, int argc, char *argv[] );
 void    h_env_release ( h_context_t *ctx, int onerror = 0 );
-
-string  hbuild_function_trace ( char *function, vmem_t *stack, int identifiers );
-Node   *hresolve_call         ( h_context_t *ctx, vmem_t *stackframe, Node *call, char *name );
-Object *htree_function_call   ( h_context_t *ctx, vmem_t *stackframe, Node *call, int threaded = 0 );
-Object *htree_execute         ( h_context_t *ctx, vmem_t *stackframe, Node *node );
-
-int     h_file_exists( char *filename );
-int     h_changepath( h_context_t *ctx );
+string  h_trace       ( char *function, vmem_t *stack, int identifiers );
+int     h_file_exists ( char *filename );
+int     h_changepath  ( h_context_t *ctx );
 
 #endif
 

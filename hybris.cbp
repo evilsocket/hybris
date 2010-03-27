@@ -35,7 +35,7 @@
 		<Unit filename="include/common.h">
 			<Option target="all" />
 		</Unit>
-		<Unit filename="include/executors.h" />
+		<Unit filename="include/executor.h" />
 		<Unit filename="include/hashtable.h" />
 		<Unit filename="include/hybris.h" />
 		<Unit filename="include/map.h">
@@ -107,7 +107,7 @@
 		<Unit filename="src/common.cpp">
 			<Option target="all" />
 		</Unit>
-		<Unit filename="src/executors.cpp" />
+		<Unit filename="src/executor.cpp" />
 		<Unit filename="src/hashtable.cpp" />
 		<Unit filename="src/hybris.cpp" />
 		<Unit filename="src/lexer.l.cpp">

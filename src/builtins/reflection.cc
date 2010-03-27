@@ -98,7 +98,7 @@ HYBRIS_BUILTIN(hcall){
 		}
 	}
 
-	Object *_return = htree_function_call( ctx, data, call, 0 );
+	Object *_return = ctx->executor->onFunctionCall( data, call, 0 );
 	delete call;
 
 	return _return;

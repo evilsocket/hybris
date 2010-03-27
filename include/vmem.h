@@ -35,6 +35,7 @@
 
 /* data segment descriptor <identifier, object> */
 typedef Map<Object> vmem_t;
+typedef vmem_t      vframe_t;
 /* code segment descriptor <function, abstract tree> */
 typedef Map<Node>   vcode_t;
 

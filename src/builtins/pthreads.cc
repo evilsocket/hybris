@@ -21,7 +21,7 @@
 #include "builtin.h"
 #include "tree.h"
 
-extern Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, int threaded = 0 );
+extern Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, int threaded /*= 0*/ );
 
 extern h_context_t HCTX;
 
@@ -69,7 +69,7 @@ void * hybris_pthread_worker( void *arg ){
 		}
 	}
 
-	Object *_return = htree_function_call( args->ctx, data, call, 1 );
+	Object *_return = args->ctx->executor->onFunctionCall( data, call, 1 );
 	delete call;
     delete _return;
 

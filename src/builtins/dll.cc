@@ -62,8 +62,8 @@ HYBRIS_BUILTIN(hdllcall){
     int i, j;
     /* push in reverse order */
     for( i = data->size() - 1, j = 0; i >= 1; i--, j++ ){
-        Object        *arg  = data->at(i);
-        unsigned char *raw  = arg->serialize();
+        Object        *arg = data->at(i);
+        unsigned char *raw = arg->serialize();
         garbage.push_back(raw);
         switch( arg->xtype ){
             case H_OT_INT    : memcpy( &iv, raw, sizeof(long) );   ulval = (unsigned long)iv; break;

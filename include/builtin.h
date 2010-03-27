@@ -26,6 +26,7 @@
 #include <dirent.h>
 #include "object.h"
 #include "vmem.h"
+#include "executor.h"
 
 using std::string;
 using std::vector;
@@ -34,6 +35,8 @@ typedef vector<string> vstr_t;
 
 /* pre declaration of struct _h_context */
 struct _h_context;
+/* pre declaration of class Executor */
+class Executor;
 
 /* builtin function pointer prototype */
 typedef Object * (*function_t)( struct _h_context *, vmem_t * );
@@ -106,6 +109,8 @@ typedef struct _h_context {
     /* threads mutex */
     pthread_mutex_t   th_mutex;
     #endif
+
+    Executor      *executor;
 }
 h_context_t;
 

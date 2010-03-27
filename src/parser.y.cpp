@@ -19,6 +19,7 @@
 */
 
 #include "hybris.h"
+#include "executor.h"
 
 #define YY_(s) (char *)s
 
@@ -82,7 +83,7 @@ program    : body { if( HCTX.args.do_timing == 1 ){
 body       : body statement { if( HCTX.args.do_timing == 1 && t_start == 0 ){
                                   t_start = h_uticks();
                               }
-                              htree_execute( &HCTX, &HCTX.vmem, $2 );
+                              HCTX.executor->exec( &HCTX.vmem, $2 );
                               Tree::release($2);
                             }
            | /* empty */ ;

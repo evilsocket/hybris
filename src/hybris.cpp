@@ -18,440 +18,29 @@
 */
 #include "hybris.h"
 #include "parser.hpp"
-#include "executors.h"
 
-string hbuild_function_trace( char *function, vmem_t *stack, int identifiers ){
-    string trace = function + string("(");
-    unsigned int i;
-    for( i = 0; i < stack->size(); ++i ){
-        trace += " " + (identifiers ? string(stack->label(i)) + "=" : string("")) +  stack->at(i)->svalue() + (i < (stack->size() - 1) ? "," : "");
+string h_trace( char *function, vmem_t *stack, int identifiers ){
+    string trace( function + string("(") );
+    unsigned int i,
+                 size( stack->size() ),
+                 i_end( size - 1 );
+
+    if( identifiers ){
+        for( i = 0; i < size; ++i ){
+            trace += " " + string(stack->label(i)) + "=" +  stack->at(i)->svalue() + (i < i_end ? "," : "");
+        }
+    }
+    else{
+        for( i = 0; i < size; ++i ){
+            trace += " " + stack->at(i)->svalue() + (i < i_end ? "," : "");
+        }
     }
     trace += " )";
+
     return trace;
 }
 
-Node * hresolve_call( h_context_t *ctx, vmem_t *stackframe, Node *call, char *name ){
-    /* search first in the code segment */
-	Node *function = H_UNDEFINED;
-	if( (function = hybris_vc_get( &ctx->vcode, (char *)call->_call.c_str() )) != H_UNDEFINED ){
-	    strcpy( name, (char *)call->_call.c_str() );
-		return function;
-	}
-	/* then search for a function alias */
-	Object *alias = H_UNDEFINED;
-	if( (alias = hybris_vm_get( stackframe, (char *)call->_call.c_str() )) != H_UNDEFINED && alias->xtype == H_OT_ALIAS ){
-	    strcpy( name, ctx->vcode.label( alias->xalias ) );
-		return ctx->vcode.at( alias->xalias );
-	}
-	/* try to evaluate the call as an alias itself */
-	if( call->_aliascall != NULL ){
-		alias = htree_execute( ctx, stackframe, call->_aliascall );
-		if( alias->xtype == H_OT_ALIAS ){
-		    strcpy( name, ctx->vcode.label( alias->xalias ) );
-			return ctx->vcode.at( alias->xalias );
-		}
-	}
-	/* function is not defined */
-	return H_UNDEFINED;
-}
-
-Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, int threaded /*= 0*/ ){
-    vmem_t stack;
-    char function_name[0xFF] = {0};
-    function_t builtin;
-    Node *node, *function, *id, *clone;
-    unsigned int i = 0, children;
-    Object *value = H_UNDEFINED;
-    H_NODE_TYPE type;
-    char *callname = (char *)call->_call.c_str();
-
-    /* check if function is a builtin */
-    builtin = hfunction_search( ctx, callname );
-    if( builtin != H_UNDEFINED ){
-        children = call->children();
-        /* do object assignment */
-        for( i = 0; i < children; ++i ){
-            /* create function stack value */
-            node  = call->child(i);
-            value = htree_execute( ctx, stackframe, node );
-            /* prevent value from being deleted, we'll take care of it */
-            if( value != H_UNDEFINED ){
-                value->setGarbageAttribute( ~H_OA_GARBAGE );
-            }
-            stack.insert( HANONYMOUSIDENTIFIER, value );
-        }
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_lock( &ctx->th_mutex );
-        #endif
-
-        /* fill the stack traceing system */
-        ctx->stack_trace.push_back( hbuild_function_trace( callname, &stack, 0 ) );
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_unlock( &ctx->th_mutex );
-        #endif
-
-        /* call the function */
-        Object *_return = builtin( ctx, &stack );
-
-        for( i = 0; i < children; i++ ){
-            value = stack.at(i);
-            if( value != H_UNDEFINED && H_IS_NOT_CONSTANT(value) ){
-                delete value;
-            }
-        }
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_lock( &ctx->th_mutex );
-        #endif
-
-        /* remove the call from the stack trace */
-        ctx->stack_trace.pop_back();
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_unlock( &ctx->th_mutex );
-        #endif
-
-        /* return function evaluation value */
-        return _return;
-    }
-    /* check for an user defined function */
-    else if( (function = hresolve_call( ctx, stackframe, call, function_name )) != H_UNDEFINED ){
-        vector<string> identifiers;
-        unsigned int body = 0;
-        /* a function could be without arguments */
-        if( function->child(0)->type() == H_NT_IDENTIFIER ){
-            id       = function->child(0);
-            children = function->children();
-            type     = id->type();
-
-            for( i = 0; type == H_NT_IDENTIFIER && i < children; ++i ){
-                id = function->child(i);
-                identifiers.push_back( id->_identifier );
-            }
-
-            body = i - 1;
-            identifiers.pop_back();
-		}
-
-        if( identifiers.size() != call->children() ){
-            #ifdef MT_SUPPORT
-            if( threaded ){
-               POOL_DEL( pthread_self() );
-            }
-            #endif
-            hybris_syntax_error( "function '%s' requires %d parameters (called with %d)",
-                                 function->_function.c_str(),
-                                 identifiers.size(),
-                                 call->children() );
-        }
-
-        children = call->children();
-        for( i = 0; i < children; ++i ){
-            clone = call->child(i);
-            value = htree_execute( ctx, stackframe, clone );
-            /* prevent value from being deleted, we'll take care of it */
-            if( value != H_UNDEFINED ){
-                value->setGarbageAttribute( ~H_OA_GARBAGE );
-            }
-            stack.insert( (char *)identifiers[i].c_str(), value );
-        }
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_lock( &ctx->th_mutex );
-        #endif
-
-        /* fill the stack traceing system */
-        ctx->stack_trace.push_back( hbuild_function_trace( callname, &stack, 0 ) );
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_unlock( &ctx->th_mutex );
-        #endif
-
-        /* call the function */
-        Object *_return = htree_execute( ctx, &stack, function->child(body) );
-
-        for( i = 0; i < children; i++ ){
-            value = stack.at(i);
-            if( value != H_UNDEFINED && H_IS_NOT_CONSTANT(value) ){
-                delete value;
-            }
-        }
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_lock( &ctx->th_mutex );
-        #endif
-
-        /* remove the call from the stack trace */
-        ctx->stack_trace.pop_back();
-        #ifdef MT_SUPPORT
-        pthread_mutex_unlock( &ctx->th_mutex );
-        #endif
-
-        /* return function evaluation value */
-        return _return;
-    }
-    #ifndef _LP64
-    /* finally check if the function is an extern identifier loaded by dll importing routines */
-    else{
-        Object *external;
-        if( (external = hybris_vm_get( stackframe, callname )) == H_UNDEFINED ){
-            #ifdef MT_SUPPORT
-            if( threaded ){
-                POOL_DEL( pthread_self() );
-            }
-            #endif
-            hybris_syntax_error( "'%s' undeclared function identifier", callname );
-        }
-        else if( (external->attributes & H_OA_EXTERN) != H_OA_EXTERN ){
-            #ifdef MT_SUPPORT
-            if( threaded ){
-                POOL_DEL( pthread_self() );
-            }
-            #endif
-           hybris_syntax_error( "'%s' does not name a function", callname );
-        }
-        /* at this point we're sure that it's an external, so build the frame for hdllcall */
-        stack.insert( HANONYMOUSIDENTIFIER, external );
-        children = call->children();
-        for( i = 0; i < children; ++i ){
-            clone = call->child(i);
-            value = htree_execute( ctx, stackframe, clone );
-            /* prevent value from being deleted, we'll take care of it */
-            if( value != H_UNDEFINED ){
-                value->setGarbageAttribute( ~H_OA_GARBAGE );
-            }
-            stack.insert( HANONYMOUSIDENTIFIER, value );
-        }
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_lock( &ctx->th_mutex );
-        #endif
-
-        /* fill the stack traceing system */
-        ctx->stack_trace.push_back( hbuild_function_trace( callname, &stack, 0 ) );
-        #ifdef MT_SUPPORT
-        pthread_mutex_unlock( &ctx->th_mutex );
-        #endif
-
-        /* call the function */
-        Object *_return = hdllcall( ctx, &stack );
-
-        for( i = 0; i < children; i++ ){
-            value = stack.at(i);
-            if( value != H_UNDEFINED && H_IS_NOT_CONSTANT(value) ){
-                delete value;
-            }
-        }
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_lock( &ctx->th_mutex );
-        #endif
-
-        /* remove the call from the stack trace */
-        ctx->stack_trace.pop_back();
-        #ifdef MT_SUPPORT
-        pthread_mutex_unlock( &ctx->th_mutex );
-        #endif
-
-        /* return function evaluation value */
-        return _return;
-    }
-    #endif
-}
-
-Object *htree_execute( h_context_t *ctx, vmem_t *stackframe, Node *node ){
-    /* skip undefined/null nodes */
-    if( node == H_UNDEFINED ){
-        return H_UNDEFINED;
-    }
-
-    switch(node->type()){
-        /* identifier */
-        case H_NT_IDENTIFIER :
-            return exec_identifier( ctx, stackframe, node );
-        /* constant value */
-        case H_NT_CONSTANT   :
-            return node->_constant;
-        /* function definition */
-        case H_NT_FUNCTION   :
-            return exec_function( ctx, stackframe, node );
-        /* function call */
-        case H_NT_CALL       :
-            return htree_function_call( ctx, stackframe, node );
-        /* unary, binary or ternary operator */
-        case H_NT_OPERATOR   :
-            switch( node->_operator ){
-                /* identifier = expression */
-                case ASSIGN    :
-                    return exec_assign( ctx, stackframe, node );
-                /* expression ; */
-                case EOSTMT  :
-                    return exec_eostmt( ctx, stackframe, node );
-                /* if( condition ) */
-                case IF     :
-                    return exec_if( ctx, stackframe, node );
-                /* return */
-                case RETURN :
-                    return exec_return( ctx, stackframe, node );
-                /* $ */
-                case DOLLAR :
-                    return exec_dollar( ctx, stackframe, node );
-                /* * */
-                case PTR :
-                    return exec_pointer( ctx, stackframe, node );
-                case OBJ :
-                    return exec_object( ctx, stackframe, node );
-                /* expression .. expression */
-                case RANGE :
-                    return exec_range( ctx, stackframe, node );
-                /* array[] = object; */
-                case SUBSCRIPTADD :
-                    return exec_subscript_add( ctx, stackframe, node );
-                /* (identifier)? = object[ expression ]; */
-                case SUBSCRIPTGET :
-                    return exec_subscript_get( ctx, stackframe, node );
-                /* object[ expression ] = expression */
-                case SUBSCRIPTSET :
-                    return exec_subscript_set( ctx, stackframe, node );
-                /* while( condition ){ body } */
-                case WHILE  :
-                    return exec_while( ctx, stackframe, node );
-                /* do{ body }while( condition ); */
-                case DO  :
-                    return exec_do( ctx, stackframe, node );
-                /* for( initialization; condition; variance ){ body } */
-                case FOR    :
-                    return exec_for( ctx, stackframe, node );
-                /* foreach( item of array ) */
-                case FOREACH :
-                    return exec_foreach( ctx, stackframe, node );
-                /* foreach( label -> item of map ) */
-                case FOREACHM :
-                    return exec_foreachm( ctx, stackframe, node );
-                break;
-                /* (condition ? expression : expression) */
-                case QUESTION :
-                    return exec_question( ctx, stackframe, node );
-                /* expression.expression */
-                case DOT    :
-                    return exec_dot( ctx, stackframe, node );
-                /* expression .= expression */
-                case DOTE   :
-                    return exec_dote( ctx, stackframe, node );
-                /* -expression */
-                case UMINUS :
-                    return exec_uminus( ctx, stackframe, node );
-                /* expression ~= expression */
-                case REGEX_OP :
-                    return exec_regex( ctx, stackframe, node );
-                /* expression + expression */
-                case PLUS    :
-                    return exec_plus( ctx, stackframe, node );
-                /* expression += expression */
-                case PLUSE   :
-                    return exec_pluse( ctx, stackframe, node );
-                /* expression - expression */
-                case MINUS    :
-                    return exec_minus( ctx, stackframe, node );
-                /* expression -= expression */
-                case MINUSE   :
-                    return exec_minuse( ctx, stackframe, node );
-                /* expression * expression */
-                case MUL	:
-                    return exec_mul( ctx, stackframe, node );
-                /* expression *= expression */
-                case MULE	:
-                    return exec_mule( ctx, stackframe, node );
-                /* expression / expression */
-                case DIV    :
-                    return exec_div( ctx, stackframe, node );
-                /* expression /= expression */
-                case DIVE   :
-                    return exec_dive( ctx, stackframe, node );
-                /* expression % expression */
-                case MOD    :
-                    return exec_mod( ctx, stackframe, node );
-                /* expression %= expression */
-                case MODE   :
-                    return exec_mode( ctx, stackframe, node );
-                /* expression++ */
-                case INC    :
-                    return exec_inc( ctx, stackframe, node );
-                /* expression-- */
-                case DEC    :
-                    return exec_dec( ctx, stackframe, node );
-                /* expression ^ expression */
-                case XOR    :
-                    return exec_xor( ctx, stackframe, node );
-                /* expression ^= expression */
-                case XORE   :
-                    return exec_xore( ctx, stackframe, node );
-                /* expression & expression */
-                case AND    :
-                    return exec_and( ctx, stackframe, node );
-                /* expression &= expression */
-                case ANDE   :
-                    return exec_ande( ctx, stackframe, node );
-                /* expression | expression */
-                case OR     :
-                    return exec_or( ctx, stackframe, node );
-                /* expression |= expression */
-                case ORE    :
-                    return exec_ore( ctx, stackframe, node );
-                /* expression << expression */
-                case SHIFTL  :
-                    return exec_shiftl( ctx, stackframe, node );
-                /* expression <<= expression */
-                case SHIFTLE :
-                    return exec_shiftle( ctx, stackframe, node );
-                /* expression >> expression */
-                case SHIFTR  :
-                    return exec_shiftr( ctx, stackframe, node );
-                /* expression >>= expression */
-                case SHIFTRE :
-                    return exec_shiftre( ctx, stackframe, node );
-                /* expression! */
-                case FACT :
-                    return exec_fact( ctx, stackframe, node );
-                /* ~expression */
-                case NOT    :
-                    return exec_not( ctx, stackframe, node );
-                /* !expression */
-                case LNOT   :
-                    return exec_lnot( ctx, stackframe, node );
-                /* expression < expression */
-                case LESS    :
-                    return exec_less( ctx, stackframe, node );
-                /* expression > expression */
-                case GREATER    :
-                    return exec_greater( ctx, stackframe, node );
-                /* expression >= expression */
-                case GE     :
-                    return exec_ge( ctx, stackframe, node );
-                /* expression <= expression */
-                case LE     :
-                    return exec_le( ctx, stackframe, node );
-                /* expression != expression */
-                case NE     :
-                    return exec_ne( ctx, stackframe, node );
-                /* expression == expression */
-                case EQ     :
-                    return exec_eq( ctx, stackframe, node );
-                /* expression && expression */
-                case LAND   :
-                    return exec_land( ctx, stackframe, node );
-                /* expression || expression */
-                case LOR    :
-                    return exec_lor( ctx, stackframe, node );
-            }
-    }
-
-    return H_UNDEFINED;
-}
-
-void hsignal_handler( int signo ) {
+void h_signal_handler( int signo ) {
     if( signo == SIGSEGV ){
         extern h_context_t HCTX;
         HCTX.args.stacktrace = 1;
@@ -627,7 +216,10 @@ void h_env_init( h_context_t *ctx, int argc, char *argv[] ){
     ctx->th_mutex = PTHREAD_MUTEX_INITIALIZER;
     #endif
 
-    signal( SIGSEGV, hsignal_handler );
+    /* initialize tree executor */
+    ctx->executor = new Executor( ctx );
+
+    signal( SIGSEGV, h_signal_handler );
 }
 
 void h_env_release( h_context_t *ctx, int onerror /*= 0*/ ){
@@ -649,6 +241,8 @@ void h_env_release( h_context_t *ctx, int onerror /*= 0*/ ){
     }
 
     ctx->builtins.clear();
+
+    delete ctx->executor;
 
     hybris_vm_release( &ctx->vmem );
     hybris_vc_release( &ctx->vcode );

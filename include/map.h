@@ -38,8 +38,8 @@ H_TEMPLATE_T class Map {
 private :
 
     struct map_pair {
-        string   label;
-        value_t *value;
+        string        label;
+        value_t      *value;
 
         map_pair( char *l, value_t *v ) :
             label(l),
