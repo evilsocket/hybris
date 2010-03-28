@@ -132,6 +132,7 @@ void h_env_init( h_context_t *ctx, int argc, char *argv[] ){
 	HYBRIS_DEFINE_BUILTIN( ctx, "mappop", hmappop );
 	HYBRIS_DEFINE_BUILTIN( ctx, "unmap", hunmap );
 	HYBRIS_DEFINE_BUILTIN( ctx, "ismapped", hismapped );
+	HYBRIS_DEFINE_BUILTIN( ctx, "haskey", hhaskey );
 	HYBRIS_DEFINE_BUILTIN( ctx, "strlen", hstrlen );
 	HYBRIS_DEFINE_BUILTIN( ctx, "strfind", hstrfind );
 	HYBRIS_DEFINE_BUILTIN( ctx, "substr", hsubstr );
@@ -160,13 +161,11 @@ void h_env_init( h_context_t *ctx, int argc, char *argv[] ){
 	HYBRIS_DEFINE_BUILTIN( ctx, "user_functions", huser_functions );
 	HYBRIS_DEFINE_BUILTIN( ctx, "core_functions", hcore_functions );
 	HYBRIS_DEFINE_BUILTIN( ctx, "dyn_functions",  hdyn_functions );
-	#ifndef _LP64
 	HYBRIS_DEFINE_BUILTIN( ctx, "call", hcall );
 	HYBRIS_DEFINE_BUILTIN( ctx, "dllopen", hdllopen );
     HYBRIS_DEFINE_BUILTIN( ctx, "dlllink", hdlllink );
     HYBRIS_DEFINE_BUILTIN( ctx, "dllcall", hdllcall );
     HYBRIS_DEFINE_BUILTIN( ctx, "dllclose", hdllclose );
-	#endif
 	HYBRIS_DEFINE_BUILTIN( ctx, "ticks", hticks );
 	HYBRIS_DEFINE_BUILTIN( ctx, "usleep", husleep );
 	HYBRIS_DEFINE_BUILTIN( ctx, "sleep", hsleep );

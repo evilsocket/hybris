@@ -160,6 +160,7 @@ HYBRIS_BUILTIN(hmapelements);
 HYBRIS_BUILTIN(hmappop);
 HYBRIS_BUILTIN(hunmap);
 HYBRIS_BUILTIN(hismapped);
+HYBRIS_BUILTIN(hhaskey);
 /* string.cc */
 HYBRIS_BUILTIN(hstrlen);
 HYBRIS_BUILTIN(hstrfind);
@@ -197,16 +198,13 @@ HYBRIS_BUILTIN(hvar_values);
 HYBRIS_BUILTIN(huser_functions);
 HYBRIS_BUILTIN(hcore_functions);
 HYBRIS_BUILTIN(hdyn_functions);
-#ifndef _LP64
 HYBRIS_BUILTIN(hcall);
-#endif
 /* dll.cc */
-#ifndef _LP64
 HYBRIS_BUILTIN(hdllopen);
 HYBRIS_BUILTIN(hdlllink);
 HYBRIS_BUILTIN(hdllcall);
 HYBRIS_BUILTIN(hdllclose);
-#endif
+
 /* time.cc */
 HYBRIS_BUILTIN(hticks);
 HYBRIS_BUILTIN(husleep);

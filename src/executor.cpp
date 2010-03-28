@@ -427,7 +427,6 @@ Object *Executor::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 
         /* return function evaluation value */
         return _return;
     }
-    #ifndef _LP64
     /* finally check if the function is an extern identifier loaded by dll importing routines */
     else{
         Object *external;
@@ -457,7 +456,9 @@ Object *Executor::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 
             if( value != H_UNDEFINED ){
                 value->setGarbageAttribute( ~H_OA_GARBAGE );
             }
-            stack.insert( HANONYMOUSIDENTIFIER, value );
+            char tmp[0xFF] = {0};
+            sprintf( tmp, "%s%d", HANONYMOUSIDENTIFIER, i );
+            stack.insert( tmp, value );
         }
 
         #ifdef MT_SUPPORT
@@ -493,7 +494,6 @@ Object *Executor::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 
         /* return function evaluation value */
         return _return;
     }
-    #endif
 }
 
 Object *Executor::onDollar( vframe_t *frame, Node *node ){

@@ -77,3 +77,21 @@ HYBRIS_BUILTIN(hismapped){
 	return new Object( static_cast<long>(-1) );
 }
 
+HYBRIS_BUILTIN(hhaskey){
+	if( data->size() != 2 ){
+		hybris_syntax_error( "function 'haskey' requires 2 parameters (called with %d)", data->size() );
+	}
+	htype_assert( data->at(0), H_OT_MAP );
+
+	Object *map = data->at(0),
+           *key = data->at(1);
+	unsigned int i;
+
+	for( i = 0; i < map->xmap.size(); i++ ){
+		if( map->xmap[i]->equals(key) ){
+			return new Object( static_cast<long>(i) );
+		}
+	}
+
+	return new Object( static_cast<long>(-1) );
+}

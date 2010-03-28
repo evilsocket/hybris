@@ -79,7 +79,8 @@ if test "x${ac_enble_mdbg}" == xyes; then
 fi
 
 # Checks for libraries.
-AC_CHECK_LIB( [dl], [dlsym], [], [AC_MSG_ERROR([libdl is missing])] ) 
+AC_CHECK_LIB( [dl],  [dlsym],        [], [AC_MSG_ERROR([libdl is missing])] ) 
+AC_CHECK_LIB( [ffi], [ffi_prep_cif], [], [AC_MSG_ERROR([libffi is missing])] ) 
 # Checks for header files.
 AC_FUNC_ALLOCA
 AC_HEADER_RESOLV

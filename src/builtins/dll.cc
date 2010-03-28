@@ -20,8 +20,9 @@
 #include "vmem.h"
 #include "builtin.h"
 #include <dlfcn.h>
+#include <ffi.h>
 
-#ifndef _LP64
+#define CALL_MAX_ARGS 256
 
 HYBRIS_BUILTIN(hdllopen){
 	if( data->size() != 1 ){
@@ -46,63 +47,68 @@ HYBRIS_BUILTIN(hdlllink){
 
 HYBRIS_BUILTIN(hdllcall){
     if( data->size() < 1 ){
-        hybris_syntax_error( "function 'dllopen' requires at least 1 parameter (called with %d)", data->size() );
+        hybris_syntax_error( "function 'dllcall' requires at least 1 parameter (called with %d)", data->size() );
     }
+    else if( data->size() > CALL_MAX_ARGS + 1 ){
+        hybris_syntax_error( "function 'dllcall' support at max %d parameters (called with %d)", CALL_MAX_ARGS, data->size() );
+    }
+
     htype_assert( data->at(0), H_OT_INT );
 
     typedef int (* function_t)(void);
     function_t function = (function_t)data->at(0)->xint;
 
-    unsigned int ulval;
-    vector<unsigned char *> garbage;
-    unsigned long * stack = new unsigned long[ data->size() - 1 ];
+    ffi_cif    cif;
+    ffi_arg    ul_ret;
+    int        argc( data->size() - 1 );
+    ffi_type  *args_t[CALL_MAX_ARGS];
+	void      *args_v[CALL_MAX_ARGS];
+	vector<unsigned char *> raw_gbc;
+	vector<unsigned long *> ulg_gbc;
+    int    i, j;
     int    iv;
     double fv;
     char   cv;
-    int i, j;
-    /* push in reverse order */
-    for( i = data->size() - 1, j = 0; i >= 1; i--, j++ ){
-        Object        *arg = data->at(i);
-        unsigned char *raw = arg->serialize();
-        garbage.push_back(raw);
+    unsigned char *raw;
+    unsigned long *ulval;
+    Object        *arg;
+
+    for( i = 1, j = 0; i < data->size(); ++i, ++j ){
+        arg   = data->at(i);
+        raw   = arg->serialize();
+        ulval = new unsigned long;
+
+        raw_gbc.push_back(raw);
+        ulg_gbc.push_back(ulval);
+
         switch( arg->xtype ){
-            case H_OT_INT    : memcpy( &iv, raw, sizeof(long) );   ulval = (unsigned long)iv; break;
-            case H_OT_FLOAT  : memcpy( &fv, raw, sizeof(double) ); ulval = (unsigned long)fv; break;
-            case H_OT_CHAR   : memcpy( &cv, raw, sizeof(char) );   ulval = (unsigned long)cv; break;
-            case H_OT_STRING : ulval = (unsigned long)raw; 									  break;
-			case H_OT_MAP    : ulval = (unsigned long)raw; 									  break;
-			case H_OT_ALIAS  : memcpy( &ulval, raw, sizeof(unsigned int) ); 				  break;
+            case H_OT_INT    : memcpy( &iv, raw, sizeof(long) );   *ulval = (unsigned long)iv; break;
+            case H_OT_FLOAT  : memcpy( &fv, raw, sizeof(double) ); *ulval = (unsigned long)fv; break;
+            case H_OT_CHAR   : memcpy( &cv, raw, sizeof(char) );   *ulval = (unsigned long)cv; break;
+            case H_OT_STRING : *ulval = (unsigned long)raw; 								   break;
+			case H_OT_MAP    : *ulval = (unsigned long)raw; 								   break;
+			case H_OT_ALIAS  : memcpy( ulval, raw, sizeof(unsigned long) ); 				   break;
 
             default :
                hybris_syntax_error( "could not use '%s' type for dllcall function", Object::type(arg) );
         }
         /* fill the stack vector */
-        stack[j] = ulval;
+         args_t[j] = &ffi_type_ulong;
+         args_v[j] = ulval;
     }
 
-    /* save all the registers and the stack pointer */
-    unsigned long esp;
-    asm __volatile__ ( "pusha" );
-    asm __volatile__ ( "mov %%esp, %0" :"=m" (esp));
-
-    int loop = data->size() - 1;
-    for( i = 0; i < loop; i++ ){
-        ulval = stack[i];
-        asm __volatile__ ( "push %0" :: "m"(ulval) );
+    if( ffi_prep_cif( &cif, FFI_DEFAULT_ABI, argc, &ffi_type_ulong, args_t ) != FFI_OK ){
+        hybris_generic_error( "ffi_prep_cif failed" );
     }
 
-    ulval = function();
+    ffi_call( &cif, FFI_FN(function), &ul_ret, args_v );
 
-    /* restore registers and stack pointer */
-    asm __volatile__ ( "mov %0, %%esp" :: "m" (esp) );
-    asm __volatile__ ( "popa" );
-
-    delete[] stack;
-    for( int i = 0; i < garbage.size(); i++ ){
-        delete[] garbage[i];
+    for( i = 0; i < argc; ++i ){
+        delete[] raw_gbc[i];
+        delete   ulg_gbc[i];
     }
 
-    return new Object( static_cast<long>(ulval) );
+    return new Object( static_cast<long>(ul_ret) );
 }
 
 HYBRIS_BUILTIN(hdllclose){
@@ -116,4 +122,3 @@ HYBRIS_BUILTIN(hdllclose){
     return new Object( static_cast<long>(0) );
 }
 
-#endif
