@@ -292,7 +292,8 @@ Object *Executor::onFunctionDeclaration( vframe_t *frame, Node *node ){
 
 Object *Executor::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
     vframe_t stack;
-    char function_name[0xFF] = {0};
+    char function_name[0xFF]  = {0},
+         tmp_identifier[0xFF] = {0};
     function_t builtin;
     Node *node, *function, *id, *clone;
     unsigned int i = 0, children;
@@ -456,9 +457,8 @@ Object *Executor::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 
             if( value != H_UNDEFINED ){
                 value->setGarbageAttribute( ~H_OA_GARBAGE );
             }
-            char tmp[0xFF] = {0};
-            sprintf( tmp, "%s%d", HANONYMOUSIDENTIFIER, i );
-            stack.insert( tmp, value );
+            sprintf( tmp_identifier, "%s%d", HANONYMOUSIDENTIFIER, i );
+            stack.insert( tmp_identifier, value );
         }
 
         #ifdef MT_SUPPORT
@@ -1357,4 +1357,3 @@ Object *Executor::onLor( vframe_t *frame, Node *node ){
 
     return c;
 }
-

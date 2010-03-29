@@ -28,6 +28,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _HHASHTABLE_H_
+#   define _HHASHTABLE_H_
+
+
 #include <sys/types.h>         /* includes definition of "ulong", we hope */
 #define ulong u_long
 
@@ -155,3 +159,4 @@ hash_item_t  *ht_next_bucket		 ( hash_table_t *ht );
 /* set eventually predicted hash table size */
 int 		  ht_set_delta_goal_size ( hash_table_t *ht, int delta );
 
+#endif
