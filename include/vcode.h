@@ -16,38 +16,26 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef _HVMEM_H_
-#	define _HVMEM_H_
+#ifndef _HVCODE_H_
+#	define _HVCODE_H_
 
-#include <stdlib.h>
-#include <string.h>
+#include "tree.h"
 #include "map.h"
-#include "object.h"
+#include "vmem.h"
 
-/* helper macro to obtain the address of a pointer */
-#define H_ADDRESS_OF(o)      reinterpret_cast<unsigned long>(o)
-/* default null value for an Object pointer */
-#define H_UNDEFINED          NULL
-/* anonymous identifier to be used upon temporary stacks creation */
-#define HANONYMOUSIDENTIFIER     (char *)"HANONYMOUSIDENTIFIER"
-#define HANONYMOUSIDENTIFIER_FTM (char *)"HANONYMOUSIDENTIFIER%d"
-
-class VirtualMemory : public Map<Object> {
+class VirtualCode : public Map<Node> {
     public :
 
-        VirtualMemory();
-        ~VirtualMemory();
+        VirtualCode();
+        ~VirtualCode();
 
-        Object *get( char *identifier );
-        Object *add( char *identifier, Object *object );
-
-        VirtualMemory *clone();
+        Node *get( char *identifier );
+        Node *add( char *identifier, Node *node );
 
         void release();
 };
 
 /* post type definitions */
-typedef VirtualMemory vmem_t;
-typedef VirtualMemory vframe_t;
+typedef VirtualCode vcode_t;
 
 #endif

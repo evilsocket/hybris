@@ -29,13 +29,11 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="include/builtin.h">
-			<Option target="all" />
-		</Unit>
 		<Unit filename="include/common.h">
 			<Option target="all" />
 		</Unit>
-		<Unit filename="include/executor.h" />
+		<Unit filename="include/context.h" />
+		<Unit filename="include/engine.h" />
 		<Unit filename="include/hashtable.h" />
 		<Unit filename="include/hybris.h" />
 		<Unit filename="include/map.h">
@@ -50,10 +48,8 @@
 		<Unit filename="include/tree.h">
 			<Option target="all" />
 		</Unit>
+		<Unit filename="include/vcode.h" />
 		<Unit filename="include/vmem.h">
-			<Option target="all" />
-		</Unit>
-		<Unit filename="src/builtin.cpp">
 			<Option target="all" />
 		</Unit>
 		<Unit filename="src/builtins/array.cc">
@@ -107,9 +103,9 @@
 		<Unit filename="src/common.cpp">
 			<Option target="all" />
 		</Unit>
-		<Unit filename="src/executor.cpp" />
+		<Unit filename="src/context.cpp" />
+		<Unit filename="src/engine.cpp" />
 		<Unit filename="src/hashtable.cpp" />
-		<Unit filename="src/hybris.cpp" />
 		<Unit filename="src/lexer.l.cpp">
 			<Option target="all" />
 		</Unit>
@@ -125,6 +121,7 @@
 		<Unit filename="src/tree.cpp">
 			<Option target="all" />
 		</Unit>
+		<Unit filename="src/vcode.cpp" />
 		<Unit filename="src/vmem.cpp">
 			<Option target="all" />
 		</Unit>

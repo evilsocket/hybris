@@ -19,29 +19,12 @@
 #ifndef _HHYBRIS_H_
 #   define _HHYBRIS_H_
 
-#include "builtin.h"
+#include "context.h"
 #include "object.h"
 #include "vmem.h"
+#include "vcode.h"
 #include "tree.h"
 #include "common.h"
-
-#define POOL_DEL(tid) pthread_mutex_lock( &ctx->th_mutex ); \
-                        for( int pool_i = 0; pool_i < ctx->th_pool.size(); ++pool_i ){ \
-                            if( ctx->th_pool[pool_i] == tid ){ \
-                                ctx->th_pool.erase( ctx->th_pool.begin() + pool_i ); \
-                                break; \
-                            } \
-                        } \
-                      pthread_mutex_unlock( &ctx->th_mutex )
-
-/* pre declaration of struct _h_context */
-typedef struct _h_context h_context_t;
-
-void    h_env_init    ( h_context_t *ctx, int argc, char *argv[] );
-void    h_env_release ( h_context_t *ctx, int onerror = 0 );
-string  h_trace       ( char *function, vmem_t *stack, int identifiers );
-int     h_file_exists ( char *filename );
-int     h_changepath  ( h_context_t *ctx );
 
 #endif
 

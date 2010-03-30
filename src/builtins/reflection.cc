@@ -16,11 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "builtin.h"
+#include "context.h"
 #include "tree.h"
 #include "lexer.h"
-
-extern Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, int threaded );
 
 HYBRIS_BUILTIN(hvar_names){
 	unsigned int i;
@@ -83,7 +81,7 @@ HYBRIS_BUILTIN(hcall){
 	htype_assert( data->at(0), H_OT_STRING );
 
 	Node *call  = new Node(H_NT_CALL);
-    call->_call = data->at(0)->xstring;
+    call->value.m_call = data->at(0)->xstring;
 	if( data->size() > 1 ){
 		unsigned int i;
 		for( i = 1; i < data->size(); i++ ){
@@ -97,7 +95,7 @@ HYBRIS_BUILTIN(hcall){
 		}
 	}
 
-	Object *_return = ctx->executor->onFunctionCall( data, call, 0 );
+	Object *_return = ctx->engine->onFunctionCall( data, call, 0 );
 	delete call;
 
 	return _return;

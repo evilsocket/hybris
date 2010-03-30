@@ -12,16 +12,9 @@ SOURCES=array.cc dll.cc fileio.cc math.cc netio.cc process.cc reflection.cc time
 OBJECTS=$(SOURCES:.cc=.o)
 LOBJECTS=$(SOURCES:.cc=.lo)
 
-all: dll.o $(SOURCES) $(OBJECTS)
+all: $(SOURCES) $(OBJECTS)
 
-lib: dll.lo $(SOURCES) $(LOBJECTS)
-
-# dllcall could not be optimized due to stack preservation issue
-dll.o: dll.cc
-	$(CC) -c -I../../include/ $(LIBXML_CFLAGS) $(LIBFFI_CFLAGS)  $? -o $@
-
-dll.lo: dll.cc
-	$(CC) -c -I../../include/ -fPIC $(LIBXML_CFLAGS) $(LIBFFI_CFLAGS)  $? -o $@
+lib: $(SOURCES) $(LOBJECTS)
 
 .cc.o:
 	$(CC) -c $< -o $@ $(CFLAGS)

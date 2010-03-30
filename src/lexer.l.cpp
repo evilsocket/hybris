@@ -21,7 +21,7 @@
 #include "tree.h"
 #include "common.h"
 #include "parser.hpp"
-#include "builtin.h"
+#include "context.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -33,9 +33,8 @@ char            *h_handle_string( char delimiter );
 char             h_handle_char( char delimiter );
 function_decl_t *h_handle_function( char * text );
 
-extern int yylineno;
-//extern h_args_t args;
-extern h_context_t __context;
+extern int     yylineno;
+extern Context __context;
 
 %}
 
@@ -95,7 +94,7 @@ include          BEGIN(INCLUSION);
 
     yytext = sptr;
 
-    hmodule_load( &__context, (char *)module.c_str() );
+    __context.load( (char *)module.c_str() );
 }
 
 "#"             { h_skip_line();    }

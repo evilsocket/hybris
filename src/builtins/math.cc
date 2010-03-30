@@ -18,7 +18,7 @@
 */
 #include "common.h"
 #include "vmem.h"
-#include "builtin.h"
+#include "context.h"
 #include <math.h>
 
 HYBRIS_BUILTIN(hacos){

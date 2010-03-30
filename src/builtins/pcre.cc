@@ -18,7 +18,7 @@
 */
 #include "common.h"
 #include "vmem.h"
-#include "builtin.h"
+#include "context.h"
 #include <pcrecpp.h>
 
 HYBRIS_BUILTIN(hrex_match){

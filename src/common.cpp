@@ -19,12 +19,12 @@
 #include "hybris.h"
 #include "common.h"
 #include "vmem.h"
-#include "builtin.h"
+#include "context.h"
 #include <time.h>
 #include <sys/time.h>
 
 void hprint_stacktrace( int force /* = 0 */ ){
-    extern h_context_t __context;
+    extern Context __context;
 
     if( (__context.args.stacktrace && __context.stack_trace.size()) || force ){
         int tail = __context.stack_trace.size() - 1;
@@ -38,19 +38,19 @@ void hprint_stacktrace( int force /* = 0 */ ){
 
 void yyerror( char *error ){
     extern int yylineno;
-    extern h_context_t __context;
+    extern Context __context;
 
     fflush(stderr);
 	if( strchr( error, '\n' ) ){
 		fprintf( stderr, "[LINE %d] %s", yylineno, error );
 		hprint_stacktrace();
-        h_env_release( &__context, 1 );
+        __context.release(1);
     	exit(-1);
 	}
 	else{
 		fprintf( stderr, "[LINE %d] %s .\n", yylineno, error );
 		hprint_stacktrace();
-        h_env_release( &__context, 1 );
+        __context.release(1);
     	exit(-1);
 	}
 }
@@ -59,7 +59,6 @@ void hybris_generic_warning( const char *format, ... ){
     char message[0xFF] = {0},
          error[0xFF] = {0};
     va_list ap;
-    extern h_context_t __context;
 
     va_start( ap, format );
     vsprintf( message, format, ap );
@@ -73,7 +72,7 @@ void hybris_generic_error( const char *format, ... ){
     char message[0xFF] = {0},
          error[0xFF] = {0};
     va_list ap;
-    extern h_context_t __context;
+    extern Context __context;
 
     va_start( ap, format );
     vsprintf( message, format, ap );
@@ -82,7 +81,7 @@ void hybris_generic_error( const char *format, ... ){
     sprintf( error, "\033[22;31mERROR : %s .\n\033[00m", message );
     yyerror(error);
     hprint_stacktrace();
-    h_env_release( &__context, 1 );
+    __context.release(1);
     exit(-1);
 }
 
@@ -91,7 +90,7 @@ void hybris_syntax_error( const char *format, ... ){
          error[0xFF] = {0};
     va_list ap;
     extern int yylineno;
-    extern h_context_t __context;
+    extern Context __context;
 
     va_start( ap, format );
     vsprintf( message, format, ap );
@@ -100,7 +99,7 @@ void hybris_syntax_error( const char *format, ... ){
     sprintf( error, "\033[22;31mSyntax error on line %d : %s .\n\033[00m", yylineno, message );
     yyerror(error);
     hprint_stacktrace();
-    h_env_release( &__context, 1 );
+    __context.release(1);
     exit(-1);
 }
 
@@ -114,6 +113,18 @@ void htype_assert( Object *o, H_OBJECT_TYPE type1, H_OBJECT_TYPE type2 ){
 	if( o->xtype != type1 && o->xtype != type2 ){
 		hybris_syntax_error( "'%s' is not a valid variable type", Object::type(o) );
 	}
+}
+
+
+int h_file_exists( char *filename ){
+    FILE *fp = fopen( filename, "r" );
+    if( fp ){
+        fclose(fp);
+        return 1;
+    }
+    else{
+        return 0;
+    }
 }
 
 unsigned long h_uticks(){

@@ -18,7 +18,7 @@
 */
 #include "common.h"
 #include "vmem.h"
-#include "builtin.h"
+#include "context.h"
 #include <dlfcn.h>
 #include <ffi.h>
 

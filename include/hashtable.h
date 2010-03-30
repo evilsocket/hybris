@@ -33,6 +33,8 @@
 
 
 #include <sys/types.h>         /* includes definition of "ulong", we hope */
+#include <stdio.h>
+
 #define ulong u_long
 
 #ifndef LOG_WORD_SIZE                  /* 5 for 32 bit words, 6 for 64 */

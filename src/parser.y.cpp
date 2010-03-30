@@ -19,14 +19,14 @@
 */
 
 #include "hybris.h"
-#include "executor.h"
+#include "engine.h"
 
 #define YY_(s) (char *)s
 
 extern int yyparse(void);
 extern int yylex(void);
 
-h_context_t   __context;
+Context   __context;
 unsigned long t_start = 0,
               t_end   = 0;
 %}
@@ -83,7 +83,7 @@ program    : body { if( __context.args.do_timing == 1 ){
 body       : body statement { if( __context.args.do_timing == 1 && t_start == 0 ){
                                   t_start = h_uticks();
                               }
-                              __context.executor->exec( &__context.vmem, $2 );
+                              __context.engine->exec( &__context.vmem, $2 );
                               Tree::release($2);
                             }
            | /* empty */ ;
@@ -235,9 +235,6 @@ int h_usage( char *argvz ){
 int main( int argc, char *argv[] ){
     int i, f_offset = 0;
 
-    __context.args.do_timing  = 0;
-    __context.args.stacktrace = 0;
-
     for( i = 0; i < argc; ++i ){
         if( strcmp( argv[i], "--trace" ) == 0 || strcmp( argv[i], "-t" ) == 0 ){
             __context.args.stacktrace = 1;
@@ -262,12 +259,13 @@ int main( int argc, char *argv[] ){
         }
     }
 
-    h_env_init( &__context, argc, argv );
+    __context.init( argc, argv );
 
     extern FILE *yyin;
     yyin = f_offset > 0 ? fopen( __context.args.source, "r") : stdin;
 
-    h_changepath( &__context );
+    __context.chdir();
+
     while( !feof(yyin) ){
         yyparse();
     }
@@ -275,7 +273,7 @@ int main( int argc, char *argv[] ){
         fclose(yyin);
     }
 
-    h_env_release(&__context);
+    __context.release();
 
 
     return 0;

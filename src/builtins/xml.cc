@@ -18,7 +18,7 @@
 */
 #include "common.h"
 #include "vmem.h"
-#include "builtin.h"
+#include "context.h"
 
 int xml_isinvalid( char *str ){
 	if( str != NULL ){

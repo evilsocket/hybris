@@ -18,7 +18,7 @@
 */
 #include "common.h"
 #include "vmem.h"
-#include "builtin.h"
+#include "context.h"
 
 HYBRIS_BUILTIN(hmatrix){
     if( data->size() < 2 ){

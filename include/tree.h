@@ -37,10 +37,14 @@ public :
     static Node *addFloat( double value );
     static Node *addChar( char value );
     static Node *addString( char *value );
+
     static Node *addOperator( int op, int argc, ... );
+
     static Node *addIdentifier( char *id );
+
     static Node *addFunction( function_decl_t *declaration, int argc, ... );
     static Node *addFunction( char *name, int argc, ... );
+
     static Node *addCall( char *name, HNodeList *argv );
 	static Node *addCall( Node *alias, HNodeList *argv );
 

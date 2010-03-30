@@ -53,6 +53,7 @@ void htype_assert( Object *o, H_OBJECT_TYPE type );
 void htype_assert( Object *o, H_OBJECT_TYPE type1, H_OBJECT_TYPE type2 );
 void hprint_stacktrace( int force = 0 );
 
+int           h_file_exists ( char *filename );
 unsigned long h_uticks();
 const char *  h_dtime( unsigned long uticks );
 

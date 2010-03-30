@@ -16,20 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "executor.h"
+#include "engine.h"
 #include "parser.hpp"
 
-Executor::Executor( h_context_t *context ) :
+Engine::Engine( Context *context ) :
     ctx(context),
     vm(&context->vmem),
     vc(&context->vcode) {
 }
 
-Executor::~Executor(){
+Engine::~Engine(){
 
 }
 
-Object *Executor::exec( vframe_t *frame, Node *node ){
+Object *Engine::exec( vframe_t *frame, Node *node ){
     /* skip undefined/null nodes */
     if( node == H_UNDEFINED ){
         return H_UNDEFINED;
@@ -50,7 +50,7 @@ Object *Executor::exec( vframe_t *frame, Node *node ){
             return onFunctionCall( frame, node );
         /* unary, binary or ternary operator */
         case H_NT_OPERATOR   :
-            switch( node->_operator ){
+            switch( node->value.m_operator ){
                 /* identifier = expression */
                 case ASSIGN    :
                     return onAssign( frame, node );
@@ -219,24 +219,24 @@ Object *Executor::exec( vframe_t *frame, Node *node ){
     return H_UNDEFINED;
 }
 
-Node * Executor::findEntryPoint( vframe_t *frame, Node *call, char *name ){
-    char *callname = (char *)call->_call.c_str();
+Node * Engine::findEntryPoint( vframe_t *frame, Node *call, char *name ){
+    char *callname = (char *)call->value.m_call.c_str();
 
     /* search first in the code segment */
 	Node *function = H_UNDEFINED;
-	if( (function = hybris_vc_get( vc, callname )) != H_UNDEFINED ){
+	if( (function = vc->get(callname)) != H_UNDEFINED ){
 	    strcpy( name, callname );
 		return function;
 	}
 	/* then search for a function alias */
 	Object *alias = H_UNDEFINED;
-	if( (alias = hybris_vm_get( frame, callname )) != H_UNDEFINED && alias->xtype == H_OT_ALIAS ){
+	if( (alias = frame->get( callname )) != H_UNDEFINED && alias->xtype == H_OT_ALIAS ){
 	    strcpy( name, vc->label( alias->xalias ) );
 		return vc->at( alias->xalias );
 	}
 	/* try to evaluate the call as an alias itself */
-	if( call->_aliascall != NULL ){
-		alias = exec( frame, call->_aliascall );
+	if( call->value.m_alias_call != NULL ){
+		alias = exec( frame, call->value.m_alias_call );
 		if( alias->xtype == H_OT_ALIAS ){
 		    strcpy( name, vc->label( alias->xalias ) );
 			return vc->find( name );
@@ -246,16 +246,16 @@ Node * Executor::findEntryPoint( vframe_t *frame, Node *call, char *name ){
 	return H_UNDEFINED;
 }
 
-Object *Executor::onIdentifier( vframe_t *frame, Node *node ){
+Object *Engine::onIdentifier( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
     int     idx;
-    char   *identifier = (char *)node->_identifier.c_str();
+    char   *identifier = (char *)node->value.m_identifier.c_str();
 
     // search for the identifier on the function frame
-    o = hybris_vm_get( frame, identifier );
+    o = frame->get( identifier );
     if( o == H_UNDEFINED && H_ADDRESS_OF(frame) != H_ADDRESS_OF(vm) ){
         // search it on the global frame if it's different from local frame
-        o = hybris_vm_get( vm, identifier );
+        o = vm->get( identifier );
     }
     // search for it as a function name
     if( o == H_UNDEFINED ){
@@ -272,231 +272,217 @@ Object *Executor::onIdentifier( vframe_t *frame, Node *node ){
     return o;
 }
 
-Object *Executor::onConstant( vframe_t *frame, Node *node ){
-    return node->_constant;
+Object *Engine::onConstant( vframe_t *frame, Node *node ){
+    return node->value.m_constant;
 }
 
-Object *Executor::onFunctionDeclaration( vframe_t *frame, Node *node ){
+Object *Engine::onFunctionDeclaration( vframe_t *frame, Node *node ){
+    char *function_name = (char *)node->value.m_function.c_str();
+
     /* check for double definition */
-    if( hybris_vc_get( vc, (char *)node->_function.c_str() ) != H_UNDEFINED ){
-        hybris_syntax_error( "function '%s' already defined", node->_function.c_str() );
+    if( vc->get(function_name) != H_UNDEFINED ){
+        hybris_syntax_error( "function '%s' already defined", function_name );
     }
-    else if( hfunction_search( ctx, (char *)node->_function.c_str() ) != H_UNDEFINED ){
-        hybris_syntax_error( "function '%s' already defined as a language builtin", node->_function.c_str() );
+    else if( ctx->getFunction( function_name ) != H_UNDEFINED ){
+        hybris_syntax_error( "function '%s' already defined as a language builtin", function_name );
     }
     /* add the function to the code segment */
-    hybris_vc_add( vc, node );
+    vc->add( function_name, node );
 
     return H_UNDEFINED;
 }
 
-Object *Executor::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
-    vframe_t stack;
-    char function_name[0xFF]  = {0},
-         tmp_identifier[0xFF] = {0};
-    function_t builtin;
-    Node *node, *function, *id, *clone;
-    unsigned int i = 0, children;
-    Object *value = H_UNDEFINED;
-    H_NODE_TYPE type;
-    char *callname = (char *)call->_call.c_str();
+Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
+    char        *callname = (char *)call->value.m_call.c_str();
+    function_t   builtin;
+    Node        *node;
+    vframe_t     stack;
+    unsigned int i(0),
+                 children( call->children() );
+    Object      *value  = H_UNDEFINED,
+                *result = H_UNDEFINED;
 
-    /* check if function is a builtin */
-    builtin = hfunction_search( ctx, callname );
-    if( builtin != H_UNDEFINED ){
-        children = call->children();
-        /* do object assignment */
-        for( i = 0; i < children; ++i ){
-            /* create function stack value */
-            node  = call->child(i);
-            value = exec( frame, node );
-            /* prevent value from being deleted, we'll take care of it */
-            if( value != H_UNDEFINED ){
-                value->setGarbageAttribute( ~H_OA_GARBAGE );
-            }
-            stack.insert( HANONYMOUSIDENTIFIER, value );
-        }
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_lock( &ctx->th_mutex );
-        #endif
-
-        /* fill the stack traceing system */
-        ctx->stack_trace.push_back( h_trace( callname, &stack, 0 ) );
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_unlock( &ctx->th_mutex );
-        #endif
-
-        /* call the function */
-        Object *_return = builtin( ctx, &stack );
-
-        for( i = 0; i < children; i++ ){
-            value = stack.at(i);
-            if( value != H_UNDEFINED && H_IS_NOT_CONSTANT(value) ){
-                delete value;
-            }
-        }
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_lock( &ctx->th_mutex );
-        #endif
-
-        /* remove the call from the stack trace */
-        ctx->stack_trace.pop_back();
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_unlock( &ctx->th_mutex );
-        #endif
-
-        /* return function evaluation value */
-        return _return;
+    if( (builtin = ctx->getFunction( callname )) == H_UNDEFINED ){
+        return H_UNDEFINED;
     }
-    /* check for an user defined function */
-    else if( (function = findEntryPoint( frame, call, function_name )) != H_UNDEFINED ){
-        vector<string> identifiers;
-        unsigned int body = 0;
-        /* a function could be without arguments */
-        if( function->child(0)->type() == H_NT_IDENTIFIER ){
-            id       = function->child(0);
-            children = function->children();
-            type     = id->type();
-
-            for( i = 0; type == H_NT_IDENTIFIER && i < children; ++i ){
-                id = function->child(i);
-                identifiers.push_back( id->_identifier );
-            }
-
-            body = i - 1;
-            identifiers.pop_back();
-		}
-
-        if( identifiers.size() != call->children() ){
-            #ifdef MT_SUPPORT
-            if( threaded ){
-               POOL_DEL( pthread_self() );
-            }
-            #endif
-            hybris_syntax_error( "function '%s' requires %d parameters (called with %d)",
-                                 function->_function.c_str(),
-                                 identifiers.size(),
-                                 call->children() );
+    /* do object assignment */
+    for( i = 0; i < children; ++i ){
+        /* create function stack value */
+        node  = call->child(i);
+        value = exec( frame, node );
+        /* prevent value from being deleted, we'll take care of it */
+        if( value != H_UNDEFINED ){
+            value->setGarbageAttribute( ~H_OA_GARBAGE );
         }
-
-        children = call->children();
-        for( i = 0; i < children; ++i ){
-            clone = call->child(i);
-            value = exec( frame, clone );
-            /* prevent value from being deleted, we'll take care of it */
-            if( value != H_UNDEFINED ){
-                value->setGarbageAttribute( ~H_OA_GARBAGE );
-            }
-            stack.insert( (char *)identifiers[i].c_str(), value );
-        }
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_lock( &ctx->th_mutex );
-        #endif
-
-        /* fill the stack traceing system */
-        ctx->stack_trace.push_back( h_trace( callname, &stack, 0 ) );
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_unlock( &ctx->th_mutex );
-        #endif
-
-        /* call the function */
-        Object *_return = exec( &stack, function->child(body) );
-
-        for( i = 0; i < children; i++ ){
-            value = stack.at(i);
-            if( value != H_UNDEFINED && H_IS_NOT_CONSTANT(value) ){
-                delete value;
-            }
-        }
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_lock( &ctx->th_mutex );
-        #endif
-
-        /* remove the call from the stack trace */
-        ctx->stack_trace.pop_back();
-        #ifdef MT_SUPPORT
-        pthread_mutex_unlock( &ctx->th_mutex );
-        #endif
-
-        /* return function evaluation value */
-        return _return;
+        stack.insert( HANONYMOUSIDENTIFIER, value );
     }
-    /* finally check if the function is an extern identifier loaded by dll importing routines */
-    else{
-        Object *external;
-        if( (external = hybris_vm_get( frame, callname )) == H_UNDEFINED ){
-            #ifdef MT_SUPPORT
-            if( threaded ){
-                POOL_DEL( pthread_self() );
-            }
-            #endif
-            hybris_syntax_error( "'%s' undeclared function identifier", callname );
+
+    ctx->trace( callname, &stack );
+
+    /* call the function */
+    result = builtin( ctx, &stack );
+
+    for( i = 0; i < children; i++ ){
+        value = stack.at(i);
+        if( value != H_UNDEFINED && H_IS_NOT_CONSTANT(value) ){
+            delete value;
         }
-        else if( (external->attributes & H_OA_EXTERN) != H_OA_EXTERN ){
-            #ifdef MT_SUPPORT
-            if( threaded ){
-                POOL_DEL( pthread_self() );
-            }
-            #endif
-           hybris_syntax_error( "'%s' does not name a function", callname );
-        }
-        /* at this point we're sure that it's an external, so build the frame for hdllcall */
-        stack.insert( HANONYMOUSIDENTIFIER, external );
-        children = call->children();
-        for( i = 0; i < children; ++i ){
-            clone = call->child(i);
-            value = exec( frame, clone );
-            /* prevent value from being deleted, we'll take care of it */
-            if( value != H_UNDEFINED ){
-                value->setGarbageAttribute( ~H_OA_GARBAGE );
-            }
-            sprintf( tmp_identifier, "%s%d", HANONYMOUSIDENTIFIER, i );
-            stack.insert( tmp_identifier, value );
-        }
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_lock( &ctx->th_mutex );
-        #endif
-
-        /* fill the stack traceing system */
-        ctx->stack_trace.push_back( h_trace( callname, &stack, 0 ) );
-        #ifdef MT_SUPPORT
-        pthread_mutex_unlock( &ctx->th_mutex );
-        #endif
-
-        /* call the function */
-        Object *_return = hdllcall( ctx, &stack );
-
-        for( i = 0; i < children; i++ ){
-            value = stack.at(i);
-            if( value != H_UNDEFINED && H_IS_NOT_CONSTANT(value) ){
-                delete value;
-            }
-        }
-
-        #ifdef MT_SUPPORT
-        pthread_mutex_lock( &ctx->th_mutex );
-        #endif
-
-        /* remove the call from the stack trace */
-        ctx->stack_trace.pop_back();
-        #ifdef MT_SUPPORT
-        pthread_mutex_unlock( &ctx->th_mutex );
-        #endif
-
-        /* return function evaluation value */
-        return _return;
     }
+
+    ctx->detrace();
+
+    /* return function evaluation value */
+    return (result == H_UNDEFINED ? new Object((unsigned int)0) : result);
 }
 
-Object *Executor::onDollar( vframe_t *frame, Node *node ){
+Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
+    char    *callname             = (char *)call->value.m_call.c_str(),
+             function_name[0xFF]  = {0};
+    Node    *function             = H_UNDEFINED,
+            *identifier           = H_UNDEFINED,
+            *clone                = H_UNDEFINED;
+    vframe_t stack;
+    Object  *value                = H_UNDEFINED,
+            *result               = H_UNDEFINED;
+
+    vector<string> identifiers;
+    unsigned int i, body = 0, children;
+    H_NODE_TYPE type;
+
+    if( (function = findEntryPoint( frame, call, function_name )) == H_UNDEFINED ){
+        return H_UNDEFINED;
+    }
+
+    /* a function could be without arguments */
+    if( function->child(0)->type() == H_NT_IDENTIFIER ){
+        identifier = function->child(0);
+        children   = function->children();
+        type       = identifier->type();
+
+        for( i = 0; type == H_NT_IDENTIFIER && i < children; ++i ){
+            identifier = function->child(i);
+            identifiers.push_back( identifier->value.m_identifier );
+        }
+
+        body = i - 1;
+        identifiers.pop_back();
+    }
+
+    if( identifiers.size() != call->children() ){
+        if( threaded ){
+           ctx->depool();
+        }
+        hybris_syntax_error( "function '%s' requires %d parameters (called with %d)",
+                             function->value.m_function.c_str(),
+                             identifiers.size(),
+                             call->children() );
+    }
+
+    children = call->children();
+    for( i = 0; i < children; ++i ){
+        clone = call->child(i);
+        value = exec( frame, clone );
+        /* prevent value from being deleted, we'll take care of it */
+        if( value != H_UNDEFINED ){
+            value->setGarbageAttribute( ~H_OA_GARBAGE );
+        }
+        stack.insert( (char *)identifiers[i].c_str(), value );
+    }
+
+    ctx->trace( callname, &stack );
+
+    /* call the function */
+    result = exec( &stack, function->child(body) );
+
+    for( i = 0; i < children; i++ ){
+        value = stack.at(i);
+        if( value != H_UNDEFINED && H_IS_NOT_CONSTANT(value) ){
+            delete value;
+        }
+    }
+
+    ctx->detrace();
+
+    /* return function evaluation value */
+    return (result == H_UNDEFINED ? new Object((unsigned int)0) : result);
+}
+
+Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
+    char    *callname         = (char *)call->value.m_call.c_str(),
+             identifier[0xFF] = {0};
+    vframe_t stack;
+    Node    *clone            = H_UNDEFINED;
+    Object  *value            = H_UNDEFINED,
+            *result           = H_UNDEFINED,
+            *fn_pointer       = H_UNDEFINED;
+    unsigned int children,
+                 i;
+
+    if( (fn_pointer = frame->get( callname )) == H_UNDEFINED ){
+        if( threaded ){
+            ctx->depool();
+        }
+        return H_UNDEFINED;
+    }
+    else if( (fn_pointer->attributes & H_OA_EXTERN) != H_OA_EXTERN ){
+        if( threaded ){
+            ctx->depool();
+        }
+        return H_UNDEFINED;
+    }
+
+    /* at this point we're sure that it's an extern function pointer, so build the frame for hdllcall */
+    stack.insert( HANONYMOUSIDENTIFIER, fn_pointer );
+    children = call->children();
+    for( i = 0; i < children; ++i ){
+        clone = call->child(i);
+        value = exec( frame, clone );
+        /* prevent value from being deleted, we'll take care of it */
+        if( value != H_UNDEFINED ){
+            value->setGarbageAttribute( ~H_OA_GARBAGE );
+        }
+
+        // create a temporary identifier to not overwrite the function pointer itself
+        sprintf( identifier, "%s%d", HANONYMOUSIDENTIFIER, i );
+        stack.insert( identifier, value );
+    }
+
+    ctx->trace( callname, &stack );
+
+    /* call the function */
+    result = hdllcall( ctx, &stack );
+
+    for( i = 0; i < children; i++ ){
+        value = stack.at(i);
+        if( value != H_UNDEFINED && H_IS_NOT_CONSTANT(value) ){
+            delete value;
+        }
+    }
+
+    ctx->detrace();
+
+    /* return function evaluation value */
+    return (result == H_UNDEFINED ? new Object((unsigned int)0) : result);
+}
+
+Object *Engine::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
+    Object *result   = H_UNDEFINED;
+
+    /* check if function is a builtin */
+    if( (result = onBuiltinFunctionCall( frame, call )) == H_UNDEFINED ){
+        /* check for an user defined function */
+        if( (result = onUserFunctionCall( frame, call, threaded )) == H_UNDEFINED ){
+            /* finally check if the function is an extern identifier loaded by dll importing routines */
+            if( (result = onDllFunctionCall( frame, call, threaded )) == H_UNDEFINED ){
+                hybris_syntax_error( "'%s' undeclared function identifier", call->value.m_call.c_str() );
+            }
+        }
+    }
+
+    return result;
+}
+
+Object *Engine::onDollar( vframe_t *frame, Node *node ){
     Object *o    = H_UNDEFINED,
            *name = H_UNDEFINED;
 
@@ -505,7 +491,7 @@ Object *Executor::onDollar( vframe_t *frame, Node *node ){
 
     H_FREE_GARBAGE(o);
 
-    if( (o = hybris_vm_get( frame, (char *)name->xstring.c_str() )) == H_UNDEFINED ){
+    if( (o = frame->get( (char *)name->xstring.c_str() )) == H_UNDEFINED ){
         hybris_syntax_error( "'%s' undeclared identifier", (char *)name->xstring.c_str() );
     }
 
@@ -514,7 +500,7 @@ Object *Executor::onDollar( vframe_t *frame, Node *node ){
     return o;
 }
 
-Object *Executor::onPointer( vframe_t *frame, Node *node ){
+Object *Engine::onPointer( vframe_t *frame, Node *node ){
     Object *o   = H_UNDEFINED,
            *res = H_UNDEFINED;
 
@@ -526,7 +512,7 @@ Object *Executor::onPointer( vframe_t *frame, Node *node ){
     return res;
 }
 
-Object *Executor::onObject( vframe_t *frame, Node *node ){
+Object *Engine::onObject( vframe_t *frame, Node *node ){
     Object *o   = H_UNDEFINED,
            *res = H_UNDEFINED;
 
@@ -538,14 +524,14 @@ Object *Executor::onObject( vframe_t *frame, Node *node ){
     return res;
 }
 
-Object *Executor::onReturn( vframe_t *frame, Node *node ){
+Object *Engine::onReturn( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
     o = exec(  frame, node->child(0) );
     return o;
 }
 
-Object *Executor::onRange( vframe_t *frame, Node *node ){
+Object *Engine::onRange( vframe_t *frame, Node *node ){
     Object *range = H_UNDEFINED,
            *from  = H_UNDEFINED,
            *to    = H_UNDEFINED;
@@ -560,7 +546,7 @@ Object *Executor::onRange( vframe_t *frame, Node *node ){
     return range;
 }
 
-Object *Executor::onSubscriptAdd( vframe_t *frame, Node *node ){
+Object *Engine::onSubscriptAdd( vframe_t *frame, Node *node ){
     Object *array  = H_UNDEFINED,
            *object = H_UNDEFINED,
            *res    = H_UNDEFINED;
@@ -575,7 +561,7 @@ Object *Executor::onSubscriptAdd( vframe_t *frame, Node *node ){
     return res;
 }
 
-Object *Executor::onSubscriptGet( vframe_t *frame, Node *node ){
+Object *Engine::onSubscriptGet( vframe_t *frame, Node *node ){
     Object *identifier = H_UNDEFINED,
            *array      = H_UNDEFINED,
            *index      = H_UNDEFINED,
@@ -601,7 +587,7 @@ Object *Executor::onSubscriptGet( vframe_t *frame, Node *node ){
     return result;
 }
 
-Object *Executor::onSubscriptSet( vframe_t *frame, Node *node ){
+Object *Engine::onSubscriptSet( vframe_t *frame, Node *node ){
     Object *array  = H_UNDEFINED,
            *index  = H_UNDEFINED,
            *object = H_UNDEFINED;
@@ -618,7 +604,7 @@ Object *Executor::onSubscriptSet( vframe_t *frame, Node *node ){
     return array;
 }
 
-Object *Executor::onWhile( vframe_t *frame, Node *node ){
+Object *Engine::onWhile( vframe_t *frame, Node *node ){
     Node *condition,
          *body;
 
@@ -638,7 +624,7 @@ Object *Executor::onWhile( vframe_t *frame, Node *node ){
     return H_UNDEFINED;
 }
 
-Object *Executor::onDo( vframe_t *frame, Node *node ){
+Object *Engine::onDo( vframe_t *frame, Node *node ){
     Node *condition,
          *body;
 
@@ -660,7 +646,7 @@ Object *Executor::onDo( vframe_t *frame, Node *node ){
     return H_UNDEFINED;
 }
 
-Object *Executor::onFor( vframe_t *frame, Node *node ){
+Object *Engine::onFor( vframe_t *frame, Node *node ){
     Node *condition,
          *increment,
          *body;
@@ -691,20 +677,20 @@ Object *Executor::onFor( vframe_t *frame, Node *node ){
     return H_UNDEFINED;
 }
 
-Object *Executor::onForeach( vframe_t *frame, Node *node ){
+Object *Engine::onForeach( vframe_t *frame, Node *node ){
     int     i, size;
     Node   *body;
     Object *map    = H_UNDEFINED,
            *result = H_UNDEFINED;
     char   *identifier;
 
-    identifier = (char *)node->child(0)->_identifier.c_str();
+    identifier = (char *)node->child(0)->value.m_identifier.c_str();
     map        = exec( frame, node->child(1) );
     body       = node->child(2);
     size       = map->xarray.size();
 
     for( i = 0; i < size; ++i ){
-        hybris_vm_add( frame, identifier, map->xarray[i] );
+        frame->add( identifier, map->xarray[i] );
         result = exec( frame, body );
         H_FREE_GARBAGE(result);
     }
@@ -714,7 +700,7 @@ Object *Executor::onForeach( vframe_t *frame, Node *node ){
     return H_UNDEFINED;
 }
 
-Object *Executor::onForeachm( vframe_t *frame, Node *node ){
+Object *Engine::onForeachm( vframe_t *frame, Node *node ){
     int     i, size;
     Node   *body;
     Object *map    = H_UNDEFINED,
@@ -722,15 +708,15 @@ Object *Executor::onForeachm( vframe_t *frame, Node *node ){
     char   *key_identifier,
            *value_identifier;
 
-    key_identifier   = (char *)node->child(0)->_identifier.c_str();
-    value_identifier = (char *)node->child(1)->_identifier.c_str();
+    key_identifier   = (char *)node->child(0)->value.m_identifier.c_str();
+    value_identifier = (char *)node->child(1)->value.m_identifier.c_str();
     map              = exec( frame, node->child(2) );
     body             = node->child(3);
     size             = map->xmap.size();
 
     for( i = 0; i < size; ++i ){
-        hybris_vm_add( frame, key_identifier,   map->xmap[i] );
-        hybris_vm_add( frame, value_identifier, map->xarray[i] );
+        frame->add( key_identifier,   map->xmap[i] );
+        frame->add( value_identifier, map->xarray[i] );
         result = exec(  frame, body );
         H_FREE_GARBAGE(result);
     }
@@ -740,7 +726,7 @@ Object *Executor::onForeachm( vframe_t *frame, Node *node ){
     return H_UNDEFINED;
 }
 
-Object *Executor::onIf( vframe_t *frame, Node *node ){
+Object *Engine::onIf( vframe_t *frame, Node *node ){
     Object *boolean = H_UNDEFINED,
            *result  = H_UNDEFINED;
 
@@ -760,7 +746,7 @@ Object *Executor::onIf( vframe_t *frame, Node *node ){
     return H_UNDEFINED;
 }
 
-Object *Executor::onQuestion( vframe_t *frame, Node *node ){
+Object *Engine::onQuestion( vframe_t *frame, Node *node ){
     Object *boolean = H_UNDEFINED,
            *result  = H_UNDEFINED;
 
@@ -778,7 +764,7 @@ Object *Executor::onQuestion( vframe_t *frame, Node *node ){
     return result;
 }
 
-Object *Executor::onEostmt( vframe_t *frame, Node *node ){
+Object *Engine::onEostmt( vframe_t *frame, Node *node ){
     Object *res_1 = H_UNDEFINED,
            *res_2 = H_UNDEFINED;
 
@@ -790,7 +776,7 @@ Object *Executor::onEostmt( vframe_t *frame, Node *node ){
     return res_2;
 }
 
-Object *Executor::onDot( vframe_t *frame, Node *node ){
+Object *Engine::onDot( vframe_t *frame, Node *node ){
     Object *a      = H_UNDEFINED,
            *b      = H_UNDEFINED,
            *result = H_UNDEFINED;
@@ -805,13 +791,13 @@ Object *Executor::onDot( vframe_t *frame, Node *node ){
     return result;
 }
 
-Object *Executor::onDote( vframe_t *frame, Node *node ){
+Object *Engine::onDote( vframe_t *frame, Node *node ){
     Object *a      = H_UNDEFINED,
            *b      = H_UNDEFINED,
            *result = H_UNDEFINED;
 
-    if( (a = hybris_vm_get( frame, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->_identifier.c_str() );
+    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
+        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
     }
 
     b      = exec( frame, node->child(1) );
@@ -823,19 +809,19 @@ Object *Executor::onDote( vframe_t *frame, Node *node ){
     return result;
 }
 
-Object *Executor::onAssign( vframe_t *frame, Node *node ){
+Object *Engine::onAssign( vframe_t *frame, Node *node ){
     Object *object = H_UNDEFINED,
            *value  = H_UNDEFINED;
 
     value  = exec(  frame, node->child(1) );
-    object = hybris_vm_add( frame, (char *)node->child(0)->_identifier.c_str(), value );
+    object = frame->add( (char *)node->child(0)->value.m_identifier.c_str(), value );
 
     H_FREE_GARBAGE(value);
 
     return object;
 }
 
-Object *Executor::onUminus( vframe_t *frame, Node *node ){
+Object *Engine::onUminus( vframe_t *frame, Node *node ){
     Object *o      = H_UNDEFINED,
            *result = H_UNDEFINED;
 
@@ -847,7 +833,7 @@ Object *Executor::onUminus( vframe_t *frame, Node *node ){
     return result;
 }
 
-Object *Executor::onRegex( vframe_t *frame, Node *node ){
+Object *Engine::onRegex( vframe_t *frame, Node *node ){
     Object *o      = H_UNDEFINED,
            *regexp = H_UNDEFINED,
            *result = H_UNDEFINED;
@@ -862,7 +848,7 @@ Object *Executor::onRegex( vframe_t *frame, Node *node ){
     return result;
 }
 
-Object *Executor::onPlus( vframe_t *frame, Node *node ){
+Object *Engine::onPlus( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -877,12 +863,12 @@ Object *Executor::onPlus( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onPluse( vframe_t *frame, Node *node ){
+Object *Engine::onPluse( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = hybris_vm_get( frame, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->_identifier.c_str() );
+    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
+        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
     }
 
     b = exec( frame, node->child(1) );
@@ -894,7 +880,7 @@ Object *Executor::onPluse( vframe_t *frame, Node *node ){
     return a;
 }
 
-Object *Executor::onMinus( vframe_t *frame, Node *node ){
+Object *Engine::onMinus( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -909,12 +895,12 @@ Object *Executor::onMinus( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onMinuse( vframe_t *frame, Node *node ){
+Object *Engine::onMinuse( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = hybris_vm_get( frame, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->_identifier.c_str() );
+    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
+        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
     }
 
     b = exec( frame, node->child(1) );
@@ -926,7 +912,7 @@ Object *Executor::onMinuse( vframe_t *frame, Node *node ){
     return a;
 }
 
-Object *Executor::onMul( vframe_t *frame, Node *node ){
+Object *Engine::onMul( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -941,12 +927,12 @@ Object *Executor::onMul( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onMule( vframe_t *frame, Node *node ){
+Object *Engine::onMule( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = hybris_vm_get( frame, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->_identifier.c_str() );
+    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
+        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
     }
 
     b = exec( frame, node->child(1) );
@@ -958,7 +944,7 @@ Object *Executor::onMule( vframe_t *frame, Node *node ){
     return a;
 }
 
-Object *Executor::onDiv( vframe_t *frame, Node *node ){
+Object *Engine::onDiv( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -973,12 +959,12 @@ Object *Executor::onDiv( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onDive( vframe_t *frame, Node *node ){
+Object *Engine::onDive( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = hybris_vm_get( frame, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->_identifier.c_str() );
+    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
+        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
     }
 
     b = exec( frame, node->child(1) );
@@ -990,7 +976,7 @@ Object *Executor::onDive( vframe_t *frame, Node *node ){
     return a;
 }
 
-Object *Executor::onMod( vframe_t *frame, Node *node ){
+Object *Engine::onMod( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -1005,12 +991,12 @@ Object *Executor::onMod( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onMode( vframe_t *frame, Node *node ){
+Object *Engine::onMode( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = hybris_vm_get( frame, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->_identifier.c_str() );
+    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
+        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
     }
 
     b = exec( frame, node->child(1) );
@@ -1022,27 +1008,27 @@ Object *Executor::onMode( vframe_t *frame, Node *node ){
     return a;
 }
 
-Object *Executor::onInc( vframe_t *frame, Node *node ){
+Object *Engine::onInc( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
-    if( (o = hybris_vm_get( frame, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", (char *)node->child(0)->_identifier.c_str() );
+    if( (o = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
+        hybris_syntax_error( "'%s' undeclared identifier", (char *)node->child(0)->value.m_identifier.c_str() );
     }
     ++(*o);
     return o;
 }
 
-Object *Executor::onDec( vframe_t *frame, Node *node ){
+Object *Engine::onDec( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
-    if( (o = hybris_vm_get( frame, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", (char *)node->child(0)->_identifier.c_str() );
+    if( (o = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
+        hybris_syntax_error( "'%s' undeclared identifier", (char *)node->child(0)->value.m_identifier.c_str() );
     }
     --(*o);
     return o;
 }
 
-Object *Executor::onXor( vframe_t *frame, Node *node ){
+Object *Engine::onXor( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -1057,12 +1043,12 @@ Object *Executor::onXor( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onXore( vframe_t *frame, Node *node ){
+Object *Engine::onXore( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = hybris_vm_get( frame, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->_identifier.c_str() );
+    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
+        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
     }
 
     b = exec( frame, node->child(1) );
@@ -1074,7 +1060,7 @@ Object *Executor::onXore( vframe_t *frame, Node *node ){
     return a;
 }
 
-Object *Executor::onAnd( vframe_t *frame, Node *node ){
+Object *Engine::onAnd( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -1089,12 +1075,12 @@ Object *Executor::onAnd( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onAnde( vframe_t *frame, Node *node ){
+Object *Engine::onAnde( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = hybris_vm_get( frame, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->_identifier.c_str() );
+    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
+        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
     }
 
     b = exec( frame, node->child(1) );
@@ -1106,7 +1092,7 @@ Object *Executor::onAnde( vframe_t *frame, Node *node ){
     return a;
 }
 
-Object *Executor::onOr( vframe_t *frame, Node *node ){
+Object *Engine::onOr( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -1121,12 +1107,12 @@ Object *Executor::onOr( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onOre( vframe_t *frame, Node *node ){
+Object *Engine::onOre( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = hybris_vm_get( frame, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->_identifier.c_str() );
+    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
+        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
     }
 
     b = exec( frame, node->child(1) );
@@ -1138,7 +1124,7 @@ Object *Executor::onOre( vframe_t *frame, Node *node ){
     return a;
 }
 
-Object *Executor::onShiftl( vframe_t *frame, Node *node ){
+Object *Engine::onShiftl( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -1153,12 +1139,12 @@ Object *Executor::onShiftl( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onShiftle( vframe_t *frame, Node *node ){
+Object *Engine::onShiftle( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = hybris_vm_get( frame, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->_identifier.c_str() );
+    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
+        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
     }
 
     b = exec( frame, node->child(1) );
@@ -1170,7 +1156,7 @@ Object *Executor::onShiftle( vframe_t *frame, Node *node ){
     return a;
 }
 
-Object *Executor::onShiftr( vframe_t *frame, Node *node ){
+Object *Engine::onShiftr( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -1185,12 +1171,12 @@ Object *Executor::onShiftr( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onShiftre( vframe_t *frame, Node *node ){
+Object *Engine::onShiftre( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = hybris_vm_get( frame, (char *)node->child(0)->_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->_identifier.c_str() );
+    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
+        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
     }
 
     b = exec( frame, node->child(1) );
@@ -1202,7 +1188,7 @@ Object *Executor::onShiftre( vframe_t *frame, Node *node ){
     return a;
 }
 
-Object *Executor::onFact( vframe_t *frame, Node *node ){
+Object *Engine::onFact( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED,
            *r = H_UNDEFINED;
 
@@ -1214,7 +1200,7 @@ Object *Executor::onFact( vframe_t *frame, Node *node ){
     return r;
 }
 
-Object *Executor::onNot( vframe_t *frame, Node *node ){
+Object *Engine::onNot( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED,
            *r = H_UNDEFINED;
 
@@ -1226,7 +1212,7 @@ Object *Executor::onNot( vframe_t *frame, Node *node ){
     return r;
 }
 
-Object *Executor::onLnot( vframe_t *frame, Node *node ){
+Object *Engine::onLnot( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED,
            *r = H_UNDEFINED;
 
@@ -1238,7 +1224,7 @@ Object *Executor::onLnot( vframe_t *frame, Node *node ){
     return r;
 }
 
-Object *Executor::onLess( vframe_t *frame, Node *node ){
+Object *Engine::onLess( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -1253,7 +1239,7 @@ Object *Executor::onLess( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onGreater( vframe_t *frame, Node *node ){
+Object *Engine::onGreater( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -1268,7 +1254,7 @@ Object *Executor::onGreater( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onGe( vframe_t *frame, Node *node ){
+Object *Engine::onGe( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -1283,7 +1269,7 @@ Object *Executor::onGe( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onLe( vframe_t *frame, Node *node ){
+Object *Engine::onLe( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -1298,7 +1284,7 @@ Object *Executor::onLe( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onNe( vframe_t *frame, Node *node ){
+Object *Engine::onNe( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -1313,7 +1299,7 @@ Object *Executor::onNe( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onEq( vframe_t *frame, Node *node ){
+Object *Engine::onEq( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -1328,7 +1314,7 @@ Object *Executor::onEq( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onLand( vframe_t *frame, Node *node ){
+Object *Engine::onLand( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -1343,7 +1329,7 @@ Object *Executor::onLand( vframe_t *frame, Node *node ){
     return c;
 }
 
-Object *Executor::onLor( vframe_t *frame, Node *node ){
+Object *Engine::onLor( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;

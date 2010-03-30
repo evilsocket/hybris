@@ -19,6 +19,7 @@
 #ifndef _HNODE_H_
 #	define _HNODE_H_
 
+
 #include "common.h"
 #include <vector>
 #include <list>
@@ -37,6 +38,25 @@ typedef unsigned short H_NODE_TYPE;
 #define H_NT_FUNCTION   4
 #define H_NT_CALL       5
 
+/* pre declaration of class Node */
+class  Node;
+
+/* possible values for a generic node */
+class NodeValue {
+    public :
+
+        Object *m_constant;
+        string  m_identifier;
+        int     m_operator;
+        string  m_function;
+        string  m_call;
+        Node   *m_alias_call;
+
+        NodeValue();
+        ~NodeValue();
+};
+
+/* node base class */
 class Node {
 
 private :
@@ -47,8 +67,11 @@ private :
 
 public  :
 
+    Node();
     Node( H_NODE_TYPE type );
     ~Node();
+
+    NodeValue value;
 
     inline H_NODE_TYPE type(){
         return m_type;
@@ -62,14 +85,47 @@ public  :
         return m_children[i];
     }
 
-    Object       *_constant;
-    string        _identifier;
-    int           _operator;
-    string        _function;
-    string        _call;
-	Node         *_aliascall;
-
     void addChild( Node *child );
+};
+
+/* constants */
+class ConstantNode : public Node {
+    public :
+
+        ConstantNode( long v );
+        ConstantNode( double v );
+        ConstantNode( char v );
+        ConstantNode( char *v );
+};
+
+/* operators */
+class OperatorNode : public Node {
+    public :
+
+        OperatorNode( int op_type );
+};
+
+/* identifiers */
+class IdentifierNode : public Node {
+    public :
+
+        IdentifierNode( char *identifier );
+};
+
+/* function declarations */
+class FunctionNode : public Node {
+    public :
+
+        FunctionNode( function_decl_t *declaration );
+        FunctionNode( char *name );
+};
+
+/* function calls */
+class CallNode : public Node {
+    public :
+
+        CallNode( char *name );
+        CallNode( Node *alias );
 };
 
 #endif

@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef _HEXECUTOR_H_
-#   define _HEXECUTOR_H_
+#ifndef _HENGINE_H_
+#   define _HENGINE_H_
 
 #include "hybris.h"
 
@@ -31,21 +31,25 @@
 #   define H_FREE_GARBAGE(o) // o
 #endif
 
-typedef struct _h_context h_context_t;
+class Context;
 
-class Executor {
+class Engine {
     private :
 
-        h_context_t *ctx;
-        vmem_t      *vm;
-        vcode_t     *vc;
+        Context *ctx;
+        vmem_t  *vm;
+        vcode_t *vc;
 
         Node * findEntryPoint( vframe_t *frame, Node *call, char *name );
 
+        Object *onBuiltinFunctionCall( vframe_t *, Node * );
+        Object *onUserFunctionCall( vframe_t *, Node *, int threaded = 0 );
+        Object *onDllFunctionCall( vframe_t *, Node *, int threaded = 0 );
+
     public  :
 
-        Executor( h_context_t *context );
-        ~Executor();
+        Engine( Context *context );
+        ~Engine();
 
         Object *onIdentifier( vframe_t *, Node * );
         Object *onConstant( vframe_t *, Node * );

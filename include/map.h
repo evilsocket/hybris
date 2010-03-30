@@ -20,10 +20,16 @@
 #	define _HMAP_H_
 
 #include "hashtable.h"
-#include "vmem.h"
 
+/* from vmem.h */
 #ifndef H_UNDEFINED
-#   define H_UNDEFINED NULL
+/* helper macro to obtain the address of a pointer */
+#   define H_ADDRESS_OF(o)      reinterpret_cast<unsigned long>(o)
+/* default null value for an Object pointer */
+#   define H_UNDEFINED          NULL
+/* anonymous identifier to be used upon temporary stacks creation */
+#   define HANONYMOUSIDENTIFIER     (char *)"HANONYMOUSIDENTIFIER"
+#   define HANONYMOUSIDENTIFIER_FTM (char *)"HANONYMOUSIDENTIFIER%d"
 #endif
 
 #include <vector>
@@ -35,7 +41,7 @@ using std::string;
 #define H_TEMPLATE_T template< typename value_t >
 
 H_TEMPLATE_T class Map {
-private :
+protected :
 
     struct map_pair {
         string        label;

@@ -1,121 +1,124 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="all" />
-	<File name="include/builtin.h" open="1" top="0" tabpos="7">
-		<Cursor position="5352" topLine="168" />
+	<File name="include/common.h" open="1" top="1" tabpos="4">
+		<Cursor position="1588" topLine="0" />
 	</File>
-	<File name="include/common.h" open="0" top="0" tabpos="6">
-		<Cursor position="399" topLine="0" />
+	<File name="include/context.h" open="1" top="0" tabpos="1">
+		<Cursor position="8395" topLine="135" />
 	</File>
-	<File name="include/executor.h" open="0" top="0" tabpos="0">
-		<Cursor position="1818" topLine="23" />
+	<File name="include/engine.h" open="0" top="0" tabpos="0">
+		<Cursor position="1512" topLine="30" />
 	</File>
 	<File name="include/hashtable.h" open="0" top="0" tabpos="2">
-		<Cursor position="4351" topLine="79" />
+		<Cursor position="1719" topLine="0" />
 	</File>
-	<File name="include/hybris.h" open="0" top="0" tabpos="18">
-		<Cursor position="1602" topLine="0" />
+	<File name="include/hybris.h" open="1" top="0" tabpos="3">
+		<Cursor position="943" topLine="0" />
 	</File>
-	<File name="include/map.h" open="1" top="0" tabpos="6">
-		<Cursor position="4090" topLine="156" />
+	<File name="include/map.h" open="0" top="0" tabpos="6">
+		<Cursor position="859" topLine="15" />
 	</File>
-	<File name="include/node.h" open="0" top="0" tabpos="15">
-		<Cursor position="1639" topLine="12" />
+	<File name="include/node.h" open="0" top="0" tabpos="2">
+		<Cursor position="1586" topLine="14" />
 	</File>
 	<File name="include/object.h" open="0" top="0" tabpos="8">
-		<Cursor position="4008" topLine="85" />
+		<Cursor position="1946" topLine="6" />
 	</File>
 	<File name="include/tree.h" open="0" top="0" tabpos="13">
-		<Cursor position="732" topLine="0" />
+		<Cursor position="891" topLine="0" />
+	</File>
+	<File name="include/vcode.h" open="0" top="0" tabpos="0">
+		<Cursor position="1029" topLine="0" />
 	</File>
 	<File name="include/vmem.h" open="0" top="0" tabpos="4">
-		<Cursor position="1422" topLine="0" />
-	</File>
-	<File name="src/builtin.cpp" open="0" top="0" tabpos="3">
-		<Cursor position="2537" topLine="26" />
+		<Cursor position="860" topLine="0" />
 	</File>
 	<File name="src/builtins/array.cc" open="0" top="0" tabpos="18">
-		<Cursor position="732" topLine="1" />
+		<Cursor position="839" topLine="1" />
 	</File>
 	<File name="src/builtins/conio.cc" open="0" top="0" tabpos="19">
-		<Cursor position="732" topLine="0" />
+		<Cursor position="839" topLine="0" />
 	</File>
-	<File name="src/builtins/dll.cc" open="1" top="0" tabpos="1">
-		<Cursor position="4159" topLine="60" />
+	<File name="src/builtins/dll.cc" open="0" top="0" tabpos="1">
+		<Cursor position="839" topLine="9" />
 	</File>
 	<File name="src/builtins/encoding.cc" open="0" top="0" tabpos="21">
-		<Cursor position="732" topLine="0" />
+		<Cursor position="839" topLine="0" />
 	</File>
 	<File name="src/builtins/fileio.cc" open="0" top="0" tabpos="22">
-		<Cursor position="1587" topLine="22" />
+		<Cursor position="839" topLine="20" />
 	</File>
 	<File name="src/builtins/http.cc" open="0" top="0" tabpos="9">
-		<Cursor position="4097" topLine="106" />
+		<Cursor position="839" topLine="20" />
 	</File>
 	<File name="src/builtins/map.cc" open="0" top="0" tabpos="1">
-		<Cursor position="2406" topLine="33" />
+		<Cursor position="839" topLine="20" />
 	</File>
 	<File name="src/builtins/math.cc" open="0" top="0" tabpos="25">
-		<Cursor position="732" topLine="1" />
+		<Cursor position="839" topLine="1" />
 	</File>
 	<File name="src/builtins/matrix.cc" open="0" top="0" tabpos="26">
-		<Cursor position="732" topLine="0" />
+		<Cursor position="839" topLine="0" />
 	</File>
 	<File name="src/builtins/netio.cc" open="0" top="0" tabpos="27">
-		<Cursor position="732" topLine="1" />
+		<Cursor position="839" topLine="1" />
 	</File>
 	<File name="src/builtins/pcre.cc" open="0" top="0" tabpos="8">
-		<Cursor position="893" topLine="15" />
+		<Cursor position="839" topLine="0" />
 	</File>
 	<File name="src/builtins/process.cc" open="0" top="0" tabpos="29">
-		<Cursor position="732" topLine="16" />
+		<Cursor position="839" topLine="16" />
 	</File>
-	<File name="src/builtins/pthreads.cc" open="0" top="0" tabpos="8">
-		<Cursor position="2649" topLine="27" />
+	<File name="src/builtins/pthreads.cc" open="0" top="0" tabpos="7">
+		<Cursor position="2920" topLine="41" />
 	</File>
-	<File name="src/builtins/reflection.cc" open="1" top="0" tabpos="8">
-		<Cursor position="3185" topLine="40" />
+	<File name="src/builtins/reflection.cc" open="0" top="0" tabpos="8">
+		<Cursor position="841" topLine="0" />
 	</File>
 	<File name="src/builtins/string.cc" open="0" top="0" tabpos="31">
-		<Cursor position="732" topLine="1" />
+		<Cursor position="839" topLine="1" />
 	</File>
 	<File name="src/builtins/time.cc" open="0" top="0" tabpos="32">
-		<Cursor position="801" topLine="0" />
+		<Cursor position="839" topLine="0" />
 	</File>
 	<File name="src/builtins/type.cc" open="0" top="0" tabpos="33">
-		<Cursor position="732" topLine="40" />
+		<Cursor position="801" topLine="18" />
 	</File>
 	<File name="src/builtins/xml.cc" open="0" top="0" tabpos="11">
-		<Cursor position="2813" topLine="46" />
+		<Cursor position="839" topLine="20" />
 	</File>
-	<File name="src/common.cpp" open="0" top="0" tabpos="10">
-		<Cursor position="980" topLine="89" />
+	<File name="src/common.cpp" open="1" top="0" tabpos="5">
+		<Cursor position="3405" topLine="88" />
 	</File>
-	<File name="src/executor.cpp" open="1" top="1" tabpos="2">
-		<Cursor position="17609" topLine="421" />
+	<File name="src/context.cpp" open="1" top="0" tabpos="2">
+		<Cursor position="12500" topLine="260" />
+	</File>
+	<File name="src/engine.cpp" open="1" top="0" tabpos="7">
+		<Cursor position="11306" topLine="296" />
 	</File>
 	<File name="src/hashtable.cpp" open="0" top="0" tabpos="3">
 		<Cursor position="29886" topLine="665" />
 	</File>
-	<File name="src/hybris.cpp" open="1" top="0" tabpos="9">
-		<Cursor position="7284" topLine="117" />
+	<File name="src/lexer.l.cpp" open="1" top="0" tabpos="6">
+		<Cursor position="1166" topLine="14" />
 	</File>
-	<File name="src/lexer.l.cpp" open="0" top="0" tabpos="4">
-		<Cursor position="1351" topLine="17" />
+	<File name="src/node.cpp" open="0" top="0" tabpos="3">
+		<Cursor position="836" topLine="20" />
 	</File>
-	<File name="src/node.cpp" open="0" top="0" tabpos="14">
-		<Cursor position="871" topLine="0" />
+	<File name="src/object.cpp" open="0" top="0" tabpos="3">
+		<Cursor position="13702" topLine="0" />
 	</File>
-	<File name="src/object.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="4783" topLine="123" />
+	<File name="src/parser.y.cpp" open="0" top="0" tabpos="4">
+		<Cursor position="824" topLine="21" />
 	</File>
-	<File name="src/parser.y.cpp" open="1" top="0" tabpos="4">
-		<Cursor position="11958" topLine="126" />
+	<File name="src/tree.cpp" open="0" top="0" tabpos="4">
+		<Cursor position="4456" topLine="0" />
 	</File>
-	<File name="src/tree.cpp" open="1" top="0" tabpos="5">
-		<Cursor position="5729" topLine="117" />
+	<File name="src/vcode.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="1373" topLine="0" />
 	</File>
-	<File name="src/vmem.cpp" open="0" top="0" tabpos="5">
-		<Cursor position="1390" topLine="12" />
+	<File name="src/vmem.cpp" open="0" top="0" tabpos="6">
+		<Cursor position="972" topLine="0" />
 	</File>
 </CodeBlocks_layout_file>

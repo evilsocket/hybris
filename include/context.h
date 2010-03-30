@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef _HBUILTIN_H_
-#   define _HBUILTIN_H_
+#ifndef _HCONTEXT_H_
+#   define _HCONTEXT_H_
 
 #include <vector>
 #include <string>
@@ -26,23 +26,24 @@
 #include <dirent.h>
 #include "object.h"
 #include "vmem.h"
-#include "executor.h"
+#include "vcode.h"
+#include "engine.h"
 
 using std::string;
 using std::vector;
 
 typedef vector<string> vstr_t;
 
-/* pre declaration of struct _h_context */
-struct _h_context;
-/* pre declaration of class Executor */
-class Executor;
+/* pre declaration of class Context */
+class Context;
+/* pre declaration of class Engine */
+class Engine;
 
 /* builtin function pointer prototype */
-typedef Object * (*function_t)( struct _h_context *, vmem_t * );
+typedef Object * (*function_t)( Context *, vmem_t * );
 
 /* helper macro to declare a builtin function */
-#define HYBRIS_BUILTIN(name) Object *name( h_context_t *ctx, vmem_t *data )
+#define HYBRIS_BUILTIN(name) Object *name( Context *ctx, vmem_t *data )
 /* helper macro to define a builtin function */
 #define HYBRIS_DEFINE_BUILTIN( ctx, name, func ) ctx->builtins.insert( name, new builtin_t( name, func ) )
 /* helper macro to define a builtin constant */
@@ -53,9 +54,8 @@ typedef struct _builtin {
     string     identifier;
     function_t function;
 
-    _builtin( string _id, function_t _fun ){
-        identifier = _id;
-        function   = _fun;
+    _builtin( string id, function_t f ) : identifier(id), function(f) {
+
     }
 }
 builtin_t;
@@ -65,9 +65,8 @@ typedef struct _builtin_constant {
     string identifier;
     Object *value;
 
-    _builtin_constant( string _id, Object *_v ){
-        identifier = _id;
-        value      = _v;
+    _builtin_constant( string id, Object *v ) : identifier(id), value(v) {
+
     }
 }
 builtin_constant_t;
@@ -75,44 +74,105 @@ builtin_constant_t;
 /* module structure definition */
 typedef struct _module_t {
     string              name;
-    void (*initializer)( struct _h_context * );
+    void (*initializer)( Context * );
     vector<builtin_t *> functions;
 }
 module_t;
 
 /* module initializer function pointer prototype */
-typedef void (*initializer_t)( struct _h_context * );
+typedef void (*initializer_t)( Context * );
 
 typedef vector<builtin_constant_t *> h_constants_t;
 typedef Map<builtin_t>               h_builtins_t;
 typedef vector<module_t *>           h_modules_t;
 
-/* hybris execution contest structure */
-typedef struct _h_context {
-    /* function call trace vector */
-    vector<string> stack_trace;
-    /* data segment */
-    vmem_t         vmem;
-    /* code segment */
-    vcode_t        vcode;
-    /* execution arguments */
-    h_args_t       args;
-    /* default constants */
-    h_constants_t  constants;
-    /* builtin functions */
-    h_builtins_t   builtins;
-    /* dynamically loaded modules */
-    h_modules_t    modules;
-    #ifdef MT_SUPPORT
-    /* running threads pool vector */
-    vector<pthread_t> th_pool;
-    /* threads mutex */
-    pthread_mutex_t   th_mutex;
-    #endif
+class Context {
+    private :
 
-    Executor      *executor;
-}
-h_context_t;
+        static void signal_handler( int signo );
+
+        string mk_trace( char *function, vframe_t *frame );
+
+    public  :
+
+        #ifdef MT_SUPPORT
+            /* running threads pool vector */
+            vector<pthread_t> th_pool;
+            /* threads mutex */
+            pthread_mutex_t   th_mutex;
+            /* lock the pthread mutex */
+            inline void lock(){
+                pthread_mutex_lock( &th_mutex );
+            }
+            /* release the pthread mutex */
+            inline void unlock(){
+                pthread_mutex_unlock( &th_mutex );
+            }
+            /* add a thread to the threads pool */
+            inline void pool( pthread_t tid = 0 ){
+                tid = (tid == 0 ? pthread_self() : tid);
+                lock();
+                th_pool.push_back(tid);
+                unlock();
+            }
+            /* remove a thread from the threads pool */
+            inline void depool( pthread_t tid = 0 ){
+                tid = (tid == 0 ? pthread_self() : tid);
+
+                lock();
+                for( int pool_i = 0; pool_i < th_pool.size(); ++pool_i ){
+                    if( th_pool[pool_i] == tid ){
+                        th_pool.erase( th_pool.begin() + pool_i );
+                        break;
+                    }
+                }
+                unlock();
+            }
+        #else
+            inline void lock(){}
+            inline void unlock(){}
+            inline void pool( pthread_t tid = 0 ){}
+            inline void depool( pthread_t tid = 0 ){}
+        #endif
+
+        /* function call trace vector */
+        vector<string> stack_trace;
+        /* data segment */
+        vmem_t         vmem;
+        /* code segment */
+        vcode_t        vcode;
+        /* execution arguments */
+        h_args_t       args;
+        /* default constants */
+        h_constants_t  constants;
+        /* builtin functions */
+        h_builtins_t   builtins;
+        /* dynamically loaded modules */
+        h_modules_t    modules;
+        /* code execution engine */
+        Engine      *engine;
+
+        Context();
+
+        int chdir();
+
+        inline void trace( char *function, vframe_t *frame ){
+            lock();
+                stack_trace.push_back( mk_trace( function, frame  ) );
+            unlock();
+        }
+
+        inline void detrace(){
+            lock();
+                stack_trace.pop_back();
+            unlock();
+        }
+
+        void init( int argc, char *argv[] );
+        void release( int error = 0 );
+        void load( char *module );
+        function_t getFunction( char *identifier );
+};
 
 /* type.cc */
 HYBRIS_BUILTIN(hisint);
@@ -255,8 +315,5 @@ HYBRIS_BUILTIN(hpthread_create);
 HYBRIS_BUILTIN(hpthread_exit);
 HYBRIS_BUILTIN(hpthread_join);
 #endif
-
-void       hmodule_load     ( h_context_t *ctx, char *module );
-function_t hfunction_search ( h_context_t *ctx, char *identifier );
 
 #endif
