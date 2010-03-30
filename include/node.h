@@ -34,9 +34,10 @@ typedef unsigned short H_NODE_TYPE;
 #define H_NT_NONE       0
 #define H_NT_CONSTANT   1
 #define H_NT_IDENTIFIER 2
-#define H_NT_OPERATOR   3
-#define H_NT_FUNCTION   4
-#define H_NT_CALL       5
+#define H_NT_EXPRESSION 3
+#define H_NT_STATEMENT  4
+#define H_NT_FUNCTION   5
+#define H_NT_CALL       6
 
 /* pre declaration of class Node */
 class  Node;
@@ -47,7 +48,8 @@ class NodeValue {
 
         Object *m_constant;
         string  m_identifier;
-        int     m_operator;
+        int     m_expression;
+        int     m_statement;
         string  m_function;
         string  m_call;
         Node   *m_alias_call;
@@ -88,6 +90,8 @@ public  :
     void addChild( Node *child );
 };
 
+/** specialized node classes **/
+
 /* constants */
 class ConstantNode : public Node {
     public :
@@ -98,11 +102,18 @@ class ConstantNode : public Node {
         ConstantNode( char *v );
 };
 
-/* operators */
-class OperatorNode : public Node {
+/* expressions */
+class ExpressionNode : public Node {
     public :
 
-        OperatorNode( int op_type );
+        ExpressionNode( int expression );
+};
+
+/* statements */
+class StatementNode : public Node {
+    public :
+
+        StatementNode( int statement );
 };
 
 /* identifiers */
@@ -120,7 +131,7 @@ class FunctionNode : public Node {
         FunctionNode( char *name );
 };
 
-/* function calls */
+/* function calls (a subset of StatementNode) */
 class CallNode : public Node {
     public :
 

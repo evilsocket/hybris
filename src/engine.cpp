@@ -36,6 +36,7 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
     }
 
     switch(node->type()){
+
         /* identifier */
         case H_NT_IDENTIFIER :
             return onIdentifier( frame, node );
@@ -48,18 +49,44 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
         /* function call */
         case H_NT_CALL       :
             return onFunctionCall( frame, node );
-        /* unary, binary or ternary operator */
-        case H_NT_OPERATOR   :
-            switch( node->value.m_operator ){
+
+        /* statements */
+        case H_NT_STATEMENT :
+            switch( node->value.m_statement ){
+                /* if( condition ) */
+                case IF     :
+                    return onIf( frame, node );
+                /* while( condition ){ body } */
+                case WHILE  :
+                    return onWhile( frame, node );
+                /* do{ body }while( condition ); */
+                case DO  :
+                    return onDo( frame, node );
+                /* for( initialization; condition; variance ){ body } */
+                case FOR    :
+                    return onFor( frame, node );
+                /* foreach( item of array ) */
+                case FOREACH :
+                    return onForeach( frame, node );
+                /* foreach( label -> item of map ) */
+                case FOREACHM :
+                    return onForeachm( frame, node );
+                break;
+                /* (condition ? expression : expression) */
+                case QUESTION :
+                    return onQuestion( frame, node );
+            }
+        break;
+
+        /* expressions */
+        case H_NT_EXPRESSION   :
+            switch( node->value.m_expression ){
                 /* identifier = expression */
                 case ASSIGN    :
                     return onAssign( frame, node );
                 /* expression ; */
                 case EOSTMT  :
                     return onEostmt( frame, node );
-                /* if( condition ) */
-                case IF     :
-                    return onIf( frame, node );
                 /* return */
                 case RETURN :
                     return onReturn( frame, node );
@@ -83,25 +110,6 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                 /* object[ expression ] = expression */
                 case SUBSCRIPTSET :
                     return onSubscriptSet( frame, node );
-                /* while( condition ){ body } */
-                case WHILE  :
-                    return onWhile( frame, node );
-                /* do{ body }while( condition ); */
-                case DO  :
-                    return onDo( frame, node );
-                /* for( initialization; condition; variance ){ body } */
-                case FOR    :
-                    return onFor( frame, node );
-                /* foreach( item of array ) */
-                case FOREACH :
-                    return onForeach( frame, node );
-                /* foreach( label -> item of map ) */
-                case FOREACHM :
-                    return onForeachm( frame, node );
-                break;
-                /* (condition ? expression : expression) */
-                case QUESTION :
-                    return onQuestion( frame, node );
                 /* expression.expression */
                 case DOT    :
                     return onDot( frame, node );

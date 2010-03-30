@@ -23,7 +23,8 @@
 NodeValue::NodeValue() :
     m_constant(NULL),
     m_identifier(""),
-    m_operator(0),
+    m_expression(0),
+    m_statement(0),
     m_function(""),
     m_call(""),
     m_alias_call(NULL) {
@@ -91,9 +92,14 @@ ConstantNode::ConstantNode( char *v ) : Node(H_NT_CONSTANT) {
 	#endif
 }
 
-/* operators */
-OperatorNode::OperatorNode( int op_type ) : Node(H_NT_OPERATOR) {
-    value.m_operator = op_type;
+/* expressions */
+ExpressionNode::ExpressionNode( int expression ) : Node(H_NT_EXPRESSION) {
+    value.m_expression = expression;
+}
+
+/* statements */
+StatementNode::StatementNode( int statement ): Node(H_NT_STATEMENT) {
+    value.m_statement = statement;
 }
 
 /* identifiers */

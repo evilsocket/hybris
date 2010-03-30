@@ -38,7 +38,9 @@ public :
     static Node *addChar( char value );
     static Node *addString( char *value );
 
-    static Node *addOperator( int op, int argc, ... );
+    static Node *addExpression( int expression, int argc, ... );
+
+    static Node *addStatement( int statement, int argc, ... );
 
     static Node *addIdentifier( char *id );
 
