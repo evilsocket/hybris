@@ -653,6 +653,103 @@ string Object::toxml( unsigned int tabs /*= 0*/ ){
 }
 #endif
 
+#ifdef PCRE_SUPPORT
+int Object::classify_pcre( string& r ){
+    pcrecpp::RE_Options  OPTS( PCRE_CASELESS | PCRE_EXTENDED );
+	pcrecpp::RE          MULTI_REGEX( ".*[^" +
+									  pcrecpp::RE::QuoteMeta("\\") + "]" +
+									  pcrecpp::RE::QuoteMeta("(") + "[^" +
+									  pcrecpp::RE::QuoteMeta(")") + "]+[^" +
+									  pcrecpp::RE::QuoteMeta("\\") + "]" +
+									  pcrecpp::RE::QuoteMeta(")") + ".*", OPTS );
+
+	if( MULTI_REGEX.PartialMatch(r.c_str()) ){
+		return H_PCRE_MULTI_MATCH;
+	}
+	else if(0){
+		return H_PCRE_REPLACE_MATCH;
+	}
+	else{
+		return H_PCRE_BOOL_MATCH;
+	}
+}
+
+void Object::parse_pcre( string& raw, string& regex, int& opts ){
+    unsigned int i;
+	vector<string> blocks;
+	pcrecpp::RE_Options  OPTS( PCRE_CASELESS | PCRE_EXTENDED );
+	pcrecpp::RE          REGEX( "^/(.*?)/([i|m|s|x|U]*)$", OPTS );
+	pcrecpp::StringPiece SUBJECT( raw );
+	string   rex, sopts;
+
+    while( REGEX.FindAndConsume( &SUBJECT, &rex, &sopts ) == true ){
+		blocks.push_back( rex );
+		blocks.push_back( sopts );
+	}
+
+	if( blocks.size() ){
+		if( blocks.size() != 2 ){
+			hybris_syntax_error( "invalid pcre regular expression syntax" );
+		}
+		opts  = 0;
+		regex = blocks[0];
+		sopts = blocks[1];
+
+		/* parse options */
+		for( i = 0; i < sopts.size(); i++ ){
+			switch( sopts[i] ){
+				case 'i' : opts |= PCRE_CASELESS;  break;
+				case 'm' : opts |= PCRE_MULTILINE; break;
+				case 's' : opts |= PCRE_DOTALL;    break;
+				case 'x' : opts |= PCRE_EXTENDED;  break;
+				case 'U' : opts |= PCRE_UNGREEDY;  break;
+			}
+		}
+	}
+	else{
+		opts  = 0;
+		regex = raw;
+	}
+}
+
+Object *Object::regexp( Object *regexp ){
+    if( assert_type( this, regexp, 1, H_OT_STRING ) == 0 ){
+		hybris_syntax_error( "invalid types for '~=' regexp operator (%s, %s)", Object::type(this), Object::type(regexp) );
+	}
+
+	string rawreg  = regexp->xstring,
+		   subject = this->xstring,
+		   regex;
+	int    opts;
+
+	Object::parse_pcre( rawreg, regex, opts );
+
+	if( Object::classify_pcre( regex ) == H_PCRE_BOOL_MATCH ){
+		pcrecpp::RE_Options OPTS(opts);
+		pcrecpp::RE         REGEX( regex.c_str(), OPTS );
+
+		return new Object( (long)REGEX.PartialMatch(subject.c_str()) );
+	}
+	else{
+		pcrecpp::RE_Options  OPTS(opts);
+		pcrecpp::RE          REGEX( regex.c_str(), OPTS );
+		pcrecpp::StringPiece SUBJECT( subject.c_str() );
+		string  match;
+		Object *matches = new Object();
+		int i = 0;
+
+		while( REGEX.FindAndConsume( &SUBJECT, &match ) == true ){
+			if( i++ > H_PCRE_MAX_MATCHES ){
+				hybris_generic_error( "something of your regex is forcing infinite matches" );
+			}
+			matches->push( new Object((char *)match.c_str()) );
+		}
+
+		return matches;
+	}
+}
+#endif
+
 void Object::input(){
 	switch(xtype){
 		case H_OT_INT    : cin >> xint;    break;

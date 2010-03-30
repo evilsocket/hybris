@@ -30,6 +30,9 @@
 #include <sstream>
 #include <vector>
 #include <iostream>
+#ifdef PCRE_SUPPORT
+    #include <pcrecpp.h>
+#endif
 #ifdef XML_SUPPORT
     #include <libxml/parser.h>
     #include <libxml/tree.h>
@@ -68,10 +71,25 @@ typedef unsigned short H_OBJECT_TYPE;
 #   define H_OA_GARBAGE  4 // 00000100
 #endif
 
+#ifdef PCRE_SUPPORT
+#   define H_PCRE_MAX_MATCHES   300
+
+#   define H_PCRE_BOOL_MATCH    0x0
+#   define H_PCRE_MULTI_MATCH   0x1
+#   define H_PCRE_REPLACE_MATCH 0x2
+#endif
+
 class Object {
 public  :
     /* return a string rapresentation of the type */
     static const char *type( Object *o );
+
+    #ifdef PCRE_SUPPORT
+    static int  classify_pcre( string& r );
+    static void parse_pcre( string& raw, string& regex, int& opts );
+
+    Object *regexp( Object *regexp );
+    #endif
 
     #ifdef XML_SUPPORT
     /* create an object from a xml tree */

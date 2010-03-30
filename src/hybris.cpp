@@ -42,8 +42,8 @@ string h_trace( char *function, vmem_t *stack, int identifiers ){
 
 void h_signal_handler( int signo ) {
     if( signo == SIGSEGV ){
-        extern h_context_t HCTX;
-        HCTX.args.stacktrace = 1;
+        extern h_context_t __context;
+        __context.args.stacktrace = 1;
         hybris_generic_error( "SIGSEGV Signal Catched" );
     }
 }

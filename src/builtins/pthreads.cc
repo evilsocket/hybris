@@ -23,21 +23,21 @@
 
 extern Object *htree_function_call( h_context_t *ctx, vmem_t *stackframe, Node *call, int threaded /*= 0*/ );
 
-extern h_context_t HCTX;
+extern h_context_t __context;
 
 
-#define POOL_ADD(tid) pthread_mutex_lock( &HCTX.th_mutex ); \
-                        HCTX.th_pool.push_back(tid); \
-                      pthread_mutex_unlock( &HCTX.th_mutex )
+#define POOL_ADD(tid) pthread_mutex_lock( &__context.th_mutex ); \
+                        __context.th_pool.push_back(tid); \
+                      pthread_mutex_unlock( &__context.th_mutex )
 
-#define POOL_DEL(tid) pthread_mutex_lock( &HCTX.th_mutex ); \
-                        for( int pool_i = 0; pool_i < HCTX.th_pool.size(); pool_i++ ){ \
-                            if( HCTX.th_pool[pool_i] == tid ){ \
-                                HCTX.th_pool.erase( HCTX.th_pool.begin() + pool_i ); \
+#define POOL_DEL(tid) pthread_mutex_lock( &__context.th_mutex ); \
+                        for( int pool_i = 0; pool_i < __context.th_pool.size(); pool_i++ ){ \
+                            if( __context.th_pool[pool_i] == tid ){ \
+                                __context.th_pool.erase( __context.th_pool.begin() + pool_i ); \
                                 break; \
                             } \
                         } \
-                      pthread_mutex_unlock( &HCTX.th_mutex )
+                      pthread_mutex_unlock( &__context.th_mutex )
 
 typedef struct {
     vmem_t      *data;

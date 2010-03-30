@@ -24,6 +24,45 @@
 
 #define CALL_MAX_ARGS 256
 
+union call_arg_ctype {
+    char   c;
+    int    i;
+    double d;
+    void  *p;
+};
+
+typedef struct {
+	ffi_type            *type;
+	union call_arg_ctype value;
+}
+dll_arg_t;
+
+static void ctype_convert( Object *o, dll_arg_t *pa ) {
+	if( o->xtype == H_OT_NONE ){
+        pa->type    = &ffi_type_pointer;
+        pa->value.p = H_UNDEFINED;
+	}
+    else if( o->xtype == H_OT_INT ){
+		pa->type    = &ffi_type_sint;
+		pa->value.i = o->xint;
+	}
+	else if( o->xtype == H_OT_CHAR ){
+        pa->type    = &ffi_type_schar;
+        pa->value.c = o->xchar;
+	}
+	else if( o->xtype == H_OT_FLOAT ){
+	    pa->type    = &ffi_type_double;
+        pa->value.d = o->xfloat;
+	}
+    else if( o->xtype == H_OT_STRING ){
+		pa->type    = &ffi_type_pointer;
+		pa->value.p = (void *)o->xstring.c_str();
+	}
+	else{
+        hybris_syntax_error( "could not use '%s' type for dllcall function", Object::type(o) );
+	}
+}
+
 HYBRIS_BUILTIN(hdllopen){
 	if( data->size() != 1 ){
 		hybris_syntax_error( "function 'dllopen' requires 1 parameter (called with %d)", data->size() );
@@ -60,53 +99,39 @@ HYBRIS_BUILTIN(hdllcall){
 
     ffi_cif    cif;
     ffi_arg    ul_ret;
-    int        argc( data->size() - 1 );
-    ffi_type  *args_t[CALL_MAX_ARGS];
-	void      *args_v[CALL_MAX_ARGS];
-	vector<unsigned char *> raw_gbc;
-	vector<unsigned long *> ulg_gbc;
-    int    i, j;
-    int    iv;
-    double fv;
-    char   cv;
-    unsigned char *raw;
-    unsigned long *ulval;
-    Object        *arg;
+    int        dsize( data->size() ),
+               argc( dsize - 1 ),
+               i;
+    ffi_type **args_t;
+	void     **args_v;
+	dll_arg_t *args, *parg;
 
-    for( i = 1, j = 0; i < data->size(); ++i, ++j ){
-        arg   = data->at(i);
-        raw   = arg->serialize();
-        ulval = new unsigned long;
+    args   = (dll_arg_t *)alloca( sizeof(dll_arg_t) * argc );
+    args_t = (ffi_type **)alloca( sizeof(ffi_type *) * argc );
+    args_v = (void **)alloca( sizeof(void *) * argc );
 
-        raw_gbc.push_back(raw);
-        ulg_gbc.push_back(ulval);
+	memset( args, 0, sizeof(dll_arg_t) * argc );
 
-        switch( arg->xtype ){
-            case H_OT_INT    : memcpy( &iv, raw, sizeof(long) );   *ulval = (unsigned long)iv; break;
-            case H_OT_FLOAT  : memcpy( &fv, raw, sizeof(double) ); *ulval = (unsigned long)fv; break;
-            case H_OT_CHAR   : memcpy( &cv, raw, sizeof(char) );   *ulval = (unsigned long)cv; break;
-            case H_OT_STRING : *ulval = (unsigned long)raw; 								   break;
-			case H_OT_MAP    : *ulval = (unsigned long)raw; 								   break;
-			case H_OT_ALIAS  : memcpy( ulval, raw, sizeof(unsigned long) ); 				   break;
-
-            default :
-               hybris_syntax_error( "could not use '%s' type for dllcall function", Object::type(arg) );
-        }
-        /* fill the stack vector */
-         args_t[j] = &ffi_type_ulong;
-         args_v[j] = ulval;
+    /* convert objects to c-type equivalents */
+    for( i = 1, parg = &args[0]; i < dsize; ++i, ++parg ){
+        ctype_convert( data->at(i), parg );
     }
+    /* assign types and values */
+    for( i = 0; i < argc; ++i ){
+		args_t[i] = args[i].type;
+		if( args_t[i]->type == FFI_TYPE_STRUCT ){
+			args_v[i] = (void *)args[i].value.p;
+		}
+		else{
+			args_v[i] = (void *)&args[i].value;
+		}
+	}
 
     if( ffi_prep_cif( &cif, FFI_DEFAULT_ABI, argc, &ffi_type_ulong, args_t ) != FFI_OK ){
         hybris_generic_error( "ffi_prep_cif failed" );
     }
 
     ffi_call( &cif, FFI_FN(function), &ul_ret, args_v );
-
-    for( i = 0; i < argc; ++i ){
-        delete[] raw_gbc[i];
-        delete   ulg_gbc[i];
-    }
 
     return new Object( static_cast<long>(ul_ret) );
 }

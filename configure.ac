@@ -1,4 +1,4 @@
-AC_PREREQ([2.65])
+AC_PREREQ([2.0])
 AC_INIT( [Hybris Scripting Language], [0.9b], [evilsocket@gmail.com], [hybris] )
 AM_INIT_AUTOMAKE( hybris, 0.9b )
 AC_CONFIG_HEADERS([include/config.h])

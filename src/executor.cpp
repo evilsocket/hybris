@@ -854,7 +854,7 @@ Object *Executor::onRegex( vframe_t *frame, Node *node ){
 
     o      = exec(  frame, node->child(0) );
     regexp = exec(  frame, node->child(1) );
-    result = hrex_operator( o, regexp );
+    result = o->regexp(regexp);
 
     H_FREE_GARBAGE(o);
     H_FREE_GARBAGE(regexp);

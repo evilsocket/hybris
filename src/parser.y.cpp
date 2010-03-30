@@ -26,7 +26,7 @@
 extern int yyparse(void);
 extern int yylex(void);
 
-h_context_t   HCTX;
+h_context_t   __context;
 unsigned long t_start = 0,
               t_end   = 0;
 %}
@@ -74,16 +74,16 @@ unsigned long t_start = 0,
 
 %%
 
-program    : body { if( HCTX.args.do_timing == 1 ){
+program    : body { if( __context.args.do_timing == 1 ){
                         t_end = h_uticks();
                         printf( "\033[01;33m[TIME] Elapsed %s .\n\033[00m", h_dtime( t_end - t_start ) );
                     }
                   }
 
-body       : body statement { if( HCTX.args.do_timing == 1 && t_start == 0 ){
+body       : body statement { if( __context.args.do_timing == 1 && t_start == 0 ){
                                   t_start = h_uticks();
                               }
-                              HCTX.executor->exec( &HCTX.vmem, $2 );
+                              __context.executor->exec( &__context.vmem, $2 );
                               Tree::release($2);
                             }
            | /* empty */ ;
@@ -235,15 +235,15 @@ int h_usage( char *argvz ){
 int main( int argc, char *argv[] ){
     int i, f_offset = 0;
 
-    HCTX.args.do_timing  = 0;
-    HCTX.args.stacktrace = 0;
+    __context.args.do_timing  = 0;
+    __context.args.stacktrace = 0;
 
     for( i = 0; i < argc; ++i ){
         if( strcmp( argv[i], "--trace" ) == 0 || strcmp( argv[i], "-t" ) == 0 ){
-            HCTX.args.stacktrace = 1;
+            __context.args.stacktrace = 1;
         }
         else if( strcmp( argv[i], "--time" ) == 0 || strcmp( argv[i], "-tm" ) == 0 ){
-            HCTX.args.do_timing  = 1;
+            __context.args.do_timing  = 1;
         }
         else if( strcmp( argv[i], "--help" ) == 0 || strcmp( argv[i], "-h" ) == 0 ){
             return h_usage(argv[0]);
@@ -253,21 +253,21 @@ int main( int argc, char *argv[] ){
         }
     }
 
-    strncpy( HCTX.args.source, argv[f_offset], sizeof(HCTX.args.source) );
+    strncpy( __context.args.source, argv[f_offset], sizeof(__context.args.source) );
 
     if( f_offset > 0 ){
-        if( h_file_exists(HCTX.args.source) == 0 ){
-            printf( "Error :'%s' no such file or directory .\n\n", HCTX.args.source );
+        if( h_file_exists(__context.args.source) == 0 ){
+            printf( "Error :'%s' no such file or directory .\n\n", __context.args.source );
             return h_usage( argv[0] );
         }
     }
 
-    h_env_init( &HCTX, argc, argv );
+    h_env_init( &__context, argc, argv );
 
     extern FILE *yyin;
-    yyin = f_offset > 0 ? fopen( HCTX.args.source, "r") : stdin;
+    yyin = f_offset > 0 ? fopen( __context.args.source, "r") : stdin;
 
-    h_changepath( &HCTX );
+    h_changepath( &__context );
     while( !feof(yyin) ){
         yyparse();
     }
@@ -275,7 +275,7 @@ int main( int argc, char *argv[] ){
         fclose(yyin);
     }
 
-    h_env_release(&HCTX);
+    h_env_release(&__context);
 
 
     return 0;
