@@ -19,7 +19,7 @@
 #include "common.h"
 #include "vmem.h"
 #include "context.h"
-#include "tree.h"
+#include "node.h"
 
 typedef struct {
     vmem_t      *data;
@@ -40,10 +40,10 @@ void * hybris_pthread_worker( void *arg ){
 		unsigned int i;
 		for( i = 1; i < data->size(); i++ ){
 			switch( data->at(i)->xtype ){
-				case H_OT_INT    : call->addChild( Tree::addInt(data->at(i)->xint) ); break;
-				case H_OT_FLOAT  : call->addChild( Tree::addFloat(data->at(i)->xfloat) ); break;
-				case H_OT_CHAR   : call->addChild( Tree::addChar(data->at(i)->xchar) ); break;
-				case H_OT_STRING : call->addChild( Tree::addString((char *)data->at(i)->xstring.c_str()) ); break;
+				case H_OT_INT    : call->addChild( new ConstantNode(data->at(i)->xint) );                    break;
+				case H_OT_FLOAT  : call->addChild( new ConstantNode(data->at(i)->xfloat) );                  break;
+				case H_OT_CHAR   : call->addChild( new ConstantNode(data->at(i)->xchar) );                   break;
+				case H_OT_STRING : call->addChild( new ConstantNode((char *)data->at(i)->xstring.c_str()) ); break;
 				default :
                     ctx->depool();
                     hybris_generic_error( "type not supported for pthread call" );

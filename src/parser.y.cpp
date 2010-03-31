@@ -32,17 +32,17 @@ unsigned long t_start = 0,
 %}
 
 %union {
-    /* basic types */
+    /* base types */
     long    integer;
     double  real;
     char    byte;
-    char   *string;
+    char    string[0xFF];
     /* variable identifier */
-    char   *identifier;
+    char    identifier[0xFF];
     /* function prototype declaration */
     function_decl_t *function;
     /* function call temp arg list */
-    HNodeList *argv;
+    NodeList *argv;
     /* not reduced node */
     Node *HNODEPTR;
 };
@@ -84,104 +84,103 @@ body       : body statement { if( __context.args.do_timing == 1 && t_start == 0 
                                   t_start = h_uticks();
                               }
                               __context.engine->exec( &__context.vmem, $2 );
-                              Tree::release($2);
+                              delete $2;
                             }
            | /* empty */ ;
 
-statement  : EOSTMT                                                   { $$ = Tree::addExpression( EOSTMT, 2, NULL, NULL ); }
+statement  : EOSTMT                                                   { $$ = new ExpressionNode( EOSTMT, 2, NULL, NULL ); }
 	   	   | expression                                               { $$ = $1; }
            | expression EOSTMT                                        { $$ = $1; }
-           | RETURN expression EOSTMT                                 { $$ = Tree::addExpression( RETURN, 1, $2 ); }
+           | RETURN expression EOSTMT                                 { $$ = new ExpressionNode( RETURN, 1, $2 ); }
            /* subscript operator special cases */
-		   | expression '[' ']' ASSIGN expression EOSTMT              { $$ = Tree::addExpression( SUBSCRIPTADD, 2, $1, $5 ); }
-           | expression '[' expression ']' ASSIGN expression EOSTMT   { $$ = Tree::addExpression( SUBSCRIPTSET, 3, $1, $3, $6 ); }
+		   | expression '[' ']' ASSIGN expression EOSTMT              { $$ = new ExpressionNode( SUBSCRIPTADD, 2, $1, $5 ); }
+           | expression '[' expression ']' ASSIGN expression EOSTMT   { $$ = new ExpressionNode( SUBSCRIPTSET, 3, $1, $3, $6 ); }
            /* conditional and loops */
-           | WHILE '(' expression ')' statement                       { $$ = Tree::addStatement( WHILE, 2, $3, $5 ); }
-           | DO statement WHILE '(' expression ')' EOSTMT             { $$ = Tree::addStatement( DO, 2, $2, $5 ); }
-		   | FOR '(' statement statement expression ')' statement     { $$ = Tree::addStatement( FOR, 4, $3, $4, $5, $7 ); }
-		   | FOREACH '(' IDENT OF expression ')' statement            { $$ = Tree::addStatement( FOREACH, 3, Tree::addIdentifier($3), $5, $7 ); free($3); }
+           | WHILE '(' expression ')' statement                       { $$ = new StatementNode( WHILE, 2, $3, $5 ); }
+           | DO statement WHILE '(' expression ')' EOSTMT             { $$ = new StatementNode( DO, 2, $2, $5 ); }
+		   | FOR '(' statement statement expression ')' statement     { $$ = new StatementNode( FOR, 4, $3, $4, $5, $7 ); }
+		   | FOREACH '(' IDENT OF expression ')' statement            { $$ = new StatementNode( FOREACH, 3, new IdentifierNode($3), $5, $7 ); }
 		   | FOREACH '(' IDENT MAPS IDENT OF expression ')' statement {
-		   		$$ = Tree::addStatement( FOREACHM, 4, Tree::addIdentifier($3), Tree::addIdentifier($5), $7, $9 );
-				free($3);
-				free($5);
+		   		$$ = new StatementNode( FOREACHM, 4, new IdentifierNode($3), new IdentifierNode($5), $7, $9 );
 		   }
-           | IF '(' expression ')' statement %prec IFX                { $$ = Tree::addStatement( IF, 2, $3, $5 ); }
-           | IF '(' expression ')' statement ELSE statement           { $$ = Tree::addStatement( IF, 3, $3, $5, $7 ); }
+           | IF '(' expression ')' statement %prec IFX                { $$ = new StatementNode( IF, 2, $3, $5 ); }
+           | IF '(' expression ')' statement ELSE statement           { $$ = new StatementNode( IF, 3, $3, $5, $7 ); }
            /* statement body */
            | '{' statements '}' { $$ = $2; }
            /* function declaration */
-           | FUNCTION_PROTOTYPE '{' statements '}'                    { $$ = Tree::addFunction( $1, 1, $3 ); };
+           | FUNCTION_PROTOTYPE '{' statements '}'                    { $$ = new FunctionNode( $1, 1, $3 ); };
 
-arglist    : expression MAPS arglist { $$ = $3;                 $$->push_front($1); }
-           | expression ',' arglist  { $$ = $3;                 $$->push_front($1); }
-           | expression              { $$ = Tree::createList(); $$->push_back($1);  }
-           | /* empty */             { $$ = Tree::createList(); };
+arglist    : expression MAPS arglist { $$ = $3;             $$->push_front($1); }
+           | expression ',' arglist  { $$ = $3;             $$->push_front($1); }
+           | expression              { $$ = new NodeList(); $$->push_back($1);  }
+           | /* empty */             { $$ = new NodeList(); };
 
 statements : /* empty */          { $$ = 0;  }
            | statement            { $$ = $1; }
-           | statements statement { $$ = Tree::addExpression( EOSTMT, 2, $1, $2 ); };
+           | statements statement { $$ = new ExpressionNode( EOSTMT, 2, $1, $2 ); };
 
-expression : INTEGER                                 { $$ = Tree::addInt($1); }
-           | REAL                                    { $$ = Tree::addFloat($1); }
-           | CHAR                                    { $$ = Tree::addChar($1); }
-           | STRING                                  { $$ = Tree::addString($1);     free($1); }
-           | IDENT                                   { $$ = Tree::addIdentifier($1); free($1); }
+expression : INTEGER                                 { $$ = new ConstantNode($1); }
+           | REAL                                    { $$ = new ConstantNode($1); }
+           | CHAR                                    { $$ = new ConstantNode($1); }
+           | STRING                                  { $$ = new ConstantNode($1); }
+
+           | IDENT                                   { $$ = new IdentifierNode($1); }
            /* expression evaluation returns an identifier */
-           | DOLLAR expression                       { $$ = Tree::addExpression( DOLLAR, 1, $2 ); }
+           | DOLLAR expression                       { $$ = new ExpressionNode( DOLLAR, 1, $2 ); }
            /* ptr/alias evaluation */
-           | AND expression                          { $$ = Tree::addExpression( PTR, 1, $2 ); }
-           | MUL expression                          { $$ = Tree::addExpression( OBJ, 1, $2 ); }
+           | AND expression                          { $$ = new ExpressionNode( PTR, 1, $2 ); }
+           | MUL expression                          { $$ = new ExpressionNode( OBJ, 1, $2 ); }
 		   /* identifier declaration/assignation */
-		   | IDENT ASSIGN expression                 { $$ = Tree::addExpression( ASSIGN, 2, Tree::addIdentifier($1), $3 ); }
+		   | IDENT ASSIGN expression                 { $$ = new ExpressionNode( ASSIGN, 2, new IdentifierNode($1), $3 ); }
            /* a single subscript could be an expression itself */
-           | expression '[' expression ']' %prec SBX { $$ = Tree::addExpression( SUBSCRIPTGET, 2, $1, $3 ); }
+           | expression '[' expression ']' %prec SBX { $$ = new ExpressionNode( SUBSCRIPTGET, 2, $1, $3 ); }
            /* range evaluation */
-           | expression DDOT expression              { $$ = Tree::addExpression( RANGE, 2, $1, $3 ); }
+           | expression DDOT expression              { $$ = new ExpressionNode( RANGE, 2, $1, $3 ); }
            /* arithmetic */
-           | MINUS expression %prec UMINUS           { $$ = Tree::addExpression( UMINUS, 1, $2 ); }
-           | expression DOT expression               { $$ = Tree::addExpression( DOT, 2, $1, $3 ); }
-		   | expression DOTE expression              { $$ = Tree::addExpression( DOTE, 2, $1, $3 ); }
-           | expression PLUS expression              { $$ = Tree::addExpression( PLUS, 2, $1, $3 ); }
-		   | expression PLUSE expression             { $$ = Tree::addExpression( PLUSE, 2, $1, $3 ); }
-           | expression MINUS expression             { $$ = Tree::addExpression( MINUS, 2, $1, $3 ); }
-		   | expression MINUSE expression            { $$ = Tree::addExpression( MINUSE, 2, $1, $3 ); }
-           | expression MUL expression               { $$ = Tree::addExpression( MUL, 2, $1, $3 ); }
-		   | expression MULE expression              { $$ = Tree::addExpression( MULE, 2, $1, $3 ); }
-           | expression DIV expression               { $$ = Tree::addExpression( DIV, 2, $1, $3 ); }
-		   | expression DIVE expression              { $$ = Tree::addExpression( DIVE, 2, $1, $3 ); }
-           | expression MOD expression               { $$ = Tree::addExpression( MOD, 2, $1, $3 ); }
-           | expression INC                          { $$ = Tree::addExpression( INC, 1, $1 ); }
-           | expression DEC                          { $$ = Tree::addExpression( DEC, 1, $1 ); }
+           | MINUS expression %prec UMINUS           { $$ = new ExpressionNode( UMINUS, 1, $2 ); }
+           | expression DOT expression               { $$ = new ExpressionNode( DOT, 2, $1, $3 ); }
+		   | expression DOTE expression              { $$ = new ExpressionNode( DOTE, 2, $1, $3 ); }
+           | expression PLUS expression              { $$ = new ExpressionNode( PLUS, 2, $1, $3 ); }
+		   | expression PLUSE expression             { $$ = new ExpressionNode( PLUSE, 2, $1, $3 ); }
+           | expression MINUS expression             { $$ = new ExpressionNode( MINUS, 2, $1, $3 ); }
+		   | expression MINUSE expression            { $$ = new ExpressionNode( MINUSE, 2, $1, $3 ); }
+           | expression MUL expression               { $$ = new ExpressionNode( MUL, 2, $1, $3 ); }
+		   | expression MULE expression              { $$ = new ExpressionNode( MULE, 2, $1, $3 ); }
+           | expression DIV expression               { $$ = new ExpressionNode( DIV, 2, $1, $3 ); }
+		   | expression DIVE expression              { $$ = new ExpressionNode( DIVE, 2, $1, $3 ); }
+           | expression MOD expression               { $$ = new ExpressionNode( MOD, 2, $1, $3 ); }
+           | expression INC                          { $$ = new ExpressionNode( INC, 1, $1 ); }
+           | expression DEC                          { $$ = new ExpressionNode( DEC, 1, $1 ); }
            /* bitwise */
-           | expression XOR expression               { $$ = Tree::addExpression( XOR, 2, $1, $3 ); }
-		   | expression XORE expression              { $$ = Tree::addExpression( XORE, 2, $1, $3 ); }
-           | NOT expression                          { $$ = Tree::addExpression( NOT, 1, $2 ); }
-           | expression AND expression               { $$ = Tree::addExpression( AND, 2, $1, $3 ); }
-		   | expression ANDE expression              { $$ = Tree::addExpression( ANDE, 2, $1, $3 ); }
-           | expression OR expression                { $$ = Tree::addExpression( OR, 2, $1, $3 ); }
-		   | expression ORE expression               { $$ = Tree::addExpression( ORE, 2, $1, $3 ); }
-		   | expression SHIFTL expression            { $$ = Tree::addExpression( SHIFTL, 2, $1, $3 ); }
-		   | expression SHIFTLE expression           { $$ = Tree::addExpression( SHIFTLE, 2, $1, $3 ); }
-		   | expression SHIFTR expression            { $$ = Tree::addExpression( SHIFTR, 2, $1, $3 ); }
-		   | expression SHIFTRE expression           { $$ = Tree::addExpression( SHIFTRE, 2, $1, $3 ); }
-		   | expression LNOT                         { $$ = Tree::addExpression( FACT, 1, $1 ); }
+           | expression XOR expression               { $$ = new ExpressionNode( XOR, 2, $1, $3 ); }
+		   | expression XORE expression              { $$ = new ExpressionNode( XORE, 2, $1, $3 ); }
+           | NOT expression                          { $$ = new ExpressionNode( NOT, 1, $2 ); }
+           | expression AND expression               { $$ = new ExpressionNode( AND, 2, $1, $3 ); }
+		   | expression ANDE expression              { $$ = new ExpressionNode( ANDE, 2, $1, $3 ); }
+           | expression OR expression                { $$ = new ExpressionNode( OR, 2, $1, $3 ); }
+		   | expression ORE expression               { $$ = new ExpressionNode( ORE, 2, $1, $3 ); }
+		   | expression SHIFTL expression            { $$ = new ExpressionNode( SHIFTL, 2, $1, $3 ); }
+		   | expression SHIFTLE expression           { $$ = new ExpressionNode( SHIFTLE, 2, $1, $3 ); }
+		   | expression SHIFTR expression            { $$ = new ExpressionNode( SHIFTR, 2, $1, $3 ); }
+		   | expression SHIFTRE expression           { $$ = new ExpressionNode( SHIFTRE, 2, $1, $3 ); }
+		   | expression LNOT                         { $$ = new ExpressionNode( FACT, 1, $1 ); }
            /* logic */
-		   | LNOT expression                         { $$ = Tree::addExpression( LNOT, 1, $2 ); }
-           | expression LESS expression              { $$ = Tree::addExpression( LESS, 2, $1, $3 ); }
-           | expression GREATER expression           { $$ = Tree::addExpression( GREATER, 2, $1, $3 ); }
-           | expression GE expression                { $$ = Tree::addExpression( GE,  2, $1, $3 ); }
-           | expression LE expression                { $$ = Tree::addExpression( LE,  2, $1, $3 ); }
-           | expression NE expression                { $$ = Tree::addExpression( NE,  2, $1, $3 ); }
-           | expression EQ expression                { $$ = Tree::addExpression( EQ,  2, $1, $3 ); }
-           | expression LAND expression              { $$ = Tree::addExpression( LAND,  2, $1, $3 ); }
-           | expression LOR expression               { $$ = Tree::addExpression( LOR,  2, $1, $3 ); }
+		   | LNOT expression                         { $$ = new ExpressionNode( LNOT, 1, $2 ); }
+           | expression LESS expression              { $$ = new ExpressionNode( LESS, 2, $1, $3 ); }
+           | expression GREATER expression           { $$ = new ExpressionNode( GREATER, 2, $1, $3 ); }
+           | expression GE expression                { $$ = new ExpressionNode( GE,  2, $1, $3 ); }
+           | expression LE expression                { $$ = new ExpressionNode( LE,  2, $1, $3 ); }
+           | expression NE expression                { $$ = new ExpressionNode( NE,  2, $1, $3 ); }
+           | expression EQ expression                { $$ = new ExpressionNode( EQ,  2, $1, $3 ); }
+           | expression LAND expression              { $$ = new ExpressionNode( LAND,  2, $1, $3 ); }
+           | expression LOR expression               { $$ = new ExpressionNode( LOR,  2, $1, $3 ); }
            /* regex specific */
-           | expression REGEX_OP expression          { $$ = Tree::addExpression( REGEX_OP, 2, $1, $3 ); }
+           | expression REGEX_OP expression          { $$ = new ExpressionNode( REGEX_OP, 2, $1, $3 ); }
            /* function call (consider two different cases due to builtin calls */
-		   | IDENT      '(' arglist ')'  %prec FBX   { $$ = Tree::addCall( $1, $3 ); }
-           | expression '(' arglist ')'              { $$ = Tree::addCall( $1, $3 ); }
+		   | IDENT      '(' arglist ')'  %prec FBX   { $$ = new CallNode( $1, $3 ); }
+           | expression '(' arglist ')'              { $$ = new CallNode( $1, $3 ); }
            /* ternary operator */
-           | '(' expression '?' expression ':' expression ')' { $$ = Tree::addStatement( QUESTION, 3, $2, $4, $6 ); }
+           | '(' expression '?' expression ':' expression ')' { $$ = new StatementNode( QUESTION, 3, $2, $4, $6 ); }
            /* group expression */
            | '(' expression ')'                      { $$ = $2; };
 

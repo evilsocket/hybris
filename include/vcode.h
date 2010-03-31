@@ -19,7 +19,7 @@
 #ifndef _HVCODE_H_
 #	define _HVCODE_H_
 
-#include "tree.h"
+#include "node.h"
 #include "map.h"
 #include "vmem.h"
 

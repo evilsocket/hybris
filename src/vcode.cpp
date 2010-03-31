@@ -37,8 +37,7 @@ Node *VirtualCode::add( char *identifier, Node *node ){
 
     /* if object does not exist yet, create a new one */
     if( get( function_name ) == H_UNDEFINED ){
-        Node *clone = Tree::clone(node,clone);
-        return insert( function_name, clone );
+        return insert( function_name, node->clone() );
     }
     /* else set the new value */
     else{
@@ -56,8 +55,8 @@ void VirtualCode::release(){
     #endif
 
     for( i = 0; i < m_elements; ++i ){
-        Tree::release( at(i) );
+        Node *item = at(i);
+        delete item;
     }
-
     clear();
 }

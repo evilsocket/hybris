@@ -9,8 +9,8 @@ CFLAGS= -Iinclude/ $(OPTIMIZATION) $(WFLAGS) $(LIBXML_CFLAGS) $(LIBFFI_CFLAGS) -
 LFLAGS= -ldl -lpcrecpp -lcurl -lpthread $(LIBXML_LFLAGS) $(LIBFFI_LFLAGS)
 PREFIX=/usr
 TARGET=hybris
-LIBOBJ= src/context.lo src/common.lo src/engine.lo src/node.lo src/object.lo src/tree.lo src/hashtable.lo src/vmem.lo src/vcode.lo src/builtins/*.lo
-SOURCES=src/common.cpp src/lexer.cpp src/context.cpp src/hashtable.cpp src/vmem.cpp src/vcode.cpp src/node.cpp src/object.cpp src/tree.cpp \
+LIBOBJ= src/context.lo src/common.lo src/engine.lo src/node.lo src/object.lo src/hashtable.lo src/vmem.lo src/vcode.lo src/builtins/*.lo
+SOURCES=src/common.cpp src/lexer.cpp src/context.cpp src/hashtable.cpp src/vmem.cpp src/vcode.cpp src/node.cpp src/object.cpp \
 		src/engine.cpp src/parser.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 LOBJECTS=$(SOURCES:.cpp=.lo)

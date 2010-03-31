@@ -23,7 +23,7 @@
 #include "object.h"
 #include "vmem.h"
 #include "vcode.h"
-#include "tree.h"
+#include "node.h"
 #include "common.h"
 
 #endif

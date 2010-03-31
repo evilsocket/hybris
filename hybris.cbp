@@ -45,9 +45,6 @@
 		<Unit filename="include/object.h">
 			<Option target="all" />
 		</Unit>
-		<Unit filename="include/tree.h">
-			<Option target="all" />
-		</Unit>
 		<Unit filename="include/vcode.h" />
 		<Unit filename="include/vmem.h">
 			<Option target="all" />
@@ -116,9 +113,6 @@
 			<Option target="all" />
 		</Unit>
 		<Unit filename="src/parser.y.cpp">
-			<Option target="all" />
-		</Unit>
-		<Unit filename="src/tree.cpp">
 			<Option target="all" />
 		</Unit>
 		<Unit filename="src/vcode.cpp" />

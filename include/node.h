@@ -42,6 +42,8 @@ typedef unsigned short H_NODE_TYPE;
 /* pre declaration of class Node */
 class  Node;
 
+typedef list<Node *> NodeList;
+
 /* possible values for a generic node */
 class NodeValue {
     public :
@@ -88,6 +90,8 @@ public  :
     }
 
     void addChild( Node *child );
+
+    Node *clone();
 };
 
 /** specialized node classes **/
@@ -107,6 +111,7 @@ class ExpressionNode : public Node {
     public :
 
         ExpressionNode( int expression );
+        ExpressionNode( int expression, int argc, ... );
 };
 
 /* statements */
@@ -114,6 +119,7 @@ class StatementNode : public Node {
     public :
 
         StatementNode( int statement );
+        StatementNode( int statement, int argc, ... );
 };
 
 /* identifiers */
@@ -128,15 +134,16 @@ class FunctionNode : public Node {
     public :
 
         FunctionNode( function_decl_t *declaration );
-        FunctionNode( char *name );
+        FunctionNode( function_decl_t *declaration, int argc, ... );
+        FunctionNode( const char *name );
 };
 
 /* function calls (a subset of StatementNode) */
 class CallNode : public Node {
     public :
 
-        CallNode( char *name );
-        CallNode( Node *alias );
+        CallNode( char *name, NodeList *argv );
+        CallNode( Node *alias, NodeList *argv );
 };
 
 #endif

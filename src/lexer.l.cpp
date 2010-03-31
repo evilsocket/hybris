@@ -18,7 +18,7 @@
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "tree.h"
+#include "node.h"
 #include "common.h"
 #include "parser.hpp"
 #include "context.h"
@@ -29,7 +29,7 @@ void yyerror(char *);
 
 void             h_skip_comment();
 void             h_skip_line();
-char            *h_handle_string( char delimiter );
+void             h_handle_string( char delimiter, char *buffer );
 char             h_handle_char( char delimiter );
 function_decl_t *h_handle_function( char * text );
 
@@ -164,13 +164,13 @@ include          BEGIN(INCLUSION);
 	return FUNCTION_PROTOTYPE;
 }
 
-{identifier}                           { yylval.identifier = strdup(yytext);    return IDENT; }
+{identifier}                           { strncpy( yylval.identifier, yytext, 0xFF ); return IDENT; }
 
 -?[0-9]+                               { yylval.integer = atol(yytext);         return INTEGER; }
 -?0x[A-Fa-f0-9]+                       { yylval.integer = strtol(yytext,0,16);  return INTEGER; }
 -?([0-9]+|([0-9]*\.[0-9]+){exponent}?) { yylval.real    = atof(yytext);         return REAL; }
 "'"                                    { yylval.byte    = h_handle_char('\'');  return CHAR; }
-"\""                                   { yylval.string  = h_handle_string('"'); return STRING; }
+"\""                                   { h_handle_string( '"', yylval.string ); return STRING; }
 
 . { hybris_syntax_error( "Unexpected token '%s'", yytext ); }
 
@@ -233,10 +233,11 @@ char  h_handle_char( char delimiter ){
 	}
 }
 
-char *h_handle_string( char delimiter ){
-    char buffer[ 0xFF ];
+void h_handle_string( char delimiter, char *buffer ){
     char *ptr;
     int c, prev = 0x00;
+
+    memset( buffer, 0x00, 0xFF );
 
     ptr = buffer;
 
@@ -250,8 +251,6 @@ char *h_handle_string( char delimiter ){
 		}
 	}
     *ptr = 0x00;
-
-    return strdup(buffer);
 }
 
 function_decl_t *h_handle_function( char * text ){
