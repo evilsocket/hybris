@@ -54,29 +54,29 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
         case H_NT_STATEMENT :
             switch( node->value.m_statement ){
                 /* if( condition ) */
-                case IF     :
+                case T_IF     :
                     return onIf( frame, node );
                 /* while( condition ){ body } */
-                case WHILE  :
+                case T_WHILE  :
                     return onWhile( frame, node );
                 /* do{ body }while( condition ); */
-                case DO  :
+                case T_DO  :
                     return onDo( frame, node );
                 /* for( initialization; condition; variance ){ body } */
-                case FOR    :
+                case T_FOR    :
                     return onFor( frame, node );
                 /* foreach( item of array ) */
-                case FOREACH :
+                case T_FOREACH :
                     return onForeach( frame, node );
                 /* foreach( label -> item of map ) */
-                case FOREACHM :
+                case T_FOREACHM :
                     return onForeachm( frame, node );
                 break;
                 /* (condition ? expression : expression) */
-                case QUESTION :
+                case T_QUESTION :
                     return onQuestion( frame, node );
 
-                case SWITCH :
+                case T_SWITCH :
                     return onSwitch( frame, node );
             }
         break;
@@ -85,144 +85,144 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
         case H_NT_EXPRESSION   :
             switch( node->value.m_expression ){
                 /* identifier = expression */
-                case ASSIGN    :
+                case T_ASSIGN    :
                     return onAssign( frame, node );
                 /* expression ; */
-                case EOSTMT  :
+                case T_EOSTMT  :
                     return onEostmt( frame, node );
                 /* return */
-                case RETURN :
+                case T_RETURN :
                     return onReturn( frame, node );
                 /* $ */
-                case DOLLAR :
+                case T_DOLLAR :
                     return onDollar( frame, node );
                 /* * */
-                case PTR :
+                case T_PTR :
                     return onPointer( frame, node );
-                case OBJ :
+                case T_OBJ :
                     return onObject( frame, node );
                 /* expression .. expression */
-                case RANGE :
+                case T_RANGE :
                     return onRange( frame, node );
                 /* array[] = object; */
-                case SUBSCRIPTADD :
+                case T_SUBSCRIPTADD :
                     return onSubscriptAdd( frame, node );
                 /* (identifier)? = object[ expression ]; */
-                case SUBSCRIPTGET :
+                case T_SUBSCRIPTGET :
                     return onSubscriptGet( frame, node );
                 /* object[ expression ] = expression */
-                case SUBSCRIPTSET :
+                case T_SUBSCRIPTSET :
                     return onSubscriptSet( frame, node );
                 /* expression.expression */
-                case DOT    :
+                case T_DOT    :
                     return onDot( frame, node );
                 /* expression .= expression */
-                case DOTE   :
+                case T_DOTE   :
                     return onDote( frame, node );
                 /* -expression */
-                case UMINUS :
+                case T_UMINUS :
                     return onUminus( frame, node );
                 /* expression ~= expression */
-                case REGEX_OP :
+                case T_REGEX_OP :
                     return onRegex( frame, node );
                 /* expression + expression */
-                case PLUS    :
+                case T_PLUS    :
                     return onPlus( frame, node );
                 /* expression += expression */
-                case PLUSE   :
+                case T_PLUSE   :
                     return onPluse( frame, node );
                 /* expression - expression */
-                case MINUS    :
+                case T_MINUS    :
                     return onMinus( frame, node );
                 /* expression -= expression */
-                case MINUSE   :
+                case T_MINUSE   :
                     return onMinuse( frame, node );
                 /* expression * expression */
-                case MUL	:
+                case T_MUL	:
                     return onMul( frame, node );
                 /* expression *= expression */
-                case MULE	:
+                case T_MULE	:
                     return onMule( frame, node );
                 /* expression / expression */
-                case DIV    :
+                case T_DIV    :
                     return onDiv( frame, node );
                 /* expression /= expression */
-                case DIVE   :
+                case T_DIVE   :
                     return onDive( frame, node );
                 /* expression % expression */
-                case MOD    :
+                case T_MOD    :
                     return onMod( frame, node );
                 /* expression %= expression */
-                case MODE   :
+                case T_MODE   :
                     return onMode( frame, node );
                 /* expression++ */
-                case INC    :
+                case T_INC    :
                     return onInc( frame, node );
                 /* expression-- */
-                case DEC    :
+                case T_DEC    :
                     return onDec( frame, node );
                 /* expression ^ expression */
-                case XOR    :
+                case T_XOR    :
                     return onXor( frame, node );
                 /* expression ^= expression */
-                case XORE   :
+                case T_XORE   :
                     return onXore( frame, node );
                 /* expression & expression */
-                case AND    :
+                case T_AND    :
                     return onAnd( frame, node );
                 /* expression &= expression */
-                case ANDE   :
+                case T_ANDE   :
                     return onAnde( frame, node );
                 /* expression | expression */
-                case OR     :
+                case T_OR     :
                     return onOr( frame, node );
                 /* expression |= expression */
-                case ORE    :
+                case T_ORE    :
                     return onOre( frame, node );
                 /* expression << expression */
-                case SHIFTL  :
+                case T_SHIFTL  :
                     return onShiftl( frame, node );
                 /* expression <<= expression */
-                case SHIFTLE :
+                case T_SHIFTLE :
                     return onShiftle( frame, node );
                 /* expression >> expression */
-                case SHIFTR  :
+                case T_SHIFTR  :
                     return onShiftr( frame, node );
                 /* expression >>= expression */
-                case SHIFTRE :
+                case T_SHIFTRE :
                     return onShiftre( frame, node );
                 /* expression! */
-                case FACT :
+                case T_FACT :
                     return onFact( frame, node );
                 /* ~expression */
-                case NOT    :
+                case T_NOT    :
                     return onNot( frame, node );
                 /* !expression */
-                case LNOT   :
+                case T_LNOT   :
                     return onLnot( frame, node );
                 /* expression < expression */
-                case LESS    :
+                case T_LESS    :
                     return onLess( frame, node );
                 /* expression > expression */
-                case GREATER    :
+                case T_GREATER    :
                     return onGreater( frame, node );
                 /* expression >= expression */
-                case GE     :
+                case T_GE     :
                     return onGe( frame, node );
                 /* expression <= expression */
-                case LE     :
+                case T_LE     :
                     return onLe( frame, node );
                 /* expression != expression */
-                case NE     :
+                case T_NE     :
                     return onNe( frame, node );
                 /* expression == expression */
-                case EQ     :
+                case T_EQ     :
                     return onEq( frame, node );
                 /* expression && expression */
-                case LAND   :
+                case T_LAND   :
                     return onLand( frame, node );
                 /* expression || expression */
-                case LOR    :
+                case T_LOR    :
                     return onLor( frame, node );
             }
     }

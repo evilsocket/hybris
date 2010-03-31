@@ -51,7 +51,7 @@ using std::cin;
 typedef unsigned short H_OBJECT_TYPE;
 
 /* object types */
-#define H_OT_NONE   0
+#define H_OT_VOID   0
 #define H_OT_INT    1
 #define H_OT_FLOAT  2
 #define H_OT_CHAR   3

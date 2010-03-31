@@ -41,7 +41,7 @@ extern Context __context;
 %option noyywrap
 %option batch
 
-%x INCLUSION
+%x T_INCLUSION
 
 exponent   [eE][-+]?[0-9]+
 spaces     [ \n\t]+
@@ -51,10 +51,10 @@ identifier [a-zA-Z][a-zA-Z0-9\_]*
 [ \t]+ ;
 [\n]             { yylineno++; }
 
-include          BEGIN(INCLUSION);
+include          BEGIN(T_INCLUSION);
 
-<INCLUSION>[ \t]*      /* eat the whitespace */
-<INCLUSION>[^ \t\n]+ {
+<T_INCLUSION>[ \t]*      /* eat the whitespace */
+<T_INCLUSION>[^ \t\n]+ {
     /* extract file name */
     char *ptr = yytext;
     while( *ptr != ' ' && *ptr != ';' ){
@@ -101,81 +101,81 @@ include          BEGIN(INCLUSION);
 "/*"		    { h_skip_comment(); }
 "//"            { h_skip_line();    }
 
-";" 		    return EOSTMT;
+";" 		    return T_EOSTMT;
 
-".."            return DDOT;
-"."             return DOT;
-".="            return DOTE;
+".."            return T_DDOT;
+"."             return T_DOT;
+".="            return T_DOTE;
 
-"="		        return ASSIGN;
-"+"             return PLUS;
-"+="            return PLUSE;
-"-"             return MINUS;
-"-="            return MINUSE;
-"/"             return DIV;
-"/="            return DIVE;
-"*"             return MUL;
-"*="            return MULE;
-"%"             return MOD;
-"%="            return MODE;
+"="		        return T_ASSIGN;
+"+"             return T_PLUS;
+"+="            return T_PLUSE;
+"-"             return T_MINUS;
+"-="            return T_MINUSE;
+"/"             return T_DIV;
+"/="            return T_DIVE;
+"*"             return T_MUL;
+"*="            return T_MULE;
+"%"             return T_MOD;
+"%="            return T_MODE;
 
-"++"            return INC;
-"--"            return DEC;
+"++"            return T_INC;
+"--"            return T_DEC;
 
-"^"             return XOR;
-"^="            return XORE;
-"~"             return NOT;
-"&"             return AND;
-"&="            return ANDE;
-"|"             return OR;
-"|="            return ORE;
-"<<"            return SHIFTL;
-"<<="           return SHIFTLE;
-">>"            return SHIFTR;
+"^"             return T_XOR;
+"^="            return T_XORE;
+"~"             return T_NOT;
+"&"             return T_AND;
+"&="            return T_ANDE;
+"|"             return T_OR;
+"|="            return T_ORE;
+"<<"            return T_SHIFTL;
+"<<="           return T_SHIFTLE;
+">>"            return T_SHIFTR;
 
-"!"             return LNOT;
-"<"             return LESS;
-">"             return GREATER;
-">="            return GE;
-"<="            return LE;
-"=="            return EQ;
-"!="            return NE;
-"&&"            return LAND;
-"||"            return LOR;
+"!"             return T_LNOT;
+"<"             return T_LESS;
+">"             return T_GREATER;
+">="            return T_GE;
+"<="            return T_LE;
+"=="            return T_EQ;
+"!="            return T_NE;
+"&&"            return T_LAND;
+"||"            return T_LOR;
 
-"~="            return REGEX_OP;
+"~="            return T_REGEX_OP;
 
 [\(|\)|\{|\}|\[|\]|\,\?\:] return yytext[0];
 
-"$"             return DOLLAR;
-"->"            return MAPS;
-"while"         return WHILE;
-"do"            return DO;
-"for"		    return FOR;
-"foreach"       return FOREACH;
-"of"            return OF;
-"if"            return IF;
-"else"          return ELSE;
+"$"             return T_DOLLAR;
+"->"            return T_MAPS;
+"while"         return T_WHILE;
+"do"            return T_DO;
+"for"		    return T_FOR;
+"foreach"       return T_FOREACH;
+"of"            return T_OF;
+"if"            return T_IF;
+"else"          return T_ELSE;
 
-"switch"        return SWITCH;
-"case"          return CASE;
-"break"         return BREAK;
-"default"       return DEFAULT;
+"switch"        return T_SWITCH;
+"case"          return T_CASE;
+"break"         return T_BREAK;
+"default"       return T_DEFAULT;
 
-"return"        return RETURN;
+"return"        return T_RETURN;
 
 "function"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*")" {
 	yylval.function   = h_handle_function(yytext);
-	return FUNCTION_PROTOTYPE;
+	return T_FUNCTION_PROTOTYPE;
 }
 
-{identifier}                           { strncpy( yylval.identifier, yytext, 0xFF ); return IDENT; }
+{identifier}                           { strncpy( yylval.identifier, yytext, 0xFF ); return T_IDENT; }
 
--?[0-9]+                               { yylval.integer = atol(yytext);         return INTEGER; }
--?0x[A-Fa-f0-9]+                       { yylval.integer = strtol(yytext,0,16);  return INTEGER; }
--?([0-9]+|([0-9]*\.[0-9]+){exponent}?) { yylval.real    = atof(yytext);         return REAL; }
-"'"                                    { yylval.byte    = h_handle_char('\'');  return CHAR; }
-"\""                                   { h_handle_string( '"', yylval.string ); return STRING; }
+-?[0-9]+                               { yylval.integer = atol(yytext);         return T_INTEGER; }
+-?0x[A-Fa-f0-9]+                       { yylval.integer = strtol(yytext,0,16);  return T_INTEGER; }
+-?([0-9]+|([0-9]*\.[0-9]+){exponent}?) { yylval.real    = atof(yytext);         return T_REAL; }
+"'"                                    { yylval.byte    = h_handle_char('\'');  return T_CHAR; }
+"\""                                   { h_handle_string( '"', yylval.string ); return T_STRING; }
 
 . { hybris_syntax_error( "Unexpected token '%s'", yytext ); }
 

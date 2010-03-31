@@ -450,7 +450,7 @@ void Object::release( bool reset_attributes /*= true*/ ){
         break;
     }
     xsize      = 0;
-    xtype      = H_OT_NONE;
+    xtype      = H_OT_VOID;
     if( reset_attributes ){
         attributes = H_OA_NONE | H_OA_GARBAGE;
     }

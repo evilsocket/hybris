@@ -38,7 +38,7 @@ typedef struct {
 dll_arg_t;
 
 static void ctype_convert( Object *o, dll_arg_t *pa ) {
-	if( o->xtype == H_OT_NONE ){
+	if( o->xtype == H_OT_VOID ){
         pa->type    = &ffi_type_pointer;
         pa->value.p = H_UNDEFINED;
 	}

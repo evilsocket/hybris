@@ -49,26 +49,94 @@ unsigned long t_start = 0,
 
 %locations
 
-%token <integer>    INTEGER
-%token <real>       REAL;
-%token <byte>       CHAR;
-%token <string>     STRING;
-%token <identifier> IDENT;
-%token <function>   FUNCTION_PROTOTYPE;
+%token <integer>    T_INTEGER
+%token <real>       T_REAL;
+%token <byte>       T_CHAR;
+%token <string>     T_STRING;
+%token <identifier> T_IDENT;
+%token <function>   T_FUNCTION_PROTOTYPE;
 
+%token T_EOSTMT
+%token T_DDOT
+%token T_DOT
+%token T_DOTE
+%token T_PLUS
+%token T_PLUSE
+%token T_MINUS
+%token T_MINUSE
+%token T_DIV
+%token T_DIVE
+%token T_MUL
+%token T_MULE
+%token T_MOD
+%token T_MODE
+%token T_FACT
+%token T_XOR
+%token T_XORE
+%token T_NOT
+%token T_AND
+%token T_ANDE
+%token T_OR
+%token T_ORE
+%token T_SHIFTL
+%token T_SHIFTLE
+%token T_SHIFTR
+%token T_SHIFTRE
+%token T_ASSIGN
+%token T_REGEX_OP
+%token T_RANGE
+%token T_SUBSCRIPTADD
+%token T_SUBSCRIPTSET
+%token T_SUBSCRIPTGET
+%token T_WHILE
+%token T_DO
+%token T_FOR
+%token T_FOREACH
+%token T_FOREACHM
+%token T_OF
+%token T_TO
+%token T_IF
+%token T_SWITCH
+%token T_CASE
+%token T_BREAK
+%token T_DEFAULT
+%token T_QUESTION
+%token T_DOLLAR
+%token T_MAPS
+%token T_PTR
+%token T_OBJ
+%token T_RETURN
+%token T_CALL
 
-%token EOSTMT DDOT DOT DOTE PLUS PLUSE MINUS MINUSE DIV DIVE MUL MULE MOD MODE FACT XOR XORE NOT AND ANDE OR ORE SHIFTL SHIFTLE SHIFTR SHIFTRE ASSIGN REGEX_OP
-%token RANGE SUBSCRIPTADD SUBSCRIPTSET SUBSCRIPTGET WHILE DO FOR FOREACH FOREACHM OF TO IF SWITCH CASE BREAK DEFAULT QUESTION DOLLAR MAPS PTR OBJ
-%token RETURN CALL
-%nonassoc IFX
-%nonassoc SBX
-%nonassoc SWBX
-%nonassoc FBX
-%nonassoc ELSE
+%nonassoc T_IF_END
+%nonassoc T_SUBSCRIPT_END
+%nonassoc T_SWITCH_END
+%nonassoc T_CALL_END
+%nonassoc T_ELSE
+%nonassoc T_UMINUS
 
-%left LNOT GE LE EQ NE GREATER LESS LAND LOR
-%left DOLLAR INC DEC MULE MUL DIVE DIV PLUSE PLUS MINUSE MINUS DOTE DOT
-%nonassoc UMINUS
+%left T_LNOT
+%left T_GE
+%left T_LE
+%left T_EQ
+%left T_NE
+%left T_GREATER
+%left T_LESS
+%left T_LAND
+%left T_LOR
+%left T_DOLLAR
+%left T_INC
+%left T_DEC
+%left T_MULE
+%left T_MUL
+%left T_DIVE
+%left T_DIV
+%left T_PLUSE
+%left T_PLUS
+%left T_MINUSE
+%left T_MINUS
+%left T_DOTE
+%left T_DOT
 
 %type <HNODEPTR> statement expression statements
 %type <argv>     arglist
@@ -90,112 +158,112 @@ body       : body statement { if( __context.args.do_timing == 1 && t_start == 0 
                             }
            | /* empty */ ;
 
-caselist   : CASE expression ':' statements BREAK EOSTMT caselist { $$ = $7;             $$->push_front( $2, $4 ); }
-           | CASE expression ':' statements BREAK EOSTMT          { $$ = new NodeList(); $$->push_back( $2, $4 );  }
-           | /* empty */                                          { $$ = new NodeList(); };
+caselist   : T_CASE expression ':' statements T_BREAK T_EOSTMT caselist { $$ = $7;             $$->push_front( $2, $4 ); }
+           | T_CASE expression ':' statements T_BREAK T_EOSTMT          { $$ = new NodeList(); $$->push_back( $2, $4 );  }
+           | /* empty */                                                { $$ = new NodeList(); };
 
-arglist    : expression MAPS arglist { $$ = $3;             $$->push_front($1); }
-           | expression ',' arglist  { $$ = $3;             $$->push_front($1); }
-           | expression              { $$ = new NodeList(); $$->push_back($1);  }
-           | /* empty */             { $$ = new NodeList(); };
+arglist    : expression T_MAPS arglist { $$ = $3;             $$->push_front($1); }
+           | expression ',' arglist    { $$ = $3;             $$->push_front($1); }
+           | expression                { $$ = new NodeList(); $$->push_back($1);  }
+           | /* empty */               { $$ = new NodeList(); };
 
-statement  : EOSTMT                                                   { $$ = new ExpressionNode( EOSTMT, 2, NULL, NULL ); }
-	   	   | expression                                               { $$ = $1; }
-           | expression EOSTMT                                        { $$ = $1; }
-           | RETURN expression EOSTMT                                 { $$ = new ExpressionNode( RETURN, 1, $2 ); }
+statement  : T_EOSTMT                                                   { $$ = new ExpressionNode( T_EOSTMT, 2, NULL, NULL ); }
+	   	   | expression                                                 { $$ = $1; }
+           | expression T_EOSTMT                                        { $$ = $1; }
+           | T_RETURN expression T_EOSTMT                               { $$ = new ExpressionNode( T_RETURN, 1, $2 ); }
            /* subscript operator special cases */
-		   | expression '[' ']' ASSIGN expression EOSTMT              { $$ = new ExpressionNode( SUBSCRIPTADD, 2, $1, $5 ); }
-           | expression '[' expression ']' ASSIGN expression EOSTMT   { $$ = new ExpressionNode( SUBSCRIPTSET, 3, $1, $3, $6 ); }
+		   | expression '[' ']' T_ASSIGN expression T_EOSTMT            { $$ = new ExpressionNode( T_SUBSCRIPTADD, 2, $1, $5 ); }
+           | expression '[' expression ']' T_ASSIGN expression T_EOSTMT { $$ = new ExpressionNode( T_SUBSCRIPTSET, 3, $1, $3, $6 ); }
            /* conditional and loops */
-           | WHILE '(' expression ')' statement                       { $$ = new StatementNode( WHILE, 2, $3, $5 ); }
-           | DO statement WHILE '(' expression ')' EOSTMT             { $$ = new StatementNode( DO, 2, $2, $5 ); }
-		   | FOR '(' statement statement expression ')' statement     { $$ = new StatementNode( FOR, 4, $3, $4, $5, $7 ); }
-		   | FOREACH '(' IDENT OF expression ')' statement            { $$ = new StatementNode( FOREACH, 3, new IdentifierNode($3), $5, $7 ); }
-		   | FOREACH '(' IDENT MAPS IDENT OF expression ')' statement {
-		   		$$ = new StatementNode( FOREACHM, 4, new IdentifierNode($3), new IdentifierNode($5), $7, $9 );
+           | T_WHILE '(' expression ')' statement                       { $$ = new StatementNode( T_WHILE, 2, $3, $5 ); }
+           | T_DO statement T_WHILE '(' expression ')' T_EOSTMT         { $$ = new StatementNode( T_DO, 2, $2, $5 ); }
+		   | T_FOR '(' statement statement expression ')' statement     { $$ = new StatementNode( T_FOR, 4, $3, $4, $5, $7 ); }
+		   | T_FOREACH '(' T_IDENT T_OF expression ')' statement        { $$ = new StatementNode( T_FOREACH, 3, new IdentifierNode($3), $5, $7 ); }
+		   | T_FOREACH '(' T_IDENT T_MAPS T_IDENT T_OF expression ')' statement {
+		   		$$ = new StatementNode( T_FOREACHM, 4, new IdentifierNode($3), new IdentifierNode($5), $7, $9 );
 		   }
-           | IF '(' expression ')' statement %prec IFX                { $$ = new StatementNode( IF, 2, $3, $5 ); }
-           | IF '(' expression ')' statement ELSE statement           { $$ = new StatementNode( IF, 3, $3, $5, $7 ); }
-           | SWITCH '(' expression ')' '{'
+           | T_IF '(' expression ')' statement %prec T_IF_END           { $$ = new StatementNode( T_IF, 2, $3, $5 ); }
+           | T_IF '(' expression ')' statement T_ELSE statement         { $$ = new StatementNode( T_IF, 3, $3, $5, $7 ); }
+           | T_SWITCH '(' expression ')' '{'
                 caselist
-            '}' %prec SWBX                                            { $$ = new StatementNode( SWITCH, $3, $6 ); }
-           | SWITCH '(' expression ')' '{'
+            '}' %prec T_SWITCH_END                                      { $$ = new StatementNode( T_SWITCH, $3, $6 ); }
+           | T_SWITCH '(' expression ')' '{'
                 caselist
-                DEFAULT ':' statements
-            '}'                                                       { $$ = new StatementNode( SWITCH, $3, $6, $9 ); }
+                T_DEFAULT ':' statements
+            '}'                                                         { $$ = new StatementNode( T_SWITCH, $3, $6, $9 ); }
            /* statement body */
            | '{' statements '}' { $$ = $2; }
            /* function declaration */
-           | FUNCTION_PROTOTYPE '{' statements '}'                    { $$ = new FunctionNode( $1, 1, $3 ); };
+           | T_FUNCTION_PROTOTYPE '{' statements '}'                    { $$ = new FunctionNode( $1, 1, $3 ); };
 
 statements : /* empty */          { $$ = 0;  }
            | statement            { $$ = $1; }
-           | statements statement { $$ = new ExpressionNode( EOSTMT, 2, $1, $2 ); };
+           | statements statement { $$ = new ExpressionNode( T_EOSTMT, 2, $1, $2 ); };
 
-expression : INTEGER                                 { $$ = new ConstantNode($1); }
-           | REAL                                    { $$ = new ConstantNode($1); }
-           | CHAR                                    { $$ = new ConstantNode($1); }
-           | STRING                                  { $$ = new ConstantNode($1); }
+expression : T_INTEGER                                 { $$ = new ConstantNode($1); }
+           | T_REAL                                    { $$ = new ConstantNode($1); }
+           | T_CHAR                                    { $$ = new ConstantNode($1); }
+           | T_STRING                                  { $$ = new ConstantNode($1); }
 
-           | IDENT                                   { $$ = new IdentifierNode($1); }
+           | T_IDENT                                   { $$ = new IdentifierNode($1); }
            /* expression evaluation returns an identifier */
-           | DOLLAR expression                       { $$ = new ExpressionNode( DOLLAR, 1, $2 ); }
+           | T_DOLLAR expression                       { $$ = new ExpressionNode( T_DOLLAR, 1, $2 ); }
            /* ptr/alias evaluation */
-           | AND expression                          { $$ = new ExpressionNode( PTR, 1, $2 ); }
-           | MUL expression                          { $$ = new ExpressionNode( OBJ, 1, $2 ); }
+           | T_AND expression                          { $$ = new ExpressionNode( T_PTR, 1, $2 ); }
+           | T_MUL expression                          { $$ = new ExpressionNode( T_OBJ, 1, $2 ); }
 		   /* identifier declaration/assignation */
-		   | IDENT ASSIGN expression                 { $$ = new ExpressionNode( ASSIGN, 2, new IdentifierNode($1), $3 ); }
+		   | T_IDENT T_ASSIGN expression               { $$ = new ExpressionNode( T_ASSIGN, 2, new IdentifierNode($1), $3 ); }
            /* a single subscript could be an expression itself */
-           | expression '[' expression ']' %prec SBX { $$ = new ExpressionNode( SUBSCRIPTGET, 2, $1, $3 ); }
+           | expression '[' expression ']' %prec T_SUBSCRIPT_END { $$ = new ExpressionNode( T_SUBSCRIPTGET, 2, $1, $3 ); }
            /* range evaluation */
-           | expression DDOT expression              { $$ = new ExpressionNode( RANGE, 2, $1, $3 ); }
+           | expression T_DDOT expression              { $$ = new ExpressionNode( T_RANGE, 2, $1, $3 ); }
            /* arithmetic */
-           | MINUS expression %prec UMINUS           { $$ = new ExpressionNode( UMINUS, 1, $2 ); }
-           | expression DOT expression               { $$ = new ExpressionNode( DOT, 2, $1, $3 ); }
-		   | expression DOTE expression              { $$ = new ExpressionNode( DOTE, 2, $1, $3 ); }
-           | expression PLUS expression              { $$ = new ExpressionNode( PLUS, 2, $1, $3 ); }
-		   | expression PLUSE expression             { $$ = new ExpressionNode( PLUSE, 2, $1, $3 ); }
-           | expression MINUS expression             { $$ = new ExpressionNode( MINUS, 2, $1, $3 ); }
-		   | expression MINUSE expression            { $$ = new ExpressionNode( MINUSE, 2, $1, $3 ); }
-           | expression MUL expression               { $$ = new ExpressionNode( MUL, 2, $1, $3 ); }
-		   | expression MULE expression              { $$ = new ExpressionNode( MULE, 2, $1, $3 ); }
-           | expression DIV expression               { $$ = new ExpressionNode( DIV, 2, $1, $3 ); }
-		   | expression DIVE expression              { $$ = new ExpressionNode( DIVE, 2, $1, $3 ); }
-           | expression MOD expression               { $$ = new ExpressionNode( MOD, 2, $1, $3 ); }
-           | expression INC                          { $$ = new ExpressionNode( INC, 1, $1 ); }
-           | expression DEC                          { $$ = new ExpressionNode( DEC, 1, $1 ); }
+           | T_MINUS expression %prec T_UMINUS           { $$ = new ExpressionNode( T_UMINUS, 1, $2 ); }
+           | expression T_DOT expression               { $$ = new ExpressionNode( T_DOT, 2, $1, $3 ); }
+		   | expression T_DOTE expression              { $$ = new ExpressionNode( T_DOTE, 2, $1, $3 ); }
+           | expression T_PLUS expression              { $$ = new ExpressionNode( T_PLUS, 2, $1, $3 ); }
+		   | expression T_PLUSE expression             { $$ = new ExpressionNode( T_PLUSE, 2, $1, $3 ); }
+           | expression T_MINUS expression             { $$ = new ExpressionNode( T_MINUS, 2, $1, $3 ); }
+		   | expression T_MINUSE expression            { $$ = new ExpressionNode( T_MINUSE, 2, $1, $3 ); }
+           | expression T_MUL expression               { $$ = new ExpressionNode( T_MUL, 2, $1, $3 ); }
+		   | expression T_MULE expression              { $$ = new ExpressionNode( T_MULE, 2, $1, $3 ); }
+           | expression T_DIV expression               { $$ = new ExpressionNode( T_DIV, 2, $1, $3 ); }
+		   | expression T_DIVE expression              { $$ = new ExpressionNode( T_DIVE, 2, $1, $3 ); }
+           | expression T_MOD expression               { $$ = new ExpressionNode( T_MOD, 2, $1, $3 ); }
+           | expression T_INC                          { $$ = new ExpressionNode( T_INC, 1, $1 ); }
+           | expression T_DEC                          { $$ = new ExpressionNode( T_DEC, 1, $1 ); }
            /* bitwise */
-           | expression XOR expression               { $$ = new ExpressionNode( XOR, 2, $1, $3 ); }
-		   | expression XORE expression              { $$ = new ExpressionNode( XORE, 2, $1, $3 ); }
-           | NOT expression                          { $$ = new ExpressionNode( NOT, 1, $2 ); }
-           | expression AND expression               { $$ = new ExpressionNode( AND, 2, $1, $3 ); }
-		   | expression ANDE expression              { $$ = new ExpressionNode( ANDE, 2, $1, $3 ); }
-           | expression OR expression                { $$ = new ExpressionNode( OR, 2, $1, $3 ); }
-		   | expression ORE expression               { $$ = new ExpressionNode( ORE, 2, $1, $3 ); }
-		   | expression SHIFTL expression            { $$ = new ExpressionNode( SHIFTL, 2, $1, $3 ); }
-		   | expression SHIFTLE expression           { $$ = new ExpressionNode( SHIFTLE, 2, $1, $3 ); }
-		   | expression SHIFTR expression            { $$ = new ExpressionNode( SHIFTR, 2, $1, $3 ); }
-		   | expression SHIFTRE expression           { $$ = new ExpressionNode( SHIFTRE, 2, $1, $3 ); }
-		   | expression LNOT                         { $$ = new ExpressionNode( FACT, 1, $1 ); }
+           | expression T_XOR expression               { $$ = new ExpressionNode( T_XOR, 2, $1, $3 ); }
+		   | expression T_XORE expression              { $$ = new ExpressionNode( T_XORE, 2, $1, $3 ); }
+           | T_NOT expression                          { $$ = new ExpressionNode( T_NOT, 1, $2 ); }
+           | expression T_AND expression               { $$ = new ExpressionNode( T_AND, 2, $1, $3 ); }
+		   | expression T_ANDE expression              { $$ = new ExpressionNode( T_ANDE, 2, $1, $3 ); }
+           | expression T_OR expression                { $$ = new ExpressionNode( T_OR, 2, $1, $3 ); }
+		   | expression T_ORE expression               { $$ = new ExpressionNode( T_ORE, 2, $1, $3 ); }
+		   | expression T_SHIFTL expression            { $$ = new ExpressionNode( T_SHIFTL, 2, $1, $3 ); }
+		   | expression T_SHIFTLE expression           { $$ = new ExpressionNode( T_SHIFTLE, 2, $1, $3 ); }
+		   | expression T_SHIFTR expression            { $$ = new ExpressionNode( T_SHIFTR, 2, $1, $3 ); }
+		   | expression T_SHIFTRE expression           { $$ = new ExpressionNode( T_SHIFTRE, 2, $1, $3 ); }
+		   | expression T_LNOT                         { $$ = new ExpressionNode( T_FACT, 1, $1 ); }
            /* logic */
-		   | LNOT expression                         { $$ = new ExpressionNode( LNOT, 1, $2 ); }
-           | expression LESS expression              { $$ = new ExpressionNode( LESS, 2, $1, $3 ); }
-           | expression GREATER expression           { $$ = new ExpressionNode( GREATER, 2, $1, $3 ); }
-           | expression GE expression                { $$ = new ExpressionNode( GE,  2, $1, $3 ); }
-           | expression LE expression                { $$ = new ExpressionNode( LE,  2, $1, $3 ); }
-           | expression NE expression                { $$ = new ExpressionNode( NE,  2, $1, $3 ); }
-           | expression EQ expression                { $$ = new ExpressionNode( EQ,  2, $1, $3 ); }
-           | expression LAND expression              { $$ = new ExpressionNode( LAND,  2, $1, $3 ); }
-           | expression LOR expression               { $$ = new ExpressionNode( LOR,  2, $1, $3 ); }
+		   | T_LNOT expression                         { $$ = new ExpressionNode( T_LNOT, 1, $2 ); }
+           | expression T_LESS expression              { $$ = new ExpressionNode( T_LESS, 2, $1, $3 ); }
+           | expression T_GREATER expression           { $$ = new ExpressionNode( T_GREATER, 2, $1, $3 ); }
+           | expression T_GE expression                { $$ = new ExpressionNode( T_GE,  2, $1, $3 ); }
+           | expression T_LE expression                { $$ = new ExpressionNode( T_LE,  2, $1, $3 ); }
+           | expression T_NE expression                { $$ = new ExpressionNode( T_NE,  2, $1, $3 ); }
+           | expression T_EQ expression                { $$ = new ExpressionNode( T_EQ,  2, $1, $3 ); }
+           | expression T_LAND expression              { $$ = new ExpressionNode( T_LAND,  2, $1, $3 ); }
+           | expression T_LOR expression               { $$ = new ExpressionNode( T_LOR,  2, $1, $3 ); }
            /* regex specific */
-           | expression REGEX_OP expression          { $$ = new ExpressionNode( REGEX_OP, 2, $1, $3 ); }
+           | expression T_REGEX_OP expression          { $$ = new ExpressionNode( T_REGEX_OP, 2, $1, $3 ); }
            /* function call (consider two different cases due to builtin calls */
-		   | IDENT      '(' arglist ')'  %prec FBX   { $$ = new CallNode( $1, $3 ); }
-           | expression '(' arglist ')'              { $$ = new CallNode( $1, $3 ); }
+		   | T_IDENT      '(' arglist ')'  %prec T_CALL_END   { $$ = new CallNode( $1, $3 ); }
+           | expression '(' arglist ')'                { $$ = new CallNode( $1, $3 ); }
            /* ternary operator */
-           | '(' expression '?' expression ':' expression ')' { $$ = new StatementNode( QUESTION, 3, $2, $4, $6 ); }
+           | '(' expression '?' expression ':' expression ')' { $$ = new StatementNode( T_QUESTION, 3, $2, $4, $6 ); }
            /* group expression */
-           | '(' expression ')'                      { $$ = $2; };
+           | '(' expression ')'                        { $$ = $2; };
 
 %%
 
