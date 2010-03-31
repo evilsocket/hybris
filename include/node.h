@@ -61,13 +61,11 @@ class NodeValue {
 };
 
 /* node base class */
-class Node {
+class Node : public vector<Node *> {
 
 private :
 
-    H_NODE_TYPE    m_type;
-    vector<Node *> m_children;
-    unsigned int   m_elements;
+    H_NODE_TYPE  m_type;
 
 public  :
 
@@ -82,11 +80,11 @@ public  :
     }
 
     inline unsigned int children(){
-        return m_elements;
+        return size();
     }
 
     inline Node *child( unsigned int i ){
-        return m_children[i];
+        return at(i);
     }
 
     void addChild( Node *child );

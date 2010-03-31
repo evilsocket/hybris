@@ -35,40 +35,35 @@ NodeValue::~NodeValue(){
 
 }
 
-Node::Node() :
-    m_type(H_NT_NONE),
-    m_elements(0) {
+Node::Node() : m_type(H_NT_NONE) {
 
 }
 
-Node::Node( H_NODE_TYPE type ) :
-    m_type(type),
-    m_elements(0)
+Node::Node( H_NODE_TYPE type ) : m_type(type)
 {
 
 }
 
 Node::~Node(){
-    if( m_elements > 0 ){
-        int i;
-        for( i = 0; i < m_elements; ++i ){
-            Node * child = m_children[i];
-            delete child;
-        }
-        m_children.clear();
+    int i, sz( size() );
+
+    for( i = 0; i < sz; ++i ){
+        Node * child = at(i);
+        delete child;
     }
+    clear();
+
     if( value.m_constant != NULL ){
         value.m_constant->release();
 	}
 }
 
 void Node::addChild( Node *child ){
-	m_children.push_back(child);
-	m_elements++;
+	push_back(child);
 }
 
 Node *Node::clone(){
-    int   i;
+    int   i, sz( size() );
     Node *clone = H_UNDEFINED;
 
     switch( m_type ){
@@ -87,22 +82,22 @@ Node *Node::clone(){
 
         case H_NT_EXPRESSION   :
             clone = new ExpressionNode( value.m_expression, 0 );
-            for( i = 0; i < m_elements; ++i ){
-                clone->addChild( child(i)->clone() );
+            for( i = 0; i < sz; ++i ){
+                clone->push_back( child(i)->clone() );
             }
         break;
 
         case H_NT_STATEMENT  :
             clone = new StatementNode( value.m_statement, 0 );
-            for( i = 0; i < m_elements; ++i ){
-                clone->addChild( child(i)->clone() );
+            for( i = 0; i < sz; ++i ){
+                clone->push_back( child(i)->clone() );
             }
         break;
 
         case H_NT_FUNCTION   :
             clone = new FunctionNode( value.m_function.c_str() );
-            for( i = 0; i < m_elements; ++i ){
-                clone->addChild( child(i)->clone() );
+            for( i = 0; i < sz; ++i ){
+                clone->push_back( child(i)->clone() );
             }
         break;
 
@@ -113,8 +108,8 @@ Node *Node::clone(){
             else{
                 clone = new CallNode( value.m_alias_call, NULL );
             }
-            for( i = 0; i < m_elements; ++i ){
-                clone->addChild( child(i)->clone() );
+            for( i = 0; i < sz; ++i ){
+                clone->push_back( child(i)->clone() );
             }
         break;
     }
@@ -165,9 +160,11 @@ ExpressionNode::ExpressionNode( int expression, int argc, ... ) : Node(H_NT_EXPR
     va_list ap;
 	int i;
 
+	reserve(argc);
+
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
-		addChild( va_arg( ap, Node * ) );
+		push_back( va_arg( ap, Node * ) );
 	}
 	va_end(ap);
 }
@@ -182,9 +179,11 @@ StatementNode::StatementNode( int statement, int argc, ... ) : Node(H_NT_STATEME
     va_list ap;
 	int i;
 
+    reserve(argc);
+
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
-		addChild( va_arg( ap, Node * ) );
+		push_back( va_arg( ap, Node * ) );
 	}
 	va_end(ap);
 }
@@ -197,9 +196,12 @@ IdentifierNode::IdentifierNode( char *identifier ) : Node(H_NT_IDENTIFIER) {
 /* functions */
 FunctionNode::FunctionNode( function_decl_t *declaration ) : Node(H_NT_FUNCTION) {
     value.m_function = declaration->function;
+
+    reserve(declaration->argc);
+
 	/* add function prototype args children */
 	for( int i = 0; i < declaration->argc; ++i ){
-		addChild( new IdentifierNode( declaration->argv[i] ) );
+		push_back( new IdentifierNode( declaration->argv[i] ) );
 	}
 }
 
@@ -208,14 +210,16 @@ FunctionNode::FunctionNode( function_decl_t *declaration, int argc, ... ) : Node
     va_list ap;
 	int i;
 
+    reserve( declaration->argc + argc );
+
 	/* add function prototype args children */
 	for( i = 0; i < declaration->argc; ++i ){
-		addChild( new IdentifierNode( declaration->argv[i] ) );
+		push_back( new IdentifierNode( declaration->argv[i] ) );
 	}
 	/* add function body statements node */
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
-		addChild( va_arg( ap, Node * ) );
+		push_back( va_arg( ap, Node * ) );
 	}
 	va_end(ap);
 }
@@ -228,8 +232,9 @@ FunctionNode::FunctionNode( const char *name ) : Node(H_NT_FUNCTION) {
 CallNode::CallNode( char *name, NodeList *argv ) : Node(H_NT_CALL) {
     value.m_call = name;
     if( argv != NULL ){
+        reserve( argv->size() );
 		for( NodeList::iterator ni = argv->begin(); ni != argv->end(); ni++ ){
-			addChild( *ni );
+			push_back( *ni );
 		}
 		delete argv;
 	}
@@ -238,8 +243,9 @@ CallNode::CallNode( char *name, NodeList *argv ) : Node(H_NT_CALL) {
 CallNode::CallNode( Node *alias, NodeList *argv ) :  Node(H_NT_CALL) {
     value.m_alias_call = alias;
     if( argv != NULL ){
+        reserve( argv->size() );
 		for( NodeList::iterator ni = argv->begin(); ni != argv->end(); ni++ ){
-			addChild( *ni );
+			push_back( *ni );
 		}
 		delete argv;
 	}
