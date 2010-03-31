@@ -7,25 +7,25 @@
 	<File name="include/context.h" open="0" top="0" tabpos="1">
 		<Cursor position="3573" topLine="71" />
 	</File>
-	<File name="include/engine.h" open="1" top="0" tabpos="6">
-		<Cursor position="1787" topLine="0" />
+	<File name="include/engine.h" open="1" top="0" tabpos="3">
+		<Cursor position="2762" topLine="48" />
 	</File>
 	<File name="include/hashtable.h" open="0" top="0" tabpos="2">
 		<Cursor position="1719" topLine="0" />
 	</File>
-	<File name="include/hybris.h" open="1" top="0" tabpos="7">
+	<File name="include/hybris.h" open="0" top="0" tabpos="7">
 		<Cursor position="921" topLine="0" />
 	</File>
 	<File name="include/map.h" open="0" top="0" tabpos="6">
 		<Cursor position="859" topLine="15" />
 	</File>
-	<File name="include/node.h" open="1" top="0" tabpos="1">
-		<Cursor position="1920" topLine="86" />
+	<File name="include/node.h" open="1" top="1" tabpos="5">
+		<Cursor position="1441" topLine="79" />
 	</File>
 	<File name="include/object.h" open="0" top="0" tabpos="8">
-		<Cursor position="1946" topLine="6" />
+		<Cursor position="4038" topLine="118" />
 	</File>
-	<File name="include/vcode.h" open="1" top="0" tabpos="8">
+	<File name="include/vcode.h" open="0" top="0" tabpos="8">
 		<Cursor position="839" topLine="0" />
 	</File>
 	<File name="include/vmem.h" open="0" top="0" tabpos="4">
@@ -67,10 +67,10 @@
 	<File name="src/builtins/process.cc" open="0" top="0" tabpos="29">
 		<Cursor position="839" topLine="16" />
 	</File>
-	<File name="src/builtins/pthreads.cc" open="1" top="0" tabpos="9">
+	<File name="src/builtins/pthreads.cc" open="0" top="0" tabpos="9">
 		<Cursor position="858" topLine="10" />
 	</File>
-	<File name="src/builtins/reflection.cc" open="1" top="0" tabpos="5">
+	<File name="src/builtins/reflection.cc" open="0" top="0" tabpos="5">
 		<Cursor position="820" topLine="19" />
 	</File>
 	<File name="src/builtins/string.cc" open="0" top="0" tabpos="31">
@@ -86,30 +86,30 @@
 		<Cursor position="839" topLine="20" />
 	</File>
 	<File name="src/common.cpp" open="0" top="0" tabpos="5">
-		<Cursor position="3405" topLine="88" />
+		<Cursor position="3405" topLine="0" />
 	</File>
 	<File name="src/context.cpp" open="0" top="0" tabpos="2">
-		<Cursor position="12500" topLine="260" />
+		<Cursor position="9320" topLine="245" />
 	</File>
 	<File name="src/engine.cpp" open="1" top="0" tabpos="4">
-		<Cursor position="13102" topLine="339" />
+		<Cursor position="24824" topLine="64" />
 	</File>
 	<File name="src/hashtable.cpp" open="0" top="0" tabpos="3">
 		<Cursor position="29886" topLine="665" />
 	</File>
-	<File name="src/lexer.l.cpp" open="1" top="0" tabpos="10">
-		<Cursor position="803" topLine="20" />
+	<File name="src/lexer.l.cpp" open="1" top="0" tabpos="1">
+		<Cursor position="4034" topLine="124" />
 	</File>
-	<File name="src/node.cpp" open="1" top="1" tabpos="2">
-		<Cursor position="5811" topLine="48" />
+	<File name="src/node.cpp" open="1" top="0" tabpos="6">
+		<Cursor position="5847" topLine="186" />
 	</File>
 	<File name="src/object.cpp" open="0" top="0" tabpos="3">
-		<Cursor position="13702" topLine="0" />
+		<Cursor position="11360" topLine="430" />
 	</File>
-	<File name="src/parser.y.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="2633" topLine="135" />
+	<File name="src/parser.y.cpp" open="1" top="0" tabpos="2">
+		<Cursor position="2992" topLine="75" />
 	</File>
-	<File name="src/vcode.cpp" open="1" top="0" tabpos="11">
+	<File name="src/vcode.cpp" open="0" top="0" tabpos="11">
 		<Cursor position="1694" topLine="0" />
 	</File>
 	<File name="src/vmem.cpp" open="0" top="0" tabpos="9">

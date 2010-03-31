@@ -157,6 +157,11 @@ include          BEGIN(INCLUSION);
 "if"            return IF;
 "else"          return ELSE;
 
+"switch"        return SWITCH;
+"case"          return CASE;
+"break"         return BREAK;
+"default"       return DEFAULT;
+
 "return"        return RETURN;
 
 "function"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*")" {

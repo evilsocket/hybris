@@ -27,7 +27,9 @@ NodeValue::NodeValue() :
     m_statement(0),
     m_function(""),
     m_call(""),
-    m_alias_call(NULL) {
+    m_alias_call(NULL),
+    m_switch(NULL),
+    m_default(NULL) {
 
 }
 
@@ -186,6 +188,33 @@ StatementNode::StatementNode( int statement, int argc, ... ) : Node(H_NT_STATEME
 		push_back( va_arg( ap, Node * ) );
 	}
 	va_end(ap);
+}
+
+StatementNode::StatementNode( int statement, Node *sw, NodeList *caselist ) : Node(H_NT_STATEMENT) {
+    value.m_statement = statement;
+    value.m_switch    = sw;
+
+    if( caselist != NULL ){
+        reserve( caselist->size() );
+		for( NodeList::iterator ni = caselist->begin(); ni != caselist->end(); ni++ ){
+			push_back( *ni );
+		}
+		delete caselist;
+	}
+}
+
+StatementNode::StatementNode( int statement, Node *sw, NodeList *caselist, Node *deflt ) : Node(H_NT_STATEMENT) {
+    value.m_statement = statement;
+    value.m_switch    = sw;
+    value.m_default   = deflt;
+
+    if( caselist != NULL ){
+        reserve( caselist->size() );
+		for( NodeList::iterator ni = caselist->begin(); ni != caselist->end(); ni++ ){
+			push_back( *ni );
+		}
+		delete caselist;
+	}
 }
 
 /* identifiers */

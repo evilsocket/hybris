@@ -58,10 +58,11 @@ unsigned long t_start = 0,
 
 
 %token EOSTMT DDOT DOT DOTE PLUS PLUSE MINUS MINUSE DIV DIVE MUL MULE MOD MODE FACT XOR XORE NOT AND ANDE OR ORE SHIFTL SHIFTLE SHIFTR SHIFTRE ASSIGN REGEX_OP
-%token RANGE SUBSCRIPTADD SUBSCRIPTSET SUBSCRIPTGET WHILE DO FOR FOREACH FOREACHM OF TO IF QUESTION DOLLAR MAPS PTR OBJ
+%token RANGE SUBSCRIPTADD SUBSCRIPTSET SUBSCRIPTGET WHILE DO FOR FOREACH FOREACHM OF TO IF SWITCH CASE BREAK DEFAULT QUESTION DOLLAR MAPS PTR OBJ
 %token RETURN CALL
 %nonassoc IFX
 %nonassoc SBX
+%nonassoc SWBX
 %nonassoc FBX
 %nonassoc ELSE
 
@@ -71,6 +72,7 @@ unsigned long t_start = 0,
 
 %type <HNODEPTR> statement expression statements
 %type <argv>     arglist
+%type <argv>     caselist
 
 %%
 
@@ -87,6 +89,15 @@ body       : body statement { if( __context.args.do_timing == 1 && t_start == 0 
                               delete $2;
                             }
            | /* empty */ ;
+
+caselist   : CASE expression ':' statements BREAK EOSTMT caselist { $$ = $7;             $$->push_front( $2, $4 ); }
+           | CASE expression ':' statements BREAK EOSTMT          { $$ = new NodeList(); $$->push_back( $2, $4 );  }
+           | /* empty */                                          { $$ = new NodeList(); };
+
+arglist    : expression MAPS arglist { $$ = $3;             $$->push_front($1); }
+           | expression ',' arglist  { $$ = $3;             $$->push_front($1); }
+           | expression              { $$ = new NodeList(); $$->push_back($1);  }
+           | /* empty */             { $$ = new NodeList(); };
 
 statement  : EOSTMT                                                   { $$ = new ExpressionNode( EOSTMT, 2, NULL, NULL ); }
 	   	   | expression                                               { $$ = $1; }
@@ -105,15 +116,17 @@ statement  : EOSTMT                                                   { $$ = new
 		   }
            | IF '(' expression ')' statement %prec IFX                { $$ = new StatementNode( IF, 2, $3, $5 ); }
            | IF '(' expression ')' statement ELSE statement           { $$ = new StatementNode( IF, 3, $3, $5, $7 ); }
+           | SWITCH '(' expression ')' '{'
+                caselist
+            '}' %prec SWBX                                            { $$ = new StatementNode( SWITCH, $3, $6 ); }
+           | SWITCH '(' expression ')' '{'
+                caselist
+                DEFAULT ':' statements
+            '}'                                                       { $$ = new StatementNode( SWITCH, $3, $6, $9 ); }
            /* statement body */
            | '{' statements '}' { $$ = $2; }
            /* function declaration */
            | FUNCTION_PROTOTYPE '{' statements '}'                    { $$ = new FunctionNode( $1, 1, $3 ); };
-
-arglist    : expression MAPS arglist { $$ = $3;             $$->push_front($1); }
-           | expression ',' arglist  { $$ = $3;             $$->push_front($1); }
-           | expression              { $$ = new NodeList(); $$->push_back($1);  }
-           | /* empty */             { $$ = new NodeList(); };
 
 statements : /* empty */          { $$ = 0;  }
            | statement            { $$ = $1; }

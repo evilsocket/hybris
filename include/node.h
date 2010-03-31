@@ -42,7 +42,30 @@ typedef unsigned short H_NODE_TYPE;
 /* pre declaration of class Node */
 class  Node;
 
-typedef list<Node *> NodeList;
+class NodeList : public list<Node *> {
+    public :
+        inline void push_front( Node *a, Node *b ){
+            NodeList::iterator i;
+
+            list<Node *>::push_front(a);
+            i = begin();
+            i++;
+            list<Node *>::insert( i, b );
+        }
+
+        inline void push_back( Node *a, Node *b ){
+            list<Node *>::push_back(a);
+            list<Node *>::push_back(b);
+        }
+
+        inline void push_front( Node *a ){
+            list<Node *>::push_front(a);
+        }
+
+        inline void push_back( Node *a ){
+            list<Node *>::push_back(a);
+        }
+};
 
 /* possible values for a generic node */
 class NodeValue {
@@ -52,6 +75,8 @@ class NodeValue {
         string  m_identifier;
         int     m_expression;
         int     m_statement;
+        Node   *m_switch;
+        Node   *m_default;
         string  m_function;
         string  m_call;
         Node   *m_alias_call;
@@ -118,6 +143,8 @@ class StatementNode : public Node {
 
         StatementNode( int statement );
         StatementNode( int statement, int argc, ... );
+        StatementNode( int statement, Node *sw, NodeList *caselist );
+        StatementNode( int statement, Node *sw, NodeList *caselist, Node *deflt );
 };
 
 /* identifiers */

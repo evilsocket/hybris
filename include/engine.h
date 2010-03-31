@@ -70,6 +70,7 @@ class Engine {
         Object *onForeachm( vframe_t *, Node * );
         Object *onIf( vframe_t *, Node * );
         Object *onQuestion( vframe_t *, Node * );
+        Object *onSwitch( vframe_t *, Node * );
         Object *onEostmt( vframe_t *, Node * );
         Object *onDot( vframe_t *, Node * );
         Object *onDote( vframe_t *, Node * );

@@ -75,6 +75,9 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                 /* (condition ? expression : expression) */
                 case QUESTION :
                     return onQuestion( frame, node );
+
+                case SWITCH :
+                    return onSwitch( frame, node );
             }
         break;
 
@@ -768,6 +771,43 @@ Object *Engine::onQuestion( vframe_t *frame, Node *node ){
     }
 
     H_FREE_GARBAGE(boolean);
+
+    return result;
+}
+
+Object *Engine::onSwitch( vframe_t *frame, Node *node){
+    Node   *case_node = H_UNDEFINED,
+           *stmt_node = H_UNDEFINED;
+    Object *target    = H_UNDEFINED,
+           *compare   = H_UNDEFINED,
+           *result    = H_UNDEFINED;
+    int     size( node->children() ),
+            i;
+
+    target = exec( frame, node->value.m_switch );
+
+    // exec case labels
+    for( i = 0; i < size; i += 2 ){
+        stmt_node = node->child(i + 1);
+        case_node = node->child(i);
+
+        if( case_node != H_UNDEFINED && stmt_node != H_UNDEFINED ){
+            compare = exec( frame, case_node );
+            if( target->equals(compare) ){
+                H_FREE_GARBAGE(compare);
+                H_FREE_GARBAGE(target);
+                return exec( frame, stmt_node );
+            }
+            H_FREE_GARBAGE(compare);
+        }
+    }
+
+    H_FREE_GARBAGE(target);
+
+    // exec default case
+    if( node->value.m_default != H_UNDEFINED ){
+        result = exec( frame, node->value.m_default );
+    }
 
     return result;
 }
