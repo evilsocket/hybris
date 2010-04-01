@@ -222,6 +222,22 @@ IdentifierNode::IdentifierNode( char *identifier ) : Node(H_NT_IDENTIFIER) {
     value.m_identifier = identifier;
 }
 
+/* structure attribute */
+AttributeNode::AttributeNode( NodeList *attrlist ) : Node(H_NT_ATTRIBUTE) {
+    if( attrlist != NULL ){
+        int sz( attrlist->size() );
+        NodeList::iterator ni = attrlist->begin();
+
+        value.m_identifier = (*ni)->value.m_identifier;
+        reserve( sz - 1 );
+        ni++;
+		for( ; ni != attrlist->end(); ni++ ){
+            push_back( *ni );
+		}
+		delete attrlist;
+	}
+}
+
 /* functions */
 FunctionNode::FunctionNode( function_decl_t *declaration ) : Node(H_NT_FUNCTION) {
     value.m_function = declaration->function;
@@ -280,6 +296,16 @@ CallNode::CallNode( Node *alias, NodeList *argv ) :  Node(H_NT_CALL) {
 	}
 }
 
-
+/* struct type definition */
+StructureNode::StructureNode( char *s_name, NodeList *attributes ) : Node(H_NT_STRUCT) {
+    value.m_identifier = s_name;
+    if( attributes != NULL ){
+        reserve( attributes->size() );
+		for( NodeList::iterator ni = attributes->begin(); ni != attributes->end(); ni++ ){
+			push_back( *ni );
+		}
+		delete attributes;
+	}
+}
 
 

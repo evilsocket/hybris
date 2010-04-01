@@ -141,6 +141,8 @@ class Context {
         vmem_t         vmem;
         /* code segment */
         vcode_t        vcode;
+        /* type definitions segment (structs and classes) */
+        vmem_t         vtypes;
         /* execution arguments */
         h_args_t       args;
         /* default constants */
@@ -150,7 +152,7 @@ class Context {
         /* dynamically loaded modules */
         h_modules_t    modules;
         /* code execution engine */
-        Engine      *engine;
+        Engine        *engine;
 
         Context();
 

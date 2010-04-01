@@ -39,11 +39,13 @@ class Engine {
         Context *ctx;
         vmem_t  *vm;
         vcode_t *vc;
+        vmem_t  *vt;
 
         Node * findEntryPoint( vframe_t *frame, Node *call, char *name );
 
         Object *onBuiltinFunctionCall( vframe_t *, Node * );
         Object *onUserFunctionCall( vframe_t *, Node *, int threaded = 0 );
+        Object *onTypeCall( vframe_t *, Node * );
         Object *onDllFunctionCall( vframe_t *, Node *, int threaded = 0 );
 
     public  :
@@ -52,8 +54,10 @@ class Engine {
         ~Engine();
 
         Object *onIdentifier( vframe_t *, Node * );
+        Object *onAttribute( vframe_t *, Node * );
         Object *onConstant( vframe_t *, Node * );
         Object *onFunctionDeclaration( vframe_t *, Node * );
+        Object *onStructureDeclaration( vframe_t *, Node * );
         Object *onFunctionCall( vframe_t *, Node *, int threaded = 0 );
         Object *onDollar( vframe_t *, Node * );
         Object *onPointer( vframe_t *, Node * );

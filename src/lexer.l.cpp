@@ -162,6 +162,8 @@ include          BEGIN(T_INCLUSION);
 "break"         return T_BREAK;
 "default"       return T_DEFAULT;
 
+"struct"        return T_STRUCT;
+
 "return"        return T_RETURN;
 
 "function"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*")" {
@@ -191,7 +193,11 @@ void h_skip_comment(){
     char c, c1;
 
 loop:
-    while ((c = yyinput()) != '*' && c != 0);
+    while ((c = yyinput()) != '*' && c != 0){
+        if( c == '\n' ){
+            yylineno++;
+        }
+    }
 
     if ((c1 = yyinput()) != '/' && c != 0){
         if( c1 == '\n' ){ yylineno++; }

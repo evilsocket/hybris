@@ -1,6 +1,6 @@
 AC_PREREQ([2.0])
-AC_INIT( [Hybris Scripting Language], [0.9b], [evilsocket@gmail.com], [hybris] )
-AM_INIT_AUTOMAKE( hybris, 0.9b )
+AC_INIT( [Hybris Scripting Language], [1.0b], [evilsocket@gmail.com], [hybris] )
+AM_INIT_AUTOMAKE( hybris, 1.0b )
 AC_CONFIG_HEADERS([include/config.h])
 
 AC_DEFINE( AUTHOR,    "The Hybris Dev Team [http://www.hybris-lang.org/]", [] )

@@ -11,7 +11,7 @@ PREFIX=/usr
 TARGET=hybris
 LIBOBJ= src/context.lo src/common.lo src/engine.lo src/node.lo src/object.lo src/hashtable.lo src/vmem.lo src/vcode.lo src/builtins/*.lo
 SOURCES=src/common.cpp src/lexer.cpp src/context.cpp src/hashtable.cpp src/vmem.cpp src/vcode.cpp src/node.cpp src/object.cpp \
-		src/engine.cpp src/parser.cpp
+	    src/engine.cpp src/parser.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 LOBJECTS=$(SOURCES:.cpp=.lo)
 

@@ -22,7 +22,8 @@
 Engine::Engine( Context *context ) :
     ctx(context),
     vm(&context->vmem),
-    vc(&context->vcode) {
+    vc(&context->vcode),
+    vt(&context->vtypes) {
 }
 
 Engine::~Engine(){
@@ -40,6 +41,9 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
         /* identifier */
         case H_NT_IDENTIFIER :
             return onIdentifier( frame, node );
+        /* attribute */
+        case H_NT_ATTRIBUTE  :
+            return onAttribute( frame, node );
         /* constant value */
         case H_NT_CONSTANT   :
             return onConstant( frame, node );
@@ -49,6 +53,9 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
         /* function call */
         case H_NT_CALL       :
             return onFunctionCall( frame, node );
+        /* struct type declaration */
+        case H_NT_STRUCT :
+            return onStructureDeclaration( frame, node );
 
         /* statements */
         case H_NT_STATEMENT :
@@ -283,6 +290,44 @@ Object *Engine::onIdentifier( vframe_t *frame, Node *node ){
     return o;
 }
 
+Object *Engine::onAttribute( vframe_t *frame, Node *node ){
+    Object    *owner = H_UNDEFINED,
+              *child = H_UNDEFINED;
+    int        i, j, attributes(node->children());
+    char      *identifier = (char *)node->value.m_identifier.c_str(),
+              *owner_id   = identifier,
+              *child_id   = NULL;
+
+    // search for the identifier on the function frame
+    owner = frame->get( identifier );
+    if( owner == H_UNDEFINED && H_ADDRESS_OF(frame) != H_ADDRESS_OF(vm) ){
+        // search it on the global frame if it's different from local frame
+        owner = vm->get( identifier );
+    }
+    if( owner == H_UNDEFINED ){
+        hybris_syntax_error( "'%s' undeclared identifier", identifier );
+    }
+    else if( owner->xtype != H_OT_STRUCT ){
+        hybris_syntax_error( "'%s' is not a structure identifier", identifier );
+    }
+
+    for( i = 0; i < attributes; ++i ){
+        child_id = (char *)node->child(i)->value.m_identifier.c_str();
+        child    = owner->getAttribute( child_id );
+
+        if( child == H_UNDEFINED ){
+            hybris_syntax_error( "'%s' is not an attribute of %s", child_id, owner_id );
+        }
+        else if( child->xtype == H_OT_STRUCT ){
+            owner    = child;
+            owner_id = child_id;
+        }
+        else{
+            return child;
+        }
+    }
+}
+
 Object *Engine::onConstant( vframe_t *frame, Node *node ){
     return node->value.m_constant;
 }
@@ -299,6 +344,20 @@ Object *Engine::onFunctionDeclaration( vframe_t *frame, Node *node ){
     }
     /* add the function to the code segment */
     vc->add( function_name, node );
+
+    return H_UNDEFINED;
+}
+
+Object *Engine::onStructureDeclaration( vframe_t *frame, Node * node ){
+    int        i, attributes( node->children() );
+    char      *s_name = (char *)node->value.m_identifier.c_str();
+    Object    *s      = new Object();
+
+    for( i = 0; i < attributes; ++i ){
+        s->addAttribute( (char *)node->child(i)->value.m_identifier.c_str() );
+    }
+
+    vt->add( s_name, s );
 
     return H_UNDEFINED;
 }
@@ -418,6 +477,40 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
     return (result == H_UNDEFINED ? new Object((unsigned int)0) : result);
 }
 
+Object *Engine::onTypeCall( vframe_t *frame, Node *type ){
+    char      *type_name = (char *)type->value.m_call.c_str();
+    Object    *user_type = H_UNDEFINED,
+              *structure = H_UNDEFINED,
+              *object    = H_UNDEFINED;
+    int        i, children( type->children() );
+
+    if( (user_type = vt->find(type_name)) == H_UNDEFINED ){
+        return H_UNDEFINED;
+    }
+
+    structure = new Object(user_type);
+
+    // init structure attributes
+    if( children > 0 ){
+        if( children > structure->xattr_names.size() ){
+            hybris_syntax_error( "structure '%s' has %d attributes, initialized with %d",
+                                 type_name,
+                                 structure->xattr_names.size(),
+                                 children );
+        }
+
+        for( i = 0; i < children; ++i ){
+            object = exec( frame, type->child(i) );
+
+            structure->setAttribute( (char *)structure->xattr_names[i].c_str(), object );
+
+            H_FREE_GARBAGE(object);
+        }
+    }
+
+    return structure;
+}
+
 Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
     char    *callname         = (char *)call->value.m_call.c_str(),
              identifier[0xFF] = {0};
@@ -483,9 +576,12 @@ Object *Engine::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*
     if( (result = onBuiltinFunctionCall( frame, call )) == H_UNDEFINED ){
         /* check for an user defined function */
         if( (result = onUserFunctionCall( frame, call, threaded )) == H_UNDEFINED ){
-            /* finally check if the function is an extern identifier loaded by dll importing routines */
-            if( (result = onDllFunctionCall( frame, call, threaded )) == H_UNDEFINED ){
-                hybris_syntax_error( "'%s' undeclared function identifier", call->value.m_call.c_str() );
+            /* check for a structure constructor */
+            if( (result = onTypeCall( frame, call )) == H_UNDEFINED ){
+                /* finally check if the function is an extern identifier loaded by dll importing routines */
+                if( (result = onDllFunctionCall( frame, call, threaded )) == H_UNDEFINED ){
+                    hybris_syntax_error( "'%s' undeclared function identifier", call->value.m_call.c_str() );
+                }
             }
         }
     }
@@ -674,7 +770,6 @@ Object *Engine::onFor( vframe_t *frame, Node *node ){
     for( init;
          (boolean = exec(  frame, condition ))->lvalue();
          (inc     = exec(  frame, increment )) ){
-
         result = exec( frame, body );
         H_FREE_GARBAGE(result);
         H_FREE_GARBAGE(boolean);
@@ -861,8 +956,18 @@ Object *Engine::onAssign( vframe_t *frame, Node *node ){
     Object *object = H_UNDEFINED,
            *value  = H_UNDEFINED;
 
-    value  = exec(  frame, node->child(1) );
-    object = frame->add( (char *)node->child(0)->value.m_identifier.c_str(), value );
+    if( node->child(0)->type() != H_NT_ATTRIBUTE ){
+        value  = exec( frame, node->child(1) );
+        object = frame->add( (char *)node->child(0)->value.m_identifier.c_str(), value );
+    }
+    else{
+        char *s_name = (char *)node->child(0)->value.m_identifier.c_str();
+
+        object = exec( frame, node->child(0) );
+        value  = exec( frame, node->child(1) );
+
+        object->assign(value);
+    }
 
     H_FREE_GARBAGE(value);
 

@@ -251,6 +251,7 @@ void Context::release( int error /*= 0*/ ){
 
     vmem.release();
     vcode.release();
+    vtypes.release();
 }
 
 void Context::load( char *module ){

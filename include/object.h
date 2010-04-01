@@ -60,6 +60,7 @@ typedef unsigned short H_OBJECT_TYPE;
 #define H_OT_MAP    6
 #define H_OT_ALIAS  7
 #define H_OT_MATRIX 8
+#define H_OT_STRUCT 9
 
 #ifdef GC_SUPPORT
     typedef unsigned char H_OBJECT_ATTRIBUTE;
@@ -124,6 +125,9 @@ public  :
 	unsigned int     xcolumns;
 	Object       *** xmatrix;
 
+	vector<string>   xattr_names;
+	vector<Object *> xattr_values;
+
 	#ifdef MEM_DEBUG
     void* operator new (size_t size);
     #endif
@@ -149,6 +153,10 @@ public  :
     ~Object();
 
 	int equals( Object *o );
+
+	void     addAttribute( char *name );
+    Object  *getAttribute( char *name );
+    void     setAttribute( char *name, Object *value );
 
 	int mapFind( Object *map );
 

@@ -2,34 +2,34 @@
 <CodeBlocks_layout_file>
 	<ActiveTarget name="all" />
 	<File name="include/common.h" open="0" top="0" tabpos="4">
-		<Cursor position="862" topLine="0" />
+		<Cursor position="560" topLine="0" />
 	</File>
-	<File name="include/context.h" open="0" top="0" tabpos="1">
-		<Cursor position="3573" topLine="71" />
+	<File name="include/context.h" open="0" top="0" tabpos="12">
+		<Cursor position="983" topLine="0" />
 	</File>
-	<File name="include/engine.h" open="1" top="0" tabpos="3">
-		<Cursor position="2762" topLine="48" />
+	<File name="include/engine.h" open="0" top="0" tabpos="4">
+		<Cursor position="1379" topLine="21" />
 	</File>
 	<File name="include/hashtable.h" open="0" top="0" tabpos="2">
-		<Cursor position="1719" topLine="0" />
+		<Cursor position="915" topLine="0" />
 	</File>
 	<File name="include/hybris.h" open="0" top="0" tabpos="7">
-		<Cursor position="921" topLine="0" />
+		<Cursor position="866" topLine="0" />
 	</File>
-	<File name="include/map.h" open="0" top="0" tabpos="6">
-		<Cursor position="859" topLine="15" />
+	<File name="include/map.h" open="0" top="0" tabpos="5">
+		<Cursor position="4293" topLine="135" />
 	</File>
-	<File name="include/node.h" open="1" top="1" tabpos="5">
-		<Cursor position="1441" topLine="79" />
+	<File name="include/node.h" open="0" top="0" tabpos="2">
+		<Cursor position="3525" topLine="126" />
 	</File>
-	<File name="include/object.h" open="0" top="0" tabpos="8">
-		<Cursor position="4038" topLine="118" />
+	<File name="include/object.h" open="0" top="0" tabpos="13">
+		<Cursor position="4284" topLine="123" />
 	</File>
 	<File name="include/vcode.h" open="0" top="0" tabpos="8">
 		<Cursor position="839" topLine="0" />
 	</File>
-	<File name="include/vmem.h" open="0" top="0" tabpos="4">
-		<Cursor position="860" topLine="0" />
+	<File name="include/vmem.h" open="0" top="0" tabpos="9">
+		<Cursor position="0" topLine="0" />
 	</File>
 	<File name="src/builtins/array.cc" open="0" top="0" tabpos="18">
 		<Cursor position="839" topLine="1" />
@@ -38,7 +38,7 @@
 		<Cursor position="839" topLine="0" />
 	</File>
 	<File name="src/builtins/dll.cc" open="0" top="0" tabpos="1">
-		<Cursor position="839" topLine="9" />
+		<Cursor position="1158" topLine="9" />
 	</File>
 	<File name="src/builtins/encoding.cc" open="0" top="0" tabpos="21">
 		<Cursor position="839" topLine="0" />
@@ -89,30 +89,30 @@
 		<Cursor position="3405" topLine="0" />
 	</File>
 	<File name="src/context.cpp" open="0" top="0" tabpos="2">
-		<Cursor position="9320" topLine="245" />
+		<Cursor position="2111" topLine="83" />
 	</File>
-	<File name="src/engine.cpp" open="1" top="0" tabpos="4">
-		<Cursor position="24824" topLine="64" />
+	<File name="src/engine.cpp" open="1" top="0" tabpos="3">
+		<Cursor position="17658" topLine="468" />
 	</File>
 	<File name="src/hashtable.cpp" open="0" top="0" tabpos="3">
-		<Cursor position="29886" topLine="665" />
+		<Cursor position="1220" topLine="19" />
 	</File>
 	<File name="src/lexer.l.cpp" open="1" top="0" tabpos="1">
-		<Cursor position="4034" topLine="124" />
+		<Cursor position="3802" topLine="130" />
 	</File>
-	<File name="src/node.cpp" open="1" top="0" tabpos="6">
-		<Cursor position="5847" topLine="186" />
+	<File name="src/node.cpp" open="0" top="0" tabpos="3">
+		<Cursor position="6229" topLine="193" />
 	</File>
-	<File name="src/object.cpp" open="0" top="0" tabpos="3">
-		<Cursor position="11360" topLine="430" />
+	<File name="src/object.cpp" open="1" top="0" tabpos="4">
+		<Cursor position="18215" topLine="638" />
 	</File>
-	<File name="src/parser.y.cpp" open="1" top="0" tabpos="2">
-		<Cursor position="2992" topLine="75" />
+	<File name="src/parser.y.cpp" open="1" top="1" tabpos="2">
+		<Cursor position="7785" topLine="188" />
 	</File>
 	<File name="src/vcode.cpp" open="0" top="0" tabpos="11">
 		<Cursor position="1694" topLine="0" />
 	</File>
-	<File name="src/vmem.cpp" open="0" top="0" tabpos="9">
-		<Cursor position="1881" topLine="31" />
+	<File name="src/vmem.cpp" open="0" top="0" tabpos="8">
+		<Cursor position="1216" topLine="16" />
 	</File>
 </CodeBlocks_layout_file>

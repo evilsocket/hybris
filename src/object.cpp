@@ -28,6 +28,7 @@ const char *Object::type( Object *o ){
 		case H_OT_MAP    : return "map";    break;
 		case H_OT_ALIAS  : return "alias";  break;
 		case H_OT_MATRIX : return "matrix"; break;
+		case H_OT_STRUCT : return "struct"; break;
 	}
 }
 
@@ -75,6 +76,62 @@ Object *Object::fromxml( xmlNode *node ){
 		}
 		return map;
 	}
+	else if( strcmp( (char *)node->name, "matrix" ) == 0 ){
+        Object *matrix = new Object();
+        xmlNode *child = NULL,
+                *row   = NULL,
+                *item  = NULL;
+        int i, j;
+
+        matrix->xtype    = H_OT_MATRIX;
+        matrix->xrows    = 0;
+        matrix->xcolumns = 0;
+        matrix->xmatrix  = NULL;
+
+        i = 0;
+
+        for( child = node->children; child; child = child->next ){
+            if( strcmp( (char *)child->name, "rows" ) == 0 ){
+                matrix->xrows   = atoi((char *)child->children->content);
+                matrix->xmatrix = new Object ** [matrix->xrows];
+            }
+            else if( strcmp( (char *)child->name, "cols" ) == 0 ){
+                matrix->xcolumns = atoi((char *)child->children->content);
+                for( int x = 0; x < matrix->xrows; ++x ){
+                    matrix->xmatrix[x] = new Object * [matrix->xcolumns];
+                }
+            }
+            else if( strcmp( (char *)child->name, "row" ) == 0 ){
+                for( item = child->children, j = 0; item; item = item->next ){
+                    if( item->type == XML_ELEMENT_NODE ){
+                        matrix->xmatrix[i][j++] = fromxml(item);
+                    }
+                }
+                ++i;
+            }
+        }
+
+        return matrix;
+	}
+	else if( strcmp( (char *)node->name, "struct" ) == 0 ){
+	    Object  *structure = new Object();
+	    xmlNode *child     = NULL;
+	    string   last_attr;
+
+	    structure->xtype = H_OT_STRUCT;
+
+        for( child = node->children; child; child = child->next ){
+            if( strcmp( (char *)child->name, "attribute" ) == 0 ){
+                structure->addAttribute( (char *)child->children->content );
+                last_attr = (char *)child->children->content;
+            }
+            else{
+                structure->setAttribute( (char *)last_attr.c_str(), fromxml(child) );
+            }
+        }
+
+        return structure;
+	}
 	else{
 		hybris_generic_error( "'%s' invalid xml object type", node->name );
 	}
@@ -103,6 +160,65 @@ Object *Object::fromxml( char *xml ){
 
 	return object;
 }
+
+string Object::toxml( unsigned int tabs /*= 0*/ ){
+	unsigned int i, j;
+	string       xtabs;
+	stringstream xml;
+
+	for( i = 0; i < tabs; ++i ){ xtabs += "\t"; }
+	switch(xtype){
+		case H_OT_INT    : xml << xtabs << "<int>"    << xint    << "</int>\n";    break;
+		case H_OT_ALIAS  : xml << xtabs << "<alias>"  << xalias  << "</alias>\n";  break;
+		case H_OT_FLOAT  : xml << xtabs << "<float>"  << xfloat  << "</float>\n";  break;
+		case H_OT_CHAR   : xml << xtabs << "<char>"   << xchar   << "</char>\n";   break;
+		case H_OT_STRING : xml << xtabs << "<string>" << xstring << "</string>\n"; break;
+		case H_OT_ARRAY  :
+			xml << xtabs << "<array>\n";
+			for( i = 0; i < xsize; ++i ){
+				xml << xarray[i]->toxml( tabs + 1 );
+			}
+			xml << xtabs << "</array>\n";
+		break;
+		case H_OT_MAP  :
+			xml << xtabs << "<map>\n";
+			for( i = 0; i < xsize; ++i ){
+				xml << xmap[i]->toxml( tabs + 1 );
+				xml << xarray[i]->toxml( tabs + 1 );
+			}
+			xml << xtabs << "</map>\n";
+		break;
+		case H_OT_MATRIX :
+            xml << xtabs << "<matrix>\n";
+            xml << xtabs << "\t" << "<rows>" << xrows    << "</rows>\n";
+            xml << xtabs << "\t" << "<cols>" << xcolumns << "</cols>\n";
+
+            for( i = 0; i < xrows; ++i ){
+                xml << xtabs << "\t" << "<row>\n";
+                for( j = 0; j < xcolumns; ++j ){
+                    xml << xmatrix[i][j]->toxml( tabs + 2 );
+                }
+                xml << xtabs << "\t" << "</row>\n";
+            }
+            xml << xtabs << "</matrix>\n";
+		break;
+
+		case H_OT_STRUCT :
+            xml << xtabs << "<struct>\n";
+            for( i = 0; i < xattr_names.size(); ++i ){
+				xml << xtabs << "\t" << "<attribute>" << xattr_names[i] << "</attribute>\n";
+				xml << xattr_values[i]->toxml( tabs + 1 );
+			}
+            xml << xtabs << "</struct>\n";
+		break;
+
+		default :
+            hybris_generic_error( "could not convert %s type to xml", Object::type(this) );
+	}
+
+	return xml.str().c_str();
+}
+
 #endif
 
 unsigned int Object::assert_type( Object *a, Object *b, unsigned int ntypes, ... ){
@@ -284,7 +400,7 @@ Object::Object( Object *o ) :
     xtype(o->xtype),
     attributes(o->attributes)
 {
-	unsigned int i, j;
+	unsigned int i, j, attrs( o->xattr_names.size() ), vals( o->xattr_values.size() );
 
 	switch( xtype ){
 		case H_OT_INT    : xint    = o->xint;    break;
@@ -316,12 +432,18 @@ Object::Object( Object *o ) :
                 }
              }
 		break;
+
+		case H_OT_STRUCT :
+            for( i = 0; i < attrs; ++i ){
+                setAttribute( (char *)o->xattr_names[i].c_str(), o->xattr_values[i] );
+            }
+		break;
 	}
 	attributes = o->attributes;
 }
 
 void Object::setGarbageAttribute( H_OBJECT_ATTRIBUTE mask ){
-    unsigned int i, j;
+    unsigned int i, j, vals( xattr_values.size() );
 
     /* not garbage */
     if( mask == ~H_OA_GARBAGE ){
@@ -353,11 +475,17 @@ void Object::setGarbageAttribute( H_OBJECT_ATTRIBUTE mask ){
                 }
             }
         break;
+
+        case H_OT_STRUCT :
+            for( i = 0; i < vals; ++i ){
+                xattr_values[i]->setGarbageAttribute(mask);
+            }
+		break;
     }
 }
 
 Object& Object::assign( Object *o ){
-    unsigned int i, j;
+    unsigned int i, j,  attrs( o->xattr_names.size() ), vals( o->xattr_values.size() );
 
 	release(false);
 
@@ -392,6 +520,11 @@ Object& Object::assign( Object *o ){
                     xmatrix[i][j] = new Object( o->xmatrix[i][j] );
                 }
              }
+		break;
+		case H_OT_STRUCT :
+            for( i = 0; i < attrs; ++i ){
+                setAttribute( (char *)o->xattr_names[i].c_str(), o->xattr_values[i] );
+            }
 		break;
 	}
 
@@ -447,6 +580,10 @@ void Object::release( bool reset_attributes /*= true*/ ){
             delete [] xmatrix;
             xrows    = 0;
             xcolumns = 0;
+        break;
+
+        case H_OT_STRUCT :
+
         break;
     }
     xsize      = 0;
@@ -512,6 +649,39 @@ int Object::equals( Object *o ){
 	}
 }
 
+void Object::addAttribute( char *name ){
+    xtype = H_OT_STRUCT;
+    xsize++;
+
+    xattr_names.push_back( string(name) );
+    xattr_values.push_back( new Object((long)0) );
+}
+
+Object *Object::getAttribute( char *name ){
+    int i, sz( xattr_names.size() );
+
+    for( i = 0; i < sz; ++i ){
+        if( xattr_names[i] == name ){
+            return xattr_values[i];
+        }
+    }
+    return NULL;
+}
+
+void Object::setAttribute( char *name, Object *value ){
+    int i, sz( xattr_names.size() );
+
+    for( i = 0; i < sz; ++i ){
+        if( xattr_names[i] == name ){
+            xattr_values[i]->assign(value);
+            return;
+        }
+    }
+
+    xattr_names.push_back( string(name) );
+    xattr_values.push_back( new Object(value) );
+}
+
 int Object::mapFind( Object *map ){
 	unsigned int i;
 	for( i = 0; i < xsize; ++i ){
@@ -566,14 +736,15 @@ unsigned char *Object::serialize(){
 
 		break;
 
-		case H_OT_ARRAY  : hybris_generic_error( "could not serialize an array" ); break;
-		case H_OT_MATRIX : hybris_generic_error( "could not serialize a matrix" ); break;
+        default :
+            hybris_generic_error( "could not serialize %s type", Object::type(this) );
 	}
+
 	return buffer;
 }
 
 void Object::print( unsigned int tabs /*= 0*/ ){
-	unsigned int i, j;
+	unsigned int i, j, vals( xattr_names.size() );
 	for( i = 0; i < tabs; ++i ) printf( "\t" );
 	switch(xtype){
 		case H_OT_INT    : printf( "%d",  xint );           break;
@@ -611,6 +782,18 @@ void Object::print( unsigned int tabs /*= 0*/ ){
             }
             printf( "}\n" );
 		break;
+
+		case H_OT_STRUCT :
+            printf( "struct {\n" );
+			for( i = 0; i < vals; ++i ){
+			    for( j = 0; j <= tabs; ++j ) printf( "\t" );
+			    printf( "%s : ", xattr_names[i].c_str() );
+                xattr_values[i]->print( tabs + 1 );
+                printf( "\n" );
+			}
+			for( i = 0; i < tabs; ++i ) printf( "\t" );
+			printf( "}\n" );
+		break;
 	}
 }
 
@@ -618,40 +801,6 @@ void Object::println( unsigned int tabs /*= 0*/ ){
 	print(tabs);
 	printf("\n");
 }
-
-#ifdef XML_SUPPORT
-string Object::toxml( unsigned int tabs /*= 0*/ ){
-	unsigned int i;
-	string       xtabs;
-	stringstream xml;
-
-	for( i = 0; i < tabs; ++i ){ xtabs += "\t"; }
-	switch(xtype){
-		case H_OT_INT    : xml << xtabs << "<int>"    << xint    << "</int>\n";    break;
-		case H_OT_ALIAS  : xml << xtabs << "<alias>"  << xalias  << "</alias>\n";  break;
-		case H_OT_FLOAT  : xml << xtabs << "<float>"  << xfloat  << "</float>\n";  break;
-		case H_OT_CHAR   : xml << xtabs << "<char>"   << xchar   << "</char>\n";   break;
-		case H_OT_STRING : xml << xtabs << "<string>" << xstring << "</string>\n"; break;
-		case H_OT_ARRAY  :
-			xml << xtabs << "<array>\n";
-			for( i = 0; i < xsize; ++i ){
-				xml << xarray[i]->toxml( tabs + 1 );
-			}
-			xml << xtabs << "</array>\n";
-		break;
-		case H_OT_MAP  :
-			xml << xtabs << "<map>\n";
-			for( i = 0; i < xsize; ++i ){
-				xml << xmap[i]->toxml( tabs + 1 );
-				xml << xarray[i]->toxml( tabs + 1 );
-			}
-			xml << xtabs << "</map>\n";
-		break;
-	}
-
-	return xml.str().c_str();
-}
-#endif
 
 #ifdef PCRE_SUPPORT
 int Object::classify_pcre( string& r ){
@@ -1729,3 +1878,4 @@ Object * Object::operator && ( Object *o ){
 
 	return new Object( static_cast<long>(lvalue() && o->lvalue()) );
 }
+

@@ -18,7 +18,7 @@
 */
 #include "vmem.h"
 
-VirtualMemory::VirtualMemory(){
+VirtualMemory::VirtualMemory() : Map<Object>() {
     #ifdef MEM_DEBUG
     printf( "[MEM DEBUG] !!! Virtual memory table initialized .\n" );
     #endif

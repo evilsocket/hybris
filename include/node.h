@@ -38,32 +38,34 @@ typedef unsigned short H_NODE_TYPE;
 #define H_NT_STATEMENT  4
 #define H_NT_FUNCTION   5
 #define H_NT_CALL       6
+#define H_NT_STRUCT     7
+#define H_NT_ATTRIBUTE  8
 
 /* pre declaration of class Node */
 class  Node;
 
 class NodeList : public list<Node *> {
     public :
-        inline void push_front( Node *a, Node *b ){
+        inline void head( Node *a, Node *b ){
             NodeList::iterator i;
 
-            list<Node *>::push_front(a);
+            push_front(a);
             i = begin();
             i++;
-            list<Node *>::insert( i, b );
+            insert( i, b );
         }
 
-        inline void push_back( Node *a, Node *b ){
-            list<Node *>::push_back(a);
-            list<Node *>::push_back(b);
+        inline void head( Node *a ){
+            push_front(a);
         }
 
-        inline void push_front( Node *a ){
-            list<Node *>::push_front(a);
+        inline void tail( Node *a, Node *b ){
+            push_back(a);
+            push_back(b);
         }
 
-        inline void push_back( Node *a ){
-            list<Node *>::push_back(a);
+        inline void tail( Node *a ){
+            push_back(a);
         }
 };
 
@@ -154,6 +156,12 @@ class IdentifierNode : public Node {
         IdentifierNode( char *identifier );
 };
 
+/* structure attribute */
+class AttributeNode : public Node {
+    public :
+        AttributeNode( NodeList *attrlist );
+};
+
 /* function declarations */
 class FunctionNode : public Node {
     public :
@@ -169,6 +177,13 @@ class CallNode : public Node {
 
         CallNode( char *name, NodeList *argv );
         CallNode( Node *alias, NodeList *argv );
+};
+
+/* struct type definition */
+class StructureNode : public Node {
+    public :
+
+        StructureNode( char *s_name, NodeList *attributes );
 };
 
 #endif
