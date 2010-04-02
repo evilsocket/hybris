@@ -29,17 +29,17 @@ using std::vector;
 using std::list;
 using std::string;
 
-typedef unsigned short H_NODE_TYPE;
-
-#define H_NT_NONE       0
-#define H_NT_CONSTANT   1
-#define H_NT_IDENTIFIER 2
-#define H_NT_EXPRESSION 3
-#define H_NT_STATEMENT  4
-#define H_NT_FUNCTION   5
-#define H_NT_CALL       6
-#define H_NT_STRUCT     7
-#define H_NT_ATTRIBUTE  8
+enum H_NODE_TYPE {
+    H_NT_NONE       = 0,
+    H_NT_CONSTANT,
+    H_NT_IDENTIFIER,
+    H_NT_EXPRESSION,
+    H_NT_STATEMENT,
+    H_NT_FUNCTION,
+    H_NT_CALL,
+    H_NT_STRUCT,
+    H_NT_ATTRIBUTE
+};
 
 /* pre declaration of class Node */
 class  Node;
@@ -156,9 +156,10 @@ class IdentifierNode : public Node {
         IdentifierNode( char *identifier );
 };
 
-/* structure attribute */
+/* structure attribute expression */
 class AttributeNode : public Node {
     public :
+
         AttributeNode( NodeList *attrlist );
 };
 

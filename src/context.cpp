@@ -41,8 +41,7 @@ string Context::mk_trace( char *function, vframe_t *frame ){
 }
 
 Context::Context(){
-    args.do_timing  = 0;
-    args.stacktrace = 0;
+    memset( &args, 0x00, sizeof(h_args_t) );
 }
 
 int Context::chdir(){

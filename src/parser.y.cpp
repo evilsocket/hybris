@@ -327,9 +327,8 @@ int main( int argc, char *argv[] ){
         }
     }
 
-    strncpy( __context.args.source, argv[f_offset], sizeof(__context.args.source) );
-
     if( f_offset > 0 ){
+        strncpy( __context.args.source, argv[f_offset], sizeof(__context.args.source) );
         if( h_file_exists(__context.args.source) == 0 ){
             printf( "Error :'%s' no such file or directory .\n\n", __context.args.source );
             return h_usage( argv[0] );
