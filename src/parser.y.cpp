@@ -338,17 +338,13 @@ int main( int argc, char *argv[] ){
     __context.init( argc, argv );
 
     extern FILE *yyin;
-    yyin = f_offset > 0 ? fopen( __context.args.source, "r") : stdin;
-
-    __context.chdir();
+    yyin = __context.openFile();
 
     while( !feof(yyin) ){
         yyparse();
     }
-    if( f_offset > 0 ){
-        fclose(yyin);
-    }
 
+    __context.closeFile();
     __context.release();
 
 

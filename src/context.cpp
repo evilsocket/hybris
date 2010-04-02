@@ -42,6 +42,24 @@ string Context::mk_trace( char *function, vframe_t *frame ){
 
 Context::Context(){
     memset( &args, 0x00, sizeof(h_args_t) );
+    fp = NULL;
+}
+
+FILE *Context::openFile(){
+    if( args.source[0] != 0x00 ){
+        fp = fopen( args.source, "r" );
+        this->chdir();
+    }
+    else{
+        fp = stdin;
+    }
+    return fp;
+}
+
+void Context::closeFile(){
+    if( args.source[0] != 0x00 ){
+        fclose(fp);
+    }
 }
 
 int Context::chdir(){

@@ -134,7 +134,8 @@ class Context {
             inline void pool( pthread_t tid = 0 ){}
             inline void depool( pthread_t tid = 0 ){}
         #endif
-
+        /* source file handle */
+        FILE          *fp;
         /* function call trace vector */
         vector<string> stack_trace;
         /* data segment */
@@ -155,6 +156,9 @@ class Context {
         Engine        *engine;
 
         Context();
+
+        FILE *openFile();
+        void closeFile();
 
         int chdir();
 
