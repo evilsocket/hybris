@@ -18,8 +18,8 @@
 */
 #include "object.h"
 
-const char *Object::type( Object *o ){
-	switch(o->xtype){
+const char *Object::type_name( Object *o ){
+	switch(o->type){
 		case H_OT_INT    : return "int";    break;
 		case H_OT_CHAR   : return "char";   break;
 		case H_OT_FLOAT  : return "float";  break;
@@ -83,28 +83,28 @@ Object *Object::fromxml( xmlNode *node ){
                 *item  = NULL;
         int i, j;
 
-        matrix->xtype    = H_OT_MATRIX;
-        matrix->xrows    = 0;
-        matrix->xcolumns = 0;
-        matrix->xmatrix  = NULL;
+        matrix->type    = H_OT_MATRIX;
+        matrix->value.m_rows    = 0;
+        matrix->value.m_columns = 0;
+        matrix->value.m_matrix  = NULL;
 
         i = 0;
 
         for( child = node->children; child; child = child->next ){
             if( strcmp( (char *)child->name, "rows" ) == 0 ){
-                matrix->xrows   = atoi((char *)child->children->content);
-                matrix->xmatrix = new Object ** [matrix->xrows];
+                matrix->value.m_rows   = atoi((char *)child->children->content);
+                matrix->value.m_matrix = new Object ** [matrix->value.m_rows];
             }
             else if( strcmp( (char *)child->name, "cols" ) == 0 ){
-                matrix->xcolumns = atoi((char *)child->children->content);
-                for( int x = 0; x < matrix->xrows; ++x ){
-                    matrix->xmatrix[x] = new Object * [matrix->xcolumns];
+                matrix->value.m_columns = atoi((char *)child->children->content);
+                for( int x = 0; x < matrix->value.m_rows; ++x ){
+                    matrix->value.m_matrix[x] = new Object * [matrix->value.m_columns];
                 }
             }
             else if( strcmp( (char *)child->name, "row" ) == 0 ){
                 for( item = child->children, j = 0; item; item = item->next ){
                     if( item->type == XML_ELEMENT_NODE ){
-                        matrix->xmatrix[i][j++] = fromxml(item);
+                        matrix->value.m_matrix[i][j++] = fromxml(item);
                     }
                 }
                 ++i;
@@ -118,7 +118,7 @@ Object *Object::fromxml( xmlNode *node ){
 	    xmlNode *child     = NULL;
 	    string   last_attr;
 
-	    structure->xtype = H_OT_STRUCT;
+	    structure->type = H_OT_STRUCT;
 
         for( child = node->children; child; child = child->next ){
             if( strcmp( (char *)child->name, "attribute" ) == 0 ){
@@ -167,36 +167,36 @@ string Object::toxml( unsigned int tabs /*= 0*/ ){
 	stringstream xml;
 
 	for( i = 0; i < tabs; ++i ){ xtabs += "\t"; }
-	switch(xtype){
-		case H_OT_INT    : xml << xtabs << "<int>"    << xint    << "</int>\n";    break;
-		case H_OT_ALIAS  : xml << xtabs << "<alias>"  << xalias  << "</alias>\n";  break;
-		case H_OT_FLOAT  : xml << xtabs << "<float>"  << xfloat  << "</float>\n";  break;
-		case H_OT_CHAR   : xml << xtabs << "<char>"   << xchar   << "</char>\n";   break;
-		case H_OT_STRING : xml << xtabs << "<string>" << xstring << "</string>\n"; break;
+	switch(type){
+		case H_OT_INT    : xml << xtabs << "<int>"    << value.m_integer    << "</int>\n";    break;
+		case H_OT_ALIAS  : xml << xtabs << "<alias>"  << value.m_alias  << "</alias>\n";  break;
+		case H_OT_FLOAT  : xml << xtabs << "<float>"  << value.m_double  << "</float>\n";  break;
+		case H_OT_CHAR   : xml << xtabs << "<char>"   << value.m_char   << "</char>\n";   break;
+		case H_OT_STRING : xml << xtabs << "<string>" << value.m_string << "</string>\n"; break;
 		case H_OT_ARRAY  :
 			xml << xtabs << "<array>\n";
-			for( i = 0; i < xsize; ++i ){
-				xml << xarray[i]->toxml( tabs + 1 );
+			for( i = 0; i < size; ++i ){
+				xml << value.m_array[i]->toxml( tabs + 1 );
 			}
 			xml << xtabs << "</array>\n";
 		break;
 		case H_OT_MAP  :
 			xml << xtabs << "<map>\n";
-			for( i = 0; i < xsize; ++i ){
-				xml << xmap[i]->toxml( tabs + 1 );
-				xml << xarray[i]->toxml( tabs + 1 );
+			for( i = 0; i < size; ++i ){
+				xml << value.m_map[i]->toxml( tabs + 1 );
+				xml << value.m_array[i]->toxml( tabs + 1 );
 			}
 			xml << xtabs << "</map>\n";
 		break;
 		case H_OT_MATRIX :
             xml << xtabs << "<matrix>\n";
-            xml << xtabs << "\t" << "<rows>" << xrows    << "</rows>\n";
-            xml << xtabs << "\t" << "<cols>" << xcolumns << "</cols>\n";
+            xml << xtabs << "\t" << "<rows>" << value.m_rows    << "</rows>\n";
+            xml << xtabs << "\t" << "<cols>" << value.m_columns << "</cols>\n";
 
-            for( i = 0; i < xrows; ++i ){
+            for( i = 0; i < value.m_rows; ++i ){
                 xml << xtabs << "\t" << "<row>\n";
-                for( j = 0; j < xcolumns; ++j ){
-                    xml << xmatrix[i][j]->toxml( tabs + 2 );
+                for( j = 0; j < value.m_columns; ++j ){
+                    xml << value.m_matrix[i][j]->toxml( tabs + 2 );
                 }
                 xml << xtabs << "\t" << "</row>\n";
             }
@@ -205,15 +205,15 @@ string Object::toxml( unsigned int tabs /*= 0*/ ){
 
 		case H_OT_STRUCT :
             xml << xtabs << "<struct>\n";
-            for( i = 0; i < xattr_names.size(); ++i ){
-				xml << xtabs << "\t" << "<attribute>" << xattr_names[i] << "</attribute>\n";
-				xml << xattr_values[i]->toxml( tabs + 1 );
+            for( i = 0; i < value.m_struct_names.size(); ++i ){
+				xml << xtabs << "\t" << "<attribute>" << value.m_struct_names[i] << "</attribute>\n";
+				xml << value.m_struct_values[i]->toxml( tabs + 1 );
 			}
             xml << xtabs << "</struct>\n";
 		break;
 
 		default :
-            hybris_generic_error( "could not convert %s type to xml", Object::type(this) );
+            hybris_generic_error( "could not convert %s type to xml", type_name(this) );
 	}
 
 	return xml.str().c_str();
@@ -231,7 +231,7 @@ unsigned int Object::assert_type( Object *a, Object *b, unsigned int ntypes, ...
 			valid = 0;
 			va_start( ap, ntypes );
 			for( i = 0; i < ntypes && valid == 0; ++i ){
-				if( objects[o]->xtype == va_arg( ap, int ) ){
+				if( objects[o]->type == va_arg( ap, int ) ){
 					valid = 1;
 				}
 			}
@@ -298,89 +298,86 @@ void * Object::operator new (size_t size){
 #endif
 
 Object::Object( long value ) :
-    xtype(H_OT_INT),
-    xint(value),
-    xsize(sizeof(long)),
+    type(H_OT_INT),
+    size(sizeof(long)),
     attributes(H_OA_NONE | H_OA_GARBAGE)
 {
-
+    this->value.m_integer = value;
 }
 
 Object::Object( long value, unsigned int _is_extern ) :
-    xtype(H_OT_INT),
-    xint(value),
-    xsize(sizeof(long)),
+    type(H_OT_INT),
+    size(sizeof(long)),
     attributes(H_OA_NONE | H_OA_GARBAGE)
 {
+    this->value.m_integer = value;
 	if( _is_extern ){
         attributes |= H_OA_EXTERN;
 	}
 }
 
 Object::Object( double value ) :
-    xtype(H_OT_FLOAT),
-    xfloat(value),
-    xsize(sizeof(double)),
+    type(H_OT_FLOAT),
+    size(sizeof(double)),
     attributes(H_OA_NONE | H_OA_GARBAGE)
 {
-
+    this->value.m_double = value;
 }
 
 Object::Object( char value ) :
-    xtype(H_OT_CHAR),
-    xchar(value),
-    xsize(sizeof(char)),
+    type(H_OT_CHAR),
+    size(sizeof(char)),
     attributes(H_OA_NONE | H_OA_GARBAGE)
 {
-
+    this->value.m_char = value;
 }
 
 Object::Object( char *value ) :
-    xtype(H_OT_STRING),
-    xstring(value),
+    type(H_OT_STRING),
     attributes(H_OA_NONE | H_OA_GARBAGE)
 {
-	parse_string( xstring );
-	xsize   = strlen(xstring.c_str()) + 1;
+    this->value.m_string = value;
+	parse_string( this->value.m_string );
+	size   = this->value.m_string.size() + 1;
 }
 
 Object::Object() :
-    xtype(H_OT_ARRAY),
-    xsize(0),
+    type(H_OT_ARRAY),
+    size(0),
     attributes(H_OA_NONE | H_OA_GARBAGE)
 {
 
 }
 
 Object::Object( unsigned int value ) :
-    xtype(H_OT_ALIAS),
-    xsize(sizeof(unsigned int)),
-    xalias(value),
+    type(H_OT_ALIAS),
+    size(sizeof(unsigned int)),
     attributes(H_OA_NONE | H_OA_GARBAGE)
 {
-
+    this->value.m_alias = value;
 }
 
 Object::Object( unsigned int rows, unsigned int columns, vector<Object *>& data ) :
-    xtype(H_OT_MATRIX),
-    xsize(0),
-    xrows(rows),
-    xcolumns(columns),
+    type(H_OT_MATRIX),
+    size(0),
     attributes(H_OA_NONE | H_OA_GARBAGE)
 {
     unsigned int x, y;
 
-    xmatrix = new Object ** [rows];
+    this->value.m_rows    = rows;
+    this->value.m_columns = columns;
+    this->value.m_matrix  = new Object ** [rows];
+
     for( x = 0; x < rows; ++x ){
-        xmatrix[x] = new Object * [columns];
+        value.m_matrix[x] = new Object * [columns];
     }
 
     if( data.size() ){
         for( x = 0; x < rows; ++x ){
             for( y = 0; y < columns; ++y ){
                 Object * o    = data[ x * columns + y ];
-                xmatrix[x][y] = o;
-                xsize        += o->xsize;
+                value.m_matrix[x][y] = o;
+                size        += o->size;
             }
         }
     }
@@ -388,54 +385,54 @@ Object::Object( unsigned int rows, unsigned int columns, vector<Object *>& data 
         for( x = 0; x < rows; ++x ){
             for( y = 0; y < columns; ++y ){
                 Object * o    = new Object( static_cast<long>(0) );
-                xmatrix[x][y] = o;
-                xsize        += o->xsize;
+                value.m_matrix[x][y] = o;
+                size        += o->size;
             }
         }
     }
 }
 
 Object::Object( Object *o ) :
-    xsize(o->xsize),
-    xtype(o->xtype),
+    size(o->size),
+    type(o->type),
     attributes(o->attributes)
 {
-	unsigned int i, j, attrs( o->xattr_names.size() ), vals( o->xattr_values.size() );
+	unsigned int i, j, attrs( o->value.m_struct_names.size() ), vals( o->value.m_struct_values.size() );
 
-	switch( xtype ){
-		case H_OT_INT    : xint    = o->xint;    break;
-		case H_OT_ALIAS  : xalias  = o->xalias;  break;
-		case H_OT_FLOAT  : xfloat  = o->xfloat;  break;
-		case H_OT_CHAR   : xchar   = o->xchar;   break;
-		case H_OT_STRING : xstring = o->xstring; break;
+	switch( type ){
+		case H_OT_INT    : value.m_integer    = o->value.m_integer;    break;
+		case H_OT_ALIAS  : value.m_alias  = o->value.m_alias;  break;
+		case H_OT_FLOAT  : value.m_double  = o->value.m_double;  break;
+		case H_OT_CHAR   : value.m_char   = o->value.m_char;   break;
+		case H_OT_STRING : value.m_string = o->value.m_string; break;
 		case H_OT_ARRAY  :
-			for( i = 0; i < xsize; ++i ){
-				xarray.push_back( new Object( o->xarray[i] ) );
+			for( i = 0; i < size; ++i ){
+				value.m_array.push_back( new Object( o->value.m_array[i] ) );
 			}
 		break;
 		case H_OT_MAP    :
-			for( i = 0; i < xsize; ++i ){
-				xmap.push_back( new Object( o->xmap[i] ) );
-				xarray.push_back( new Object( o->xarray[i] ) );
+			for( i = 0; i < size; ++i ){
+				value.m_map.push_back( new Object( o->value.m_map[i] ) );
+				value.m_array.push_back( new Object( o->value.m_array[i] ) );
 			}
 		break;
 		case H_OT_MATRIX :
-            xrows    = o->xrows;
-            xcolumns = o->xcolumns;
-            xmatrix  = new Object ** [xrows];
-            for( i = 0; i < xrows; ++i ){
-                xmatrix[i] = new Object * [xcolumns];
+            value.m_rows    = o->value.m_rows;
+            value.m_columns = o->value.m_columns;
+            value.m_matrix  = new Object ** [value.m_rows];
+            for( i = 0; i < value.m_rows; ++i ){
+                value.m_matrix[i] = new Object * [value.m_columns];
             }
-            for( i = 0; i < xrows; ++i ){
-                for( j = 0; j < xcolumns; ++j ){
-                    xmatrix[i][j] = new Object( o->xmatrix[i][j] );
+            for( i = 0; i < value.m_rows; ++i ){
+                for( j = 0; j < value.m_columns; ++j ){
+                    value.m_matrix[i][j] = new Object( o->value.m_matrix[i][j] );
                 }
              }
 		break;
 
 		case H_OT_STRUCT :
             for( i = 0; i < attrs; ++i ){
-                setAttribute( (char *)o->xattr_names[i].c_str(), o->xattr_values[i] );
+                setAttribute( (char *)o->value.m_struct_names[i].c_str(), o->value.m_struct_values[i] );
             }
 		break;
 	}
@@ -443,7 +440,7 @@ Object::Object( Object *o ) :
 }
 
 void Object::setGarbageAttribute( H_OBJECT_ATTRIBUTE mask ){
-    unsigned int i, j, vals( xattr_values.size() );
+    unsigned int i, j, vals( value.m_struct_values.size() );
 
     /* not garbage */
     if( mask == ~H_OA_GARBAGE ){
@@ -454,76 +451,76 @@ void Object::setGarbageAttribute( H_OBJECT_ATTRIBUTE mask ){
         attributes |= mask;
     }
     /* eventually handle children */
-    switch( xtype ){
+    switch( type ){
         case H_OT_ARRAY  :
-            for( i = 0; i < xsize; ++i ){
-                xarray[i]->setGarbageAttribute(mask);
+            for( i = 0; i < size; ++i ){
+                value.m_array[i]->setGarbageAttribute(mask);
             }
         break;
 
         case H_OT_MAP    :
-            for( i = 0; i < xsize; ++i ){
-                xarray[i]->setGarbageAttribute(mask);
-                xmap[i]->setGarbageAttribute(mask);
+            for( i = 0; i < size; ++i ){
+                value.m_array[i]->setGarbageAttribute(mask);
+                value.m_map[i]->setGarbageAttribute(mask);
             }
         break;
 
         case H_OT_MATRIX :
-            for( i = 0; i < xrows; ++i ){
-                for( j = 0; j < xcolumns; ++j ){
-                    xmatrix[i][j]->setGarbageAttribute(mask);
+            for( i = 0; i < value.m_rows; ++i ){
+                for( j = 0; j < value.m_columns; ++j ){
+                    value.m_matrix[i][j]->setGarbageAttribute(mask);
                 }
             }
         break;
 
         case H_OT_STRUCT :
             for( i = 0; i < vals; ++i ){
-                xattr_values[i]->setGarbageAttribute(mask);
+                value.m_struct_values[i]->setGarbageAttribute(mask);
             }
 		break;
     }
 }
 
 Object& Object::assign( Object *o ){
-    unsigned int i, j,  attrs( o->xattr_names.size() ), vals( o->xattr_values.size() );
+    unsigned int i, j,  attrs( o->value.m_struct_names.size() ), vals( o->value.m_struct_values.size() );
 
 	release(false);
 
-    xtype = o->xtype;
-    xsize = o->xsize;
-	switch( o->xtype ){
-		case H_OT_INT    : xint    = o->xint;    break;
-		case H_OT_ALIAS  : xalias  = o->xalias;  break;
-		case H_OT_FLOAT  : xfloat  = o->xfloat;  break;
-		case H_OT_CHAR   : xchar   = o->xchar;   break;
-		case H_OT_STRING : xstring = o->xstring; break;
+    type = o->type;
+    size = o->size;
+	switch( o->type ){
+		case H_OT_INT    : value.m_integer    = o->value.m_integer;    break;
+		case H_OT_ALIAS  : value.m_alias  = o->value.m_alias;  break;
+		case H_OT_FLOAT  : value.m_double  = o->value.m_double;  break;
+		case H_OT_CHAR   : value.m_char   = o->value.m_char;   break;
+		case H_OT_STRING : value.m_string = o->value.m_string; break;
 		case H_OT_ARRAY  :
-			for( i = 0; i < xsize; ++i ){
-				xarray.push_back( new Object( o->xarray[i] ) );
+			for( i = 0; i < size; ++i ){
+				value.m_array.push_back( new Object( o->value.m_array[i] ) );
 			}
 		break;
 		case H_OT_MAP    :
-			for( i = 0; i < xsize; ++i ){
-				xmap.push_back( new Object( o->xmap[i] ) );
-				xarray.push_back( new Object( o->xarray[i] ) );
+			for( i = 0; i < size; ++i ){
+				value.m_map.push_back( new Object( o->value.m_map[i] ) );
+				value.m_array.push_back( new Object( o->value.m_array[i] ) );
 			}
 		break;
 		case H_OT_MATRIX :
-            xrows    = o->xrows;
-            xcolumns = o->xcolumns;
-            xmatrix  = new Object ** [xrows];
-            for( i = 0; i < xrows; ++i ){
-                xmatrix[i] = new Object * [xcolumns];
+            value.m_rows    = o->value.m_rows;
+            value.m_columns = o->value.m_columns;
+            value.m_matrix  = new Object ** [value.m_rows];
+            for( i = 0; i < value.m_rows; ++i ){
+                value.m_matrix[i] = new Object * [value.m_columns];
             }
-            for( i = 0; i < xrows; ++i ){
-                for( j = 0; j < xcolumns; ++j ){
-                    xmatrix[i][j] = new Object( o->xmatrix[i][j] );
+            for( i = 0; i < value.m_rows; ++i ){
+                for( j = 0; j < value.m_columns; ++j ){
+                    value.m_matrix[i][j] = new Object( o->value.m_matrix[i][j] );
                 }
              }
 		break;
 		case H_OT_STRUCT :
             for( i = 0; i < attrs; ++i ){
-                setAttribute( (char *)o->xattr_names[i].c_str(), o->xattr_values[i] );
+                setAttribute( (char *)o->value.m_struct_names[i].c_str(), o->value.m_struct_values[i] );
             }
 		break;
 	}
@@ -535,59 +532,65 @@ void Object::release( bool reset_attributes /*= true*/ ){
     unsigned int i, j;
     Object *o;
 
-    switch( xtype ){
+    switch( type ){
         case H_OT_STRING :
-            xstring.clear();
+            value.m_string.clear();
         break;
 
         case H_OT_ARRAY  :
-            for( i = 0; i < xsize; ++i ){
-                o = xarray[i];
+            for( i = 0; i < size; ++i ){
+                o = value.m_array[i];
                 if( o ){
                     delete o;
-                    xarray[i] = NULL;
+                    value.m_array[i] = NULL;
                 }
             }
-            xarray.clear();
+            value.m_array.clear();
         break;
 
         case H_OT_MAP    :
-            for( i = 0; i < xsize; ++i ){
-                o = xmap[i];
+            for( i = 0; i < size; ++i ){
+                o = value.m_map[i];
                 if( o ){
                     delete o;
-                    xmap[i] = NULL;
+                    value.m_map[i] = NULL;
                 }
-                o = xarray[i];
+                o = value.m_array[i];
                 if( o ){
                     delete o;
-                    xarray[i] = NULL;
+                    value.m_array[i] = NULL;
                 }
             }
-            xmap.clear();
-            xarray.clear();
+            value.m_map.clear();
+            value.m_array.clear();
         break;
 
         case H_OT_MATRIX :
-            for( i = 0; i < xrows; ++i ){
-                for( j = 0; j < xcolumns; ++j ){
-                    o = xmatrix[i][j];
+            for( i = 0; i < value.m_rows; ++i ){
+                for( j = 0; j < value.m_columns; ++j ){
+                    o = value.m_matrix[i][j];
                     delete o;
-                    xmatrix[i][j] = NULL;
+                    value.m_matrix[i][j] = NULL;
                 }
-                delete [] xmatrix[i];
+                delete [] value.m_matrix[i];
             }
-            delete [] xmatrix;
-            xrows    = 0;
-            xcolumns = 0;
+            delete [] value.m_matrix;
+            value.m_rows    = 0;
+            value.m_columns = 0;
         break;
 
         case H_OT_STRUCT :
-
+            for( i = 0; i < value.m_struct_values.size(); ++i ){
+                o = value.m_struct_values[i];
+                delete o;
+                value.m_struct_values[i] = NULL;
+            }
+            value.m_struct_values.clear();
+            value.m_struct_names.clear();
         break;
     }
-    xsize      = 0;
-    xtype      = H_OT_VOID;
+    size      = 0;
+    type      = H_OT_VOID;
     if( reset_attributes ){
         attributes = H_OA_NONE | H_OA_GARBAGE;
     }
@@ -595,97 +598,112 @@ void Object::release( bool reset_attributes /*= true*/ ){
 
 Object::~Object(){
     #ifdef MEM_DEBUG
-    printf( "[MEM DEBUG] deleted object (- %d bytes)\n", xsize );
+    printf( "[MEM DEBUG] deleted object (- %d bytes)\n", size );
     #endif
     release();
 }
 
 int Object::equals( Object *o ){
-	if( xtype != o->xtype ){
+	if( type != o->type ){
 		return 0;
 	}
-	else if( xsize != o->xsize ){
+	else if( size != o->size ){
 		return 0;
 	}
 	unsigned int i, j;
-	switch( xtype ){
-		case H_OT_INT    : return xint    == o->xint;
-		case H_OT_ALIAS  : return xalias  == o->xalias;
-		case H_OT_FLOAT  : return xfloat  == o->xfloat;
-		case H_OT_CHAR   : return xchar   == o->xchar;
-		case H_OT_STRING : return xstring == o->xstring;
+	switch( type ){
+		case H_OT_INT    : return value.m_integer    == o->value.m_integer;
+		case H_OT_ALIAS  : return value.m_alias  == o->value.m_alias;
+		case H_OT_FLOAT  : return value.m_double  == o->value.m_double;
+		case H_OT_CHAR   : return value.m_char   == o->value.m_char;
+		case H_OT_STRING : return value.m_string == o->value.m_string;
 		case H_OT_ARRAY  :
-			for( i = 0; i < xsize; ++i ){
-				if( xarray[i]->equals( o->xarray[i] ) == 0 ){
+			for( i = 0; i < size; ++i ){
+				if( value.m_array[i]->equals( o->value.m_array[i] ) == 0 ){
 					return 0;
 				}
 			}
 			return 1;
 		break;
 		case H_OT_MAP    :
-			for( i = 0; i < xsize; ++i ){
-				if( xmap[i]->equals( o->xmap[i] ) == 0 ){
+			for( i = 0; i < size; ++i ){
+				if( value.m_map[i]->equals( o->value.m_map[i] ) == 0 ){
 					return 0;
 				}
-				if( xarray[i]->equals( o->xarray[i] ) == 0 ){
+				if( value.m_array[i]->equals( o->value.m_array[i] ) == 0 ){
 					return 0;
 				}
 			}
 			return 1;
 		break;
 		case H_OT_MATRIX :
-            if( xrows != o->xrows || xcolumns != o->xcolumns ){
+            if( value.m_rows != o->value.m_rows || value.m_columns != o->value.m_columns ){
                 return 0;
             }
-            for( i = 0; i < xrows; ++i ){
-                for( j = 0; j < xcolumns; ++j ){
-                    if( xmatrix[i][j]->equals( o->xmatrix[i][j] ) == 0 ){
+            for( i = 0; i < value.m_rows; ++i ){
+                for( j = 0; j < value.m_columns; ++j ){
+                    if( value.m_matrix[i][j]->equals( o->value.m_matrix[i][j] ) == 0 ){
                         return 0;
                     }
                 }
             }
             return 1;
 		break;
+		case H_OT_STRUCT :
+            if( value.m_struct_names.size()  != o->value.m_struct_names.size() ||
+                value.m_struct_values.size() != o->value.m_struct_values.size() ){
+                return 0;
+            }
+
+            for( i = 0; i < value.m_struct_names.size(); ++i ){
+                if( value.m_struct_names[i]  != o->value.m_struct_names[i] ||
+                    value.m_struct_values[i]->equals(o->value.m_struct_values[i]) == 0 ){
+                    return 0;
+                }
+                return 1;
+            }
+
+		break;
 	}
 }
 
 void Object::addAttribute( char *name ){
-    xtype = H_OT_STRUCT;
-    xsize++;
+    type = H_OT_STRUCT;
+    size++;
 
-    xattr_names.push_back( string(name) );
-    xattr_values.push_back( new Object((long)0) );
+    value.m_struct_names.push_back( string(name) );
+    value.m_struct_values.push_back( new Object((long)0) );
 }
 
 Object *Object::getAttribute( char *name ){
-    int i, sz( xattr_names.size() );
+    int i, sz( value.m_struct_names.size() );
 
     for( i = 0; i < sz; ++i ){
-        if( xattr_names[i] == name ){
-            return xattr_values[i];
+        if( value.m_struct_names[i] == name ){
+            return value.m_struct_values[i];
         }
     }
     return NULL;
 }
 
 void Object::setAttribute( char *name, Object *value ){
-    int i, sz( xattr_names.size() );
+    int i, sz( this->value.m_struct_names.size() );
 
     for( i = 0; i < sz; ++i ){
-        if( xattr_names[i] == name ){
-            xattr_values[i]->assign(value);
+        if( this->value.m_struct_names[i] == name ){
+            this->value.m_struct_values[i]->assign(value);
             return;
         }
     }
 
-    xattr_names.push_back( string(name) );
-    xattr_values.push_back( new Object(value) );
+    this->value.m_struct_names.push_back( string(name) );
+    this->value.m_struct_values.push_back( new Object(value) );
 }
 
 int Object::mapFind( Object *map ){
 	unsigned int i;
-	for( i = 0; i < xsize; ++i ){
-		if( xmap[i]->equals(map) ){
+	for( i = 0; i < size; ++i ){
+		if( value.m_map[i]->equals(map) ){
 			return i;
 		}
 	}
@@ -693,69 +711,25 @@ int Object::mapFind( Object *map ){
 }
 
 Object * Object::getObject(){
-	if( xtype != H_OT_ALIAS ){
+	if( type != H_OT_ALIAS ){
 		hybris_generic_error( "invalid pointer reference" );
 	}
-	return (Object *)xalias;
-}
-
-unsigned char *Object::serialize(){
-	unsigned char *buffer = new unsigned char[ xsize ];
-	unsigned int xmapsize = 0, i, offset = 0;
-
-	memset( buffer, 0x00, xsize );
-	switch( xtype ){
-		case H_OT_INT    : memcpy( buffer, &xint, xsize );           break;
-		case H_OT_ALIAS  : memcpy( buffer, &xalias, xsize );         break;
-		case H_OT_FLOAT  : memcpy( buffer, &xfloat, xsize );         break;
-		case H_OT_CHAR   : memcpy( buffer, &xchar, xsize );          break;
-		case H_OT_STRING : memcpy( buffer, xstring.c_str(), xsize ); break;
-		case H_OT_MAP    :
-			// compute the map objects size
-			for( i = 0; i < xsize; ++i ){
-				switch( xarray[i]->xtype ){
-					case H_OT_INT    : xmapsize += xarray[i]->xsize; break;
-					case H_OT_ALIAS  : xmapsize += xarray[i]->getObject()->xsize; break;
-					case H_OT_FLOAT  : xmapsize += xarray[i]->xsize; break;
-					case H_OT_CHAR   : xmapsize += xarray[i]->xsize; break;
-					case H_OT_STRING : xmapsize += xarray[i]->xsize; break;
-					default:
-						hybris_generic_error( "invalid map sub type '%s' for field %s", Object::type(xarray[i]), xmap[i]->toString() );
-				}
-			}
-
-			// alloc new buffer
-			delete[] buffer;
-			buffer = new unsigned char[ xmapsize ];
-
-			// create the serialized stream looping each map's object
-			for( i = 0; i < xsize; ++i ){
-				memcpy( (buffer + offset), xarray[i]->serialize(), xarray[i]->xsize );
-				offset += xarray[i]->xsize;
-			}
-
-		break;
-
-        default :
-            hybris_generic_error( "could not serialize %s type", Object::type(this) );
-	}
-
-	return buffer;
+	return (Object *)value.m_alias;
 }
 
 void Object::print( unsigned int tabs /*= 0*/ ){
-	unsigned int i, j, vals( xattr_names.size() );
+	unsigned int i, j, vals( value.m_struct_names.size() );
 	for( i = 0; i < tabs; ++i ) printf( "\t" );
-	switch(xtype){
-		case H_OT_INT    : printf( "%d",  xint );           break;
-		case H_OT_ALIAS  : printf( "0x%X", xalias );        break;
-		case H_OT_FLOAT  : printf( "%lf", xfloat );         break;
-		case H_OT_CHAR   : printf( "%c", xchar );           break;
-		case H_OT_STRING : printf( "%s", xstring.c_str() ); break;
+	switch(type){
+		case H_OT_INT    : printf( "%d",  value.m_integer );           break;
+		case H_OT_ALIAS  : printf( "0x%X", value.m_alias );        break;
+		case H_OT_FLOAT  : printf( "%lf", value.m_double );         break;
+		case H_OT_CHAR   : printf( "%c", value.m_char );           break;
+		case H_OT_STRING : printf( "%s", value.m_string.c_str() ); break;
 		case H_OT_ARRAY  :
 			printf( "array {\n" );
-			for( i = 0; i < xsize; ++i ){
-				xarray[i]->println(tabs + 1);
+			for( i = 0; i < size; ++i ){
+				value.m_array[i]->println(tabs + 1);
 			}
 			for( i = 0; i < tabs; ++i ) printf( "\t" );
 			printf( "}\n" );
@@ -763,20 +737,20 @@ void Object::print( unsigned int tabs /*= 0*/ ){
 		break;
 		case H_OT_MAP  :
 			printf( "map {\n" );
-			for( i = 0; i < xsize; ++i ){
-				xmap[i]->print(tabs + 1);
+			for( i = 0; i < size; ++i ){
+				value.m_map[i]->print(tabs + 1);
 				printf( " -> " );
-				xarray[i]->println(tabs + 1);
+				value.m_array[i]->println(tabs + 1);
 			}
 			for( i = 0; i < tabs; ++i ) printf( "\t" );
 			printf( "}\n" );
 			return;
 		break;
 		case H_OT_MATRIX :
-            printf( "matrix [%dx%d] {\n", xrows, xcolumns );
-            for( i = 0; i < xrows; ++i ){
-                for( j = 0; j < xcolumns; ++j ){
-                    xmatrix[i][j]->print( tabs + 1 );
+            printf( "matrix [%dx%d] {\n", value.m_rows, value.m_columns );
+            for( i = 0; i < value.m_rows; ++i ){
+                for( j = 0; j < value.m_columns; ++j ){
+                    value.m_matrix[i][j]->print( tabs + 1 );
                 }
                 printf( "\n" );
             }
@@ -787,8 +761,8 @@ void Object::print( unsigned int tabs /*= 0*/ ){
             printf( "struct {\n" );
 			for( i = 0; i < vals; ++i ){
 			    for( j = 0; j <= tabs; ++j ) printf( "\t" );
-			    printf( "%s : ", xattr_names[i].c_str() );
-                xattr_values[i]->print( tabs + 1 );
+			    printf( "%s : ", value.m_struct_names[i].c_str() );
+                value.m_struct_values[i]->print( tabs + 1 );
                 printf( "\n" );
 			}
 			for( i = 0; i < tabs; ++i ) printf( "\t" );
@@ -863,11 +837,11 @@ void Object::parse_pcre( string& raw, string& regex, int& opts ){
 
 Object *Object::regexp( Object *regexp ){
     if( assert_type( this, regexp, 1, H_OT_STRING ) == 0 ){
-		hybris_syntax_error( "invalid types for '~=' regexp operator (%s, %s)", Object::type(this), Object::type(regexp) );
+		hybris_syntax_error( "invalid types for '~=' regexp operator (%s, %s)", type_name(this), type_name(regexp) );
 	}
 
-	string rawreg  = regexp->xstring,
-		   subject = this->xstring,
+	string rawreg  = regexp->value.m_string,
+		   subject = this->value.m_string,
 		   regex;
 	int    opts;
 
@@ -900,28 +874,26 @@ Object *Object::regexp( Object *regexp ){
 #endif
 
 void Object::input(){
-	switch(xtype){
-		case H_OT_INT    : cin >> xint;    break;
-		case H_OT_FLOAT  : cin >> xfloat;  break;
-		case H_OT_CHAR   : cin >> xchar;   break;
-		case H_OT_STRING : cin >> xstring; break;
-		case H_OT_ARRAY  : hybris_syntax_error( "could not read an array" ); break;
-		case H_OT_MAP    : hybris_syntax_error( "could not read a map" ); break;
-		case H_OT_ALIAS  : hybris_syntax_error( "could not read an alias" ); break;
-		case H_OT_MATRIX : hybris_syntax_error( "could not read a matrix" ); break;
+	switch(type){
+		case H_OT_INT    : cin >> value.m_integer; break;
+		case H_OT_FLOAT  : cin >> value.m_double;  break;
+		case H_OT_CHAR   : cin >> value.m_char;    break;
+		case H_OT_STRING : cin >> value.m_string;  break;
+
+		default :
+             hybris_syntax_error( "could not read type '%s' from stdin", type_name(this) );
 	}
 }
 
 long Object::lvalue(){
-	switch(xtype){
-		case H_OT_INT    : return xint;        break;
-		case H_OT_ALIAS  : return xalias;      break;
-		case H_OT_FLOAT  : return static_cast<long>(xfloat); break;
-		case H_OT_CHAR   : return static_cast<long>(xchar);  break;
-		case H_OT_STRING :
-		case H_OT_ARRAY  :
-		case H_OT_MAP    :
-		case H_OT_MATRIX : return static_cast<long>(xsize);  break;
+	switch(type){
+		case H_OT_INT    : return value.m_integer;                   break;
+		case H_OT_ALIAS  : return value.m_alias;                     break;
+		case H_OT_FLOAT  : return static_cast<long>(value.m_double); break;
+		case H_OT_CHAR   : return static_cast<long>(value.m_char);   break;
+
+		default :
+            return static_cast<long>(size);
 	}
 }
 
@@ -929,25 +901,25 @@ Object * Object::dot( Object *o ){
 	stringstream ret;
 	char         tmp[0xFF] = {0};
 
-	switch(xtype){
-		case H_OT_INT    : ret << xint;    break;
-		case H_OT_ALIAS  : sprintf( tmp, "0x%X", xalias ); ret << tmp; break;
-		case H_OT_FLOAT  : ret << xfloat;  break;
-		case H_OT_CHAR   : ret << xchar;   break;
-		case H_OT_STRING : ret << xstring; break;
-		case H_OT_ARRAY  :
-		case H_OT_MAP    :
-        case H_OT_MATRIX : hybris_syntax_error( "'%s' is an invalid type for '.' operator", type(this) ); break;
+	switch(type){
+		case H_OT_INT    : ret << value.m_integer;    break;
+		case H_OT_ALIAS  : sprintf( tmp, "0x%X", value.m_alias ); ret << tmp; break;
+		case H_OT_FLOAT  : ret << value.m_double;  break;
+		case H_OT_CHAR   : ret << value.m_char;   break;
+		case H_OT_STRING : ret << value.m_string; break;
+
+		default :
+            hybris_syntax_error( "'%s' is an invalid type for '.' operator", type_name(this) );
 	}
-	switch(o->xtype){
-		case H_OT_INT    : ret << o->xint;    break;
-		case H_OT_ALIAS  : sprintf( tmp, "0x%X", o->xalias ); ret << tmp; break;
-		case H_OT_FLOAT  : ret << o->xfloat;  break;
-		case H_OT_CHAR   : ret << o->xchar;   break;
-		case H_OT_STRING : ret << o->xstring; break;
-		case H_OT_ARRAY  :
-		case H_OT_MAP    :
-		case H_OT_MATRIX : hybris_syntax_error( "'%s' is an invalid type for '.' operator", type(o) ); break;
+	switch(o->type){
+		case H_OT_INT    : ret << o->value.m_integer;    break;
+		case H_OT_ALIAS  : sprintf( tmp, "0x%X", o->value.m_alias ); ret << tmp; break;
+		case H_OT_FLOAT  : ret << o->value.m_double;  break;
+		case H_OT_CHAR   : ret << o->value.m_char;   break;
+		case H_OT_STRING : ret << o->value.m_string; break;
+
+		default :
+            hybris_syntax_error( "'%s' is an invalid type for '.' operator", type_name(o) );
 	}
 
 	return new Object( (char *)ret.str().c_str() );
@@ -957,212 +929,209 @@ Object * Object::dotequal( Object *o ){
 	stringstream ret;
 	char         tmp[0xFF] = {0};
 
-	switch(xtype){
-		case H_OT_INT    : ret << xint;    break;
-		case H_OT_FLOAT  : ret << xfloat;  break;
-		case H_OT_CHAR   : ret << xchar;   break;
-		case H_OT_STRING : ret << xstring; break;
-		case H_OT_ALIAS  : sprintf( tmp, "0x%X", xalias ); ret << tmp; break;
-		case H_OT_ARRAY  :
-		case H_OT_MAP    :
-		case H_OT_MATRIX : hybris_syntax_error( "'%s' is an invalid type for '.=' operator", type(this) ); break;
+	switch(type){
+		case H_OT_INT    : ret << value.m_integer;    break;
+		case H_OT_FLOAT  : ret << value.m_double;  break;
+		case H_OT_CHAR   : ret << value.m_char;   break;
+		case H_OT_STRING : ret << value.m_string; break;
+		case H_OT_ALIAS  : sprintf( tmp, "0x%X", value.m_alias ); ret << tmp; break;
+
+		default:
+            hybris_syntax_error( "'%s' is an invalid type for '.=' operator", type_name(this) );
 	}
-	switch(o->xtype){
-		case H_OT_INT    : ret << o->xint;    break;
-		case H_OT_FLOAT  : ret << o->xfloat;  break;
-		case H_OT_CHAR   : ret << o->xchar;   break;
-		case H_OT_STRING : ret << o->xstring; break;
-		case H_OT_ALIAS  : sprintf( tmp, "0x%X", xalias ); ret << tmp; break;
-		case H_OT_ARRAY  :
-		case H_OT_MAP    :
-		case H_OT_MATRIX : hybris_syntax_error( "'%s' is an invalid type for '.=' operator", type(o) ); break;
+	switch(o->type){
+		case H_OT_INT    : ret << o->value.m_integer;    break;
+		case H_OT_FLOAT  : ret << o->value.m_double;  break;
+		case H_OT_CHAR   : ret << o->value.m_char;   break;
+		case H_OT_STRING : ret << o->value.m_string; break;
+		case H_OT_ALIAS  : sprintf( tmp, "0x%X", value.m_alias ); ret << tmp; break;
+
+		default :
+            hybris_syntax_error( "'%s' is an invalid type for '.=' operator", type_name(o) );
 	}
 
 	release(false);
 
-	xtype   = H_OT_STRING;
-	xstring = ret.str();
-	parse_string( xstring );
-	xsize   = strlen( xstring.c_str() ) + 1;
+	type   = H_OT_STRING;
+	value.m_string = ret.str();
+	parse_string( value.m_string );
+	size   = strlen( value.m_string.c_str() ) + 1;
 
 	return this;
 }
 
 Object * Object::toString(){
 	stringstream ret;
-	switch(xtype){
-		case H_OT_INT    : ret << xint;    break;
-		case H_OT_FLOAT  : ret << xfloat;  break;
-		case H_OT_CHAR   : ret << xchar;   break;
-		case H_OT_STRING : ret << xstring; break;
-		case H_OT_ALIAS  :
-		case H_OT_ARRAY  :
-		case H_OT_MAP    :
-		case H_OT_MATRIX : hybris_generic_error( "could not convert '%s' to string", type(this) ); break;
+	switch(type){
+		case H_OT_INT    : ret << value.m_integer; break;
+		case H_OT_FLOAT  : ret << value.m_double;  break;
+		case H_OT_CHAR   : ret << value.m_char;    break;
+		case H_OT_STRING : ret << value.m_string;  break;
+
+		default :
+            hybris_generic_error( "could not convert '%s' to string", type_name(this) );
 	}
 	return new Object( (char *)ret.str().c_str() );
 }
 
 Object * Object::toInt(){
     long ret;
-    switch(xtype){
-		case H_OT_INT    : ret = xint;                  break;
-		case H_OT_FLOAT  : ret = (long)xfloat;          break;
-		case H_OT_CHAR   : ret = (long)xchar;           break;
-		case H_OT_STRING : ret = atol(xstring.c_str()); break;
-		case H_OT_ALIAS  :
-		case H_OT_ARRAY  :
-		case H_OT_MAP    :
-		case H_OT_MATRIX : hybris_generic_error( "could not convert '%s' to int", type(this) ); break;
+    switch(type){
+		case H_OT_INT    : ret = value.m_integer;              break;
+		case H_OT_FLOAT  : ret = (long)value.m_double;         break;
+		case H_OT_CHAR   : ret = (long)value.m_char;           break;
+		case H_OT_STRING : ret = atol(value.m_string.c_str()); break;
+
+		default :
+            hybris_generic_error( "could not convert '%s' to int", type_name(this) );
 	}
 	return new Object( ret );
 }
 
 string Object::svalue(){
 	stringstream ret;
-	switch(xtype){
-		case H_OT_INT    : ret << xint;      break;
-		case H_OT_FLOAT  : ret << xfloat;    break;
-		case H_OT_CHAR   : ret << "'"  << xchar   << "'";  break;
-		case H_OT_STRING : ret << "\"" << xstring << "\""; break;
-		case H_OT_ALIAS  : ret << "<alias>"; break;
-		case H_OT_ARRAY  : ret << "<array>"; break;
-		case H_OT_MAP    : ret << "<map>";   break;
-		case H_OT_MATRIX : ret << "<matrix>"; break;
+	switch(type){
+		case H_OT_INT    : ret << value.m_integer;      break;
+		case H_OT_FLOAT  : ret << value.m_double;    break;
+		case H_OT_CHAR   : ret << "'"  << value.m_char   << "'";  break;
+		case H_OT_STRING : ret << "\"" << value.m_string << "\""; break;
+
+		default :
+            ret << "<" << type_name(this) << ">";
 	}
 	return ret.str();
 }
 
 Object *Object::push( Object *o ){
     Object *item = new Object(o);
-    xarray.push_back( item );
-	xtype = H_OT_ARRAY;
-	xsize = xarray.size();
+    value.m_array.push_back( item );
+	type = H_OT_ARRAY;
+	size = value.m_array.size();
 	return this;
 }
 
 Object *Object::push_ref( Object *o ){
-	xarray.push_back( o );
-	xtype = H_OT_ARRAY;
-	xsize = xarray.size();
+	value.m_array.push_back( o );
+	type = H_OT_ARRAY;
+	size = value.m_array.size();
 	return this;
 }
 
 Object *Object::map( Object *map, Object *o ){
-	xmap.push_back( new Object(map) );
-	xarray.push_back( new Object(o) );
-	xtype = H_OT_MAP;
-	xsize = xmap.size();
+	value.m_map.push_back( new Object(map) );
+	value.m_array.push_back( new Object(o) );
+	type = H_OT_MAP;
+	size = value.m_map.size();
 	return this;
 }
 
 Object *Object::pop(){
-	if( xtype != H_OT_ARRAY ){
+	if( type != H_OT_ARRAY ){
 		hybris_generic_error( "could not pop an element from a non array type" );
 	}
 	#ifdef BOUNDS_CHECK
-	else if( xarray.size() <= 0 ){
+	else if( value.m_array.size() <= 0 ){
 	    hybris_generic_error( "could not pop an element from an empty array" );
 	}
 	#endif
 
-	Object *element = xarray[ xarray.size() - 1 ];
-	xarray.pop_back();
-	xsize = xarray.size();
+	Object *element = value.m_array[ value.m_array.size() - 1 ];
+	value.m_array.pop_back();
+	size = value.m_array.size();
 	return element;
 }
 
 Object *Object::mapPop(){
-	if( xtype != H_OT_MAP ){
+	if( type != H_OT_MAP ){
 		hybris_generic_error( "could not pop an element from a non map type" );
 	}
 	#ifdef BOUNDS_CHECK
-	else if( xarray.size() <= 0 || xmap.size() <= 0 ){
+	else if( value.m_array.size() <= 0 || value.m_map.size() <= 0 ){
 	    hybris_generic_error( "could not pop an element from an empty map" );
 	}
 	#endif
 
-	Object *element = xarray[ xarray.size() - 1 ];
-	xarray.pop_back();
-	xmap.pop_back();
-	xsize = xmap.size();
+	Object *element = value.m_array[ value.m_array.size() - 1 ];
+	value.m_array.pop_back();
+	value.m_map.pop_back();
+	size = value.m_map.size();
 	return element;
 }
 
 Object *Object::remove( Object *index ){
-	if( xtype != H_OT_ARRAY ){
+	if( type != H_OT_ARRAY ){
 		hybris_generic_error( "could not remove an element from a non array type" );
 	}
 	#ifdef BOUNDS_CHECK
-	else if( index->lvalue() >= xarray.size() ){
+	else if( index->lvalue() >= value.m_array.size() ){
 	    hybris_generic_error( "index out of bounds" );
 	}
 	#endif
 
 	unsigned int i = index->lvalue();
-	Object *element = xarray[i];
-	xarray.erase( xarray.begin() + i );
-	xsize = xarray.size();
+	Object *element = value.m_array[i];
+	value.m_array.erase( value.m_array.begin() + i );
+	size = value.m_array.size();
 	return element;
 }
 
 Object *Object::unmap( Object *map ){
-	if( xtype != H_OT_MAP ){
+	if( type != H_OT_MAP ){
 		hybris_generic_error( "could not unmap an element from a non map type" );
 	}
 	int i = mapFind(map);
 	if( i != -1 ){
-		Object *element = xarray[i];
-		xmap.erase( xmap.begin() + i );
-		xarray.erase( xarray.begin() + i );
-		xsize = xmap.size();
+		Object *element = value.m_array[i];
+		value.m_map.erase( value.m_map.begin() + i );
+		value.m_array.erase( value.m_array.begin() + i );
+		size = value.m_map.size();
 		return element;
 	}
 	return this;
 }
 
 Object *Object::at( Object *index ){
-	if( xtype == H_OT_STRING ){
+	if( type == H_OT_STRING ){
         #ifdef BOUNDS_CHECK
-        if( index->lvalue() >= xstring.size() ){
+        if( index->lvalue() >= value.m_string.size() ){
             hybris_generic_error( "index out of bounds" );
         }
         #endif
-		return new Object( xstring[ index->lvalue() ] );
+		return new Object( value.m_string[ index->lvalue() ] );
 	}
-	else if( xtype == H_OT_ARRAY ){
+	else if( type == H_OT_ARRAY ){
         #ifdef BOUNDS_CHECK
-        if( index->lvalue() >= xarray.size() ){
+        if( index->lvalue() >= value.m_array.size() ){
             hybris_generic_error( "index out of bounds" );
         }
         #endif
-		return xarray[ index->lvalue() ];
+		return value.m_array[ index->lvalue() ];
 	}
-	else if( xtype == H_OT_MAP ){
+	else if( type == H_OT_MAP ){
 		int i = mapFind(index);
 		if( i != -1 ){
-			return new Object( xarray[i] );
+			return new Object( value.m_array[i] );
 		}
 		else{
 			hybris_generic_error( "no mapped values for label '%s'", index->toString() );
 		}
 	}
-	else if( xtype == H_OT_MATRIX ){
+	else if( type == H_OT_MATRIX ){
 	    #ifdef BOUNDS_CHECK
-        if( index->lvalue() >= xcolumns ){
+        if( index->lvalue() >= value.m_columns ){
             hybris_generic_error( "index out of bounds" );
         }
         #endif
         Object *array    = new Object();
         unsigned int x = index->lvalue(),
                      y;
-        for( y = 0; y < xrows; ++y ){
-            array->push_ref( xmatrix[x][y] );
+        for( y = 0; y < value.m_rows; ++y ){
+            array->push_ref( value.m_matrix[x][y] );
         }
         return array;
 	}
 	else{
-		hybris_syntax_error( "'%s' is an invalid type for subscript operator", type(this) );
+		hybris_syntax_error( "'%s' is an invalid type for subscript operator", type_name(this) );
 	}
 }
 
@@ -1171,7 +1140,7 @@ Object *Object::at( char *map ){
 	int i = mapFind(&tmp);
 
 	if( i != -1 ){
-        return xarray[i];
+        return value.m_array[i];
 	}
 	else{
         hybris_generic_error( "no mapped values for label '%s'", map );
@@ -1179,35 +1148,35 @@ Object *Object::at( char *map ){
 }
 
 Object& Object::at( Object *index, Object *set ){
-	if( xtype == H_OT_STRING ){
+	if( type == H_OT_STRING ){
 	    #ifdef BOUNDS_CHECK
-        if( index->lvalue() >= xstring.size() ){
+        if( index->lvalue() >= value.m_string.size() ){
             hybris_generic_error( "index out of bounds" );
         }
         #endif
-		xstring[ index->lvalue() ] = (char)set->lvalue();
+		value.m_string[ index->lvalue() ] = (char)set->lvalue();
 	}
-	else if( xtype == H_OT_ARRAY ){
+	else if( type == H_OT_ARRAY ){
 	    #ifdef BOUNDS_CHECK
-        if( index->lvalue() >= xarray.size() ){
+        if( index->lvalue() >= value.m_array.size() ){
             hybris_generic_error( "index out of bounds" );
         }
         #endif
-		delete xarray[ index->lvalue() ];
-		xarray[ index->lvalue() ] = new Object(set);
+		delete value.m_array[ index->lvalue() ];
+		value.m_array[ index->lvalue() ] = new Object(set);
 	}
-	else if( xtype == H_OT_MAP ){
+	else if( type == H_OT_MAP ){
 		int i = mapFind(index);
 		if( i != -1 ){
-			delete xarray[i];
-			xarray[i] = new Object(set);
+			delete value.m_array[i];
+			value.m_array[i] = new Object(set);
 		}
 		else{
 			map( index, set );
 		}
 	}
 	else{
-		hybris_syntax_error( "'%s' is an invalid type for subscript operator", type(this) );
+		hybris_syntax_error( "'%s' is an invalid type for subscript operator", type_name(this) );
 	}
 
 	return *this;
@@ -1217,33 +1186,33 @@ Object* Object::range( Object *to ){
     if( assert_type( this, to, 2, H_OT_CHAR, H_OT_INT ) == 0 ){
 		hybris_syntax_error( "invalid type for range operator" );
 	}
-	if( xtype != to->xtype ){
+	if( type != to->type ){
         hybris_syntax_error( "types must be the same for range operator" );
     }
 
     Object *range = new Object();
     long i;
 
-    if( xtype == H_OT_CHAR ){
-        if( xchar < to->xchar ){
-            for( i = xchar; i <= to->xchar; ++i ){
+    if( type == H_OT_CHAR ){
+        if( value.m_char < to->value.m_char ){
+            for( i = value.m_char; i <= to->value.m_char; ++i ){
                 range->push( new Object( (char)i ) );
             }
         }
         else{
-            for( i = xchar; i >= to->xchar; i-- ){
+            for( i = value.m_char; i >= to->value.m_char; i-- ){
                 range->push( new Object( (char)i ) );
             }
         }
     }
-    else if( xtype == H_OT_INT ){
-        if( xint < to->xint ){
-            for( i = xint; i <= to->xint; ++i ){
+    else if( type == H_OT_INT ){
+        if( value.m_integer < to->value.m_integer ){
+            for( i = value.m_integer; i <= to->value.m_integer; ++i ){
                 range->push( new Object( i ) );
             }
         }
         else{
-            for( i = xint; i >= to->xint; i-- ){
+            for( i = value.m_integer; i >= to->value.m_integer; i-- ){
                 range->push( new Object( i ) );
             }
         }
@@ -1257,26 +1226,24 @@ Object& Object::operator = ( Object *o ){
 }
 
 Object * Object::operator - (){
-	switch(xtype){
-		case H_OT_INT    : return new Object( static_cast<long>(~xint + 1) );   break;
-		case H_OT_FLOAT  : return new Object( static_cast<double>(~(int)xfloat + 1) ); break;
-		case H_OT_CHAR   : return new Object( static_cast<char>(~xchar + 1) );  break;
-		case H_OT_ALIAS  :
-		case H_OT_STRING :
-		case H_OT_ARRAY  :
-		case H_OT_MAP    : hybris_syntax_error( "unexpected type for unary minus operator" );
+	switch(type){
+		case H_OT_INT    : return new Object( static_cast<long>(~value.m_integer + 1) );   break;
+		case H_OT_FLOAT  : return new Object( static_cast<double>(~(int)value.m_double + 1) ); break;
+		case H_OT_CHAR   : return new Object( static_cast<char>(~value.m_char + 1) );  break;
+
+		default :
+            hybris_syntax_error( "unexpected %s type for unary minus operator", type_name(this) );
 	}
 }
 
 Object * Object::operator ! (){
-	switch(xtype){
-		case H_OT_INT    : return new Object( static_cast<long>(!xint) );   break;
-		case H_OT_FLOAT  : return new Object( static_cast<double>(!xfloat) ); break;
-		case H_OT_CHAR   : return new Object( static_cast<char>(!xchar) );  break;
-		case H_OT_ALIAS  :
-		case H_OT_STRING :
-		case H_OT_ARRAY  :
-		case H_OT_MAP    : hybris_syntax_error( "unexpected type for unary not operator" );
+	switch(type){
+		case H_OT_INT    : return new Object( static_cast<long>(!value.m_integer) );   break;
+		case H_OT_FLOAT  : return new Object( static_cast<double>(!value.m_double) ); break;
+		case H_OT_CHAR   : return new Object( static_cast<char>(!value.m_char) );  break;
+
+		default :
+            hybris_syntax_error( "unexpected %s type for unary not operator", type_name(this) );
 	}
 }
 
@@ -1287,7 +1254,7 @@ Object * Object::factorial(){
            ln_fact = 1,
            i;
 
-    switch(xtype){
+    switch(type){
 		case H_OT_INT    :
 		case H_OT_CHAR   :
              ln_num = lvalue();
@@ -1298,42 +1265,38 @@ Object * Object::factorial(){
         break;
 
 		case H_OT_FLOAT  :
-             db_num = xfloat;
+             db_num = value.m_double;
              for( i = 1; i <= db_num; ++i ){
                 db_fact *= i;
              }
              return new Object(db_fact);
 		break;
 
-		case H_OT_ALIAS  :
-		case H_OT_STRING :
-		case H_OT_ARRAY  :
-		case H_OT_MAP    : hybris_syntax_error( "unexpected type for factorial operator" );
+		default :
+            hybris_syntax_error( "unexpected %s type for factorial operator", type_name(this) );
 	}
 }
 
 Object& Object::operator ++ (){
-	switch(xtype){
-		case H_OT_INT    : ++xint;   break;
-		case H_OT_FLOAT  : ++xfloat; break;
-		case H_OT_CHAR   : ++xchar;  break;
-		case H_OT_ALIAS  :
-		case H_OT_STRING :
-		case H_OT_ARRAY  :
-		case H_OT_MAP    : hybris_syntax_error( "unexpected type for increment operator" );
+	switch(type){
+		case H_OT_INT    : ++value.m_integer;   break;
+		case H_OT_FLOAT  : ++value.m_double; break;
+		case H_OT_CHAR   : ++value.m_char;  break;
+
+		default :
+            hybris_syntax_error( "unexpected %s type for increment operator", type_name(this) );
 	}
 	return *this;
 }
 
 Object& Object::operator -- (){
-	switch(xtype){
-		case H_OT_INT    : --xint;   break;
-		case H_OT_FLOAT  : --xfloat; break;
-		case H_OT_CHAR   : --xchar;  break;
-		case H_OT_ALIAS  :
-		case H_OT_STRING :
-		case H_OT_ARRAY  :
-		case H_OT_MAP    : hybris_syntax_error( "unexpected type for decrement operator" );
+	switch(type){
+		case H_OT_INT    : --value.m_integer;   break;
+		case H_OT_FLOAT  : --value.m_double; break;
+		case H_OT_CHAR   : --value.m_char;  break;
+
+		default :
+            hybris_syntax_error( "unexpected %s type for decrement operator", type_name(this) );
 	}
 	return *this;
 }
@@ -1343,30 +1306,30 @@ Object * Object::operator + ( Object *o ){
 		hybris_syntax_error( "invalid type for addition operator" );
 	}
 
-	if( xtype == H_OT_FLOAT ){
-		return new Object( xfloat + (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue()) );
+	if( type == H_OT_FLOAT ){
+		return new Object( value.m_double + (o->type == H_OT_FLOAT ? o->value.m_double : o->lvalue()) );
 	}
-	else if( o->xtype == H_OT_FLOAT ){
-		return new Object( o->xfloat + (xtype == H_OT_FLOAT ? xfloat : lvalue()) );
+	else if( o->type == H_OT_FLOAT ){
+		return new Object( o->value.m_double + (type == H_OT_FLOAT ? value.m_double : lvalue()) );
 	}
-	else if( xtype == H_OT_MATRIX ){
+	else if( type == H_OT_MATRIX ){
 	    Object *matrix = new Object( this );
 	    unsigned int x, y;
 
-        if( o->xtype == H_OT_MATRIX ){
-            if( xrows != o->xrows || xcolumns != o->xcolumns ){
+        if( o->type == H_OT_MATRIX ){
+            if( value.m_rows != o->value.m_rows || value.m_columns != o->value.m_columns ){
                 hybris_syntax_error( "matrices have to be the same size" );
             }
-            for( x = 0; x < xrows; ++x ){
-                for( y = 0; y < xcolumns; ++y ){
-                    (*matrix->xmatrix[x][y]) += o->xmatrix[x][y];
+            for( x = 0; x < value.m_rows; ++x ){
+                for( y = 0; y < value.m_columns; ++y ){
+                    (*matrix->value.m_matrix[x][y]) += o->value.m_matrix[x][y];
                 }
             }
         }
         else{
-            for( x = 0; x < xrows; ++x ){
-                for( y = 0; y < xcolumns; ++y ){
-                    (*matrix->xmatrix[x][y]) += o;
+            for( x = 0; x < value.m_rows; ++x ){
+                for( y = 0; y < value.m_columns; ++y ){
+                    (*matrix->value.m_matrix[x][y]) += o;
                 }
             }
         }
@@ -1382,35 +1345,35 @@ Object * Object::operator += ( Object *o ){
 		hybris_syntax_error( "invalid type for addition operator" );
 	}
 
-	if( xtype == H_OT_FLOAT ){
-		xfloat += (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue());
+	if( type == H_OT_FLOAT ){
+		value.m_double += (o->type == H_OT_FLOAT ? o->value.m_double : o->lvalue());
 	}
-	else if( xtype == H_OT_CHAR ){
-		xchar += (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue());
+	else if( type == H_OT_CHAR ){
+		value.m_char += (o->type == H_OT_FLOAT ? o->value.m_double : o->lvalue());
 	}
-	else if( xtype == H_OT_MATRIX ){
+	else if( type == H_OT_MATRIX ){
 	    unsigned int x, y;
 
-        if( o->xtype == H_OT_MATRIX ){
-            if( xrows != o->xrows || xcolumns != o->xcolumns ){
+        if( o->type == H_OT_MATRIX ){
+            if( value.m_rows != o->value.m_rows || value.m_columns != o->value.m_columns ){
                 hybris_syntax_error( "matrices have to be the same size" );
             }
-            for( x = 0; x < xrows; ++x ){
-                for( y = 0; y < xcolumns; ++y ){
-                    (*this->xmatrix[x][y]) += o->xmatrix[x][y];
+            for( x = 0; x < value.m_rows; ++x ){
+                for( y = 0; y < value.m_columns; ++y ){
+                    (*this->value.m_matrix[x][y]) += o->value.m_matrix[x][y];
                 }
             }
         }
         else{
-            for( x = 0; x < xrows; ++x ){
-                for( y = 0; y < xcolumns; ++y ){
-                    (*this->xmatrix[x][y]) += o;
+            for( x = 0; x < value.m_rows; ++x ){
+                for( y = 0; y < value.m_columns; ++y ){
+                    (*this->value.m_matrix[x][y]) += o;
                 }
             }
         }
 	}
 	else{
-		xint += (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue());
+		value.m_integer += (o->type == H_OT_FLOAT ? o->value.m_double : o->lvalue());
 	}
 
 	return this;
@@ -1421,30 +1384,30 @@ Object * Object::operator - ( Object *o ){
 		hybris_syntax_error( "invalid type for subtraction operator" );
 	}
 
-	if( xtype == H_OT_FLOAT ){
-		return new Object( xfloat - (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue()) );
+	if( type == H_OT_FLOAT ){
+		return new Object( value.m_double - (o->type == H_OT_FLOAT ? o->value.m_double : o->lvalue()) );
 	}
-	else if( o->xtype == H_OT_FLOAT ){
-		return new Object( o->xfloat - (xtype == H_OT_FLOAT ? xfloat : lvalue()) );
+	else if( o->type == H_OT_FLOAT ){
+		return new Object( o->value.m_double - (type == H_OT_FLOAT ? value.m_double : lvalue()) );
 	}
-    else if( xtype == H_OT_MATRIX ){
+    else if( type == H_OT_MATRIX ){
 	    Object *matrix = new Object( this );
 	    unsigned int x, y;
 
-        if( o->xtype == H_OT_MATRIX ){
-            if( xrows != o->xrows || xcolumns != o->xcolumns ){
+        if( o->type == H_OT_MATRIX ){
+            if( value.m_rows != o->value.m_rows || value.m_columns != o->value.m_columns ){
                 hybris_syntax_error( "matrices have to be the same size" );
             }
-            for( x = 0; x < xrows; ++x ){
-                for( y = 0; y < xcolumns; ++y ){
-                    (*matrix->xmatrix[x][y]) -= o->xmatrix[x][y];
+            for( x = 0; x < value.m_rows; ++x ){
+                for( y = 0; y < value.m_columns; ++y ){
+                    (*matrix->value.m_matrix[x][y]) -= o->value.m_matrix[x][y];
                 }
             }
         }
         else{
-            for( x = 0; x < xrows; ++x ){
-                for( y = 0; y < xcolumns; ++y ){
-                    (*matrix->xmatrix[x][y]) -= o;
+            for( x = 0; x < value.m_rows; ++x ){
+                for( y = 0; y < value.m_columns; ++y ){
+                    (*matrix->value.m_matrix[x][y]) -= o;
                 }
             }
         }
@@ -1460,35 +1423,35 @@ Object * Object::operator -= ( Object *o ){
 		hybris_syntax_error( "invalid type for subtraction operator" );
 	}
 
-	if( xtype == H_OT_FLOAT ){
-		xfloat -= (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue());
+	if( type == H_OT_FLOAT ){
+		value.m_double -= (o->type == H_OT_FLOAT ? o->value.m_double : o->lvalue());
 	}
-	else if( xtype == H_OT_CHAR ){
-		xchar -= (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue());
+	else if( type == H_OT_CHAR ){
+		value.m_char -= (o->type == H_OT_FLOAT ? o->value.m_double : o->lvalue());
 	}
-	else if( xtype == H_OT_MATRIX ){
+	else if( type == H_OT_MATRIX ){
 	    unsigned int x, y;
 
-        if( o->xtype == H_OT_MATRIX ){
-            if( xrows != o->xrows || xcolumns != o->xcolumns ){
+        if( o->type == H_OT_MATRIX ){
+            if( value.m_rows != o->value.m_rows || value.m_columns != o->value.m_columns ){
                 hybris_syntax_error( "matrices have to be the same size" );
             }
-            for( x = 0; x < xrows; ++x ){
-                for( y = 0; y < xcolumns; ++y ){
-                    (*this->xmatrix[x][y]) -= o->xmatrix[x][y];
+            for( x = 0; x < value.m_rows; ++x ){
+                for( y = 0; y < value.m_columns; ++y ){
+                    (*this->value.m_matrix[x][y]) -= o->value.m_matrix[x][y];
                 }
             }
         }
         else{
-            for( x = 0; x < xrows; ++x ){
-                for( y = 0; y < xcolumns; ++y ){
-                    (*this->xmatrix[x][y]) -= o;
+            for( x = 0; x < value.m_rows; ++x ){
+                for( y = 0; y < value.m_columns; ++y ){
+                    (*this->value.m_matrix[x][y]) -= o;
                 }
             }
         }
 	}
 	else{
-		xint -= (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue());
+		value.m_integer -= (o->type == H_OT_FLOAT ? o->value.m_double : o->lvalue());
 	}
 	return this;
 }
@@ -1498,35 +1461,35 @@ Object * Object::operator * ( Object *o ){
 		hybris_syntax_error( "invalid type for multiplication operator" );
 	}
 
-	if( xtype == H_OT_FLOAT ){
-		return new Object( xfloat * (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue()) );
+	if( type == H_OT_FLOAT ){
+		return new Object( value.m_double * (o->type == H_OT_FLOAT ? o->value.m_double : o->lvalue()) );
 	}
-	else if( o->xtype == H_OT_FLOAT ){
-		return new Object( o->xfloat * (xtype == H_OT_FLOAT ? xfloat : lvalue()) );
+	else if( o->type == H_OT_FLOAT ){
+		return new Object( o->value.m_double * (type == H_OT_FLOAT ? value.m_double : lvalue()) );
 	}
-	else if( xtype == H_OT_MATRIX ){
+	else if( type == H_OT_MATRIX ){
 	    unsigned int x, y, z;
 	    Object *matrix;
 
-	    if( o->xtype == H_OT_MATRIX ){
-            if( xcolumns != o->xrows ){
+	    if( o->type == H_OT_MATRIX ){
+            if( value.m_columns != o->value.m_rows ){
                 hybris_syntax_error( "first matrix columns have to be the same size of second matrix rows" );
             }
             vector<Object *> dummy;
-            matrix = new Object( this->xcolumns, o->xrows, dummy );
-            for( x = 0; x < xrows; ++x ){
-                for( y = 0; y < o->xcolumns; ++y ){
-                    for( z = 0; z < xcolumns; z++ ){
-                        (*matrix->xmatrix[x][y]) = (*xmatrix[x][z]) * o->xmatrix[z][y];
+            matrix = new Object( this->value.m_columns, o->value.m_rows, dummy );
+            for( x = 0; x < value.m_rows; ++x ){
+                for( y = 0; y < o->value.m_columns; ++y ){
+                    for( z = 0; z < value.m_columns; z++ ){
+                        (*matrix->value.m_matrix[x][y]) = (*value.m_matrix[x][z]) * o->value.m_matrix[z][y];
                     }
                 }
             }
         }
         else{
             matrix = new Object( this );
-            for( x = 0; x < xrows; ++x ){
-                for( y = 0; y < xcolumns; ++y ){
-                    (*matrix->xmatrix[x][y]) *= o;
+            for( x = 0; x < value.m_rows; ++x ){
+                for( y = 0; y < value.m_columns; ++y ){
+                    (*matrix->value.m_matrix[x][y]) *= o;
                 }
             }
         }
@@ -1542,35 +1505,35 @@ Object * Object::operator *= ( Object *o ){
 		hybris_syntax_error( "invalid type for multiplication operator" );
 	}
 
-	if( xtype == H_OT_FLOAT ){
-		xfloat *= (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue());
+	if( type == H_OT_FLOAT ){
+		value.m_double *= (o->type == H_OT_FLOAT ? o->value.m_double : o->lvalue());
 	}
-	else if( xtype == H_OT_CHAR ){
-		xchar *= (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue());
+	else if( type == H_OT_CHAR ){
+		value.m_char *= (o->type == H_OT_FLOAT ? o->value.m_double : o->lvalue());
 	}
-	else if( xtype == H_OT_MATRIX ){
+	else if( type == H_OT_MATRIX ){
 	    unsigned int x, y, z;
 	    Object *matrix;
 
-	    if( o->xtype == H_OT_MATRIX ){
-            if( xcolumns != o->xrows ){
+	    if( o->type == H_OT_MATRIX ){
+            if( value.m_columns != o->value.m_rows ){
                 hybris_syntax_error( "first matrix columns have to be the same size of second matrix rows" );
             }
             vector<Object *> dummy;
-            matrix = new Object( this->xcolumns, o->xrows, dummy );
-            for( x = 0; x < xrows; ++x ){
-                for( y = 0; y < o->xcolumns; ++y ){
-                    for( z = 0; z < xcolumns; z++ ){
-                        (*matrix->xmatrix[x][y]) = (*xmatrix[x][z]) * o->xmatrix[z][y];
+            matrix = new Object( this->value.m_columns, o->value.m_rows, dummy );
+            for( x = 0; x < value.m_rows; ++x ){
+                for( y = 0; y < o->value.m_columns; ++y ){
+                    for( z = 0; z < value.m_columns; z++ ){
+                        (*matrix->value.m_matrix[x][y]) = (*value.m_matrix[x][z]) * o->value.m_matrix[z][y];
                     }
                 }
             }
         }
         else{
             matrix = new Object( this );
-            for( x = 0; x < xrows; ++x ){
-                for( y = 0; y < xcolumns; ++y ){
-                    (*matrix->xmatrix[x][y]) *= o;
+            for( x = 0; x < value.m_rows; ++x ){
+                for( y = 0; y < value.m_columns; ++y ){
+                    (*matrix->value.m_matrix[x][y]) *= o;
                 }
             }
         }
@@ -1578,7 +1541,7 @@ Object * Object::operator *= ( Object *o ){
         (*this) = matrix;
 	}
 	else{
-		xint *= (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue());
+		value.m_integer *= (o->type == H_OT_FLOAT ? o->value.m_double : o->lvalue());
 	}
 
 	return this;
@@ -1589,11 +1552,11 @@ Object * Object::operator / ( Object *o ){
 		hybris_syntax_error( "invalid type for division operator" );
 	}
 
-	if( xtype == H_OT_FLOAT ){
-		return new Object( static_cast<double>(xfloat / (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue()) ) );
+	if( type == H_OT_FLOAT ){
+		return new Object( static_cast<double>(value.m_double / (o->type == H_OT_FLOAT ? o->value.m_double : o->lvalue()) ) );
 	}
-	else if( o->xtype == H_OT_FLOAT ){
-		return new Object( static_cast<double>( o->xfloat / (xtype == H_OT_FLOAT ? xfloat : lvalue()) ) );
+	else if( o->type == H_OT_FLOAT ){
+		return new Object( static_cast<double>( o->value.m_double / (type == H_OT_FLOAT ? value.m_double : lvalue()) ) );
 	}
 	else{
 		return new Object( static_cast<long>(lvalue() / o->lvalue()) );
@@ -1605,14 +1568,14 @@ Object * Object::operator /= ( Object *o ){
 		hybris_syntax_error( "invalid type for division operator" );
 	}
 
-	if( xtype == H_OT_FLOAT ){
-		xfloat /= (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue());
+	if( type == H_OT_FLOAT ){
+		value.m_double /= (o->type == H_OT_FLOAT ? o->value.m_double : o->lvalue());
 	}
-	else if( xtype == H_OT_CHAR ){
-		xchar /= (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue());
+	else if( type == H_OT_CHAR ){
+		value.m_char /= (o->type == H_OT_FLOAT ? o->value.m_double : o->lvalue());
 	}
 	else{
-		xint /= (o->xtype == H_OT_FLOAT ? o->xfloat : o->lvalue());
+		value.m_integer /= (o->type == H_OT_FLOAT ? o->value.m_double : o->lvalue());
 	}
 	return this;
 }
@@ -1656,11 +1619,11 @@ Object * Object::operator %= ( Object *o ){
         mod = a % b;
     }
 
-    if( xtype == H_OT_INT ){
-        xint = mod;
+    if( type == H_OT_INT ){
+        value.m_integer = mod;
     }
     else{
-        xchar = (char)mod;
+        value.m_char = (char)mod;
     }
 }
 
@@ -1678,11 +1641,11 @@ Object * Object::operator &= ( Object *o ){
 	}
 
 	int val = lvalue() & o->lvalue();
-	if( xtype == H_OT_INT ){
-		xint = val;
+	if( type == H_OT_INT ){
+		value.m_integer = val;
 	}
 	else{
-		xchar = (char)val;
+		value.m_char = (char)val;
 	}
 	return this;
 }
@@ -1701,11 +1664,11 @@ Object * Object::operator |= ( Object *o ){
 	}
 
 	int val = lvalue() | o->lvalue();
-	if( xtype == H_OT_INT ){
-		xint = val;
+	if( type == H_OT_INT ){
+		value.m_integer = val;
 	}
 	else{
-		xchar = (char)val;
+		value.m_char = (char)val;
 	}
 	return this;
 }
@@ -1724,11 +1687,11 @@ Object * Object::operator <<= ( Object *o ){
 	}
 
 	int val = lvalue() << o->lvalue();
-	if( xtype == H_OT_INT ){
-		xint = val;
+	if( type == H_OT_INT ){
+		value.m_integer = val;
 	}
 	else{
-		xchar = (char)val;
+		value.m_char = (char)val;
 	}
 	return this;
 }
@@ -1747,11 +1710,11 @@ Object * Object::operator >>= ( Object *o ){
 	}
 
 	int val = lvalue() >> o->lvalue();
-	if( xtype == H_OT_INT ){
-		xint = val;
+	if( type == H_OT_INT ){
+		value.m_integer = val;
 	}
 	else{
-		xchar = (char)val;
+		value.m_char = (char)val;
 	}
 	return this;
 }
@@ -1770,11 +1733,11 @@ Object * Object::operator ^= ( Object *o ){
 	}
 
 	int val = lvalue() ^ o->lvalue();
-	if( xtype == H_OT_INT ){
-		xint = val;
+	if( type == H_OT_INT ){
+		value.m_integer = val;
 	}
 	else{
-		xchar = (char)val;
+		value.m_char = (char)val;
 	}
 	return this;
 }
@@ -1796,16 +1759,16 @@ Object * Object::lnot (){
 }
 
 Object * Object::operator == ( Object *o ){
-	if( xtype == H_OT_STRING && o->xtype == H_OT_STRING ){
-		return new Object( static_cast<long>(xstring == o->xstring) );
+	if( type == H_OT_STRING && o->type == H_OT_STRING ){
+		return new Object( static_cast<long>(value.m_string == o->value.m_string) );
 	}
-	else if( xtype == H_OT_ARRAY && o->xtype == H_OT_ARRAY ){
+	else if( type == H_OT_ARRAY && o->type == H_OT_ARRAY ){
 		return new Object( static_cast<long>( this->equals(o) ) );
 	}
-	else if( xtype == H_OT_MAP && o->xtype == H_OT_MAP ){
+	else if( type == H_OT_MAP && o->type == H_OT_MAP ){
 		return new Object( static_cast<long>( this->equals(o) ) );
 	}
-	else if( xtype == H_OT_MATRIX && o->xtype == H_OT_MATRIX ){
+	else if( type == H_OT_MATRIX && o->type == H_OT_MATRIX ){
         return new Object( static_cast<long>( this->equals(o) ) );
 	}
 	else{
@@ -1814,16 +1777,16 @@ Object * Object::operator == ( Object *o ){
 }
 
 Object * Object::operator != ( Object *o ){
-	if( xtype == H_OT_STRING && o->xtype == H_OT_STRING ){
-		return new Object( static_cast<long>(xstring != o->xstring) );
+	if( type == H_OT_STRING && o->type == H_OT_STRING ){
+		return new Object( static_cast<long>(value.m_string != o->value.m_string) );
 	}
-	else if( xtype == H_OT_ARRAY && o->xtype == H_OT_ARRAY ){
+	else if( type == H_OT_ARRAY && o->type == H_OT_ARRAY ){
 		return new Object( static_cast<long>( !this->equals(o) ) );
 	}
-	else if( xtype == H_OT_MAP && o->xtype == H_OT_MAP ){
+	else if( type == H_OT_MAP && o->type == H_OT_MAP ){
 		return new Object( static_cast<long>( !this->equals(o) ) );
 	}
-	else if( xtype == H_OT_MATRIX && o->xtype == H_OT_MATRIX ){
+	else if( type == H_OT_MATRIX && o->type == H_OT_MATRIX ){
         return new Object( static_cast<long>( !this->equals(o) ) );
 	}
 	else{
@@ -1833,7 +1796,7 @@ Object * Object::operator != ( Object *o ){
 
 Object * Object::operator < ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hybris_syntax_error( "invalid types for '<' comparision operator (%s, %s)", Object::type(this), Object::type(o) );
+		hybris_syntax_error( "invalid types for '<' comparision operator (%s, %s)", type_name(this), type_name(o) );
 	}
 
 	return new Object( static_cast<long>(lvalue() < o->lvalue()) );
@@ -1841,7 +1804,7 @@ Object * Object::operator < ( Object *o ){
 
 Object * Object::operator > ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hybris_syntax_error( "invalid types for '>' comparision operator (%s, %s)", Object::type(this), Object::type(o) );
+		hybris_syntax_error( "invalid types for '>' comparision operator (%s, %s)", type_name(this), type_name(o) );
 	}
 
 	return new Object( static_cast<long>(lvalue() > o->lvalue()) );
@@ -1849,7 +1812,7 @@ Object * Object::operator > ( Object *o ){
 
 Object * Object::operator <= ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hybris_syntax_error( "invalid types for '<=' comparision operator (%s, %s)", Object::type(this), Object::type(o) );
+		hybris_syntax_error( "invalid types for '<=' comparision operator (%s, %s)", type_name(this), type_name(o) );
 	}
 
 	return new Object( static_cast<long>(lvalue() <= o->lvalue()) );
@@ -1857,7 +1820,7 @@ Object * Object::operator <= ( Object *o ){
 
 Object * Object::operator >= ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hybris_syntax_error( "invalid types for '>=' comparision operator (%s, %s)", Object::type(this), Object::type(o) );
+		hybris_syntax_error( "invalid types for '>=' comparision operator (%s, %s)", type_name(this), type_name(o) );
 	}
 
 	return new Object( static_cast<long>(lvalue() >= o->lvalue()) );

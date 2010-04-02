@@ -38,7 +38,7 @@ HYBRIS_BUILTIN(husleep){
 
 	struct timespec ts;
 
-    ts.tv_sec  = (long int)data->at(0)->xint / 1000000;
+    ts.tv_sec  = (long int)data->at(0)->value.m_integer / 1000000;
     ts.tv_nsec = ts.tv_sec * 1000;
     nanosleep(&ts,&ts);
 
@@ -53,7 +53,7 @@ HYBRIS_BUILTIN(hsleep){
 
 	struct timespec ts;
 
-    ts.tv_sec  = (long int)data->at(0)->xint / 1000;
+    ts.tv_sec  = (long int)data->at(0)->value.m_integer / 1000;
     ts.tv_nsec = ts.tv_sec * 1000;
     nanosleep(&ts,&ts);
 

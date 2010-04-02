@@ -35,10 +35,10 @@ HYBRIS_BUILTIN(hsettimeout){
 	htype_assert( data->at(0), H_OT_INT );
 	htype_assert( data->at(1), H_OT_INT );
 
-	struct timeval tout = { 0 , data->at(1)->xint };
+	struct timeval tout = { 0 , data->at(1)->value.m_integer };
 
-	setsockopt( data->at(0)->xint, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
-	setsockopt( data->at(0)->xint, SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
+	setsockopt( data->at(0)->value.m_integer, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
+	setsockopt( data->at(0)->value.m_integer, SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
 
 	return new Object( static_cast<long>(0) );
 }
@@ -54,18 +54,18 @@ HYBRIS_BUILTIN(hconnect){
 		}
 		if( data->size() == 3 ){
 			htype_assert( data->at(2), H_OT_INT );
-			struct timeval tout = { 0 , data->at(2)->xint };
+			struct timeval tout = { 0 , data->at(2)->value.m_integer };
 
 			setsockopt( sd, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
 			setsockopt( sd, SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
 		}
 
 		struct sockaddr_in server;
-		hostent * host = gethostbyname(data->at(0)->xstring.c_str());
+		hostent * host = gethostbyname(data->at(0)->value.m_string.c_str());
 		if( host ){
 			bzero( &server, sizeof(server) );
 			server.sin_family      = AF_INET;
-			server.sin_port        = htons(data->at(1)->xint);
+			server.sin_port        = htons(data->at(1)->value.m_integer);
 			bcopy( host->h_addr, &(server.sin_addr.s_addr), host->h_length );
 		}
 
@@ -92,13 +92,13 @@ HYBRIS_BUILTIN(hserver){
 		}
 		if( data->size() == 2 ){
 			htype_assert( data->at(1), H_OT_INT );
-			struct timeval tout = { 0 , data->at(1)->xint };
+			struct timeval tout = { 0 , data->at(1)->value.m_integer };
 
 			setsockopt( sd, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
 			setsockopt( sd, SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
 		}
 
-		short int port = data->at(0)->xint;
+		short int port = data->at(0)->value.m_integer;
 		struct    sockaddr_in servaddr;
 
 		memset(&servaddr, 0, sizeof(servaddr));
@@ -127,7 +127,7 @@ HYBRIS_BUILTIN(haccept){
 
 	Object *_return = NULL;
 	if( data->size() >= 1 ){
-		int sd = data->at(0)->xint,
+		int sd = data->at(0)->value.m_integer,
 		    csd;
 
 		if( (csd = accept( sd, NULL, NULL) ) < 0 ) {
@@ -149,22 +149,22 @@ HYBRIS_BUILTIN(hrecv){
 		 isEOL 		= false;
     Object *_return = NULL;
     if( data->size() >= 2 ){
-		int sd            = data->at(0)->xint;
+		int sd            = data->at(0)->value.m_integer;
 		Object *object   = data->at(1);
 		unsigned int size, read = 0, i, n;
 		char c;
 		/* explicit size declaration */
 		if( data->size() == 3 ){
-			size = data->at(2)->xint;
-			switch( object->xtype ){
-				case H_OT_INT    : read = recv( sd, &object->xint, size, 0 ); break;
-				case H_OT_FLOAT  : read = recv( sd, &object->xfloat, size, 0 ); break;
-				case H_OT_CHAR   : read = recv( sd, &object->xchar, size, 0 ); break;
+			size = data->at(2)->value.m_integer;
+			switch( object->type ){
+				case H_OT_INT    : read = recv( sd, &object->value.m_integer, size, 0 ); break;
+				case H_OT_FLOAT  : read = recv( sd, &object->value.m_double, size, 0 ); break;
+				case H_OT_CHAR   : read = recv( sd, &object->value.m_char, size, 0 ); break;
 				case H_OT_STRING :
 					for( i = 0; i < size; i++ ){
 						if( recv( sd, &c, sizeof(char), 0 ) > 0 ){
 							read++ ;
-							object->xstring += c;
+							object->value.m_string += c;
 						}
 						else{
 							read = 0;
@@ -174,16 +174,16 @@ HYBRIS_BUILTIN(hrecv){
 				break;
 				case H_OT_ARRAY  : hybris_generic_error( "can not directly deserialize an array type" ); break;
 			}
-			object->xsize = size;
+			object->size = size;
 		}
 		/* handle size by type */
 		else{
-			switch( object->xtype ){
-				case H_OT_INT    : object->xsize = read = recv( sd, &object->xint,   sizeof(long), 0 ); break;
-				case H_OT_FLOAT  : object->xsize = read = recv( sd, &object->xfloat, sizeof(double), 0 ); break;
-				case H_OT_CHAR   : object->xsize = read = recv( sd, &object->xchar,  sizeof(char), 0 ); break;
+			switch( object->type ){
+				case H_OT_INT    : object->size = read = recv( sd, &object->value.m_integer,   sizeof(long), 0 ); break;
+				case H_OT_FLOAT  : object->size = read = recv( sd, &object->value.m_double, sizeof(double), 0 ); break;
+				case H_OT_CHAR   : object->size = read = recv( sd, &object->value.m_char,  sizeof(char), 0 ); break;
 				case H_OT_STRING :
-					object->xstring = "";
+					object->value.m_string = "";
 					while( !isEOL && !isEOF ){
 						n = recv( sd, &c, sizeof(char), 0 );
 				 		if( n < 1 ){
@@ -195,11 +195,11 @@ HYBRIS_BUILTIN(hrecv){
 						else {
 							if( c != '\r' ){
 								read++;
-								object->xstring += c;
+								object->value.m_string += c;
 							}
 						}
 					}
-					object->xsize = read;
+					object->size = read;
 				break;
 				case H_OT_ARRAY  : hybris_generic_error( "can not directly deserialize an array type" ); break;
 			}
@@ -218,34 +218,34 @@ HYBRIS_BUILTIN(hsend){
 
     Object *_return = NULL;
     if( data->size() >= 2 ){
-		int sd           = data->at(0)->xint;
+		int sd           = data->at(0)->value.m_integer;
 		Object *object   = data->at(1);
 		unsigned int size, written = 0, i;
 		char c;
 		if( data->size() == 3 ){
-			size = data->at(2)->xint;
-			switch( object->xtype ){
-				case H_OT_INT    : written = send( sd, &object->xint,   size, 0 ); break;
-				case H_OT_FLOAT  : written = send( sd, &object->xfloat, size, 0 ); break;
-				case H_OT_CHAR   : written = send( sd, &object->xchar,  size, 0 ); break;
-				case H_OT_STRING : written = send( sd, object->xstring.c_str(), size, 0 ); break;
+			size = data->at(2)->value.m_integer;
+			switch( object->type ){
+				case H_OT_INT    : written = send( sd, &object->value.m_integer,   size, 0 ); break;
+				case H_OT_FLOAT  : written = send( sd, &object->value.m_double, size, 0 ); break;
+				case H_OT_CHAR   : written = send( sd, &object->value.m_char,  size, 0 ); break;
+				case H_OT_STRING : written = send( sd, object->value.m_string.c_str(), size, 0 ); break;
 				case H_OT_ARRAY  : hybris_generic_error( "can not directly serialize an array type when specifying size" ); break;
 			}
 		}
 		else{
-			switch( object->xtype ){
-				case H_OT_INT    : written = send( sd, &object->xint,   sizeof(long), 0 ); break;
-				case H_OT_FLOAT  : written = send( sd, &object->xfloat, sizeof(double), 0 ); break;
-				case H_OT_CHAR   : written = send( sd, &object->xchar,  sizeof(char), 0 ); break;
-				case H_OT_STRING : written = send( sd, object->xstring.c_str(), object->xsize, 0 ); break;
+			switch( object->type ){
+				case H_OT_INT    : written = send( sd, &object->value.m_integer,   sizeof(long), 0 ); break;
+				case H_OT_FLOAT  : written = send( sd, &object->value.m_double, sizeof(double), 0 ); break;
+				case H_OT_CHAR   : written = send( sd, &object->value.m_char,  sizeof(char), 0 ); break;
+				case H_OT_STRING : written = send( sd, object->value.m_string.c_str(), object->size, 0 ); break;
 				case H_OT_ARRAY  :
-					for( i = 0; i < object->xsize; i++ ){
-						Object *element = object->xarray[i];
-						switch( element->xtype ){
-							case H_OT_INT    : written += send( sd, &element->xint,   sizeof(long), 0 ); break;
-							case H_OT_FLOAT  : written += send( sd, &element->xfloat, sizeof(double), 0 ); break;
-							case H_OT_CHAR   : written += send( sd, &element->xchar,  sizeof(char), 0 ); break;
-							case H_OT_STRING : written += send( sd, element->xstring.c_str(), element->xsize, 0 ); break;
+					for( i = 0; i < object->size; i++ ){
+						Object *element = object->value.m_array[i];
+						switch( element->type ){
+							case H_OT_INT    : written += send( sd, &element->value.m_integer,   sizeof(long), 0 ); break;
+							case H_OT_FLOAT  : written += send( sd, &element->value.m_double, sizeof(double), 0 ); break;
+							case H_OT_CHAR   : written += send( sd, &element->value.m_char,  sizeof(char), 0 ); break;
+							case H_OT_STRING : written += send( sd, element->value.m_string.c_str(), element->size, 0 ); break;
 							case H_OT_ARRAY  : hybris_generic_error( "can not directly serialize nested arrays" ); break;
 						}
 					}
@@ -262,7 +262,7 @@ HYBRIS_BUILTIN(hsend){
 
 HYBRIS_BUILTIN(hclose){
     if( data->size() ){
-		close( data->at(0)->xint );
+		close( data->at(0)->value.m_integer );
     }
     return new Object( static_cast<long>(0) );
 }

@@ -70,11 +70,11 @@ Node *Node::clone(){
 
     switch( m_type ){
         case H_NT_CONSTANT   :
-            switch( value.m_constant->xtype ){
-                case H_OT_INT    : clone = new ConstantNode( value.m_constant->xint );                    break;
-                case H_OT_FLOAT  : clone = new ConstantNode( value.m_constant->xfloat );                  break;
-                case H_OT_CHAR   : clone = new ConstantNode( value.m_constant->xchar );                   break;
-                case H_OT_STRING : clone = new ConstantNode( (char *)value.m_constant->xstring.c_str() ); break;
+            switch( value.m_constant->type ){
+                case H_OT_INT    : clone = new ConstantNode( value.m_constant->value.m_integer );                    break;
+                case H_OT_FLOAT  : clone = new ConstantNode( value.m_constant->value.m_double );                  break;
+                case H_OT_CHAR   : clone = new ConstantNode( value.m_constant->value.m_char );                   break;
+                case H_OT_STRING : clone = new ConstantNode( (char *)value.m_constant->value.m_string.c_str() ); break;
             }
         break;
 

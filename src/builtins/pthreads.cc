@@ -35,15 +35,15 @@ void * hybris_pthread_worker( void *arg ){
     ctx->pool();
 
     Node *call  = new Node(H_NT_CALL);
-    call->value.m_call = data->at(0)->xstring;
+    call->value.m_call = data->at(0)->value.m_string;
 	if( data->size() > 1 ){
 		unsigned int i;
 		for( i = 1; i < data->size(); i++ ){
-			switch( data->at(i)->xtype ){
-				case H_OT_INT    : call->addChild( new ConstantNode(data->at(i)->xint) );                    break;
-				case H_OT_FLOAT  : call->addChild( new ConstantNode(data->at(i)->xfloat) );                  break;
-				case H_OT_CHAR   : call->addChild( new ConstantNode(data->at(i)->xchar) );                   break;
-				case H_OT_STRING : call->addChild( new ConstantNode((char *)data->at(i)->xstring.c_str()) ); break;
+			switch( data->at(i)->type ){
+				case H_OT_INT    : call->addChild( new ConstantNode(data->at(i)->value.m_integer) );                    break;
+				case H_OT_FLOAT  : call->addChild( new ConstantNode(data->at(i)->value.m_double) );                  break;
+				case H_OT_CHAR   : call->addChild( new ConstantNode(data->at(i)->value.m_char) );                   break;
+				case H_OT_STRING : call->addChild( new ConstantNode((char *)data->at(i)->value.m_string.c_str()) ); break;
 				default :
                     ctx->depool();
                     hybris_generic_error( "type not supported for pthread call" );
@@ -93,7 +93,7 @@ HYBRIS_BUILTIN(hpthread_join){
 	}
 	htype_assert( data->at(0), H_OT_INT );
 
-    pthread_t tid = static_cast<pthread_t>( data->at(0)->xint );
+    pthread_t tid = static_cast<pthread_t>( data->at(0)->value.m_integer );
     void *status;
 
     pthread_join( tid, &status );

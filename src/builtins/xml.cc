@@ -79,7 +79,7 @@ HYBRIS_BUILTIN(hxml_load){
 	}
 	htype_assert( data->at(0), H_OT_STRING );
 
-	string   filename = data->at(0)->xstring;
+	string   filename = data->at(0)->value.m_string;
 	xmlDoc  *doc  = NULL;
 	xmlNode *root = NULL;
 
@@ -104,7 +104,7 @@ HYBRIS_BUILTIN(hxml_parse){
 	}
 	htype_assert( data->at(0), H_OT_STRING );
 
-	string   xml  = data->at(0)->xstring;
+	string   xml  = data->at(0)->value.m_string;
 	xmlDoc  *doc  = NULL;
 	xmlNode *root = NULL;
 

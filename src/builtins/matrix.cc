@@ -27,8 +27,8 @@ HYBRIS_BUILTIN(hmatrix){
 	htype_assert( data->at(0), H_OT_INT );
     htype_assert( data->at(1), H_OT_INT );
 
-    unsigned int     rows    = data->at(0)->xint,
-                     columns = data->at(1)->xint,
+    unsigned int     rows    = data->at(0)->value.m_integer,
+                     columns = data->at(1)->value.m_integer,
                      nvalues = data->size() - 2,
                      i;
     vector<Object *> values;
@@ -49,7 +49,7 @@ HYBRIS_BUILTIN(hcolumns){
 		hybris_syntax_error( "function 'columns' requires 1 parameter (called with %d)", data->size() );
 	}
 	htype_assert( data->at(0), H_OT_MATRIX );
-	return new Object( static_cast<long>( data->at(0)->xcolumns ) );
+	return new Object( static_cast<long>( data->at(0)->value.m_columns ) );
 }
 
 HYBRIS_BUILTIN(hrows){
@@ -57,6 +57,6 @@ HYBRIS_BUILTIN(hrows){
 		hybris_syntax_error( "function 'rows' requires 1 parameter (called with %d)", data->size() );
 	}
 	htype_assert( data->at(0), H_OT_MATRIX );
-	return new Object( static_cast<long>( data->at(0)->xrows ) );
+	return new Object( static_cast<long>( data->at(0)->value.m_rows ) );
 }
 

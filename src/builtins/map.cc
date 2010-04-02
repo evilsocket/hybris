@@ -38,7 +38,7 @@ HYBRIS_BUILTIN(hmapelements){
 	}
 	htype_assert( data->at(0), H_OT_MAP );
 
-	return new Object( static_cast<long>( data->at(0)->xmap.size() ) );
+	return new Object( static_cast<long>( data->at(0)->value.m_map.size() ) );
 }
 
 HYBRIS_BUILTIN(hmappop){
@@ -68,8 +68,8 @@ HYBRIS_BUILTIN(hismapped){
 		    *find  = data->at(1);
 	unsigned int i;
 
-	for( i = 0; i < map->xarray.size(); i++ ){
-		if( map->xarray[i]->equals(find) ){
+	for( i = 0; i < map->value.m_array.size(); i++ ){
+		if( map->value.m_array[i]->equals(find) ){
 			return new Object( static_cast<long>(i) );
 		}
 	}
@@ -87,8 +87,8 @@ HYBRIS_BUILTIN(hhaskey){
            *key = data->at(1);
 	unsigned int i;
 
-	for( i = 0; i < map->xmap.size(); i++ ){
-		if( map->xmap[i]->equals(key) ){
+	for( i = 0; i < map->value.m_map.size(); i++ ){
+		if( map->value.m_map[i]->equals(key) ){
 			return new Object( static_cast<long>(i) );
 		}
 	}

@@ -28,8 +28,8 @@ HYBRIS_BUILTIN(hrex_match){
 	htype_assert( data->at(0), H_OT_STRING );
 	htype_assert( data->at(1), H_OT_STRING );
 
-	string rawreg  = data->at(0)->xstring,
-		   subject = data->at(1)->xstring,
+	string rawreg  = data->at(0)->value.m_string,
+		   subject = data->at(1)->value.m_string,
 		   regex;
 	int    opts;
 
@@ -48,8 +48,8 @@ HYBRIS_BUILTIN(hrex_matches){
 	htype_assert( data->at(0), H_OT_STRING );
 	htype_assert( data->at(1), H_OT_STRING );
 
-	string rawreg  = data->at(0)->xstring,
-		   subject = data->at(1)->xstring,
+	string rawreg  = data->at(0)->value.m_string,
+		   subject = data->at(1)->value.m_string,
 		   regex;
 	int    opts, i = 0;
 
@@ -79,9 +79,9 @@ HYBRIS_BUILTIN(hrex_replace){
 	htype_assert( data->at(1), H_OT_STRING );
 	htype_assert( data->at(2), H_OT_STRING, H_OT_CHAR );
 
-	string rawreg  = data->at(0)->xstring,
-		   subject = data->at(1)->xstring,
-		   replace = (data->at(2)->xtype == H_OT_STRING ? data->at(2)->xstring : string("") + data->at(2)->xchar),
+	string rawreg  = data->at(0)->value.m_string,
+		   subject = data->at(1)->value.m_string,
+		   replace = (data->at(2)->type == H_OT_STRING ? data->at(2)->value.m_string : string("") + data->at(2)->value.m_char),
 		   regex;
 	int    opts;
 

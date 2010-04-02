@@ -28,7 +28,7 @@ HYBRIS_BUILTIN(hfopen){
 
     Object *_return = NULL;
     if( data->size() == 2 ){
-        _return = new Object( reinterpret_cast<long>( fopen( data->at(0)->xstring.c_str(), data->at(1)->xstring.c_str() ) ) );
+        _return = new Object( reinterpret_cast<long>( fopen( data->at(0)->value.m_string.c_str(), data->at(1)->value.m_string.c_str() ) ) );
     }
 	else{
 		hybris_syntax_error( "function 'fopen' requires 2 parameters (called with %d)", data->size() );
@@ -44,7 +44,7 @@ HYBRIS_BUILTIN(hfseek){
 	htype_assert( data->at(1), H_OT_INT );
 	htype_assert( data->at(3), H_OT_INT );
 
-	return new Object( static_cast<long>( fseek( (FILE *)data->at(0)->xint, data->at(1)->xint, data->at(2)->xint ) ) );
+	return new Object( static_cast<long>( fseek( (FILE *)data->at(0)->value.m_integer, data->at(1)->value.m_integer, data->at(2)->value.m_integer ) ) );
 }
 
 HYBRIS_BUILTIN(hftell){
@@ -53,7 +53,7 @@ HYBRIS_BUILTIN(hftell){
 	}
 	htype_assert( data->at(0), H_OT_INT );
 
-	return new Object( static_cast<long>( ftell( (FILE *)data->at(0)->xint ) ) );
+	return new Object( static_cast<long>( ftell( (FILE *)data->at(0)->value.m_integer ) ) );
 }
 
 HYBRIS_BUILTIN(hfsize){
@@ -62,16 +62,16 @@ HYBRIS_BUILTIN(hfsize){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_STRING );
 	int size = 0;
-	if( data->at(0)->xtype == H_OT_INT ){
-		int pos = ftell((FILE *)data->at(0)->xint);
-		fseek( (FILE *)data->at(0)->xint, 0, SEEK_END );
-		size = ftell( (FILE *)data->at(0)->xint );
-		fseek( (FILE *)data->at(0)->xint, pos, SEEK_SET );
+	if( data->at(0)->type == H_OT_INT ){
+		int pos = ftell((FILE *)data->at(0)->value.m_integer);
+		fseek( (FILE *)data->at(0)->value.m_integer, 0, SEEK_END );
+		size = ftell( (FILE *)data->at(0)->value.m_integer );
+		fseek( (FILE *)data->at(0)->value.m_integer, pos, SEEK_SET );
 	}
 	else{
-		FILE *fp = fopen( data->at(0)->xstring.c_str(), "r" );
+		FILE *fp = fopen( data->at(0)->value.m_string.c_str(), "r" );
 		if( fp == NULL ){
-			hybris_generic_error( "'%s' no such file or directory", data->at(0)->xstring.c_str() );
+			hybris_generic_error( "'%s' no such file or directory", data->at(0)->value.m_string.c_str() );
 		}
 		fseek( fp, 0, SEEK_END );
 		size = ftell( fp );
@@ -86,7 +86,7 @@ HYBRIS_BUILTIN(hfread){
 
     Object *_return = NULL;
     if( data->size() >= 2 ){
-		FILE *fp          = (FILE *)data->at(0)->xint;
+		FILE *fp          = (FILE *)data->at(0)->value.m_integer;
 		if( !fp ){
 			hybris_generic_error( "invalid file descriptor" );
 		}
@@ -95,33 +95,33 @@ HYBRIS_BUILTIN(hfread){
 		char c;
 		/* explicit size declaration */
 		if( data->size() == 3 ){
-			size = data->at(2)->xint;
-			switch( object->xtype ){
-				case H_OT_INT    : read = fread( &object->xint,   1, size, fp ); break;
-				case H_OT_FLOAT  : read = fread( &object->xfloat, 1, size, fp ); break;
-				case H_OT_CHAR   : read = fread( &object->xchar,  1, size, fp ); break;
+			size = data->at(2)->value.m_integer;
+			switch( object->type ){
+				case H_OT_INT    : read = fread( &object->value.m_integer,   1, size, fp ); break;
+				case H_OT_FLOAT  : read = fread( &object->value.m_double, 1, size, fp ); break;
+				case H_OT_CHAR   : read = fread( &object->value.m_char,  1, size, fp ); break;
 				case H_OT_STRING :
 					for( i = 0; i < size; i++ ){
 						read += fread( &c, 1, sizeof(char), fp );
-						object->xstring += c;
+						object->value.m_string += c;
 					}
 				break;
 				case H_OT_ARRAY  : hybris_generic_error( "can not directly deserialize an array type" ); break;
 			}
-			object->xsize = size;
+			object->size = size;
 		}
 		/* handle size by type */
 		else{
-			switch( object->xtype ){
-				case H_OT_INT    : object->xsize = read = fread( &object->xint,   1, sizeof(long), fp ); break;
-				case H_OT_FLOAT  : object->xsize = read = fread( &object->xfloat, 1, sizeof(double), fp ); break;
-				case H_OT_CHAR   : object->xsize = read = fread( &object->xchar,  1, sizeof(char), fp ); break;
+			switch( object->type ){
+				case H_OT_INT    : object->size = read = fread( &object->value.m_integer,   1, sizeof(long), fp ); break;
+				case H_OT_FLOAT  : object->size = read = fread( &object->value.m_double, 1, sizeof(double), fp ); break;
+				case H_OT_CHAR   : object->size = read = fread( &object->value.m_char,  1, sizeof(char), fp ); break;
 				case H_OT_STRING :
 					while( (c = fgetc(fp)) != '\n' && c != '\r' && c != 0x00 ){
-						object->xstring += c;
+						object->value.m_string += c;
 						read++;
 					}
-					object->xsize = read;
+					object->size = read;
 				break;
 				case H_OT_ARRAY  : hybris_generic_error( "can not directly deserialize an array type" ); break;
 			}
@@ -139,7 +139,7 @@ HYBRIS_BUILTIN(hfwrite){
 
     Object *_return = NULL;
     if( data->size() >= 2 ){
-		FILE *fp          = (FILE *)data->at(0)->xint;
+		FILE *fp          = (FILE *)data->at(0)->value.m_integer;
 		if( !fp ){
 			hybris_generic_error( "invalid file descriptor" );
 		}
@@ -147,29 +147,29 @@ HYBRIS_BUILTIN(hfwrite){
 		unsigned int size, written = 0, i;
 		char c;
 		if( data->size() == 3 ){
-			size = data->at(2)->xint;
-			switch( object->xtype ){
-				case H_OT_INT    : written = fwrite( &object->xint,   1, size, fp ); break;
-				case H_OT_FLOAT  : written = fwrite( &object->xfloat, 1, size, fp ); break;
-				case H_OT_CHAR   : written = fwrite( &object->xchar,  1, size, fp ); break;
-				case H_OT_STRING : written = fwrite( object->xstring.c_str(), 1, size, fp ); break;
+			size = data->at(2)->value.m_integer;
+			switch( object->type ){
+				case H_OT_INT    : written = fwrite( &object->value.m_integer,   1, size, fp ); break;
+				case H_OT_FLOAT  : written = fwrite( &object->value.m_double, 1, size, fp ); break;
+				case H_OT_CHAR   : written = fwrite( &object->value.m_char,  1, size, fp ); break;
+				case H_OT_STRING : written = fwrite( object->value.m_string.c_str(), 1, size, fp ); break;
 				case H_OT_ARRAY  : hybris_generic_error( "can not directly serialize an array type when specifying size" ); break;
 			}
 		}
 		else{
-			switch( object->xtype ){
-				case H_OT_INT    : written = fwrite( &object->xint,   1, sizeof(long), fp ); break;
-				case H_OT_FLOAT  : written = fwrite( &object->xfloat, 1, sizeof(double), fp ); break;
-				case H_OT_CHAR   : written = fwrite( &object->xchar,  1, sizeof(char), fp ); break;
-				case H_OT_STRING : written = fwrite( object->xstring.c_str(), 1, object->xsize, fp ); break;
+			switch( object->type ){
+				case H_OT_INT    : written = fwrite( &object->value.m_integer,   1, sizeof(long), fp ); break;
+				case H_OT_FLOAT  : written = fwrite( &object->value.m_double, 1, sizeof(double), fp ); break;
+				case H_OT_CHAR   : written = fwrite( &object->value.m_char,  1, sizeof(char), fp ); break;
+				case H_OT_STRING : written = fwrite( object->value.m_string.c_str(), 1, object->size, fp ); break;
 				case H_OT_ARRAY  :
-					for( i = 0; i < object->xsize; i++ ){
-						Object *element = object->xarray[i];
-						switch( element->xtype ){
-							case H_OT_INT    : written += fwrite( &element->xint,   1, sizeof(long), fp ); break;
-							case H_OT_FLOAT  : written += fwrite( &element->xfloat, 1, sizeof(double), fp ); break;
-							case H_OT_CHAR   : written += fwrite( &element->xchar,  1, sizeof(char), fp ); break;
-							case H_OT_STRING : written += fwrite( element->xstring.c_str(), 1, element->xsize, fp ); break;
+					for( i = 0; i < object->size; i++ ){
+						Object *element = object->value.m_array[i];
+						switch( element->type ){
+							case H_OT_INT    : written += fwrite( &element->value.m_integer,   1, sizeof(long), fp ); break;
+							case H_OT_FLOAT  : written += fwrite( &element->value.m_double, 1, sizeof(double), fp ); break;
+							case H_OT_CHAR   : written += fwrite( &element->value.m_char,  1, sizeof(char), fp ); break;
+							case H_OT_STRING : written += fwrite( element->value.m_string.c_str(), 1, element->size, fp ); break;
 							case H_OT_ARRAY  : hybris_generic_error( "can not directly serialize nested arrays" ); break;
 						}
 					}
@@ -192,7 +192,7 @@ HYBRIS_BUILTIN(hfgets){
 
 	char line[0xFFFF] = {0};
 
-	if( fgets( line, 0xFFFF, (FILE *)data->at(0)->xint ) ){
+	if( fgets( line, 0xFFFF, (FILE *)data->at(0)->value.m_integer ) ){
 		return new Object(line);
 	}
 	else{
@@ -203,7 +203,7 @@ HYBRIS_BUILTIN(hfgets){
 HYBRIS_BUILTIN(hfclose){
 	htype_assert( data->at(0), H_OT_INT );
     if( data->size() ){
-		fclose( (FILE *)data->at(0)->xint );
+		fclose( (FILE *)data->at(0)->value.m_integer );
     }
     return new Object(static_cast<long>(0));
 }
@@ -214,9 +214,9 @@ HYBRIS_BUILTIN(hfile){
 	}
 	htype_assert( data->at(0), H_OT_STRING );
 
-	FILE *fp = fopen( data->at(0)->xstring.c_str(), "rt" );
+	FILE *fp = fopen( data->at(0)->value.m_string.c_str(), "rt" );
 	if( !fp ){
-		hybris_generic_error( "could not open '%s' for reading", data->at(0)->xstring.c_str() );
+		hybris_generic_error( "could not open '%s' for reading", data->at(0)->value.m_string.c_str() );
 	}
 
 	string buffer;
@@ -275,8 +275,8 @@ HYBRIS_BUILTIN(hreaddir){
     DIR           *dir;
     struct dirent *ent;
 
-    if( (dir = opendir( data->at(0)->xstring.c_str() )) == NULL ) {
-        hybris_generic_error( "could not open directory '%s' for reading", data->at(0)->xstring.c_str() );
+    if( (dir = opendir( data->at(0)->value.m_string.c_str() )) == NULL ) {
+        hybris_generic_error( "could not open directory '%s' for reading", data->at(0)->value.m_string.c_str() );
     }
 
     Object *files 	  = new Object();
@@ -288,7 +288,7 @@ HYBRIS_BUILTIN(hreaddir){
         files->push(file);
         if( recursive ){
             if( ent->d_type == DT_DIR && strcmp( ent->d_name, ".." ) != 0 && strcmp( ent->d_name, "." ) != 0 ){
-                readdir_recurse( (char *)data->at(0)->xstring.c_str(), ent->d_name, files );
+                readdir_recurse( (char *)data->at(0)->value.m_string.c_str(), ent->d_name, files );
             }
         }
     }

@@ -83,9 +83,9 @@ void VirtualMemory::release(){
 
     for( i = 0; i < m_elements; ++i ){
         o = at(i);
-        if( o != H_UNDEFINED && o->xsize ){
+        if( o != H_UNDEFINED && o->size ){
             #ifdef MEM_DEBUG
-                printf( "[MEM DEBUG] !!! releasing '%s' value at 0x%X (- %d bytes)\n", Object::type(o), o,  o->xsize );
+                printf( "[MEM DEBUG] !!! releasing '%s' value at 0x%X (- %d bytes)\n", Object::type_name(o), o,  o->size );
             #endif
             delete o;
         }

@@ -47,8 +47,8 @@ HYBRIS_BUILTIN(hhttp_get){
 	struct curl_slist *headerlist = NULL;
 	string hbuffer,
 		   buffer,
-		   host = data->at(0)->xstring,
-		   page = data->at(1)->xstring,
+		   host = data->at(0)->value.m_string,
+		   page = data->at(1)->value.m_string,
 		   url;
 	unsigned int dohead = (data->size() >= 3 ? data->at(2)->lvalue() : 0),
 				 https  = !strncmp( "https://", host.c_str(), 8 );
@@ -88,10 +88,10 @@ HYBRIS_BUILTIN(hhttp_get){
 		string header;
 		Object *headers = data->at(3);
 
-		for( i = 0; i < headers->xmap.size(); i++ ){
-			Object *name  = headers->xmap[i]->toString(),
-				   *value = headers->xarray[i]->toString();
-			header     = name->xstring + ": " + value->xstring;
+		for( i = 0; i < headers->value.m_map.size(); i++ ){
+			Object *name  = headers->value.m_map[i]->toString(),
+				   *value = headers->value.m_array[i]->toString();
+			header     = name->value.m_string + ": " + value->value.m_string;
 			headerlist = curl_slist_append( headerlist, header.c_str() );
 			delete name;
 			delete value;
@@ -139,8 +139,8 @@ HYBRIS_BUILTIN(hhttp_post){
 	Object *post = data->at(2);
 	string hbuffer,
 		   buffer,
-		   host = data->at(0)->xstring,
-		   page = data->at(1)->xstring,
+		   host = data->at(0)->value.m_string,
+		   page = data->at(1)->value.m_string,
 		   url;
 	unsigned int i,
 				 dohead = (data->size() >= 3 ? data->at(3)->lvalue() : 0),
@@ -180,10 +180,10 @@ HYBRIS_BUILTIN(hhttp_post){
 		string header;
 		Object *headers = data->at(4);
 
-		for( i = 0; i < headers->xmap.size(); i++ ){
-			Object *name  = headers->xmap[i]->toString(),
-					*value = headers->xarray[i]->toString();
-			header     = name->xstring + ": " + value->xstring;
+		for( i = 0; i < headers->value.m_map.size(); i++ ){
+			Object *name  = headers->value.m_map[i]->toString(),
+					*value = headers->value.m_array[i]->toString();
+			header     = name->value.m_string + ": " + value->value.m_string;
 			headerlist = curl_slist_append( headerlist, header.c_str() );
 			delete name;
 			delete value;
@@ -191,13 +191,13 @@ HYBRIS_BUILTIN(hhttp_post){
 		curl_easy_setopt( cd, CURLOPT_HTTPHEADER, headerlist );
 	}
 
-	for( i = 0; i < post->xmap.size(); i++ ){
-		Object *name  = post->xmap[i]->toString(),
-				*value = post->xarray[i]->toString();
+	for( i = 0; i < post->value.m_map.size(); i++ ){
+		Object *name  = post->value.m_map[i]->toString(),
+				*value = post->value.m_array[i]->toString();
 
 		curl_formadd( &formpost, &lastptr,
-		 		      CURLFORM_COPYNAME, name->xstring.c_str(),
-               		  CURLFORM_COPYCONTENTS, value->xstring.c_str(),
+		 		      CURLFORM_COPYNAME, name->value.m_string.c_str(),
+               		  CURLFORM_COPYCONTENTS, value->value.m_string.c_str(),
               		  CURLFORM_END );
 		delete name;
 		delete value;
@@ -235,7 +235,7 @@ HYBRIS_BUILTIN(hhttp){
     htype_assert( data->at(0), H_OT_INT );
 
     vmem_t hdata;
-    int    method = data->at(0)->xint,
+    int    method = data->at(0)->value.m_integer,
            i;
 
     if( method == HTTP_GET && data->size() < 3 ){

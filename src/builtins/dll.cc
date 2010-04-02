@@ -38,28 +38,28 @@ typedef struct {
 dll_arg_t;
 
 static void ctype_convert( Object *o, dll_arg_t *pa ) {
-	if( o->xtype == H_OT_VOID ){
+	if( o->type == H_OT_VOID ){
         pa->type    = &ffi_type_pointer;
         pa->value.p = H_UNDEFINED;
 	}
-    else if( o->xtype == H_OT_INT ){
+    else if( o->type == H_OT_INT ){
 		pa->type    = &ffi_type_sint;
-		pa->value.i = o->xint;
+		pa->value.i = o->value.m_integer;
 	}
-	else if( o->xtype == H_OT_CHAR ){
+	else if( o->type == H_OT_CHAR ){
         pa->type    = &ffi_type_schar;
-        pa->value.c = o->xchar;
+        pa->value.c = o->value.m_char;
 	}
-	else if( o->xtype == H_OT_FLOAT ){
+	else if( o->type == H_OT_FLOAT ){
 	    pa->type    = &ffi_type_double;
-        pa->value.d = o->xfloat;
+        pa->value.d = o->value.m_double;
 	}
-    else if( o->xtype == H_OT_STRING ){
+    else if( o->type == H_OT_STRING ){
 		pa->type    = &ffi_type_pointer;
-		pa->value.p = (void *)o->xstring.c_str();
+		pa->value.p = (void *)o->value.m_string.c_str();
 	}
 	else{
-        hybris_syntax_error( "could not use '%s' type for dllcall function", Object::type(o) );
+        hybris_syntax_error( "could not use '%s' type for dllcall function", Object::type_name(o) );
 	}
 }
 
@@ -69,7 +69,7 @@ HYBRIS_BUILTIN(hdllopen){
 	}
 	htype_assert( data->at(0), H_OT_STRING );
 
-    return new Object( reinterpret_cast<long>( dlopen( data->at(0)->xstring.c_str(), RTLD_LAZY ) ) );
+    return new Object( reinterpret_cast<long>( dlopen( data->at(0)->value.m_string.c_str(), RTLD_LAZY ) ) );
 }
 
 HYBRIS_BUILTIN(hdlllink){
@@ -79,9 +79,9 @@ HYBRIS_BUILTIN(hdlllink){
 	htype_assert( data->at(0), H_OT_INT    );
 	htype_assert( data->at(1), H_OT_STRING );
 
-    void *hdll = reinterpret_cast<void *>( data->at(0)->xint );
+    void *hdll = reinterpret_cast<void *>( data->at(0)->value.m_integer );
 
-    return new Object( reinterpret_cast<long>( dlsym( hdll, data->at(1)->xstring.c_str() ) ), 1 );
+    return new Object( reinterpret_cast<long>( dlsym( hdll, data->at(1)->value.m_string.c_str() ) ), 1 );
 }
 
 HYBRIS_BUILTIN(hdllcall){
@@ -95,7 +95,7 @@ HYBRIS_BUILTIN(hdllcall){
     htype_assert( data->at(0), H_OT_INT );
 
     typedef int (* function_t)(void);
-    function_t function = (function_t)data->at(0)->xint;
+    function_t function = (function_t)data->at(0)->value.m_integer;
 
     ffi_cif    cif;
     ffi_arg    ul_ret;
@@ -142,7 +142,7 @@ HYBRIS_BUILTIN(hdllclose){
 	}
 	htype_assert( data->at(0), H_OT_INT );
 
-	dlclose( (void *)data->at(0)->xint );
+	dlclose( (void *)data->at(0)->value.m_integer );
 
     return new Object( static_cast<long>(0) );
 }

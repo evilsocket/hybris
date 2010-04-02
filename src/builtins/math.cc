@@ -27,11 +27,11 @@ HYBRIS_BUILTIN(hacos){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        return new Object((double)acos(data->at(0)->xint));
+    if( data->at(0)->type == H_OT_INT ){
+        return new Object((double)acos(data->at(0)->value.m_integer));
     }
     else{
-        return new Object((double)acos(data->at(0)->xfloat));
+        return new Object((double)acos(data->at(0)->value.m_double));
     }
 }
 
@@ -41,11 +41,11 @@ HYBRIS_BUILTIN(hasin){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        return new Object((double)asin(data->at(0)->xint));
+    if( data->at(0)->type == H_OT_INT ){
+        return new Object((double)asin(data->at(0)->value.m_integer));
     }
     else{
-        return new Object((double)asin(data->at(0)->xfloat));
+        return new Object((double)asin(data->at(0)->value.m_double));
     }
 }
 
@@ -55,11 +55,11 @@ HYBRIS_BUILTIN(hatan){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        return new Object((double)atan(data->at(0)->xint));
+    if( data->at(0)->type == H_OT_INT ){
+        return new Object((double)atan(data->at(0)->value.m_integer));
     }
     else{
-        return new Object((double)atan(data->at(0)->xfloat));
+        return new Object((double)atan(data->at(0)->value.m_double));
     }
 }
 
@@ -72,17 +72,17 @@ HYBRIS_BUILTIN(hatan2){
 
     double a, b;
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        a = (double)data->at(0)->xint;
+    if( data->at(0)->type == H_OT_INT ){
+        a = (double)data->at(0)->value.m_integer;
     }
     else{
-        a = data->at(0)->xfloat;
+        a = data->at(0)->value.m_double;
     }
-    if( data->at(1)->xtype == H_OT_INT ){
-        b = (double)data->at(1)->xint;
+    if( data->at(1)->type == H_OT_INT ){
+        b = (double)data->at(1)->value.m_integer;
     }
     else{
-        b = data->at(1)->xfloat;
+        b = data->at(1)->value.m_double;
     }
     return new Object((double)atan2(a,b));
 }
@@ -93,11 +93,11 @@ HYBRIS_BUILTIN(hceil){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        return new Object( static_cast<long>( ceil(data->at(0)->xint) ) );
+    if( data->at(0)->type == H_OT_INT ){
+        return new Object( static_cast<long>( ceil(data->at(0)->value.m_integer) ) );
     }
     else{
-        return new Object(static_cast<long>( ceil(data->at(0)->xfloat) ) );
+        return new Object(static_cast<long>( ceil(data->at(0)->value.m_double) ) );
     }
 }
 
@@ -107,11 +107,11 @@ HYBRIS_BUILTIN(hcos){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        return new Object((double)cos(data->at(0)->xint));
+    if( data->at(0)->type == H_OT_INT ){
+        return new Object((double)cos(data->at(0)->value.m_integer));
     }
     else{
-        return new Object((double)cos(data->at(0)->xfloat));
+        return new Object((double)cos(data->at(0)->value.m_double));
     }
 }
 
@@ -121,11 +121,11 @@ HYBRIS_BUILTIN(hcosh){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        return new Object((double)cosh(data->at(0)->xint));
+    if( data->at(0)->type == H_OT_INT ){
+        return new Object((double)cosh(data->at(0)->value.m_integer));
     }
     else{
-        return new Object((double)cosh(data->at(0)->xfloat));
+        return new Object((double)cosh(data->at(0)->value.m_double));
     }
 }
 
@@ -135,11 +135,11 @@ HYBRIS_BUILTIN(hexp){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        return new Object((double)exp(data->at(0)->xint));
+    if( data->at(0)->type == H_OT_INT ){
+        return new Object((double)exp(data->at(0)->value.m_integer));
     }
     else{
-        return new Object((double)exp(data->at(0)->xfloat));
+        return new Object((double)exp(data->at(0)->value.m_double));
     }
 }
 
@@ -149,11 +149,11 @@ HYBRIS_BUILTIN(hfabs){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        return new Object((double)fabs(data->at(0)->xint));
+    if( data->at(0)->type == H_OT_INT ){
+        return new Object((double)fabs(data->at(0)->value.m_integer));
     }
     else{
-        return new Object((double)fabs(data->at(0)->xfloat));
+        return new Object((double)fabs(data->at(0)->value.m_double));
     }
 }
 
@@ -163,11 +163,11 @@ HYBRIS_BUILTIN(hfloor){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        return new Object( static_cast<long>( floor(data->at(0)->xint) ) );
+    if( data->at(0)->type == H_OT_INT ){
+        return new Object( static_cast<long>( floor(data->at(0)->value.m_integer) ) );
     }
     else{
-        return new Object( static_cast<long>( floor(data->at(0)->xfloat) ) );
+        return new Object( static_cast<long>( floor(data->at(0)->value.m_double) ) );
     }
 }
 
@@ -180,17 +180,17 @@ HYBRIS_BUILTIN(hfmod){
 
     double a, b;
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        a = (double)data->at(0)->xint;
+    if( data->at(0)->type == H_OT_INT ){
+        a = (double)data->at(0)->value.m_integer;
     }
     else{
-        a = data->at(0)->xfloat;
+        a = data->at(0)->value.m_double;
     }
-    if( data->at(1)->xtype == H_OT_INT ){
-        b = (double)data->at(1)->xint;
+    if( data->at(1)->type == H_OT_INT ){
+        b = (double)data->at(1)->value.m_integer;
     }
     else{
-        b = data->at(1)->xfloat;
+        b = data->at(1)->value.m_double;
     }
     return new Object((double)fmod(a,b));
 }
@@ -201,11 +201,11 @@ HYBRIS_BUILTIN(hlog){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        return new Object((double)log(data->at(0)->xint));
+    if( data->at(0)->type == H_OT_INT ){
+        return new Object((double)log(data->at(0)->value.m_integer));
     }
     else{
-        return new Object((double)log(data->at(0)->xfloat));
+        return new Object((double)log(data->at(0)->value.m_double));
     }
 }
 
@@ -215,11 +215,11 @@ HYBRIS_BUILTIN(hlog10){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        return new Object((double)log10(data->at(0)->xint));
+    if( data->at(0)->type == H_OT_INT ){
+        return new Object((double)log10(data->at(0)->value.m_integer));
     }
     else{
-        return new Object((double)log10(data->at(0)->xfloat));
+        return new Object((double)log10(data->at(0)->value.m_double));
     }
 }
 
@@ -232,17 +232,17 @@ HYBRIS_BUILTIN(hpow){
 
     double a, b;
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        a = (double)data->at(0)->xint;
+    if( data->at(0)->type == H_OT_INT ){
+        a = (double)data->at(0)->value.m_integer;
     }
     else{
-        a = data->at(0)->xfloat;
+        a = data->at(0)->value.m_double;
     }
-    if( data->at(1)->xtype == H_OT_INT ){
-        b = (double)data->at(1)->xint;
+    if( data->at(1)->type == H_OT_INT ){
+        b = (double)data->at(1)->value.m_integer;
     }
     else{
-        b = data->at(1)->xfloat;
+        b = data->at(1)->value.m_double;
     }
     return new Object((double)pow(a,b));
 }
@@ -253,11 +253,11 @@ HYBRIS_BUILTIN(hsin){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        return new Object((double)sin(data->at(0)->xint));
+    if( data->at(0)->type == H_OT_INT ){
+        return new Object((double)sin(data->at(0)->value.m_integer));
     }
     else{
-        return new Object((double)sin(data->at(0)->xfloat));
+        return new Object((double)sin(data->at(0)->value.m_double));
     }
 }
 
@@ -267,11 +267,11 @@ HYBRIS_BUILTIN(hsinh){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        return new Object((double)sinh(data->at(0)->xint));
+    if( data->at(0)->type == H_OT_INT ){
+        return new Object((double)sinh(data->at(0)->value.m_integer));
     }
     else{
-        return new Object((double)sinh(data->at(0)->xfloat));
+        return new Object((double)sinh(data->at(0)->value.m_double));
     }
 }
 
@@ -281,11 +281,11 @@ HYBRIS_BUILTIN(hsqrt){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        return new Object((double)sqrt(data->at(0)->xint));
+    if( data->at(0)->type == H_OT_INT ){
+        return new Object((double)sqrt(data->at(0)->value.m_integer));
     }
     else{
-        return new Object((double)sqrt(data->at(0)->xfloat));
+        return new Object((double)sqrt(data->at(0)->value.m_double));
     }
 }
 
@@ -295,11 +295,11 @@ HYBRIS_BUILTIN(htan){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        return new Object((double)tan(data->at(0)->xint));
+    if( data->at(0)->type == H_OT_INT ){
+        return new Object((double)tan(data->at(0)->value.m_integer));
     }
     else{
-        return new Object((double)tan(data->at(0)->xfloat));
+        return new Object((double)tan(data->at(0)->value.m_double));
     }
 }
 
@@ -309,11 +309,11 @@ HYBRIS_BUILTIN(htanh){
 	}
 	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->xtype == H_OT_INT ){
-        return new Object((double)tanh(data->at(0)->xint));
+    if( data->at(0)->type == H_OT_INT ){
+        return new Object((double)tanh(data->at(0)->value.m_integer));
     }
     else{
-        return new Object((double)tanh(data->at(0)->xfloat));
+        return new Object((double)tanh(data->at(0)->value.m_double));
     }
 }
 

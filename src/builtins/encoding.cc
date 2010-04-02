@@ -40,7 +40,7 @@ HYBRIS_BUILTIN(hurlencode){
     }
     htype_assert( data->at(0), H_OT_STRING );
 
-    char *pstr = (char *)data->at(0)->xstring.c_str(),
+    char *pstr = (char *)data->at(0)->value.m_string.c_str(),
          *buf  = (char *)malloc(strlen(pstr) * 3 + 1),
          *pbuf = buf;
 
@@ -74,7 +74,7 @@ HYBRIS_BUILTIN(hurldecode){
     }
     htype_assert( data->at(0), H_OT_STRING );
 
-    char *pstr = (char *)data->at(0)->xstring.c_str(),
+    char *pstr = (char *)data->at(0)->value.m_string.c_str(),
          *buf  = (char *)malloc(strlen(pstr) + 1),
          *pbuf = buf;
 
@@ -114,7 +114,7 @@ HYBRIS_BUILTIN(hbase64encode) {
     std::string ret;
     unsigned char block_3[3];
     unsigned char block_4[4];
-    char * str = (char *)data->at(0)->xstring.c_str();
+    char * str = (char *)data->at(0)->value.m_string.c_str();
     int i = 0,
         j = 0,
         size = strlen(str);;
@@ -162,7 +162,7 @@ HYBRIS_BUILTIN(hbase64decode) {
 
     static const std::string b64_charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     std::string ret;
-    char * str = (char *)data->at(0)->xstring.c_str();
+    char * str = (char *)data->at(0)->value.m_string.c_str();
     int in_len = strlen(str),
         i = 0,
         j = 0,

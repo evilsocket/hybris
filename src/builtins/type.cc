@@ -22,63 +22,63 @@ HYBRIS_BUILTIN(hisint){
 	if( data->size() != 1 ){
 		hybris_syntax_error( "function 'isint' requires 1 parameter (called with %d)", data->size() );
 	}
-	return new Object( static_cast<long>(data->at(0)->xtype == H_OT_INT) );
+	return new Object( static_cast<long>(data->at(0)->type == H_OT_INT) );
 }
 
 HYBRIS_BUILTIN(hisfloat){
 	if( data->size() != 1 ){
 		hybris_syntax_error( "function 'isfloat' requires 1 parameter (called with %d)", data->size() );
 	}
-	return new Object( static_cast<long>(data->at(0)->xtype == H_OT_FLOAT) );
+	return new Object( static_cast<long>(data->at(0)->type == H_OT_FLOAT) );
 }
 
 HYBRIS_BUILTIN(hischar){
 	if( data->size() != 1 ){
 		hybris_syntax_error( "function 'ischar' requires 1 parameter (called with %d)", data->size() );
 	}
-	return new Object( static_cast<long>(data->at(0)->xtype == H_OT_CHAR) );
+	return new Object( static_cast<long>(data->at(0)->type == H_OT_CHAR) );
 }
 
 HYBRIS_BUILTIN(hisstring){
 	if( data->size() != 1 ){
 		hybris_syntax_error( "function 'isstring' requires 1 parameter (called with %d)", data->size() );
 	}
-	return new Object( static_cast<long>(data->at(0)->xtype == H_OT_STRING) );
+	return new Object( static_cast<long>(data->at(0)->type == H_OT_STRING) );
 }
 
 HYBRIS_BUILTIN(hisarray){
 	if( data->size() != 1 ){
 		hybris_syntax_error( "function 'isarray' requires 1 parameter (called with %d)", data->size() );
 	}
-	return new Object( static_cast<long>(data->at(0)->xtype == H_OT_ARRAY) );
+	return new Object( static_cast<long>(data->at(0)->type == H_OT_ARRAY) );
 }
 
 HYBRIS_BUILTIN(hismap){
 	if( data->size() != 1 ){
 		hybris_syntax_error( "function 'ismap' requires 1 parameter (called with %d)", data->size() );
 	}
-	return new Object( static_cast<long>(data->at(0)->xtype == H_OT_MAP) );
+	return new Object( static_cast<long>(data->at(0)->type == H_OT_MAP) );
 }
 
 HYBRIS_BUILTIN(hisalias){
 	if( data->size() != 1 ){
 		hybris_syntax_error( "function 'isalias' requires 1 parameter (called with %d)", data->size() );
 	}
-	return new Object( static_cast<long>(data->at(0)->xtype == H_OT_ALIAS) );
+	return new Object( static_cast<long>(data->at(0)->type == H_OT_ALIAS) );
 }
 
 HYBRIS_BUILTIN(htypeof){
 	if( data->size() != 1 ){
 		hybris_syntax_error( "function 'typeof' requires 1 parameter (called with %d)", data->size() );
 	}
-	return new Object( (char *)Object::type(data->at(0)) );
+	return new Object( (char *)Object::type_name(data->at(0)) );
 }
 
 HYBRIS_BUILTIN(hsizeof){
 	if( data->size() != 1 ){
 		hybris_syntax_error( "function 'sizeof' requires 1 parameter (called with %d)", data->size() );
 	}
-	return new Object( static_cast<long>( data->at(0)->xsize  ) );
+	return new Object( static_cast<long>( data->at(0)->size  ) );
 }
 
 HYBRIS_BUILTIN(htoint){
@@ -109,5 +109,5 @@ HYBRIS_BUILTIN(hfromxml){
 	}
 	htype_assert( data->at(0), H_OT_STRING );
 
-	return Object::fromxml( (char *)data->at(0)->xstring.c_str() );
+	return Object::fromxml( (char *)data->at(0)->value.m_string.c_str() );
 }

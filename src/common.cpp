@@ -104,14 +104,14 @@ void hybris_syntax_error( const char *format, ... ){
 }
 
 void htype_assert( Object *o, H_OBJECT_TYPE type ){
-	if( o->xtype != type ){
-		hybris_syntax_error( "'%s' is not a valid variable type", Object::type(o) );
+	if( o->type != type ){
+		hybris_syntax_error( "'%s' is not a valid variable type", Object::type_name(o) );
 	}
 }
 
 void htype_assert( Object *o, H_OBJECT_TYPE type1, H_OBJECT_TYPE type2 ){
-	if( o->xtype != type1 && o->xtype != type2 ){
-		hybris_syntax_error( "'%s' is not a valid variable type", Object::type(o) );
+	if( o->type != type1 && o->type != type2 ){
+		hybris_syntax_error( "'%s' is not a valid variable type", Object::type_name(o) );
 	}
 }
 

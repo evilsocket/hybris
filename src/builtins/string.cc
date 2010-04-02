@@ -26,7 +26,7 @@ HYBRIS_BUILTIN(hstrlen){
 	}
 	htype_assert( data->at(0), H_OT_STRING );
 
-	return new Object( static_cast<long>( data->at(0)->xstring.size() ) );
+	return new Object( static_cast<long>( data->at(0)->value.m_string.size() ) );
 }
 
 HYBRIS_BUILTIN(hstrfind){
@@ -36,7 +36,7 @@ HYBRIS_BUILTIN(hstrfind){
 	htype_assert( data->at(0), H_OT_STRING );
 	htype_assert( data->at(1), H_OT_STRING );
 
-	int found = data->at(0)->xstring.find( data->at(1)->xstring );
+	int found = data->at(0)->value.m_string.find( data->at(1)->value.m_string );
 
 	return new Object( static_cast<long>(found == string::npos ? -1 : found) );
 }
@@ -47,7 +47,7 @@ HYBRIS_BUILTIN(hsubstr){
 	}
 	htype_assert( data->at(0), H_OT_STRING );
 
-	string sub = data->at(0)->xstring.substr( data->at(1)->lvalue(), data->at(2)->lvalue() );
+	string sub = data->at(0)->value.m_string.substr( data->at(1)->lvalue(), data->at(2)->lvalue() );
 
 	return new Object( (char *)sub.c_str() );
 }
@@ -60,9 +60,9 @@ HYBRIS_BUILTIN(hstrreplace){
 	htype_assert( data->at(1), H_OT_STRING );
 	htype_assert( data->at(2), H_OT_STRING );
 
-	string str  = data->at(0)->xstring,
-		   find = data->at(1)->xstring,
-		   repl = data->at(2)->xstring;
+	string str  = data->at(0)->value.m_string,
+		   find = data->at(1)->value.m_string,
+		   repl = data->at(2)->value.m_string;
 
 	unsigned int i;
 	for( ; (i = str.find( find )) != string::npos ; ){
@@ -79,8 +79,8 @@ HYBRIS_BUILTIN(hstrsplit){
 	htype_assert( data->at(0), H_OT_STRING );
 	htype_assert( data->at(1), H_OT_STRING, H_OT_CHAR );
 
-	string str = data->at(0)->xstring,
-		   tok = (data->at(1)->xtype == H_OT_STRING ? data->at(1)->xstring : string("") + data->at(1)->xchar);
+	string str = data->at(0)->value.m_string,
+		   tok = (data->at(1)->type == H_OT_STRING ? data->at(1)->value.m_string : string("") + data->at(1)->value.m_char);
 	vector<string> parts;
     int start = 0, end = 0, i;
 

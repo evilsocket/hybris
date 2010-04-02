@@ -42,25 +42,21 @@
 extern void  hybris_syntax_error( const char *format, ... );
 extern void  hybris_generic_error( const char *format, ... );
 
-using std::string;
-using std::stringstream;
-using std::vector;
-using std::cout;
-using std::cin;
-
-typedef unsigned short H_OBJECT_TYPE;
+using namespace std;
 
 /* object types */
-#define H_OT_VOID   0
-#define H_OT_INT    1
-#define H_OT_FLOAT  2
-#define H_OT_CHAR   3
-#define H_OT_STRING 4
-#define H_OT_ARRAY  5
-#define H_OT_MAP    6
-#define H_OT_ALIAS  7
-#define H_OT_MATRIX 8
-#define H_OT_STRUCT 9
+enum H_OBJECT_TYPE {
+    H_OT_VOID = 0,
+    H_OT_INT,
+    H_OT_FLOAT,
+    H_OT_CHAR,
+    H_OT_STRING,
+    H_OT_ARRAY,
+    H_OT_MAP,
+    H_OT_ALIAS,
+    H_OT_MATRIX,
+    H_OT_STRUCT
+};
 
 #ifdef GC_SUPPORT
     typedef unsigned char H_OBJECT_ATTRIBUTE;
@@ -80,16 +76,45 @@ typedef unsigned short H_OBJECT_TYPE;
 #   define H_PCRE_REPLACE_MATCH 0x2
 #endif
 
+class Object;
+
+class ObjectValue {
+    public:
+
+        long             m_integer;
+        double           m_double;
+        char             m_char;
+        string           m_string;
+        vector<Object *> m_array;
+        vector<Object *> m_map;
+        unsigned int     m_alias;
+
+        unsigned int     m_rows;
+        unsigned int     m_columns;
+        Object       *** m_matrix;
+
+        vector<string>   m_struct_names;
+        vector<Object *> m_struct_values;
+};
+
 class Object {
 public  :
+     /* return 1 if a and b are of one of the types described on the arguments */
+	static unsigned int assert_type( Object *a, Object *b, unsigned int ntypes, ... );
+    /* replace each occurrence of "find" in "source" with "replace" */
+    static void replace( string &source, const string find, string replace );
+    /* parse a string for escape and special characters encoding */
+    static void parse_string( string& s );
     /* return a string rapresentation of the type */
-    static const char *type( Object *o );
+    static const char *type_name( Object *o );
 
     #ifdef PCRE_SUPPORT
+    /* tells if a regex is a single match or multi match */
     static int  classify_pcre( string& r );
+    /* split raw regex and its options from pcre regex */
     static void parse_pcre( string& raw, string& regex, int& opts );
-
-    Object *regexp( Object *regexp );
+    /* regex operator */
+    Object     *regexp( Object *regexp );
     #endif
 
     #ifdef XML_SUPPORT
@@ -97,41 +122,26 @@ public  :
 	static Object *fromxml( xmlNode *node );
     /* create an object from a xml stream */
 	static Object *fromxml( char *xml );
+	/* convert the object to a xml stream */
+	string         toxml( unsigned int tabs = 0 );
     #endif
-
-    /* return 1 if a and b are of one of the types described on the arguments */
-	static unsigned int assert_type( Object *a, Object *b, unsigned int ntypes, ... );
-    /* replace each occurrence of "find" in "source" with "replace" */
-    static void replace( string &source, const string find, string replace );
-    /* parse a string for escape and special characters encoding */
-    static void parse_string( string& s );
-
-    H_OBJECT_TYPE      xtype;
-    unsigned int       xsize;
 
     #ifdef GC_SUPPORT
-        H_OBJECT_ATTRIBUTE attributes;
+    /* object gc attribute mask */
+    H_OBJECT_ATTRIBUTE attributes;
     #endif
-
-    long             xint;
-    double           xfloat;
-    char             xchar;
-    string           xstring;
-	vector<Object *> xarray;
-	vector<Object *> xmap;
-	unsigned int     xalias;
-
-	unsigned int     xrows;
-	unsigned int     xcolumns;
-	Object       *** xmatrix;
-
-	vector<string>   xattr_names;
-	vector<Object *> xattr_values;
+    /* type of the object */
+    H_OBJECT_TYPE      type;
+    /* size of the object */
+    unsigned int       size;
+    /* value of the object */
+    ObjectValue        value;
 
 	#ifdef MEM_DEBUG
     void* operator new (size_t size);
     #endif
 
+    /* ctors */
     Object( long value );
     Object( long value, unsigned int _is_extern );
     Object( double value );
@@ -141,16 +151,18 @@ public  :
 	Object( unsigned int value );
 	Object( unsigned int rows, unsigned int columns, vector<Object *>& data );
     Object( Object *o );
+    /* dtor, calls ::release */
+    ~Object();
+
+    void release( bool reset_attributes = true );
 
     #ifdef GC_SUPPORT
-        void setGarbageAttribute( H_OBJECT_ATTRIBUTE mask );
+    /* set the object as deletable or not deletable */
+    void setGarbageAttribute( H_OBJECT_ATTRIBUTE mask );
     #endif
 
     Object& assign( Object *o );
 
-    void release( bool reset_attributes = true );
-
-    ~Object();
 
 	int equals( Object *o );
 
@@ -162,19 +174,15 @@ public  :
 
 	Object * getObject();
 
-    unsigned char *serialize();
-
+    /* console i/o methods */
     void print( unsigned int tabs = 0 );
     void println( unsigned int tabs = 0 );
-
-    #ifdef XML_SUPPORT
-	string toxml( unsigned int tabs = 0 );
-    #endif
-
     void input();
+    /* conversion methods */
 	Object * toString();
     Object * toInt();
 
+    /* operators */
 	long lvalue();
     Object * dot( Object *o );
 	Object * dotequal( Object *o );

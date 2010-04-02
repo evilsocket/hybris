@@ -248,15 +248,15 @@ Node * Engine::findEntryPoint( vframe_t *frame, Node *call, char *name ){
 	}
 	/* then search for a function alias */
 	Object *alias = H_UNDEFINED;
-	if( (alias = frame->get( callname )) != H_UNDEFINED && alias->xtype == H_OT_ALIAS ){
-	    strcpy( name, vc->label( alias->xalias ) );
-		return vc->at( alias->xalias );
+	if( (alias = frame->get( callname )) != H_UNDEFINED && alias->type == H_OT_ALIAS ){
+	    strcpy( name, vc->label( alias->value.m_alias ) );
+		return vc->at( alias->value.m_alias );
 	}
 	/* try to evaluate the call as an alias itself */
 	if( call->value.m_alias_call != NULL ){
 		alias = exec( frame, call->value.m_alias_call );
-		if( alias->xtype == H_OT_ALIAS ){
-		    strcpy( name, vc->label( alias->xalias ) );
+		if( alias->type == H_OT_ALIAS ){
+		    strcpy( name, vc->label( alias->value.m_alias ) );
 			return vc->find( name );
 		}
 	}
@@ -307,7 +307,7 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
     if( owner == H_UNDEFINED ){
         hybris_syntax_error( "'%s' undeclared identifier", identifier );
     }
-    else if( owner->xtype != H_OT_STRUCT ){
+    else if( owner->type != H_OT_STRUCT ){
         hybris_syntax_error( "'%s' is not a structure identifier", identifier );
     }
 
@@ -318,7 +318,7 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
         if( child == H_UNDEFINED ){
             hybris_syntax_error( "'%s' is not an attribute of %s", child_id, owner_id );
         }
-        else if( child->xtype == H_OT_STRUCT ){
+        else if( child->type == H_OT_STRUCT ){
             owner    = child;
             owner_id = child_id;
         }
@@ -492,17 +492,17 @@ Object *Engine::onTypeCall( vframe_t *frame, Node *type ){
 
     // init structure attributes
     if( children > 0 ){
-        if( children > structure->xattr_names.size() ){
+        if( children > structure->value.m_struct_names.size() ){
             hybris_syntax_error( "structure '%s' has %d attributes, initialized with %d",
                                  type_name,
-                                 structure->xattr_names.size(),
+                                 structure->value.m_struct_names.size(),
                                  children );
         }
 
         for( i = 0; i < children; ++i ){
             object = exec( frame, type->child(i) );
 
-            structure->setAttribute( (char *)structure->xattr_names[i].c_str(), object );
+            structure->setAttribute( (char *)structure->value.m_struct_names[i].c_str(), object );
 
             H_FREE_GARBAGE(object);
         }
@@ -598,8 +598,8 @@ Object *Engine::onDollar( vframe_t *frame, Node *node ){
 
     H_FREE_GARBAGE(o);
 
-    if( (o = frame->get( (char *)name->xstring.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", (char *)name->xstring.c_str() );
+    if( (o = frame->get( (char *)name->value.m_string.c_str() )) == H_UNDEFINED ){
+        hybris_syntax_error( "'%s' undeclared identifier", (char *)name->value.m_string.c_str() );
     }
 
     H_FREE_GARBAGE(name);
@@ -793,10 +793,10 @@ Object *Engine::onForeach( vframe_t *frame, Node *node ){
     identifier = (char *)node->child(0)->value.m_identifier.c_str();
     map        = exec( frame, node->child(1) );
     body       = node->child(2);
-    size       = map->xarray.size();
+    size       = map->value.m_array.size();
 
     for( i = 0; i < size; ++i ){
-        frame->add( identifier, map->xarray[i] );
+        frame->add( identifier, map->value.m_array[i] );
         result = exec( frame, body );
         H_FREE_GARBAGE(result);
     }
@@ -818,11 +818,11 @@ Object *Engine::onForeachm( vframe_t *frame, Node *node ){
     value_identifier = (char *)node->child(1)->value.m_identifier.c_str();
     map              = exec( frame, node->child(2) );
     body             = node->child(3);
-    size             = map->xmap.size();
+    size             = map->value.m_map.size();
 
     for( i = 0; i < size; ++i ){
-        frame->add( key_identifier,   map->xmap[i] );
-        frame->add( value_identifier, map->xarray[i] );
+        frame->add( key_identifier,   map->value.m_map[i] );
+        frame->add( value_identifier, map->value.m_array[i] );
         result = exec(  frame, body );
         H_FREE_GARBAGE(result);
     }
@@ -939,10 +939,7 @@ Object *Engine::onDote( vframe_t *frame, Node *node ){
            *b      = H_UNDEFINED,
            *result = H_UNDEFINED;
 
-    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
-    }
-
+    a      = exec( frame, node->child(0) );
     b      = exec( frame, node->child(1) );
     result = a->dotequal( b );
 
@@ -1020,10 +1017,7 @@ Object *Engine::onPluse( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
-    }
-
+    a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
     (*a) += b;
@@ -1052,10 +1046,7 @@ Object *Engine::onMinuse( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
-    }
-
+    a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
     (*a) -= b;
@@ -1084,10 +1075,7 @@ Object *Engine::onMule( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
-    }
-
+    a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
     (*a) *= b;
@@ -1116,10 +1104,7 @@ Object *Engine::onDive( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
-    }
-
+    a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
     (*a) /= b;
@@ -1148,10 +1133,7 @@ Object *Engine::onMode( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
-    }
-
+    a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
     (*a) %= b;
@@ -1164,9 +1146,7 @@ Object *Engine::onMode( vframe_t *frame, Node *node ){
 Object *Engine::onInc( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
-    if( (o = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", (char *)node->child(0)->value.m_identifier.c_str() );
-    }
+    o = exec( frame, node->child(0) );
     ++(*o);
     return o;
 }
@@ -1174,9 +1154,7 @@ Object *Engine::onInc( vframe_t *frame, Node *node ){
 Object *Engine::onDec( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
-    if( (o = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", (char *)node->child(0)->value.m_identifier.c_str() );
-    }
+    o = exec( frame, node->child(0) );
     --(*o);
     return o;
 }
@@ -1200,10 +1178,7 @@ Object *Engine::onXore( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
-    }
-
+    a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
     (*a) ^= b;
@@ -1232,10 +1207,7 @@ Object *Engine::onAnde( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
-    }
-
+    a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
     (*a) &= b;
@@ -1264,10 +1236,7 @@ Object *Engine::onOre( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
-    }
-
+    a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
     (*a) |= b;
@@ -1296,10 +1265,7 @@ Object *Engine::onShiftle( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
-    }
-
+    a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
     (*a) <<= b;
@@ -1328,10 +1294,7 @@ Object *Engine::onShiftre( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
-    if( (a = frame->get( (char *)node->child(0)->value.m_identifier.c_str() )) == H_UNDEFINED ){
-        hybris_syntax_error( "'%s' undeclared identifier", node->child(0)->value.m_identifier.c_str() );
-    }
-
+    a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
     (*a) >>= b;
