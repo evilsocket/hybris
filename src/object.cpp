@@ -18,12 +18,31 @@
 */
 #include "object.h"
 
+unsigned int htoi( const char *ptr ){
+	unsigned int value(0);
+	char ch = *ptr;
+
+    for(;;){
+        if (ch >= '0' && ch <= '9')
+            value = (value << 4) + (ch - '0');
+        else if (ch >= 'A' && ch <= 'F')
+            value = (value << 4) + (ch - 'A' + 10);
+        else if (ch >= 'a' && ch <= 'f')
+            value = (value << 4) + (ch - 'a' + 10);
+        else
+            return value;
+
+        ch = *(++ptr);
+    }
+}
+
 const char *Object::type_name( Object *o ){
 	switch(o->type){
 		case H_OT_INT    : return "int";    break;
 		case H_OT_CHAR   : return "char";   break;
 		case H_OT_FLOAT  : return "float";  break;
 		case H_OT_STRING : return "string"; break;
+		case H_OT_BINARY : return "binary"; break;
 		case H_OT_ARRAY  : return "array";  break;
 		case H_OT_MAP    : return "map";    break;
 		case H_OT_ALIAS  : return "alias";  break;
@@ -50,6 +69,18 @@ Object *Object::fromxml( xmlNode *node ){
 	}
 	else if( strcmp( (char *)node->name, "string" ) == 0 ){
 		return new Object( data );
+	}
+	else if( strcmp( (char *)node->name, "binary" ) == 0 ){
+		Object               *binary = NULL;
+		vector<unsigned char> stream;
+		char *bytes   = (char *)data;
+        char  byte[3] = {0};
+
+        for( int i = 0; i < strlen(bytes); i += 2 ){
+            memcpy( &byte, &bytes[i], 2 );
+            stream.push_back( htoi(byte) );
+        }
+		return binary = new Object(stream);
 	}
 	else if( strcmp( (char *)node->name, "array" ) == 0 ){
 		Object *array  = new Object();
@@ -163,6 +194,7 @@ Object *Object::fromxml( char *xml ){
 
 string Object::toxml( unsigned int tabs /*= 0*/ ){
 	unsigned int i, j;
+	char         byte[3] = {0};
 	string       xtabs;
 	stringstream xml;
 
@@ -173,6 +205,17 @@ string Object::toxml( unsigned int tabs /*= 0*/ ){
 		case H_OT_FLOAT  : xml << xtabs << "<float>"  << value.m_double  << "</float>\n";  break;
 		case H_OT_CHAR   : xml << xtabs << "<char>"   << value.m_char   << "</char>\n";   break;
 		case H_OT_STRING : xml << xtabs << "<string>" << value.m_string << "</string>\n"; break;
+		case H_OT_BINARY :
+            xml << xtabs << "<binary>\n";
+            xml << xtabs << "\t";
+            for( i = 0; i < size; ++i ){
+                sprintf( byte, "%.2X", value.m_array[i]->value.m_char );
+				xml << byte;
+			}
+			xml << "\n";
+            xml << xtabs << "</binary>\n";
+		break;
+
 		case H_OT_ARRAY  :
 			xml << xtabs << "<array>\n";
 			for( i = 0; i < size; ++i ){
@@ -341,6 +384,18 @@ Object::Object( char *value ) :
 	size   = this->value.m_string.size() + 1;
 }
 
+Object::Object( vector<unsigned char>& data ) :
+    type(H_OT_BINARY),
+    size(data.size()),
+    attributes(H_OA_NONE | H_OA_GARBAGE)
+{
+    vector<unsigned char>::iterator i;
+
+    for( i = data.begin(); i != data.end(); i++ ){
+        value.m_array.push_back( new Object( (char)(*i) ) );
+    }
+}
+
 Object::Object() :
     type(H_OT_ARRAY),
     size(0),
@@ -405,6 +460,11 @@ Object::Object( Object *o ) :
 		case H_OT_FLOAT  : value.m_double  = o->value.m_double;  break;
 		case H_OT_CHAR   : value.m_char   = o->value.m_char;   break;
 		case H_OT_STRING : value.m_string = o->value.m_string; break;
+		case H_OT_BINARY :
+            for( i = 0; i < size; ++i ){
+				value.m_array.push_back( new Object( o->value.m_array[i] ) );
+			}
+		break;
 		case H_OT_ARRAY  :
 			for( i = 0; i < size; ++i ){
 				value.m_array.push_back( new Object( o->value.m_array[i] ) );
@@ -452,6 +512,12 @@ void Object::setGarbageAttribute( H_OBJECT_ATTRIBUTE mask ){
     }
     /* eventually handle children */
     switch( type ){
+        case H_OT_BINARY :
+            for( i = 0; i < size; ++i ){
+                value.m_array[i]->setGarbageAttribute(mask);
+            }
+        break;
+
         case H_OT_ARRAY  :
             for( i = 0; i < size; ++i ){
                 value.m_array[i]->setGarbageAttribute(mask);
@@ -494,6 +560,11 @@ Object& Object::assign( Object *o ){
 		case H_OT_FLOAT  : value.m_double  = o->value.m_double;  break;
 		case H_OT_CHAR   : value.m_char   = o->value.m_char;   break;
 		case H_OT_STRING : value.m_string = o->value.m_string; break;
+		case H_OT_BINARY :
+            for( i = 0; i < size; ++i ){
+				value.m_array.push_back( new Object( o->value.m_array[i] ) );
+			}
+		break;
 		case H_OT_ARRAY  :
 			for( i = 0; i < size; ++i ){
 				value.m_array.push_back( new Object( o->value.m_array[i] ) );
@@ -535,6 +606,17 @@ void Object::release( bool reset_attributes /*= true*/ ){
     switch( type ){
         case H_OT_STRING :
             value.m_string.clear();
+        break;
+
+        case H_OT_BINARY :
+            for( i = 0; i < size; ++i ){
+                o = value.m_array[i];
+                if( o ){
+                    delete o;
+                    value.m_array[i] = NULL;
+                }
+            }
+            value.m_array.clear();
         break;
 
         case H_OT_ARRAY  :
@@ -617,6 +699,14 @@ int Object::equals( Object *o ){
 		case H_OT_FLOAT  : return value.m_double  == o->value.m_double;
 		case H_OT_CHAR   : return value.m_char   == o->value.m_char;
 		case H_OT_STRING : return value.m_string == o->value.m_string;
+		case H_OT_BINARY :
+            for( i = 0; i < size; ++i ){
+				if( value.m_array[i]->equals( o->value.m_array[i] ) == 0 ){
+					return 0;
+				}
+			}
+			return 1;
+		break;
 		case H_OT_ARRAY  :
 			for( i = 0; i < size; ++i ){
 				if( value.m_array[i]->equals( o->value.m_array[i] ) == 0 ){
@@ -726,6 +816,15 @@ void Object::print( unsigned int tabs /*= 0*/ ){
 		case H_OT_FLOAT  : printf( "%lf", value.m_double );         break;
 		case H_OT_CHAR   : printf( "%c", value.m_char );           break;
 		case H_OT_STRING : printf( "%s", value.m_string.c_str() ); break;
+		case H_OT_BINARY :
+            printf( "binary {\n\t" );
+            for( i = 0; i < size; ++i ){
+				printf( "%.2X", value.m_array[i]->value.m_char );
+			}
+			for( i = 0; i < tabs; ++i ) printf( "\t" );
+			printf( "\n}\n" );
+			return;
+		break;
 		case H_OT_ARRAY  :
 			printf( "array {\n" );
 			for( i = 0; i < size; ++i ){
@@ -967,6 +1066,11 @@ Object * Object::toString(){
 		case H_OT_FLOAT  : ret << value.m_double;  break;
 		case H_OT_CHAR   : ret << value.m_char;    break;
 		case H_OT_STRING : ret << value.m_string;  break;
+		case H_OT_BINARY :
+            for( int i = 0; i < size; ++i ){
+                ret << value.m_array[i]->value.m_char;
+            }
+        break;
 
 		default :
             hybris_generic_error( "could not convert '%s' to string", type_name(this) );
@@ -1099,7 +1203,7 @@ Object *Object::at( Object *index ){
         #endif
 		return new Object( value.m_string[ index->lvalue() ] );
 	}
-	else if( type == H_OT_ARRAY ){
+	else if( type == H_OT_ARRAY || type == H_OT_BINARY  ){
         #ifdef BOUNDS_CHECK
         if( index->lvalue() >= value.m_array.size() ){
             hybris_generic_error( "index out of bounds" );
@@ -1155,6 +1259,20 @@ Object& Object::at( Object *index, Object *set ){
         }
         #endif
 		value.m_string[ index->lvalue() ] = (char)set->lvalue();
+	}
+	else if( type == H_OT_BINARY ){
+	    if( set->type != H_OT_CHAR && set->type != H_OT_INT && set->type != H_OT_FLOAT ){
+	        hybris_syntax_error( "binary type allows only char, int or float types in its subscript operator" );
+	    }
+	    #ifdef BOUNDS_CHECK
+        if( index->lvalue() >= value.m_array.size() ){
+            hybris_generic_error( "index out of bounds" );
+        }
+        #endif
+		delete value.m_array[ index->lvalue() ];
+		Object *integer = set->toInt();
+		value.m_array[ index->lvalue() ] = new Object((char)integer->value.m_integer);
+		delete integer;
 	}
 	else if( type == H_OT_ARRAY ){
 	    #ifdef BOUNDS_CHECK
@@ -1759,39 +1877,11 @@ Object * Object::lnot (){
 }
 
 Object * Object::operator == ( Object *o ){
-	if( type == H_OT_STRING && o->type == H_OT_STRING ){
-		return new Object( static_cast<long>(value.m_string == o->value.m_string) );
-	}
-	else if( type == H_OT_ARRAY && o->type == H_OT_ARRAY ){
-		return new Object( static_cast<long>( this->equals(o) ) );
-	}
-	else if( type == H_OT_MAP && o->type == H_OT_MAP ){
-		return new Object( static_cast<long>( this->equals(o) ) );
-	}
-	else if( type == H_OT_MATRIX && o->type == H_OT_MATRIX ){
-        return new Object( static_cast<long>( this->equals(o) ) );
-	}
-	else{
-		return new Object( static_cast<long>(lvalue() == o->lvalue()) );
-	}
+    return new Object( static_cast<long>( this->equals(o) ) );
 }
 
 Object * Object::operator != ( Object *o ){
-	if( type == H_OT_STRING && o->type == H_OT_STRING ){
-		return new Object( static_cast<long>(value.m_string != o->value.m_string) );
-	}
-	else if( type == H_OT_ARRAY && o->type == H_OT_ARRAY ){
-		return new Object( static_cast<long>( !this->equals(o) ) );
-	}
-	else if( type == H_OT_MAP && o->type == H_OT_MAP ){
-		return new Object( static_cast<long>( !this->equals(o) ) );
-	}
-	else if( type == H_OT_MATRIX && o->type == H_OT_MATRIX ){
-        return new Object( static_cast<long>( !this->equals(o) ) );
-	}
-	else{
-		return new Object( static_cast<long>(lvalue() != o->lvalue()) );
-	}
+	return new Object( static_cast<long>( !this->equals(o) ) );
 }
 
 Object * Object::operator < ( Object *o ){

@@ -51,6 +51,7 @@ enum H_OBJECT_TYPE {
     H_OT_FLOAT,
     H_OT_CHAR,
     H_OT_STRING,
+    H_OT_BINARY,
     H_OT_ARRAY,
     H_OT_MAP,
     H_OT_ALIAS,
@@ -147,6 +148,7 @@ public  :
     Object( double value );
     Object( char value );
     Object( char *value );
+    Object( vector<unsigned char>& data );
 	Object();
 	Object( unsigned int value );
 	Object( unsigned int rows, unsigned int columns, vector<Object *>& data );

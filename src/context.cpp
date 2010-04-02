@@ -157,6 +157,7 @@ void Context::init( int argc, char *argv[] ){
     HYBRIS_DEFINE_BUILTIN( this, "sqrt", hsqrt );
     HYBRIS_DEFINE_BUILTIN( this, "tan", htan );
     HYBRIS_DEFINE_BUILTIN( this, "tanh", htanh );
+    HYBRIS_DEFINE_BUILTIN( this, "binary", hbinary );
 	HYBRIS_DEFINE_BUILTIN( this, "array", harray );
 	HYBRIS_DEFINE_BUILTIN( this, "elements", helements );
 	HYBRIS_DEFINE_BUILTIN( this, "pop", hpop );

@@ -4,8 +4,8 @@
 	<File name="include/common.h" open="0" top="0" tabpos="4">
 		<Cursor position="1211" topLine="0" />
 	</File>
-	<File name="include/context.h" open="1" top="0" tabpos="1">
-		<Cursor position="4520" topLine="105" />
+	<File name="include/context.h" open="0" top="0" tabpos="1">
+		<Cursor position="4938" topLine="120" />
 	</File>
 	<File name="include/engine.h" open="0" top="0" tabpos="4">
 		<Cursor position="1379" topLine="21" />
@@ -22,8 +22,8 @@
 	<File name="include/node.h" open="0" top="0" tabpos="2">
 		<Cursor position="3392" topLine="55" />
 	</File>
-	<File name="include/object.h" open="1" top="1" tabpos="3">
-		<Cursor position="2475" topLine="30" />
+	<File name="include/object.h" open="0" top="0" tabpos="3">
+		<Cursor position="4006" topLine="72" />
 	</File>
 	<File name="include/vcode.h" open="0" top="0" tabpos="8">
 		<Cursor position="839" topLine="0" />
@@ -31,8 +31,8 @@
 	<File name="include/vmem.h" open="0" top="0" tabpos="9">
 		<Cursor position="0" topLine="0" />
 	</File>
-	<File name="src/builtins/array.cc" open="0" top="0" tabpos="18">
-		<Cursor position="2152" topLine="4" />
+	<File name="src/builtins/array.cc" open="1" top="0" tabpos="4">
+		<Cursor position="2152" topLine="15" />
 	</File>
 	<File name="src/builtins/conio.cc" open="0" top="0" tabpos="19">
 		<Cursor position="839" topLine="0" />
@@ -58,8 +58,8 @@
 	<File name="src/builtins/matrix.cc" open="0" top="0" tabpos="26">
 		<Cursor position="1927" topLine="0" />
 	</File>
-	<File name="src/builtins/netio.cc" open="0" top="0" tabpos="27">
-		<Cursor position="8249" topLine="183" />
+	<File name="src/builtins/netio.cc" open="1" top="1" tabpos="5">
+		<Cursor position="782" topLine="204" />
 	</File>
 	<File name="src/builtins/pcre.cc" open="0" top="0" tabpos="8">
 		<Cursor position="2721" topLine="19" />
@@ -85,11 +85,11 @@
 	<File name="src/builtins/xml.cc" open="0" top="0" tabpos="11">
 		<Cursor position="3314" topLine="42" />
 	</File>
-	<File name="src/common.cpp" open="0" top="0" tabpos="5">
-		<Cursor position="3228" topLine="49" />
+	<File name="src/common.cpp" open="1" top="0" tabpos="3">
+		<Cursor position="1448" topLine="19" />
 	</File>
 	<File name="src/context.cpp" open="0" top="0" tabpos="2">
-		<Cursor position="1433" topLine="11" />
+		<Cursor position="1999" topLine="35" />
 	</File>
 	<File name="src/engine.cpp" open="0" top="0" tabpos="3">
 		<Cursor position="9518" topLine="20" />
@@ -97,8 +97,8 @@
 	<File name="src/hashtable.cpp" open="0" top="0" tabpos="3">
 		<Cursor position="1220" topLine="19" />
 	</File>
-	<File name="src/lexer.l.cpp" open="0" top="0" tabpos="1">
-		<Cursor position="3802" topLine="130" />
+	<File name="src/lexer.l.cpp" open="1" top="0" tabpos="1">
+		<Cursor position="1252" topLine="28" />
 	</File>
 	<File name="src/node.cpp" open="0" top="0" tabpos="3">
 		<Cursor position="1631" topLine="72" />
@@ -107,7 +107,7 @@
 		<Cursor position="19814" topLine="645" />
 	</File>
 	<File name="src/parser.y.cpp" open="1" top="0" tabpos="2">
-		<Cursor position="15386" topLine="291" />
+		<Cursor position="15433" topLine="288" />
 	</File>
 	<File name="src/vcode.cpp" open="0" top="0" tabpos="11">
 		<Cursor position="1694" topLine="0" />

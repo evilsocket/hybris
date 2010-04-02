@@ -25,7 +25,8 @@ SOURCES=array.cc \
 		pcre.cc \
 		pthreads.cc \
 		string.cc \
-		type.cc
+		type.cc \
+		binary.cc
 
 OBJECTS=$(SOURCES:.cc=.o)
 LOBJECTS=$(SOURCES:.cc=.lo)

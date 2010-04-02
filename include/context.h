@@ -214,6 +214,8 @@ HYBRIS_BUILTIN(hsinh);
 HYBRIS_BUILTIN(hsqrt);
 HYBRIS_BUILTIN(htan);
 HYBRIS_BUILTIN(htanh);
+/* binary.cc */
+HYBRIS_BUILTIN(hbinary);
 /* array.cc */
 HYBRIS_BUILTIN(harray);
 HYBRIS_BUILTIN(helements);
@@ -268,7 +270,6 @@ HYBRIS_BUILTIN(hdllopen);
 HYBRIS_BUILTIN(hdlllink);
 HYBRIS_BUILTIN(hdllcall);
 HYBRIS_BUILTIN(hdllclose);
-
 /* time.cc */
 HYBRIS_BUILTIN(hticks);
 HYBRIS_BUILTIN(husleep);
