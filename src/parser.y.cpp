@@ -44,7 +44,7 @@ unsigned long t_start = 0,
     /* function call temp arg list */
     NodeList *argv;
     /* not reduced node */
-    Node *HNODEPTR;
+    Node *node;
 };
 
 %locations
@@ -120,11 +120,11 @@ unsigned long t_start = 0,
 %left T_LNOT T_GE T_LE T_EQ T_NE T_GREATER T_LESS T_LAND T_LOR
 %left T_DOLLAR T_INC T_DEC T_MULE T_MUL T_DIVE T_DIV T_PLUSE T_PLUS T_MINUSE T_MINUS T_DOTE T_DOT
 
-%type <HNODEPTR> statement expression statements
-%type <argv>     T_ARGV_LIST
-%type <argv>     T_CASE_LIST
-%type <argv>     T_ATTR_LIST
-%type <argv>     T_IDENT_LIST
+%type <node> statement expression statements
+%type <argv> T_ARGV_LIST
+%type <argv> T_CASE_LIST
+%type <argv> T_ATTR_LIST
+%type <argv> T_IDENT_LIST
 %%
 
 program    : body { if( __context.args.do_timing == 1 ){
@@ -197,7 +197,7 @@ expression : T_INTEGER                                 { $$ = new ConstantNode($
            | T_REAL                                    { $$ = new ConstantNode($1); }
            | T_CHAR                                    { $$ = new ConstantNode($1); }
            | T_STRING                                  { $$ = new ConstantNode($1); }
-
+           /* identifiers and attributes */
            | T_IDENT                                   { $$ = new IdentifierNode($1); }
            | T_IDENT_LIST                              { $$ = new AttributeNode($1);  }
            /* expression evaluation returns an identifier */
@@ -205,9 +205,8 @@ expression : T_INTEGER                                 { $$ = new ConstantNode($
            /* ptr/alias evaluation */
            | T_AND expression                          { $$ = new ExpressionNode( T_PTR, 1, $2 ); }
            | T_MUL expression                          { $$ = new ExpressionNode( T_OBJ, 1, $2 ); }
-
+           /* attribute declaration/assignation */
            | T_IDENT_LIST T_ASSIGN expression          { $$ = new ExpressionNode( T_ASSIGN, 2, new AttributeNode($1), $3 ); }
-
 		   /* identifier declaration/assignation */
 		   | T_IDENT T_ASSIGN expression               { $$ = new ExpressionNode( T_ASSIGN, 2, new IdentifierNode($1), $3 ); }
            /* a single subscript could be an expression itself */

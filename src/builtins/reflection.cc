@@ -18,7 +18,6 @@
 */
 #include "context.h"
 #include "node.h"
-#include "lexer.h"
 
 HYBRIS_BUILTIN(hvar_names){
 	unsigned int i;

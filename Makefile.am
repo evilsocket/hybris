@@ -59,7 +59,7 @@ src/parser.cpp: src/parser.y.cpp
 	bison -y -d -o $@ $? 
 
 src/lexer.cpp: src/lexer.l.cpp
-	flex --header-file=include/lexer.h -o $@ $? 
+	flex -o $@ $? 
 
 clean:
 	rm -f src/lexer.cpp include/lexer.h include/parser.h src/parser.hpp src/parser.cpp src/*.o src/*.lo $(TARGET)
