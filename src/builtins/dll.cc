@@ -34,10 +34,23 @@ union call_arg_ctype {
 typedef struct {
 	ffi_type            *type;
 	union call_arg_ctype value;
+	bool                 dynamic;
 }
 dll_arg_t;
 
+unsigned char *binary_serialize( Object *o ){
+    unsigned int   i, size( o->size );
+    unsigned char *buffer = new unsigned char[ size ];
+
+    for( i = 0; i < size; ++i ){
+        buffer[i] = (unsigned char)o->value.m_array[i]->value.m_char;
+    }
+
+    return buffer;
+}
+
 static void ctype_convert( Object *o, dll_arg_t *pa ) {
+    pa->dynamic = false;
 	if( o->type == H_OT_VOID ){
         pa->type    = &ffi_type_pointer;
         pa->value.p = H_UNDEFINED;
@@ -57,6 +70,11 @@ static void ctype_convert( Object *o, dll_arg_t *pa ) {
     else if( o->type == H_OT_STRING ){
 		pa->type    = &ffi_type_pointer;
 		pa->value.p = (void *)o->value.m_string.c_str();
+	}
+	else if( o->type == H_OT_BINARY ){
+	    pa->dynamic = true;
+        pa->type    = &ffi_type_pointer;
+        pa->value.p = (void *)binary_serialize(o);
 	}
 	else{
         hybris_syntax_error( "could not use '%s' type for dllcall function", Object::type_name(o) );
@@ -132,6 +150,13 @@ HYBRIS_BUILTIN(hdllcall){
     }
 
     ffi_call( &cif, FFI_FN(function), &ul_ret, args_v );
+
+    /* release dynamically allocated data */
+    for( i = 0; i < argc; ++i ){
+		if( args[i].dynamic == true ){
+            delete [] args[i].value.p;
+		}
+	}
 
     return new Object( static_cast<long>(ul_ret) );
 }
