@@ -1,6 +1,0 @@
-New in 0.9 beta :
-
-- Hash table for virtual memory lookup.
-- General improvement.
-- Fixed pthread support and threads concurrency bug.
-- Fixed command line parsing bug.

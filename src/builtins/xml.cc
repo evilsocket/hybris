@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "common.h"
-#include "vmem.h"
 #include "context.h"
+#include <libxml/parser.h>
+#include <libxml/tree.h>
 
 int xml_isinvalid( char *str ){
 	if( str != NULL ){

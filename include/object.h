@@ -33,11 +33,9 @@
 #ifdef PCRE_SUPPORT
     #include <pcrecpp.h>
 #endif
-#ifdef XML_SUPPORT
-    #include <libxml/parser.h>
-    #include <libxml/tree.h>
-#endif
 #include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 extern void  hybris_syntax_error( const char *format, ... );
 extern void  hybris_generic_error( const char *format, ... );
@@ -118,18 +116,11 @@ public  :
     Object     *regexp( Object *regexp );
     #endif
 
-    #ifdef XML_SUPPORT
-    /* create an object from a xml tree */
-	static Object *fromxml( xmlNode *node );
-    /* create an object from a xml stream */
-	static Object *fromxml( char *xml );
-	/* convert the object to a xml stream */
-	string         toxml( unsigned int tabs = 0 );
-    #endif
-
     #ifdef GC_SUPPORT
     /* object gc attribute mask */
     H_OBJECT_ATTRIBUTE attributes;
+    /* set the object as deletable or not deletable */
+    void setGarbageAttribute( H_OBJECT_ATTRIBUTE mask );
     #endif
     /* type of the object */
     H_OBJECT_TYPE      type;
@@ -157,11 +148,6 @@ public  :
     ~Object();
 
     void release( bool reset_attributes = true );
-
-    #ifdef GC_SUPPORT
-    /* set the object as deletable or not deletable */
-    void setGarbageAttribute( H_OBJECT_ATTRIBUTE mask );
-    #endif
 
     Object& assign( Object *o );
 
