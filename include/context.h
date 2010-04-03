@@ -216,6 +216,7 @@ HYBRIS_BUILTIN(htan);
 HYBRIS_BUILTIN(htanh);
 /* binary.cc */
 HYBRIS_BUILTIN(hbinary);
+HYBRIS_BUILTIN(hpack);
 /* array.cc */
 HYBRIS_BUILTIN(harray);
 HYBRIS_BUILTIN(helements);
