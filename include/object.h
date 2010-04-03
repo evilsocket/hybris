@@ -147,12 +147,9 @@ public  :
     /* dtor, calls ::release */
     ~Object();
 
-    void release( bool reset_attributes = true );
-
     Object& assign( Object *o );
-
-
-	int equals( Object *o );
+    void    release( bool reset_attributes = true );
+	int     equals( Object *o );
 
 	void     addAttribute( char *name );
     Object  *getAttribute( char *name );

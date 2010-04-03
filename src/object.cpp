@@ -112,7 +112,7 @@ void * Object::operator new (size_t size){
 Object::Object( long value ) :
     type(H_OT_INT),
     size(sizeof(long)),
-    attributes(H_OA_NONE | H_OA_GARBAGE)
+    attributes(H_OA_GARBAGE)
 {
     this->value.m_integer = value;
 }
@@ -120,7 +120,7 @@ Object::Object( long value ) :
 Object::Object( long value, unsigned int _is_extern ) :
     type(H_OT_INT),
     size(sizeof(long)),
-    attributes(H_OA_NONE | H_OA_GARBAGE)
+    attributes(H_OA_GARBAGE)
 {
     this->value.m_integer = value;
 	if( _is_extern ){
@@ -131,7 +131,7 @@ Object::Object( long value, unsigned int _is_extern ) :
 Object::Object( double value ) :
     type(H_OT_FLOAT),
     size(sizeof(double)),
-    attributes(H_OA_NONE | H_OA_GARBAGE)
+    attributes(H_OA_GARBAGE)
 {
     this->value.m_double = value;
 }
@@ -139,14 +139,14 @@ Object::Object( double value ) :
 Object::Object( char value ) :
     type(H_OT_CHAR),
     size(sizeof(char)),
-    attributes(H_OA_NONE | H_OA_GARBAGE)
+    attributes(H_OA_GARBAGE)
 {
     this->value.m_char = value;
 }
 
 Object::Object( char *value ) :
     type(H_OT_STRING),
-    attributes(H_OA_NONE | H_OA_GARBAGE)
+    attributes(H_OA_GARBAGE)
 {
     this->value.m_string = value;
 	parse_string( this->value.m_string );
@@ -156,7 +156,7 @@ Object::Object( char *value ) :
 Object::Object( vector<unsigned char>& data ) :
     type(H_OT_BINARY),
     size(data.size()),
-    attributes(H_OA_NONE | H_OA_GARBAGE)
+    attributes(H_OA_GARBAGE)
 {
     vector<unsigned char>::iterator i;
 
@@ -168,7 +168,7 @@ Object::Object( vector<unsigned char>& data ) :
 Object::Object() :
     type(H_OT_ARRAY),
     size(0),
-    attributes(H_OA_NONE | H_OA_GARBAGE)
+    attributes(H_OA_GARBAGE)
 {
 
 }
@@ -176,7 +176,7 @@ Object::Object() :
 Object::Object( unsigned int value ) :
     type(H_OT_ALIAS),
     size(sizeof(unsigned int)),
-    attributes(H_OA_NONE | H_OA_GARBAGE)
+    attributes(H_OA_GARBAGE)
 {
     this->value.m_alias = value;
 }
@@ -184,7 +184,7 @@ Object::Object( unsigned int value ) :
 Object::Object( unsigned int rows, unsigned int columns, vector<Object *>& data ) :
     type(H_OT_MATRIX),
     size(0),
-    attributes(H_OA_NONE | H_OA_GARBAGE)
+    attributes(H_OA_GARBAGE)
 {
     unsigned int x, y;
 
@@ -258,7 +258,6 @@ Object::Object( Object *o ) :
                 }
              }
 		break;
-
 		case H_OT_STRUCT :
             for( i = 0; i < attrs; ++i ){
                 setAttribute( (char *)o->value.m_struct_names[i].c_str(), o->value.m_struct_values[i] );
@@ -440,10 +439,10 @@ void Object::release( bool reset_attributes /*= true*/ ){
             value.m_struct_names.clear();
         break;
     }
-    size      = 0;
-    type      = H_OT_VOID;
+    size = 0;
+    type = H_OT_VOID;
     if( reset_attributes ){
-        attributes = H_OA_NONE | H_OA_GARBAGE;
+        attributes = H_OA_GARBAGE;
     }
 }
 
