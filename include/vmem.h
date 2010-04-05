@@ -25,7 +25,7 @@
 #include "object.h"
 
 /* helper macro to obtain the address of a pointer */
-#define H_ADDRESS_OF(o)      reinterpret_cast<unsigned long>(o)
+#define H_ADDRESS_OF(o)      reinterpret_cast<ulong>(o)
 /* default null value for an Object pointer */
 #define H_UNDEFINED          NULL
 /* anonymous identifier to be used upon temporary stacks creation */

@@ -23,9 +23,9 @@
 
 HYBRIS_BUILTIN(hacos){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'acos' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'acos' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->type == H_OT_INT ){
         return new Object((double)acos(data->at(0)->value.m_integer));
@@ -37,9 +37,9 @@ HYBRIS_BUILTIN(hacos){
 
 HYBRIS_BUILTIN(hasin){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'asin' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'asin' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->type == H_OT_INT ){
         return new Object((double)asin(data->at(0)->value.m_integer));
@@ -51,9 +51,9 @@ HYBRIS_BUILTIN(hasin){
 
 HYBRIS_BUILTIN(hatan){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'atan' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'atan' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->type == H_OT_INT ){
         return new Object((double)atan(data->at(0)->value.m_integer));
@@ -65,10 +65,10 @@ HYBRIS_BUILTIN(hatan){
 
 HYBRIS_BUILTIN(hatan2){
     if( data->size() != 2 ){
-		hybris_syntax_error( "function 'atan2' requires 2 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'atan2' requires 2 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
-    htype_assert( data->at(1), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+    hyb_type_assert( data->at(1), H_OT_INT, H_OT_FLOAT );
 
     double a, b;
 
@@ -89,9 +89,9 @@ HYBRIS_BUILTIN(hatan2){
 
 HYBRIS_BUILTIN(hceil){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'ceil' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'ceil' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->type == H_OT_INT ){
         return new Object( static_cast<long>( ceil(data->at(0)->value.m_integer) ) );
@@ -103,9 +103,9 @@ HYBRIS_BUILTIN(hceil){
 
 HYBRIS_BUILTIN(hcos){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'cos' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'cos' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->type == H_OT_INT ){
         return new Object((double)cos(data->at(0)->value.m_integer));
@@ -117,9 +117,9 @@ HYBRIS_BUILTIN(hcos){
 
 HYBRIS_BUILTIN(hcosh){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'cosh' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'cosh' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->type == H_OT_INT ){
         return new Object((double)cosh(data->at(0)->value.m_integer));
@@ -131,9 +131,9 @@ HYBRIS_BUILTIN(hcosh){
 
 HYBRIS_BUILTIN(hexp){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'exp' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'exp' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->type == H_OT_INT ){
         return new Object((double)exp(data->at(0)->value.m_integer));
@@ -145,9 +145,9 @@ HYBRIS_BUILTIN(hexp){
 
 HYBRIS_BUILTIN(hfabs){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'fabs' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'fabs' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->type == H_OT_INT ){
         return new Object((double)fabs(data->at(0)->value.m_integer));
@@ -159,9 +159,9 @@ HYBRIS_BUILTIN(hfabs){
 
 HYBRIS_BUILTIN(hfloor){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'floor' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'floor' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->type == H_OT_INT ){
         return new Object( static_cast<long>( floor(data->at(0)->value.m_integer) ) );
@@ -173,10 +173,10 @@ HYBRIS_BUILTIN(hfloor){
 
 HYBRIS_BUILTIN(hfmod){
     if( data->size() != 2 ){
-		hybris_syntax_error( "function 'fmod' requires 2 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'fmod' requires 2 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
-    htype_assert( data->at(1), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+    hyb_type_assert( data->at(1), H_OT_INT, H_OT_FLOAT );
 
     double a, b;
 
@@ -197,9 +197,9 @@ HYBRIS_BUILTIN(hfmod){
 
 HYBRIS_BUILTIN(hlog){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'hlog' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'hlog' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->type == H_OT_INT ){
         return new Object((double)log(data->at(0)->value.m_integer));
@@ -211,9 +211,9 @@ HYBRIS_BUILTIN(hlog){
 
 HYBRIS_BUILTIN(hlog10){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'log10' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'log10' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->type == H_OT_INT ){
         return new Object((double)log10(data->at(0)->value.m_integer));
@@ -225,10 +225,10 @@ HYBRIS_BUILTIN(hlog10){
 
 HYBRIS_BUILTIN(hpow){
     if( data->size() != 2 ){
-		hybris_syntax_error( "function 'pow' requires 2 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'pow' requires 2 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
-    htype_assert( data->at(1), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+    hyb_type_assert( data->at(1), H_OT_INT, H_OT_FLOAT );
 
     double a, b;
 
@@ -249,9 +249,9 @@ HYBRIS_BUILTIN(hpow){
 
 HYBRIS_BUILTIN(hsin){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'sin' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'sin' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->type == H_OT_INT ){
         return new Object((double)sin(data->at(0)->value.m_integer));
@@ -263,9 +263,9 @@ HYBRIS_BUILTIN(hsin){
 
 HYBRIS_BUILTIN(hsinh){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'sinh' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'sinh' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->type == H_OT_INT ){
         return new Object((double)sinh(data->at(0)->value.m_integer));
@@ -277,9 +277,9 @@ HYBRIS_BUILTIN(hsinh){
 
 HYBRIS_BUILTIN(hsqrt){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'sqrt' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'sqrt' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->type == H_OT_INT ){
         return new Object((double)sqrt(data->at(0)->value.m_integer));
@@ -291,9 +291,9 @@ HYBRIS_BUILTIN(hsqrt){
 
 HYBRIS_BUILTIN(htan){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'tan' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'tan' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->type == H_OT_INT ){
         return new Object((double)tan(data->at(0)->value.m_integer));
@@ -305,9 +305,9 @@ HYBRIS_BUILTIN(htan){
 
 HYBRIS_BUILTIN(htanh){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'tanh' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'tanh' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
 
     if( data->at(0)->type == H_OT_INT ){
         return new Object((double)tanh(data->at(0)->value.m_integer));

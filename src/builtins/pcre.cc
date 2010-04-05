@@ -23,10 +23,10 @@
 
 HYBRIS_BUILTIN(hrex_match){
 	if( data->size() != 2 ){
-		hybris_syntax_error( "function 'rex_match' requires 2 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'rex_match' requires 2 parameters (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_STRING );
-	htype_assert( data->at(1), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(1), H_OT_STRING );
 
 	string rawreg  = data->at(0)->value.m_string,
 		   subject = data->at(1)->value.m_string,
@@ -43,10 +43,10 @@ HYBRIS_BUILTIN(hrex_match){
 
 HYBRIS_BUILTIN(hrex_matches){
 	if( data->size() != 2 ){
-		hybris_syntax_error( "function 'rex_matches' requires 2 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'rex_matches' requires 2 parameters (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_STRING );
-	htype_assert( data->at(1), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(1), H_OT_STRING );
 
 	string rawreg  = data->at(0)->value.m_string,
 		   subject = data->at(1)->value.m_string,
@@ -63,7 +63,7 @@ HYBRIS_BUILTIN(hrex_matches){
 
     while( REGEX.FindAndConsume( &SUBJECT, &match ) == true ){
 		if( i++ > H_PCRE_MAX_MATCHES ){
-			hybris_generic_error( "something of your regex is forcing infinite matches" );
+			hyb_generic_error( "something of your regex is forcing infinite matches" );
 		}
 		matches->push( new Object((char *)match.c_str()) );
 	}
@@ -73,11 +73,11 @@ HYBRIS_BUILTIN(hrex_matches){
 
 HYBRIS_BUILTIN(hrex_replace){
 	if( data->size() != 3 ){
-		hybris_syntax_error( "function 'rex_replace' requires 2 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'rex_replace' requires 2 parameters (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_STRING );
-	htype_assert( data->at(1), H_OT_STRING );
-	htype_assert( data->at(2), H_OT_STRING, H_OT_CHAR );
+	hyb_type_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(1), H_OT_STRING );
+	hyb_type_assert( data->at(2), H_OT_STRING, H_OT_CHAR );
 
 	string rawreg  = data->at(0)->value.m_string,
 		   subject = data->at(1)->value.m_string,

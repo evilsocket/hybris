@@ -24,7 +24,7 @@
 /* from vmem.h */
 #ifndef H_UNDEFINED
 /* helper macro to obtain the address of a pointer */
-#   define H_ADDRESS_OF(o)      reinterpret_cast<unsigned long>(o)
+#   define H_ADDRESS_OF(o)      reinterpret_cast<ulong>(o)
 /* default null value for an Object pointer */
 #   define H_UNDEFINED          NULL
 /* anonymous identifier to be used upon temporary stacks creation */
@@ -77,7 +77,7 @@ protected :
 		unsigned int  i, j,
                       size( m_elements ),
                       send( size - 1 );
-		unsigned long v_address( H_ADDRESS_OF(value) );
+		ulong v_address( H_ADDRESS_OF(value) );
 
 		for( i = 0, j = send; i < size && j >= 0; ++i, --j ){
 			if( H_ADDRESS_OF(m_map[i]->value) == v_address ){

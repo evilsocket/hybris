@@ -22,7 +22,7 @@
 
 HYBRIS_BUILTIN(hmap){
 	if( (data->size() % 2) != 0 ){
-		hybris_syntax_error( "function 'map' requires an even number of parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'map' requires an even number of parameters (called with %d)", data->size() );
 	}
 	unsigned int i;
 	Object *map = new Object();
@@ -34,36 +34,36 @@ HYBRIS_BUILTIN(hmap){
 
 HYBRIS_BUILTIN(hmapelements){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'mapelements' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'mapelements' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_MAP );
+	hyb_type_assert( data->at(0), H_OT_MAP );
 
 	return new Object( static_cast<long>( data->at(0)->value.m_map.size() ) );
 }
 
 HYBRIS_BUILTIN(hmappop){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'mappop' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'mappop' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_MAP );
+	hyb_type_assert( data->at(0), H_OT_MAP );
 
 	return new Object( data->at(0)->mapPop() );
 }
 
 HYBRIS_BUILTIN(hunmap){
 	if( data->size() != 2 ){
-		hybris_syntax_error( "function 'unmap' requires 2 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'unmap' requires 2 parameters (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_MAP );
+	hyb_type_assert( data->at(0), H_OT_MAP );
 
 	return new Object( data->at(0)->unmap(data->at(1)) );
 }
 
 HYBRIS_BUILTIN(hismapped){
 	if( data->size() != 2 ){
-		hybris_syntax_error( "function 'ismapped' requires 2 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'ismapped' requires 2 parameters (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_MAP );
+	hyb_type_assert( data->at(0), H_OT_MAP );
 	Object *map   = data->at(0),
 		    *find  = data->at(1);
 	unsigned int i;
@@ -79,9 +79,9 @@ HYBRIS_BUILTIN(hismapped){
 
 HYBRIS_BUILTIN(hhaskey){
 	if( data->size() != 2 ){
-		hybris_syntax_error( "function 'haskey' requires 2 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'haskey' requires 2 parameters (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_MAP );
+	hyb_type_assert( data->at(0), H_OT_MAP );
 
 	Object *map = data->at(0),
            *key = data->at(1);

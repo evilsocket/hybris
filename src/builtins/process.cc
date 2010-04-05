@@ -24,13 +24,13 @@
 
 
 HYBRIS_BUILTIN(hexec){
-	htype_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_STRING );
     Object *_return = NULL;
     if( data->size() ){
         _return = new Object( static_cast<long>( system( data->at(0)->value.m_string.c_str() ) ) );
     }
 	else{
-		hybris_syntax_error( "function 'exec' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'exec' requires 1 parameter (called with %d)", data->size() );
 	}
     return _return;
 }
@@ -45,26 +45,26 @@ HYBRIS_BUILTIN(hgetpid){
 
 HYBRIS_BUILTIN(hwait){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'wait' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'wait' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT );
+	hyb_type_assert( data->at(0), H_OT_INT );
     return new Object( static_cast<long>( wait( &data->at(0)->value.m_integer ) ) );
 }
 
 HYBRIS_BUILTIN(hpopen){
-	htype_assert( data->at(0), H_OT_STRING );
-	htype_assert( data->at(1), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(1), H_OT_STRING );
 
     if( data->size() == 2 ){
         return new Object( reinterpret_cast<long>( popen( data->at(0)->value.m_string.c_str(), data->at(1)->value.m_string.c_str() ) ) );
     }
 	else{
-		hybris_syntax_error( "function 'popen' requires 2 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'popen' requires 2 parameters (called with %d)", data->size() );
 	}
 }
 
 HYBRIS_BUILTIN(hpclose){
-	htype_assert( data->at(0), H_OT_INT );
+	hyb_type_assert( data->at(0), H_OT_INT );
     if( data->size() ){
 		pclose( (FILE *)data->at(0)->value.m_integer );
     }
@@ -74,7 +74,7 @@ HYBRIS_BUILTIN(hpclose){
 HYBRIS_BUILTIN(hexit){
     int code = 0;
     if( data->size() > 0 ){
-		htype_assert( data->at(0), H_OT_INT );
+		hyb_type_assert( data->at(0), H_OT_INT );
 		code = data->at(0)->value.m_integer;
 	}
 	exit(code);

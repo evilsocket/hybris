@@ -22,19 +22,19 @@
 
 HYBRIS_BUILTIN(hstrlen){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'strlen' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'strlen' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_STRING );
 
 	return new Object( static_cast<long>( data->at(0)->value.m_string.size() ) );
 }
 
 HYBRIS_BUILTIN(hstrfind){
 	if( data->size() != 2 ){
-		hybris_syntax_error( "function 'strfind' requires 2 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'strfind' requires 2 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_STRING );
-	htype_assert( data->at(1), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(1), H_OT_STRING );
 
 	int found = data->at(0)->value.m_string.find( data->at(1)->value.m_string );
 
@@ -43,9 +43,9 @@ HYBRIS_BUILTIN(hstrfind){
 
 HYBRIS_BUILTIN(hsubstr){
 	if( data->size() != 3 ){
-		hybris_syntax_error( "function 'substr' requires 3 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'substr' requires 3 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_STRING );
 
 	string sub = data->at(0)->value.m_string.substr( data->at(1)->lvalue(), data->at(2)->lvalue() );
 
@@ -54,11 +54,11 @@ HYBRIS_BUILTIN(hsubstr){
 
 HYBRIS_BUILTIN(hstrreplace){
 	if( data->size() != 3 ){
-		hybris_syntax_error( "function 'strreplace' requires 3 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'strreplace' requires 3 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_STRING );
-	htype_assert( data->at(1), H_OT_STRING );
-	htype_assert( data->at(2), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(1), H_OT_STRING );
+	hyb_type_assert( data->at(2), H_OT_STRING );
 
 	string str  = data->at(0)->value.m_string,
 		   find = data->at(1)->value.m_string,
@@ -74,10 +74,10 @@ HYBRIS_BUILTIN(hstrreplace){
 
 HYBRIS_BUILTIN(hstrsplit){
 	if( data->size() != 2 ){
-		hybris_syntax_error( "function 'strsplit' requires 2 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'strsplit' requires 2 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_STRING );
-	htype_assert( data->at(1), H_OT_STRING, H_OT_CHAR );
+	hyb_type_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(1), H_OT_STRING, H_OT_CHAR );
 
 	string str = data->at(0)->value.m_string,
 		   tok = (data->at(1)->type == H_OT_STRING ? data->at(1)->value.m_string : string("") + data->at(1)->value.m_char);

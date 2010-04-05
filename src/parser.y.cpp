@@ -23,12 +23,83 @@
 
 #define YY_(s) (char *)s
 
+/** macros to define parse tree **/
+/* get the node evaluation */
+#define MK_NODE(a)                a
+/* delete the node */
+#define RM_NODE(a)                delete (a)
+/* node list */
+#define MK_NODE_LIST()            new NodeList()
+/* identifiers, attributes and constants */
+#define MK_IDENT_NODE(a)          new IdentifierNode(a)
+#define MK_CONST_NODE(a)          new ConstantNode(a)
+#define MK_IDLST_NODE(a)          new AttributeNode(a)
+/* statements */
+#define MK_WHILE_NODE(a, b)       new StatementNode( T_WHILE, 2, a, b )
+#define MK_DO_NODE(a, b)          new StatementNode( T_DO, 2, a, b )
+#define MK_FOR_NODE(a,b,c,d)      new StatementNode( T_FOR, 4, a, b, c, d )
+#define MK_FOREACH_NODE(a,b,c)    new StatementNode( T_FOREACH, 3, MK_IDENT_NODE(a), b, c )
+#define MK_FOREACHM_NODE(a,b,c,d) new StatementNode( T_FOREACHM, 4, MK_IDENT_NODE(a), MK_IDENT_NODE(b), c, d )
+#define MK_IF_NODE(a, b)          new StatementNode( T_IF, 2, a, b )
+#define MK_IF_ELSE_NODE(a, b, c)  new StatementNode( T_IF, 3, a, b, c )
+#define MK_SWITCH_NODE(a, b)      new StatementNode( T_SWITCH, a, b )
+#define MK_SWITCH_DEF_NODE(a,b,c) new StatementNode( T_SWITCH, a, b, c )
+#define MK_FUNCTION_NODE(a, b)    new FunctionNode( a, 1, b )
+#define MK_STRUCT_NODE(a, b)      new StructureNode( a, b )
+/* expressions */
+#define MK_RETURN_NODE(a)         new ExpressionNode( T_RETURN, 1, a )
+#define MK_EOSTMT_NODE(a, b)      new ExpressionNode( T_EOSTMT, 2, a, b )
+#define MK_DOLLAR_NODE(a)		  new ExpressionNode( T_DOLLAR, 1, a )
+#define MK_PTR_NODE(a)			  new ExpressionNode( T_PTR, 1, a )
+#define MK_OBJ_NODE(a)			  new ExpressionNode( T_OBJ, 1, a )
+#define MK_ASSIGN_NODE(a, b)      new ExpressionNode( T_ASSIGN, 2, a, b )
+#define MK_SB_NODE(a, b)	      new ExpressionNode( T_SUBSCRIPTGET, 2, a, b )
+#define MK_SB_PUSH_NODE(a, b)     new ExpressionNode( T_SUBSCRIPTADD, 2, a, b )
+#define MK_SB_SET_NODE(a, b, c)   new ExpressionNode( T_SUBSCRIPTSET, 3, a, b, c )
+#define MK_RANGE_NODE(a, b)		  new ExpressionNode( T_RANGE, 2, a, b )
+#define MK_UMINUS_NODE(a)		  new ExpressionNode( T_UMINUS, 1, a )
+#define MK_DOT_NODE(a, b)		  new ExpressionNode( T_DOT, 2, a, b )
+#define MK_DOTE_NODE(a, b)		  new ExpressionNode( T_DOTE, 2, a, b )
+#define MK_PLUS_NODE(a, b)		  new ExpressionNode( T_PLUS, 2, a, b )
+#define MK_PLUSE_NODE(a, b)		  new ExpressionNode( T_PLUSE, 2, a, b )
+#define MK_MINUS_NODE(a, b)		  new ExpressionNode( T_MINUS, 2, a, b )
+#define MK_MINUSE_NODE(a, b)	  new ExpressionNode( T_MINUSE, 2, a, b )
+#define MK_MUL_NODE(a, b)		  new ExpressionNode( T_MUL, 2, a, b )
+#define MK_MULE_NODE(a, b)		  new ExpressionNode( T_MULE, 2, a, b )
+#define MK_DIV_NODE(a, b)		  new ExpressionNode( T_DIV, 2, a, b )
+#define MK_DIVE_NODE(a, b)		  new ExpressionNode( T_DIVE, 2, a, b )
+#define MK_MOD_NODE(a, b)		  new ExpressionNode( T_MOD, 2, a, b )
+#define MK_INC_NODE(a)			  new ExpressionNode( T_INC, 1, a )
+#define MK_DEC_NODE(a)			  new ExpressionNode( T_DEC, 1, a )
+#define MK_XOR_NODE(a, b)		  new ExpressionNode( T_XOR, 2, a, b )
+#define MK_XORE_NODE(a, b)		  new ExpressionNode( T_XORE, 2, a, b )
+#define MK_NOT_NODE(a)			  new ExpressionNode( T_NOT, 1, a )
+#define MK_AND_NODE(a, b)		  new ExpressionNode( T_AND, 2, a, b )
+#define MK_ANDE_NODE(a, b)		  new ExpressionNode( T_ANDE, 2, a, b )
+#define MK_OR_NODE(a, b)		  new ExpressionNode( T_OR, 2, a, b )
+#define MK_ORE_NODE(a, b)		  new ExpressionNode( T_ORE, 2, a, b )
+#define MK_SHIFTL_NODE(a, b)	  new ExpressionNode( T_SHIFTL, 2, a, b )
+#define MK_SHIFTLE_NODE(a, b)	  new ExpressionNode( T_SHIFTLE, 2, a, b )
+#define MK_SHIFTR_NODE(a, b)	  new ExpressionNode( T_SHIFTR, 2, a, b )
+#define MK_SHIFTRE_NODE(a, b)	  new ExpressionNode( T_SHIFTRE, 2, a, b )
+#define MK_FACT_NODE(a)			  new ExpressionNode( T_FACT, 1, a )
+#define MK_LNOT_NODE(a)			  new ExpressionNode( T_LNOT, 1, a )
+#define MK_LESS_NODE(a, b)		  new ExpressionNode( T_LESS, 2, a, b )
+#define MK_GREATER_NODE(a, b)	  new ExpressionNode( T_GREATER, 2, a, b )
+#define MK_GE_NODE(a, b)		  new ExpressionNode( T_GE, 2, a, b )
+#define MK_LE_NODE(a, b)		  new ExpressionNode( T_LE, 2, a, b )
+#define MK_NE_NODE(a, b)		  new ExpressionNode( T_NE, 2, a, b )
+#define MK_EQ_NODE(a, b)		  new ExpressionNode( T_EQ, 2, a, b )
+#define MK_LAND_NODE(a, b)		  new ExpressionNode( T_LAND, 2, a, b )
+#define MK_LOR_NODE(a, b)		  new ExpressionNode( T_LOR, 2, a, b )
+#define MK_PCRE_NODE(a, b)		  new ExpressionNode( T_REGEX_OP, 2, a, b )
+#define MK_CALL_NODE(a, b)        new CallNode( a, b )
+#define MK_QUESTION_NODE(a, b, c) new StatementNode( T_QUESTION, 3, a, b, c )
+
 extern int yyparse(void);
 extern int yylex(void);
 
-Context   __context;
-unsigned long t_start = 0,
-              t_end   = 0;
+Context __context;
 %}
 
 %union {
@@ -110,7 +181,7 @@ unsigned long t_start = 0,
 %token T_STRUCT
 
 %nonassoc T_IF_END
-%nonassoc T_SUBSCRIPT_END
+%nonassoc T_SB_END
 %nonassoc T_SWITCH_END
 %nonassoc T_CALL_END
 %nonassoc T_ELSE
@@ -127,143 +198,137 @@ unsigned long t_start = 0,
 %type <argv> T_IDENT_LIST
 %%
 
-program    : body { if( __context.args.do_timing == 1 ){
-                        t_end = h_uticks();
-                        printf( "\033[01;33m[TIME] Elapsed %s .\n\033[00m", h_dtime( t_end - t_start ) );
-                    }
-                  }
+program    : body           { __context.timer(); }
 
-body       : body statement { if( __context.args.do_timing == 1 && t_start == 0 ){
-                                  t_start = h_uticks();
-                              }
+body       : body statement { __context.timer();
                               __context.engine->exec( &__context.vmem, $2 );
-                              delete $2;
+                              RM_NODE($2);
                             }
            | /* empty */ ;
 
 
-T_ARGV_LIST  : expression T_MAPS T_ARGV_LIST { $$ = $3;             $$->head($1); }
-             | expression ',' T_ARGV_LIST    { $$ = $3;             $$->head($1); }
-             | expression                    { $$ = new NodeList(); $$->tail($1); }
-             | /* empty */                   { $$ = new NodeList(); };
+T_ARGV_LIST  : expression T_MAPS T_ARGV_LIST { $$ = MK_NODE($3);    $$->head($1); }
+             | expression ',' T_ARGV_LIST    { $$ = MK_NODE($3);    $$->head($1); }
+             | expression                    { $$ = MK_NODE_LIST(); $$->tail($1); }
+             | /* empty */                   { $$ = MK_NODE_LIST(); };
 
-T_CASE_LIST  : T_CASE expression ':' statements T_BREAK T_EOSTMT T_CASE_LIST { $$ = $7;             $$->head( $2, $4 ); }
-             | T_CASE expression ':' statements T_BREAK T_EOSTMT             { $$ = new NodeList(); $$->tail( $2, $4 ); }
-             | /* empty */                                                   { $$ = new NodeList(); };
+T_CASE_LIST  : T_CASE expression ':' statements T_BREAK T_EOSTMT T_CASE_LIST { $$ = MK_NODE($7);    $$->head( $2, $4 ); }
+             | T_CASE expression ':' statements T_BREAK T_EOSTMT             { $$ = MK_NODE_LIST(); $$->tail( $2, $4 ); }
+             | /* empty */                                                   { $$ = MK_NODE_LIST(); };
 
-T_ATTR_LIST  : T_IDENT ',' T_ATTR_LIST      { $$ = $3;             $$->head( new IdentifierNode($1) ); }
-             | T_IDENT T_EOSTMT T_ATTR_LIST { $$ = $3;             $$->head( new IdentifierNode($1) ); }
-             | /* empty */                  { $$ = new NodeList(); };
+T_ATTR_LIST  : T_IDENT ',' T_ATTR_LIST      { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
+             | T_IDENT T_EOSTMT T_ATTR_LIST { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
+             | /* empty */                  { $$ = MK_NODE_LIST(); };
 
-T_IDENT_LIST : T_IDENT T_MAPS T_IDENT_LIST { $$ = $3;             $$->head( new IdentifierNode($1) ); }
-             | T_IDENT T_MAPS T_IDENT      { $$ = new NodeList(); $$->tail( new IdentifierNode($1), new IdentifierNode($3) ); }
+T_IDENT_LIST : T_IDENT T_MAPS T_IDENT_LIST { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
+             | T_IDENT T_MAPS T_IDENT      { $$ = MK_NODE_LIST(); $$->tail( MK_IDENT_NODE($1), MK_IDENT_NODE($3) ); }
 
-statement  : T_EOSTMT                                                   { $$ = new ExpressionNode( T_EOSTMT, 2, NULL, NULL ); }
-	   	   | expression                                                 { $$ = $1; }
-           | expression T_EOSTMT                                        { $$ = $1; }
-           | T_RETURN expression T_EOSTMT                               { $$ = new ExpressionNode( T_RETURN, 1, $2 ); }
+statement  : T_EOSTMT                                                   { $$ = MK_EOSTMT_NODE( NULL, NULL ); }
+	   	   | expression                                                 { $$ = MK_NODE($1); }
+           | expression T_EOSTMT                                        { $$ = MK_NODE($1); }
+           | T_RETURN expression T_EOSTMT                               { $$ = MK_RETURN_NODE( $2 ); }
            /* subscript operator special cases */
-		   | expression '[' ']' T_ASSIGN expression T_EOSTMT            { $$ = new ExpressionNode( T_SUBSCRIPTADD, 2, $1, $5 ); }
-           | expression '[' expression ']' T_ASSIGN expression T_EOSTMT { $$ = new ExpressionNode( T_SUBSCRIPTSET, 3, $1, $3, $6 ); }
+		   | expression '[' ']' T_ASSIGN expression T_EOSTMT            { $$ = MK_SB_PUSH_NODE( $1, $5 ); }
+           | expression '[' expression ']' T_ASSIGN expression T_EOSTMT { $$ = MK_SB_SET_NODE( $1, $3, $6 ); }
            /* conditional and loops */
-           | T_WHILE '(' expression ')' statement                       { $$ = new StatementNode( T_WHILE, 2, $3, $5 ); }
-           | T_DO statement T_WHILE '(' expression ')' T_EOSTMT         { $$ = new StatementNode( T_DO, 2, $2, $5 ); }
-		   | T_FOR '(' statement statement expression ')' statement     { $$ = new StatementNode( T_FOR, 4, $3, $4, $5, $7 ); }
-		   | T_FOREACH '(' T_IDENT T_OF expression ')' statement        { $$ = new StatementNode( T_FOREACH, 3, new IdentifierNode($3), $5, $7 ); }
+           | T_WHILE '(' expression ')' statement                       { $$ = MK_WHILE_NODE( $3, $5 ); }
+           | T_DO statement T_WHILE '(' expression ')' T_EOSTMT         { $$ = MK_DO_NODE( $2, $5 ); }
+		   | T_FOR '(' statement statement expression ')' statement     { $$ = MK_FOR_NODE( $3, $4, $5, $7 ); }
+		   | T_FOREACH '(' T_IDENT T_OF expression ')' statement        { $$ = MK_FOREACH_NODE( $3, $5, $7 ); }
 		   | T_FOREACH '(' T_IDENT T_MAPS T_IDENT T_OF expression ')' statement {
-		   		$$ = new StatementNode( T_FOREACHM, 4, new IdentifierNode($3), new IdentifierNode($5), $7, $9 );
+		   		$$ = MK_FOREACHM_NODE( $3, $5, $7, $9 );
 		   }
-           | T_IF '(' expression ')' statement %prec T_IF_END           { $$ = new StatementNode( T_IF, 2, $3, $5 ); }
-           | T_IF '(' expression ')' statement T_ELSE statement         { $$ = new StatementNode( T_IF, 3, $3, $5, $7 ); }
+           | T_IF '(' expression ')' statement %prec T_IF_END           { $$ = MK_IF_NODE( $3, $5 ); }
+           | T_IF '(' expression ')' statement T_ELSE statement         { $$ = MK_IF_ELSE_NODE( $3, $5, $7 ); }
            | T_SWITCH '(' expression ')' '{'
                 T_CASE_LIST
-            '}' %prec T_SWITCH_END                                      { $$ = new StatementNode( T_SWITCH, $3, $6 ); }
+            '}' %prec T_SWITCH_END                                      { $$ = MK_SWITCH_NODE( $3, $6 ); }
            | T_SWITCH '(' expression ')' '{'
                 T_CASE_LIST
                 T_DEFAULT ':' statements
-            '}'                                                         { $$ = new StatementNode( T_SWITCH, $3, $6, $9 ); }
+            '}'                                                         { $$ = MK_SWITCH_DEF_NODE( $3, $6, $9 ); }
            /* statement body */
            | '{' statements '}' { $$ = $2; }
            /* function declaration */
-           | T_FUNCTION_PROTOTYPE '{' statements '}'                    { $$ = new FunctionNode( $1, 1, $3 ); }
+           | T_FUNCTION_PROTOTYPE '{' statements '}'                    { $$ = MK_FUNCTION_NODE( $1, $3 ); }
            /* structure declaration */
-           | T_STRUCT T_IDENT '{' T_ATTR_LIST '}'                       { $$ = new StructureNode( $2, $4 ); };
+           | T_STRUCT T_IDENT '{' T_ATTR_LIST '}'                       { $$ = MK_STRUCT_NODE( $2, $4 ); };
 
-statements : /* empty */          { $$ = 0;  }
-           | statement            { $$ = $1; }
-           | statements statement { $$ = new ExpressionNode( T_EOSTMT, 2, $1, $2 ); };
+statements : /* empty */          { $$ = MK_NODE(0);  }
+           | statement            { $$ = MK_NODE($1); }
+           | statements statement { $$ = MK_EOSTMT_NODE( $1, $2 ); };
 
-expression : T_INTEGER                                 { $$ = new ConstantNode($1); }
-           | T_REAL                                    { $$ = new ConstantNode($1); }
-           | T_CHAR                                    { $$ = new ConstantNode($1); }
-           | T_STRING                                  { $$ = new ConstantNode($1); }
+expression : T_INTEGER                                        { $$ = MK_CONST_NODE($1); }
+           | T_REAL                                           { $$ = MK_CONST_NODE($1); }
+           | T_CHAR                                           { $$ = MK_CONST_NODE($1); }
+           | T_STRING                                         { $$ = MK_CONST_NODE($1); }
            /* identifiers and attributes */
-           | T_IDENT                                   { $$ = new IdentifierNode($1); }
-           | T_IDENT_LIST                              { $$ = new AttributeNode($1);  }
+           | T_IDENT                                          { $$ = MK_IDENT_NODE($1); }
+           | T_IDENT_LIST                                     { $$ = MK_IDLST_NODE($1);  }
            /* expression evaluation returns an identifier */
-           | T_DOLLAR expression                       { $$ = new ExpressionNode( T_DOLLAR, 1, $2 ); }
+           | T_DOLLAR expression                              { $$ = MK_DOLLAR_NODE($2); }
            /* ptr/alias evaluation */
-           | T_AND expression                          { $$ = new ExpressionNode( T_PTR, 1, $2 ); }
-           | T_MUL expression                          { $$ = new ExpressionNode( T_OBJ, 1, $2 ); }
+           | T_AND expression                                 { $$ = MK_PTR_NODE($2); }
+           | T_MUL expression                                 { $$ = MK_OBJ_NODE($2); }
            /* attribute declaration/assignation */
-           | T_IDENT_LIST T_ASSIGN expression          { $$ = new ExpressionNode( T_ASSIGN, 2, new AttributeNode($1), $3 ); }
+           | T_IDENT_LIST T_ASSIGN expression                 { $$ = MK_ASSIGN_NODE( MK_IDLST_NODE($1), $3 ); }
 		   /* identifier declaration/assignation */
-		   | T_IDENT T_ASSIGN expression               { $$ = new ExpressionNode( T_ASSIGN, 2, new IdentifierNode($1), $3 ); }
+		   | T_IDENT T_ASSIGN expression                      { $$ = MK_ASSIGN_NODE( MK_IDENT_NODE($1), $3 ); }
            /* a single subscript could be an expression itself */
-           | expression '[' expression ']' %prec T_SUBSCRIPT_END { $$ = new ExpressionNode( T_SUBSCRIPTGET, 2, $1, $3 ); }
+           | expression '[' expression ']' %prec T_SB_END     { $$ = MK_SB_NODE( $1, $3 ); }
            /* range evaluation */
-           | expression T_DDOT expression              { $$ = new ExpressionNode( T_RANGE, 2, $1, $3 ); }
+           | expression T_DDOT expression                     { $$ = MK_RANGE_NODE( $1, $3 ); }
            /* arithmetic & misc operators */
-           | T_MINUS expression %prec T_UMINUS         { $$ = new ExpressionNode( T_UMINUS, 1, $2 ); }
-           | expression T_DOT expression               { $$ = new ExpressionNode( T_DOT, 2, $1, $3 ); }
-		   | expression T_DOTE expression              { $$ = new ExpressionNode( T_DOTE, 2, $1, $3 ); }
-           | expression T_PLUS expression              { $$ = new ExpressionNode( T_PLUS, 2, $1, $3 ); }
-		   | expression T_PLUSE expression             { $$ = new ExpressionNode( T_PLUSE, 2, $1, $3 ); }
-           | expression T_MINUS expression             { $$ = new ExpressionNode( T_MINUS, 2, $1, $3 ); }
-		   | expression T_MINUSE expression            { $$ = new ExpressionNode( T_MINUSE, 2, $1, $3 ); }
-           | expression T_MUL expression               { $$ = new ExpressionNode( T_MUL, 2, $1, $3 ); }
-		   | expression T_MULE expression              { $$ = new ExpressionNode( T_MULE, 2, $1, $3 ); }
-           | expression T_DIV expression               { $$ = new ExpressionNode( T_DIV, 2, $1, $3 ); }
-		   | expression T_DIVE expression              { $$ = new ExpressionNode( T_DIVE, 2, $1, $3 ); }
-           | expression T_MOD expression               { $$ = new ExpressionNode( T_MOD, 2, $1, $3 ); }
-           | expression T_INC                          { $$ = new ExpressionNode( T_INC, 1, $1 ); }
-           | expression T_DEC                          { $$ = new ExpressionNode( T_DEC, 1, $1 ); }
+           | T_MINUS expression %prec T_UMINUS                { $$ = MK_UMINUS_NODE( $2 ); }
+           | expression T_DOT expression                      { $$ = MK_DOT_NODE( $1, $3 ); }
+		   | expression T_DOTE expression                     { $$ = MK_DOTE_NODE( $1, $3 ); }
+           | expression T_PLUS expression                     { $$ = MK_PLUS_NODE( $1, $3 ); }
+		   | expression T_PLUSE expression                    { $$ = MK_PLUSE_NODE( $1, $3 ); }
+           | expression T_MINUS expression                    { $$ = MK_MINUS_NODE( $1, $3 ); }
+		   | expression T_MINUSE expression                   { $$ = MK_MINUSE_NODE( $1, $3 ); }
+           | expression T_MUL expression                      { $$ = MK_MUL_NODE( $1, $3 ); }
+		   | expression T_MULE expression                     { $$ = MK_MULE_NODE( $1, $3 ); }
+           | expression T_DIV expression                      { $$ = MK_DIV_NODE( $1, $3 ); }
+		   | expression T_DIVE expression                     { $$ = MK_DIVE_NODE( $1, $3 ); }
+           | expression T_MOD expression                      { $$ = MK_MOD_NODE( $1, $3 ); }
+           | expression T_INC                                 { $$ = MK_INC_NODE( $1 ); }
+           | expression T_DEC                                 { $$ = MK_DEC_NODE( $1 ); }
            /* bitwise */
-           | expression T_XOR expression               { $$ = new ExpressionNode( T_XOR, 2, $1, $3 ); }
-		   | expression T_XORE expression              { $$ = new ExpressionNode( T_XORE, 2, $1, $3 ); }
-           | T_NOT expression                          { $$ = new ExpressionNode( T_NOT, 1, $2 ); }
-           | expression T_AND expression               { $$ = new ExpressionNode( T_AND, 2, $1, $3 ); }
-		   | expression T_ANDE expression              { $$ = new ExpressionNode( T_ANDE, 2, $1, $3 ); }
-           | expression T_OR expression                { $$ = new ExpressionNode( T_OR, 2, $1, $3 ); }
-		   | expression T_ORE expression               { $$ = new ExpressionNode( T_ORE, 2, $1, $3 ); }
-		   | expression T_SHIFTL expression            { $$ = new ExpressionNode( T_SHIFTL, 2, $1, $3 ); }
-		   | expression T_SHIFTLE expression           { $$ = new ExpressionNode( T_SHIFTLE, 2, $1, $3 ); }
-		   | expression T_SHIFTR expression            { $$ = new ExpressionNode( T_SHIFTR, 2, $1, $3 ); }
-		   | expression T_SHIFTRE expression           { $$ = new ExpressionNode( T_SHIFTRE, 2, $1, $3 ); }
-		   | expression T_LNOT                         { $$ = new ExpressionNode( T_FACT, 1, $1 ); }
+           | expression T_XOR expression                      { $$ = MK_XOR_NODE( $1, $3 ); }
+		   | expression T_XORE expression                     { $$ = MK_XORE_NODE( $1, $3 ); }
+           | T_NOT expression                                 { $$ = MK_NOT_NODE( $2 ); }
+           | expression T_AND expression                      { $$ = MK_AND_NODE( $1, $3 ); }
+		   | expression T_ANDE expression                     { $$ = MK_ANDE_NODE( $1, $3 ); }
+           | expression T_OR expression                       { $$ = MK_OR_NODE( $1, $3 ); }
+		   | expression T_ORE expression                      { $$ = MK_ORE_NODE( $1, $3 ); }
+		   | expression T_SHIFTL expression                   { $$ = MK_SHIFTL_NODE( $1, $3 ); }
+		   | expression T_SHIFTLE expression                  { $$ = MK_SHIFTLE_NODE( $1, $3 ); }
+		   | expression T_SHIFTR expression                   { $$ = MK_SHIFTR_NODE( $1, $3 ); }
+		   | expression T_SHIFTRE expression                  { $$ = MK_SHIFTRE_NODE( $1, $3 ); }
+		   | expression T_LNOT                                { $$ = MK_FACT_NODE( $1 ); }
            /* logic */
-		   | T_LNOT expression                         { $$ = new ExpressionNode( T_LNOT, 1, $2 ); }
-           | expression T_LESS expression              { $$ = new ExpressionNode( T_LESS, 2, $1, $3 ); }
-           | expression T_GREATER expression           { $$ = new ExpressionNode( T_GREATER, 2, $1, $3 ); }
-           | expression T_GE expression                { $$ = new ExpressionNode( T_GE,  2, $1, $3 ); }
-           | expression T_LE expression                { $$ = new ExpressionNode( T_LE,  2, $1, $3 ); }
-           | expression T_NE expression                { $$ = new ExpressionNode( T_NE,  2, $1, $3 ); }
-           | expression T_EQ expression                { $$ = new ExpressionNode( T_EQ,  2, $1, $3 ); }
-           | expression T_LAND expression              { $$ = new ExpressionNode( T_LAND,  2, $1, $3 ); }
-           | expression T_LOR expression               { $$ = new ExpressionNode( T_LOR,  2, $1, $3 ); }
+		   | T_LNOT expression                                { $$ = MK_LNOT_NODE( $2 ); }
+           | expression T_LESS expression                     { $$ = MK_LESS_NODE( $1, $3 ); }
+           | expression T_GREATER expression                  { $$ = MK_GREATER_NODE( $1, $3 ); }
+           | expression T_GE expression                       { $$ = MK_GE_NODE( $1, $3 ); }
+           | expression T_LE expression                       { $$ = MK_LE_NODE( $1, $3 ); }
+           | expression T_NE expression                       { $$ = MK_NE_NODE( $1, $3 ); }
+           | expression T_EQ expression                       { $$ = MK_EQ_NODE( $1, $3 ); }
+           | expression T_LAND expression                     { $$ = MK_LAND_NODE( $1, $3 ); }
+           | expression T_LOR expression                      { $$ = MK_LOR_NODE( $1, $3 ); }
            /* regex specific */
-           | expression T_REGEX_OP expression          { $$ = new ExpressionNode( T_REGEX_OP, 2, $1, $3 ); }
+           | expression T_REGEX_OP expression                 { $$ = MK_PCRE_NODE( $1, $3 ); }
            /* function call (consider two different cases due to builtin calls */
-		   | T_IDENT    '(' T_ARGV_LIST ')'  %prec T_CALL_END { $$ = new CallNode( $1, $3 ); }
-           | expression '(' T_ARGV_LIST ')'                   { $$ = new CallNode( $1, $3 ); }
+		   | T_IDENT    '(' T_ARGV_LIST ')'  %prec T_CALL_END { $$ = MK_CALL_NODE( $1, $3 ); }
+           | expression '(' T_ARGV_LIST ')'                   { $$ = MK_CALL_NODE( $1, $3 ); }
            /* ternary operator */
-           | '(' expression '?' expression ':' expression ')' { $$ = new StatementNode( T_QUESTION, 3, $2, $4, $6 ); }
+           | '(' expression '?' expression ':' expression ')' { $$ = MK_QUESTION_NODE( $2, $4, $6 ); }
            /* group expression */
-           | '(' expression ')'                               { $$ = $2; };
+           | '(' expression ')'                               { $$ = MK_NODE($2); };
 
 %%
 
-int h_banner(){
+int hyb_banner(){
     printf( "Hybris %s (built: %s %s)\n"
             "Released under GPL v3.0 by %s\n"
             "Compiled with :\n"
@@ -299,8 +364,8 @@ int h_banner(){
             MODS_PATH );
 }
 
-int h_usage( char *argvz ){
-    h_banner();
+int hyb_usage( char *argvz ){
+    hyb_banner();
     printf( "\nUsage: %s file (--trace) (--time)\n"
             "\t-h  (--help)  : Will print this menu .\n"
             "\t-tm (--time)  : Will print execution time in micro seconds .\n"
@@ -316,10 +381,10 @@ int main( int argc, char *argv[] ){
             __context.args.stacktrace = 1;
         }
         else if( strcmp( argv[i], "--time" ) == 0 || strcmp( argv[i], "-tm" ) == 0 ){
-            __context.args.do_timing  = 1;
+            __context.args.tm_timer   = 1;
         }
         else if( strcmp( argv[i], "--help" ) == 0 || strcmp( argv[i], "-h" ) == 0 ){
-            return h_usage(argv[0]);
+            return hyb_usage(argv[0]);
         }
         else if( f_offset == 0 ){
             f_offset = i;
@@ -328,9 +393,9 @@ int main( int argc, char *argv[] ){
 
     if( f_offset > 0 ){
         strncpy( __context.args.source, argv[f_offset], sizeof(__context.args.source) );
-        if( h_file_exists(__context.args.source) == 0 ){
-            printf( "Error :'%s' no such file or directory .\n\n", __context.args.source );
-            return h_usage( argv[0] );
+        if( hyb_file_exists(__context.args.source) == 0 ){
+            printf( "\033[22;31mERROR : '%s' no such file or directory.\n\n\033[00m", __context.args.source );
+            return hyb_usage( argv[0] );
         }
     }
 

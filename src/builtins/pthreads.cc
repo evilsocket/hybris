@@ -27,7 +27,7 @@ typedef struct {
 }
 thread_args_t;
 
-void * hybris_pthread_worker( void *arg ){
+void * hyb_pthread_worker( void *arg ){
     thread_args_t *args = (thread_args_t *)arg;
     Context       *ctx  = args->ctx;
     vmem_t        *data = args->data;
@@ -46,7 +46,7 @@ void * hybris_pthread_worker( void *arg ){
 				case H_OT_STRING : call->addChild( new ConstantNode((char *)data->at(i)->value.m_string.c_str()) ); break;
 				default :
                     ctx->depool();
-                    hybris_generic_error( "type not supported for pthread call" );
+                    hyb_generic_error( "type not supported for pthread call" );
 			}
 		}
 	}
@@ -66,16 +66,16 @@ void * hybris_pthread_worker( void *arg ){
 
 HYBRIS_BUILTIN(hpthread_create){
 	if( data->size() < 1 ){
-		hybris_syntax_error( "function 'pthread_create' requires at least 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'pthread_create' requires at least 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_STRING );
 
     pthread_t tid;
     thread_args_t *args = new thread_args_t;
 
     args->data = data->clone();
     args->ctx  = ctx;
-    pthread_create( &tid, NULL, hybris_pthread_worker, (void *)args );
+    pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args );
 
     return new Object( static_cast<long>(tid) );
 }
@@ -89,9 +89,9 @@ HYBRIS_BUILTIN(hpthread_exit){
 
 HYBRIS_BUILTIN(hpthread_join){
     if( data->size() < 1 ){
-		hybris_syntax_error( "function 'pthread_join' requires at least 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'pthread_join' requires at least 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT );
+	hyb_type_assert( data->at(0), H_OT_INT );
 
     pthread_t tid = static_cast<pthread_t>( data->at(0)->value.m_integer );
     void *status;

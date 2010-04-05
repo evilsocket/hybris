@@ -36,9 +36,9 @@ inline bool is_base64(unsigned char c) {
 HYBRIS_BUILTIN(hurlencode){
     Object *_return;
     if( data->size() != 1 ){
-        hybris_syntax_error( "function 'urlencode' requires 1 parameter (called with %d)", data->size() );
+        hyb_syntax_error( "function 'urlencode' requires 1 parameter (called with %d)", data->size() );
     }
-    htype_assert( data->at(0), H_OT_STRING );
+    hyb_type_assert( data->at(0), H_OT_STRING );
 
     char *pstr = (char *)data->at(0)->value.m_string.c_str(),
          *buf  = (char *)malloc(strlen(pstr) * 3 + 1),
@@ -70,9 +70,9 @@ HYBRIS_BUILTIN(hurlencode){
 HYBRIS_BUILTIN(hurldecode){
     Object *_return;
     if( data->size() != 1 ){
-        hybris_syntax_error( "function 'urldecode' requires 1 parameter (called with %d)", data->size() );
+        hyb_syntax_error( "function 'urldecode' requires 1 parameter (called with %d)", data->size() );
     }
-    htype_assert( data->at(0), H_OT_STRING );
+    hyb_type_assert( data->at(0), H_OT_STRING );
 
     char *pstr = (char *)data->at(0)->value.m_string.c_str(),
          *buf  = (char *)malloc(strlen(pstr) + 1),
@@ -105,9 +105,9 @@ HYBRIS_BUILTIN(hurldecode){
 
 HYBRIS_BUILTIN(hbase64encode) {
     if( data->size() != 1 ){
-        hybris_syntax_error( "function 'base64encode' requires 1 parameter (called with %d)", data->size() );
+        hyb_syntax_error( "function 'base64encode' requires 1 parameter (called with %d)", data->size() );
     }
-    htype_assert( data->at(0), H_OT_STRING );
+    hyb_type_assert( data->at(0), H_OT_STRING );
 
     static const char b64_charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -156,9 +156,9 @@ HYBRIS_BUILTIN(hbase64encode) {
 
 HYBRIS_BUILTIN(hbase64decode) {
     if( data->size() != 1 ){
-        hybris_syntax_error( "function 'base64decode' requires 1 parameter (called with %d)", data->size() );
+        hyb_syntax_error( "function 'base64decode' requires 1 parameter (called with %d)", data->size() );
     }
-    htype_assert( data->at(0), H_OT_STRING );
+    hyb_type_assert( data->at(0), H_OT_STRING );
 
     static const std::string b64_charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     std::string ret;

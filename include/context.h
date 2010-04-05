@@ -174,6 +174,20 @@ class Context {
             unlock();
         }
 
+        inline void timer(){
+            if( args.tm_timer ){
+                /* first call */
+                if( args.tm_start == 0 ){
+                    args.tm_start = hyb_uticks();
+                }
+                /* last call */
+                else{
+                    args.tm_end = hyb_uticks();
+                    printf( "\033[01;33m[TIME] Elapsed %s .\n\033[00m", hyb_timediff( args.tm_end - args.tm_start ) );
+                }
+            }
+        }
+
         void init( int argc, char *argv[] );
         void release( int error = 0 );
         void load( char *module );

@@ -23,7 +23,7 @@
 
 /* helper macro to obtain the address of a pointer */
 #ifndef H_ADDRESS_OF
-#   define H_ADDRESS_OF(o) reinterpret_cast<unsigned long>(o)
+#   define H_ADDRESS_OF(o) reinterpret_cast<ulong>(o)
 #endif
 
 #include <string>
@@ -37,8 +37,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-extern void  hybris_syntax_error( const char *format, ... );
-extern void  hybris_generic_error( const char *format, ... );
+extern void hyb_syntax_error( const char *format, ... );
+extern void hyb_generic_error( const char *format, ... );
 
 using namespace std;
 

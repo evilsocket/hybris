@@ -22,10 +22,10 @@
 
 HYBRIS_BUILTIN(hmatrix){
     if( data->size() < 2 ){
-		hybris_syntax_error( "function 'matrix' requires at least 2 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'matrix' requires at least 2 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT );
-    htype_assert( data->at(1), H_OT_INT );
+	hyb_type_assert( data->at(0), H_OT_INT );
+    hyb_type_assert( data->at(1), H_OT_INT );
 
     unsigned int     rows    = data->at(0)->value.m_integer,
                      columns = data->at(1)->value.m_integer,
@@ -34,7 +34,7 @@ HYBRIS_BUILTIN(hmatrix){
     vector<Object *> values;
 
     if( nvalues != (rows * columns) ){
-        hybris_syntax_error( "unexpected number of values for the matrix, expected %d (%dx%d), given %d", rows*columns, rows, columns, nvalues );
+        hyb_syntax_error( "unexpected number of values for the matrix, expected %d (%dx%d), given %d", rows*columns, rows, columns, nvalues );
     }
 
     for( i = 2; i < data->size(); i++ ){
@@ -46,17 +46,17 @@ HYBRIS_BUILTIN(hmatrix){
 
 HYBRIS_BUILTIN(hcolumns){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'columns' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'columns' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_MATRIX );
+	hyb_type_assert( data->at(0), H_OT_MATRIX );
 	return new Object( static_cast<long>( data->at(0)->value.m_columns ) );
 }
 
 HYBRIS_BUILTIN(hrows){
     if( data->size() != 1 ){
-		hybris_syntax_error( "function 'rows' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'rows' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_MATRIX );
+	hyb_type_assert( data->at(0), H_OT_MATRIX );
 	return new Object( static_cast<long>( data->at(0)->value.m_rows ) );
 }
 

@@ -22,7 +22,7 @@ void Context::signal_handler( int signo ){
     if( signo == SIGSEGV ){
         extern Context __context;
         __context.args.stacktrace = 1;
-        hybris_generic_error( "SIGSEGV Signal Catched" );
+        hyb_generic_error( "SIGSEGV Signal Catched" );
     }
 }
 
@@ -278,37 +278,37 @@ void Context::load( char *module ){
     if( !hmodule ){
         char *error = dlerror();
         if( error == NULL ){
-            hybris_generic_warning( "module '%s' could not be loaded", module );
+            hyb_generic_warning( "module '%s' could not be loaded", module );
         }
         else{
-            hybris_generic_warning( "%s", error );
+            hyb_generic_warning( "%s", error );
         }
         return;
     }
     /* load module name */
-    char *modname = (char *)dlsym( hmodule, "hybris_module_name" );
+    char *modname = (char *)dlsym( hmodule, "hyb_module_name" );
     if( !modname ){
         dlclose(hmodule);
-        hybris_generic_warning( "could not find module name symbol in '%s'", module );
+        hyb_generic_warning( "could not find module name symbol in '%s'", module );
         return;
     }
     /* load initialization routine, usually used for constants definition, etc */
-    initializer_t initializer = (initializer_t)dlsym( hmodule, "hybris_module_init" );
+    initializer_t initializer = (initializer_t)dlsym( hmodule, "hyb_module_init" );
     if(initializer){
         initializer( this );
     }
     /* exported functions vector */
-    builtin_t *functions = (builtin_t *)dlsym( hmodule, "hybris_module_functions" );
+    builtin_t *functions = (builtin_t *)dlsym( hmodule, "hyb_module_functions" );
     if(!functions){
         dlclose(hmodule);
-        hybris_generic_warning( "could not find module '%s' functions pointer", module );
+        hyb_generic_warning( "could not find module '%s' functions pointer", module );
         return;
     }
 
     module_t *hmod    = new module_t;
     hmod->name        = modname;
     hmod->initializer = initializer;
-    unsigned long i   = 0;
+    ulong i   = 0;
 
     while( functions[i].function != NULL ){
         builtin_t *function = new builtin_t( functions[i].identifier, functions[i].function );

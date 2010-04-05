@@ -53,7 +53,7 @@ HYBRIS_BUILTIN(hinput){
         _return = data->at(0);
     }
 	else{
-		hybris_syntax_error( "function 'input' requires 1 or 2 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'input' requires 1 or 2 parameters (called with %d)", data->size() );
 	}
 
     return _return;

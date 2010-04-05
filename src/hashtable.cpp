@@ -135,7 +135,7 @@ typedef ulong          HTOffset; /* something big enough to hold offsets */
 /* ht_safe_malloc() -- safe malloc
  *    allocates memory, or crashes if the allocation fails.
  */
-inline static void *ht_safe_malloc(unsigned long size)
+inline static void *ht_safe_malloc(ulong size)
 {
    void *retval;
 
@@ -155,7 +155,7 @@ inline static void *ht_safe_malloc(unsigned long size)
  *    allocates memory and initializes it to 0, or crashes if
  *    the allocation fails.
  */
-inline static void *ht_safe_calloc(unsigned long size)
+inline static void *ht_safe_calloc(ulong size)
 {
    void *retval;
 
@@ -173,7 +173,7 @@ inline static void *ht_safe_calloc(unsigned long size)
  *    grows the amount of memory from a source, or crashes if
  *    the allocation fails.
  */
-inline static void *ht_safe_realloc(void *ptr, unsigned long new_size, long delta)
+inline static void *ht_safe_realloc(void *ptr, ulong new_size, long delta)
 {
    if ( ptr == NULL )
       return ht_safe_malloc(new_size);
@@ -191,7 +191,7 @@ inline static void *ht_safe_realloc(void *ptr, unsigned long new_size, long delt
  *    frees memory using free, but updates count of how much memory
  *    is being used.
  */
-inline static void ht_free(void *ptr, unsigned long size)
+inline static void ht_free(void *ptr, ulong size)
 {
    if ( size > 0 )         /* some systems seem to not like freeing NULL */
       free(ptr);
@@ -203,9 +203,9 @@ inline static void ht_free(void *ptr, unsigned long size)
 |     aligned on some machines, so instead of casting we copy.            |
 \*************************************************************************/
 
-unsigned long ht_copy(char *ul)
+ulong ht_copy(char *ul)
 {
-   unsigned long retval;
+   ulong retval;
 
    memcpy(&retval, ul, sizeof(retval));
    return retval;
@@ -221,8 +221,8 @@ inline static void HTSetupKeyTrunc(void)
 {
    int i, j;
 
-   for ( i = 0; i < sizeof(unsigned long); ++i )
-      for ( j = 0; j < sizeof(unsigned long); ++j )
+   for ( i = 0; i < sizeof(ulong); ++i )
+      for ( j = 0; j < sizeof(ulong); ++j )
         grgKeyTruncMask[i][j] = j < i ? 255 : 0;   /* chars have 8 bits */
 }
 

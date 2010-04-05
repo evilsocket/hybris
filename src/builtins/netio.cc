@@ -30,10 +30,10 @@
 
 HYBRIS_BUILTIN(hsettimeout){
 	if( data->size() != 2 ){
-		hybris_syntax_error( "function 'settimeout' requires 2 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'settimeout' requires 2 parameters (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT );
-	htype_assert( data->at(1), H_OT_INT );
+	hyb_type_assert( data->at(0), H_OT_INT );
+	hyb_type_assert( data->at(1), H_OT_INT );
 
 	struct timeval tout = { 0 , data->at(1)->value.m_integer };
 
@@ -44,7 +44,7 @@ HYBRIS_BUILTIN(hsettimeout){
 }
 
 HYBRIS_BUILTIN(hconnect){
-	htype_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_STRING );
 
 	Object *_return = NULL;
 	if( data->size() >= 2 ){
@@ -53,7 +53,7 @@ HYBRIS_BUILTIN(hconnect){
 			return new Object( static_cast<long>(-1) );
 		}
 		if( data->size() == 3 ){
-			htype_assert( data->at(2), H_OT_INT );
+			hyb_type_assert( data->at(2), H_OT_INT );
 			struct timeval tout = { 0 , data->at(2)->value.m_integer };
 
 			setsockopt( sd, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
@@ -76,13 +76,13 @@ HYBRIS_BUILTIN(hconnect){
 		_return = new Object( static_cast<long>(sd) );
     }
 	else{
-		hybris_syntax_error( "function 'connect' requires at least 2 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'connect' requires at least 2 parameters (called with %d)", data->size() );
 	}
     return _return;
 }
 
 HYBRIS_BUILTIN(hserver){
-	htype_assert( data->at(0), H_OT_INT );
+	hyb_type_assert( data->at(0), H_OT_INT );
 
 	Object *_return = NULL;
 	if( data->size() >= 1 ){
@@ -91,7 +91,7 @@ HYBRIS_BUILTIN(hserver){
 			return new Object( static_cast<long>(-1) );
 		}
 		if( data->size() == 2 ){
-			htype_assert( data->at(1), H_OT_INT );
+			hyb_type_assert( data->at(1), H_OT_INT );
 			struct timeval tout = { 0 , data->at(1)->value.m_integer };
 
 			setsockopt( sd, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
@@ -117,13 +117,13 @@ HYBRIS_BUILTIN(hserver){
 		_return = new Object( static_cast<long>(sd) );
     }
 	else{
-		hybris_syntax_error( "function 'server' requires at least 1 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'server' requires at least 1 parameters (called with %d)", data->size() );
 	}
     return _return;
 }
 
 HYBRIS_BUILTIN(haccept){
-	htype_assert( data->at(0), H_OT_INT );
+	hyb_type_assert( data->at(0), H_OT_INT );
 
 	Object *_return = NULL;
 	if( data->size() >= 1 ){
@@ -137,13 +137,13 @@ HYBRIS_BUILTIN(haccept){
 		_return = new Object( static_cast<long>(csd) );
 	}
 	else{
-		hybris_syntax_error( "function 'accept' requires 1 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'accept' requires 1 parameters (called with %d)", data->size() );
 	}
     return _return;
 }
 
 HYBRIS_BUILTIN(hrecv){
-	htype_assert( data->at(0), H_OT_INT );
+	hyb_type_assert( data->at(0), H_OT_INT );
 
 	bool isEOF	    = false,
 		 isEOL 		= false;
@@ -172,7 +172,7 @@ HYBRIS_BUILTIN(hrecv){
 						}
 					}
 				break;
-				case H_OT_ARRAY  : hybris_generic_error( "can not directly deserialize an array type" ); break;
+				case H_OT_ARRAY  : hyb_generic_error( "can not directly deserialize an array type" ); break;
 			}
 			object->size = size;
 		}
@@ -201,20 +201,20 @@ HYBRIS_BUILTIN(hrecv){
 					}
 					object->size = read;
 				break;
-				case H_OT_ARRAY  : hybris_generic_error( "can not directly deserialize an array type" ); break;
+				case H_OT_ARRAY  : hyb_generic_error( "can not directly deserialize an array type" ); break;
 			}
 		}
         _return = new Object( static_cast<long>(read) );
     }
 	else{
-		hybris_syntax_error( "function 'recv' requires 2 or 3 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'recv' requires 2 or 3 parameters (called with %d)", data->size() );
 	}
 
     return _return;
 }
 
 HYBRIS_BUILTIN(hsend){
-	htype_assert( data->at(0), H_OT_INT );
+	hyb_type_assert( data->at(0), H_OT_INT );
 
     Object *_return = NULL;
     if( data->size() >= 2 ){
@@ -229,7 +229,7 @@ HYBRIS_BUILTIN(hsend){
 				case H_OT_FLOAT  : written = send( sd, &object->value.m_double, size, 0 ); break;
 				case H_OT_CHAR   : written = send( sd, &object->value.m_char,  size, 0 ); break;
 				case H_OT_STRING : written = send( sd, object->value.m_string.c_str(), size, 0 ); break;
-				case H_OT_ARRAY  : hybris_generic_error( "can not directly serialize an array type when specifying size" ); break;
+				case H_OT_ARRAY  : hyb_generic_error( "can not directly serialize an array type when specifying size" ); break;
 			}
 		}
 		else{
@@ -246,7 +246,7 @@ HYBRIS_BUILTIN(hsend){
 							case H_OT_FLOAT  : written += send( sd, &element->value.m_double, sizeof(double), 0 ); break;
 							case H_OT_CHAR   : written += send( sd, &element->value.m_char,  sizeof(char), 0 ); break;
 							case H_OT_STRING : written += send( sd, element->value.m_string.c_str(), element->size, 0 ); break;
-							case H_OT_ARRAY  : hybris_generic_error( "can not directly serialize nested arrays" ); break;
+							case H_OT_ARRAY  : hyb_generic_error( "can not directly serialize nested arrays" ); break;
 						}
 					}
 				break;
@@ -255,7 +255,7 @@ HYBRIS_BUILTIN(hsend){
         _return = new Object( static_cast<long>(written) );
     }
 	else{
-		hybris_syntax_error( "function 'send' requires 2 or 3 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'send' requires 2 or 3 parameters (called with %d)", data->size() );
 	}
     return _return;
 }

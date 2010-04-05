@@ -25,13 +25,17 @@
 #include <stdio.h>
 #include <string.h>
 
-void yyerror(char *);
-
-void             h_skip_comment();
-void             h_skip_line();
-void             h_handle_string( char delimiter, char *buffer );
-char             h_handle_char( char delimiter );
-function_decl_t *h_handle_function( char * text );
+void             yyerror(char *);
+// handle one line comments
+void             hyb_lex_skip_comment();
+// handle multi line comments
+void             hyb_lex_skip_line();
+// handle string constants
+void             hyb_lex_string( char delimiter, char *buffer );
+// handle char constants
+char             hyb_lex_char( char delimiter );
+// handle function prototypes declarations
+function_decl_t *hyb_lex_function( char * text );
 
 extern int     yylineno;
 extern Context __context;
@@ -66,7 +70,7 @@ include          BEGIN(T_INCLUSION);
     if( (yyin = fopen( mod.c_str(), "r" )) == NULL ){
         /* attempt to load from /usr/lib/hybris/libs/ */
         if( (yyin = fopen( (LIBS_PATH + mod).c_str(), "r" )) == NULL ){
-            hybris_generic_error( "Could not open '%s' for inclusion", yytext );
+            hyb_generic_error( "Could not open '%s' for inclusion", yytext );
         }
     }
 
@@ -97,9 +101,9 @@ include          BEGIN(T_INCLUSION);
     __context.load( (char *)module.c_str() );
 }
 
-"#"             { h_skip_line();    }
-"/*"		    { h_skip_comment(); }
-"//"            { h_skip_line();    }
+"#"             { hyb_lex_skip_line();    }
+"/*"		    { hyb_lex_skip_comment(); }
+"//"            { hyb_lex_skip_line();    }
 
 ";" 		    return T_EOSTMT;
 
@@ -167,7 +171,7 @@ include          BEGIN(T_INCLUSION);
 "return"        return T_RETURN;
 
 "function"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*")" {
-	yylval.function   = h_handle_function(yytext);
+	yylval.function   = hyb_lex_function(yytext);
 	return T_FUNCTION_PROTOTYPE;
 }
 
@@ -176,20 +180,20 @@ include          BEGIN(T_INCLUSION);
 -?[0-9]+                               { yylval.integer = atol(yytext);         return T_INTEGER; }
 -?0x[A-Fa-f0-9]+                       { yylval.integer = strtol(yytext,0,16);  return T_INTEGER; }
 -?([0-9]+|([0-9]*\.[0-9]+){exponent}?) { yylval.real    = atof(yytext);         return T_REAL; }
-"'"                                    { yylval.byte    = h_handle_char('\'');  return T_CHAR; }
-"\""                                   { h_handle_string( '"', yylval.string ); return T_STRING; }
+"'"                                    { yylval.byte    = hyb_lex_char('\'');   return T_CHAR; }
+"\""                                   { hyb_lex_string( '"', yylval.string );  return T_STRING; }
 
-. { hybris_syntax_error( "Unexpected token '%s'", yytext ); }
+. { hyb_syntax_error( "Unexpected token '%s'", yytext ); }
 
 %%
 
 
 
-int h_isspace(char c){
+int hyb_lex_isspace(char c){
     return (strchr( " \r\n\t", c ) != NULL);
 }
 
-void h_skip_comment(){
+void hyb_lex_skip_comment(){
     char c, c1;
 
 loop:
@@ -206,13 +210,13 @@ loop:
     }
 }
 
-void h_skip_line(){
+void hyb_lex_skip_line(){
     char c;
     while( (c = yyinput()) != '\n' && c != EOF );
     yylineno++;
 }
 
-char  h_handle_char( char delimiter ){
+char  hyb_lex_char( char delimiter ){
     char ch;
 
 	ch = yyinput();
@@ -244,7 +248,7 @@ char  h_handle_char( char delimiter ){
 	}
 }
 
-void h_handle_string( char delimiter, char *buffer ){
+void hyb_lex_string( char delimiter, char *buffer ){
     char *ptr;
     int c, prev = 0x00;
 
@@ -264,7 +268,7 @@ void h_handle_string( char delimiter, char *buffer ){
     *ptr = 0x00;
 }
 
-function_decl_t *h_handle_function( char * text ){
+function_decl_t *hyb_lex_function( char * text ){
     function_decl_t *declaration = new function_decl_t;
     char *sptr = text + strlen( "function " ),
          *dptr = declaration->function,
@@ -272,9 +276,9 @@ function_decl_t *h_handle_function( char * text ){
     int  end = 0;
 
     memset( declaration->function, 0x00, 0xFF );
-    while( h_isspace(*sptr) ){ sptr++; };
+    while( hyb_lex_isspace(*sptr) ){ sptr++; };
 
-    while( !h_isspace(*sptr) && *sptr != '(' ){
+    while( !hyb_lex_isspace(*sptr) && *sptr != '(' ){
         *dptr = *sptr;
         sptr++;
         dptr++;

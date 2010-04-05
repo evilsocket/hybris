@@ -23,7 +23,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-void hprint_stacktrace( int force /* = 0 */ ){
+void hyb_print_stacktrace( int force /* = 0 */ ){
     extern Context __context;
 
     if( (__context.args.stacktrace && __context.stack_trace.size()) || force ){
@@ -43,19 +43,19 @@ void yyerror( char *error ){
     fflush(stderr);
 	if( strchr( error, '\n' ) ){
 		fprintf( stderr, "[LINE %d] %s", yylineno, error );
-		hprint_stacktrace();
+		hyb_print_stacktrace();
         __context.release(1);
     	exit(-1);
 	}
 	else{
 		fprintf( stderr, "[LINE %d] %s .\n", yylineno, error );
-		hprint_stacktrace();
+		hyb_print_stacktrace();
         __context.release(1);
     	exit(-1);
 	}
 }
 
-void hybris_generic_warning( const char *format, ... ){
+void hyb_generic_warning( const char *format, ... ){
     char message[0xFF] = {0},
          error[0xFF] = {0};
     va_list ap;
@@ -68,7 +68,7 @@ void hybris_generic_warning( const char *format, ... ){
     yyerror(error);
 }
 
-void hybris_generic_error( const char *format, ... ){
+void hyb_generic_error( const char *format, ... ){
     char message[0xFF] = {0},
          error[0xFF] = {0};
     va_list ap;
@@ -80,12 +80,12 @@ void hybris_generic_error( const char *format, ... ){
 
     sprintf( error, "\033[22;31mERROR : %s .\n\033[00m", message );
     yyerror(error);
-    hprint_stacktrace();
+    hyb_print_stacktrace();
     __context.release(1);
     exit(-1);
 }
 
-void hybris_syntax_error( const char *format, ... ){
+void hyb_syntax_error( const char *format, ... ){
     char message[0xFF] = {0},
          error[0xFF] = {0};
     va_list ap;
@@ -98,25 +98,25 @@ void hybris_syntax_error( const char *format, ... ){
 
     sprintf( error, "\033[22;31mSyntax error on line %d : %s .\n\033[00m", yylineno, message );
     yyerror(error);
-    hprint_stacktrace();
+    hyb_print_stacktrace();
     __context.release(1);
     exit(-1);
 }
 
-void htype_assert( Object *o, H_OBJECT_TYPE type ){
+void hyb_type_assert( Object *o, H_OBJECT_TYPE type ){
 	if( o->type != type ){
-		hybris_syntax_error( "'%s' is not a valid variable type", Object::type_name(o) );
+		hyb_syntax_error( "'%s' is not a valid variable type", Object::type_name(o) );
 	}
 }
 
-void htype_assert( Object *o, H_OBJECT_TYPE type1, H_OBJECT_TYPE type2 ){
+void hyb_type_assert( Object *o, H_OBJECT_TYPE type1, H_OBJECT_TYPE type2 ){
 	if( o->type != type1 && o->type != type2 ){
-		hybris_syntax_error( "'%s' is not a valid variable type", Object::type_name(o) );
+		hyb_syntax_error( "'%s' is not a valid variable type", Object::type_name(o) );
 	}
 }
 
 
-int h_file_exists( char *filename ){
+int hyb_file_exists( char *filename ){
     FILE *fp = fopen( filename, "r" );
     if( fp ){
         fclose(fp);
@@ -127,13 +127,13 @@ int h_file_exists( char *filename ){
     }
 }
 
-unsigned long h_uticks(){
+ulong hyb_uticks(){
     timeval ts;
     gettimeofday(&ts,0);
     return ((ts.tv_sec * 1000000) + ts.tv_usec);
 }
 
-const char * h_dtime( unsigned long uticks ){
+const char * hyb_timediff( ulong uticks ){
     #define MS_DELTA (1000.0)
     #define SS_DELTA (MS_DELTA * 1000.0)
     #define MM_DELTA (SS_DELTA * 60.0)

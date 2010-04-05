@@ -41,20 +41,23 @@ typedef struct {
     char source[0xFF];
     char rootpath[0xFF];
     int  stacktrace;
-    int  do_timing;
+
+    int           tm_timer;
+    ulong tm_start;
+    ulong tm_end;
 }
 h_args_t;
 
 void yyerror( char *error );
-void hybris_generic_warning( const char *format, ... );
-void hybris_generic_error( const char *format, ... );
-void hybris_syntax_error( const char *format, ... );
-void htype_assert( Object *o, H_OBJECT_TYPE type );
-void htype_assert( Object *o, H_OBJECT_TYPE type1, H_OBJECT_TYPE type2 );
-void hprint_stacktrace( int force = 0 );
 
-int           h_file_exists ( char *filename );
-unsigned long h_uticks();
-const char *  h_dtime( unsigned long uticks );
+void         hyb_generic_warning( const char *format, ... );
+void         hyb_generic_error( const char *format, ... );
+void         hyb_syntax_error( const char *format, ... );
+void         hyb_type_assert( Object *o, H_OBJECT_TYPE type );
+void         hyb_type_assert( Object *o, H_OBJECT_TYPE type1, H_OBJECT_TYPE type2 );
+void         hyb_print_stacktrace( int force = 0 );
+int          hyb_file_exists ( char *filename );
+ulong        hyb_uticks();
+const char * hyb_timediff( ulong uticks );
 
 #endif

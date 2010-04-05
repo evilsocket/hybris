@@ -77,25 +77,25 @@ static void ctype_convert( Object *o, dll_arg_t *pa ) {
         pa->value.p = (void *)binary_serialize(o);
 	}
 	else{
-        hybris_syntax_error( "could not use '%s' type for dllcall function", Object::type_name(o) );
+        hyb_syntax_error( "could not use '%s' type for dllcall function", Object::type_name(o) );
 	}
 }
 
 HYBRIS_BUILTIN(hdllopen){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'dllopen' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'dllopen' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_STRING );
 
     return new Object( reinterpret_cast<long>( dlopen( data->at(0)->value.m_string.c_str(), RTLD_LAZY ) ) );
 }
 
 HYBRIS_BUILTIN(hdlllink){
     if( data->size() != 2 ){
-		hybris_syntax_error( "function 'dlllink' requires 2 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'dlllink' requires 2 parameters (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT    );
-	htype_assert( data->at(1), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_INT    );
+	hyb_type_assert( data->at(1), H_OT_STRING );
 
     void *hdll = reinterpret_cast<void *>( data->at(0)->value.m_integer );
 
@@ -104,13 +104,13 @@ HYBRIS_BUILTIN(hdlllink){
 
 HYBRIS_BUILTIN(hdllcall){
     if( data->size() < 1 ){
-        hybris_syntax_error( "function 'dllcall' requires at least 1 parameter (called with %d)", data->size() );
+        hyb_syntax_error( "function 'dllcall' requires at least 1 parameter (called with %d)", data->size() );
     }
     else if( data->size() > CALL_MAX_ARGS + 1 ){
-        hybris_syntax_error( "function 'dllcall' support at max %d parameters (called with %d)", CALL_MAX_ARGS, data->size() );
+        hyb_syntax_error( "function 'dllcall' support at max %d parameters (called with %d)", CALL_MAX_ARGS, data->size() );
     }
 
-    htype_assert( data->at(0), H_OT_INT );
+    hyb_type_assert( data->at(0), H_OT_INT );
 
     typedef int (* function_t)(void);
     function_t function = (function_t)data->at(0)->value.m_integer;
@@ -146,7 +146,7 @@ HYBRIS_BUILTIN(hdllcall){
 	}
 
     if( ffi_prep_cif( &cif, FFI_DEFAULT_ABI, argc, &ffi_type_ulong, args_t ) != FFI_OK ){
-        hybris_generic_error( "ffi_prep_cif failed" );
+        hyb_generic_error( "ffi_prep_cif failed" );
     }
 
     ffi_call( &cif, FFI_FN(function), &ul_ret, args_v );
@@ -163,9 +163,9 @@ HYBRIS_BUILTIN(hdllcall){
 
 HYBRIS_BUILTIN(hdllclose){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'dllclose' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'dllclose' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT );
+	hyb_type_assert( data->at(0), H_OT_INT );
 
 	dlclose( (void *)data->at(0)->value.m_integer );
 

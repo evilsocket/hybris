@@ -75,9 +75,9 @@ HYBRIS_BUILTIN(hdyn_functions){
 
 HYBRIS_BUILTIN(hcall){
 	if( data->size() < 1 ){
-		hybris_syntax_error( "function 'call' requires at least 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'call' requires at least 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_STRING );
 
 	Node *call  = new Node(H_NT_CALL);
     call->value.m_call = data->at(0)->value.m_string;
@@ -90,7 +90,7 @@ HYBRIS_BUILTIN(hcall){
 				case H_OT_CHAR   : call->addChild( new ConstantNode(data->at(i)->value.m_char) );                   break;
 				case H_OT_STRING : call->addChild( new ConstantNode((char *)data->at(i)->value.m_string.c_str()) ); break;
 
-				default : hybris_generic_error( "type not supported for reflected call" );
+				default : hyb_generic_error( "type not supported for reflected call" );
 			}
 		}
 	}

@@ -32,9 +32,9 @@ HYBRIS_BUILTIN(hticks){
 
 HYBRIS_BUILTIN(husleep){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'usleep' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'usleep' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT );
+	hyb_type_assert( data->at(0), H_OT_INT );
 
 	struct timespec ts;
 
@@ -47,9 +47,9 @@ HYBRIS_BUILTIN(husleep){
 
 HYBRIS_BUILTIN(hsleep){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'sleep' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'sleep' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_INT );
+	hyb_type_assert( data->at(0), H_OT_INT );
 
 	struct timespec ts;
 

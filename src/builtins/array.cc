@@ -31,36 +31,36 @@ HYBRIS_BUILTIN(harray){
 
 HYBRIS_BUILTIN(helements){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'elements' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'elements' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_ARRAY );
+	hyb_type_assert( data->at(0), H_OT_ARRAY );
 
 	return new Object( static_cast<long>( data->at(0)->value.m_array.size() ) );
 }
 
 HYBRIS_BUILTIN(hpop){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'pop' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'pop' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_ARRAY );
+	hyb_type_assert( data->at(0), H_OT_ARRAY );
 
 	return new Object( data->at(0)->pop() );
 }
 
 HYBRIS_BUILTIN(hremove){
 	if( data->size() != 2 ){
-		hybris_syntax_error( "function 'remove' requires 2 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'remove' requires 2 parameters (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_ARRAY );
+	hyb_type_assert( data->at(0), H_OT_ARRAY );
 
 	return new Object( data->at(0)->remove(data->at(1)) );
 }
 
 HYBRIS_BUILTIN(hcontains){
 	if( data->size() != 2 ){
-		hybris_syntax_error( "function 'contains' requires 2 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'contains' requires 2 parameters (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_ARRAY );
+	hyb_type_assert( data->at(0), H_OT_ARRAY );
 	Object *array = data->at(0),
 		    *find  = data->at(1);
 	unsigned int i;

@@ -34,12 +34,12 @@ static size_t http_append_callback( void *ptr, size_t size, size_t nmemb, void *
 
 HYBRIS_BUILTIN(hhttp_get){
 	if( data->size() < 2 ){
-		hybris_syntax_error( "function 'http_get' requires at least 2 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'http_get' requires at least 2 parameters (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_STRING );
-	htype_assert( data->at(1), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(1), H_OT_STRING );
 	if( data->size() >= 3 ){
-		htype_assert( data->at(2), H_OT_MAP );
+		hyb_type_assert( data->at(2), H_OT_MAP );
 	}
 
 	CURL  *cd;
@@ -83,7 +83,7 @@ HYBRIS_BUILTIN(hhttp_get){
 	}
 
 	if( data->size() > 3 ){
-		htype_assert( data->at(3), H_OT_MAP );
+		hyb_type_assert( data->at(3), H_OT_MAP );
 		unsigned int i;
 		string header;
 		Object *headers = data->at(3);
@@ -122,13 +122,13 @@ HYBRIS_BUILTIN(hhttp_get){
 
 HYBRIS_BUILTIN(hhttp_post){
 	if( data->size() < 3 ){
-		hybris_syntax_error( "function 'http_post' requires at least 3 parameters (called with %d)", data->size() );
+		hyb_syntax_error( "function 'http_post' requires at least 3 parameters (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_STRING );
-	htype_assert( data->at(1), H_OT_STRING );
-	htype_assert( data->at(2), H_OT_MAP );
+	hyb_type_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(1), H_OT_STRING );
+	hyb_type_assert( data->at(2), H_OT_MAP );
 	if( data->size() >= 3 ){
-		htype_assert( data->at(3), H_OT_INT );
+		hyb_type_assert( data->at(3), H_OT_INT );
 	}
 
 	CURL  *cd;
@@ -176,7 +176,7 @@ HYBRIS_BUILTIN(hhttp_post){
 	}
 
 	if( data->size() >= 4 ){
-		htype_assert( data->at(4), H_OT_MAP );
+		hyb_type_assert( data->at(4), H_OT_MAP );
 		string header;
 		Object *headers = data->at(4);
 
@@ -230,19 +230,19 @@ HYBRIS_BUILTIN(hhttp_post){
 
 HYBRIS_BUILTIN(hhttp){
     if( data->size() < 1 ){
-		hybris_syntax_error( "function 'http' requires at least 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'http' requires at least 1 parameter (called with %d)", data->size() );
 	}
-    htype_assert( data->at(0), H_OT_INT );
+    hyb_type_assert( data->at(0), H_OT_INT );
 
     vmem_t hdata;
     int    method = data->at(0)->value.m_integer,
            i;
 
     if( method == HTTP_GET && data->size() < 3 ){
-        hybris_syntax_error( "function 'http' requires at least 2 parameters if method=GET (called with %d)", data->size() );
+        hyb_syntax_error( "function 'http' requires at least 2 parameters if method=GET (called with %d)", data->size() );
     }
     else if( method == HTTP_POST && data->size() < 4 ){
-        hybris_syntax_error( "function 'http' requires at least 3 parameters if method=POST (called with %d)", data->size() );
+        hyb_syntax_error( "function 'http' requires at least 3 parameters if method=POST (called with %d)", data->size() );
     }
 
     for( i = 1; i < data->size(); i++ ){
@@ -256,6 +256,6 @@ HYBRIS_BUILTIN(hhttp){
         return hhttp_post( ctx, &hdata );
     }
     else{
-        hybris_syntax_error( "function 'http', unknown method" );
+        hyb_syntax_error( "function 'http', unknown method" );
     }
 }

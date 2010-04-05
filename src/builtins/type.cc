@@ -22,77 +22,77 @@
 
 HYBRIS_BUILTIN(hisint){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'isint' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'isint' requires 1 parameter (called with %d)", data->size() );
 	}
 	return new Object( static_cast<long>(data->at(0)->type == H_OT_INT) );
 }
 
 HYBRIS_BUILTIN(hisfloat){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'isfloat' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'isfloat' requires 1 parameter (called with %d)", data->size() );
 	}
 	return new Object( static_cast<long>(data->at(0)->type == H_OT_FLOAT) );
 }
 
 HYBRIS_BUILTIN(hischar){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'ischar' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'ischar' requires 1 parameter (called with %d)", data->size() );
 	}
 	return new Object( static_cast<long>(data->at(0)->type == H_OT_CHAR) );
 }
 
 HYBRIS_BUILTIN(hisstring){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'isstring' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'isstring' requires 1 parameter (called with %d)", data->size() );
 	}
 	return new Object( static_cast<long>(data->at(0)->type == H_OT_STRING) );
 }
 
 HYBRIS_BUILTIN(hisarray){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'isarray' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'isarray' requires 1 parameter (called with %d)", data->size() );
 	}
 	return new Object( static_cast<long>(data->at(0)->type == H_OT_ARRAY) );
 }
 
 HYBRIS_BUILTIN(hismap){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'ismap' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'ismap' requires 1 parameter (called with %d)", data->size() );
 	}
 	return new Object( static_cast<long>(data->at(0)->type == H_OT_MAP) );
 }
 
 HYBRIS_BUILTIN(hisalias){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'isalias' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'isalias' requires 1 parameter (called with %d)", data->size() );
 	}
 	return new Object( static_cast<long>(data->at(0)->type == H_OT_ALIAS) );
 }
 
 HYBRIS_BUILTIN(htypeof){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'typeof' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'typeof' requires 1 parameter (called with %d)", data->size() );
 	}
 	return new Object( (char *)Object::type_name(data->at(0)) );
 }
 
 HYBRIS_BUILTIN(hsizeof){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'sizeof' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'sizeof' requires 1 parameter (called with %d)", data->size() );
 	}
 	return new Object( static_cast<long>( data->at(0)->size  ) );
 }
 
 HYBRIS_BUILTIN(htoint){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'toint' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'toint' requires 1 parameter (called with %d)", data->size() );
 	}
 	return data->at(0)->toInt();
 }
 
 HYBRIS_BUILTIN(htostring){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'tostring' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'tostring' requires 1 parameter (called with %d)", data->size() );
 	}
 	return data->at(0)->toString();
 }
@@ -227,7 +227,7 @@ Object *xmlNode2Object( xmlNode *node ){
         return structure;
 	}
 	else{
-		hybris_generic_error( "'%s' invalid xml object type", node->name );
+		hyb_generic_error( "'%s' invalid xml object type", node->name );
 	}
 }
 
@@ -295,7 +295,7 @@ string Object2Xml( Object *o, unsigned int tabs = 0 ){
 		break;
 
 		default :
-            hybris_generic_error( "could not convert %s type to xml", Object::type_name(o) );
+            hyb_generic_error( "could not convert %s type to xml", Object::type_name(o) );
 	}
 
 	return xml.str().c_str();
@@ -304,9 +304,9 @@ string Object2Xml( Object *o, unsigned int tabs = 0 ){
 
 HYBRIS_BUILTIN(hfromxml){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'fromxml' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'fromxml' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_STRING );
 
 	xmlDoc  *doc  = NULL;
 	xmlNode *root = NULL;
@@ -320,7 +320,7 @@ HYBRIS_BUILTIN(hfromxml){
 
 	doc = xmlReadMemory( normalized.c_str(), normalized.size(), NULL, NULL, 0 );
 	if( doc == NULL ){
-		hybris_generic_error( "could not parse xml object" );
+		hyb_generic_error( "could not parse xml object" );
 	}
 
 	Object *object = xmlNode2Object( xmlDocGetRootElement(doc) );
@@ -334,7 +334,7 @@ HYBRIS_BUILTIN(hfromxml){
 
 HYBRIS_BUILTIN(htoxml){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'toxml' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'toxml' requires 1 parameter (called with %d)", data->size() );
 	}
 
 	string xml = Object2Xml( data->at(0) );

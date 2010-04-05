@@ -75,9 +75,9 @@ Object *xml_traverse( xmlNode *node ){
 
 HYBRIS_BUILTIN(hxml_load){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'xml_load' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'xml_load' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_STRING );
 
 	string   filename = data->at(0)->value.m_string;
 	xmlDoc  *doc  = NULL;
@@ -87,7 +87,7 @@ HYBRIS_BUILTIN(hxml_load){
 
 	doc = xmlReadFile( filename.c_str(), NULL, 0);
 	if( doc == NULL ){
-		hybris_generic_error( "error loading or parsing '%s'", filename.c_str() );
+		hyb_generic_error( "error loading or parsing '%s'", filename.c_str() );
 	}
 
 	Object *hmap = xml_traverse( xmlDocGetRootElement(doc) );
@@ -100,9 +100,9 @@ HYBRIS_BUILTIN(hxml_load){
 
 HYBRIS_BUILTIN(hxml_parse){
 	if( data->size() != 1 ){
-		hybris_syntax_error( "function 'xml_parse' requires 1 parameter (called with %d)", data->size() );
+		hyb_syntax_error( "function 'xml_parse' requires 1 parameter (called with %d)", data->size() );
 	}
-	htype_assert( data->at(0), H_OT_STRING );
+	hyb_type_assert( data->at(0), H_OT_STRING );
 
 	string   xml  = data->at(0)->value.m_string;
 	xmlDoc  *doc  = NULL;
@@ -112,7 +112,7 @@ HYBRIS_BUILTIN(hxml_parse){
 
 	doc = xmlReadMemory( xml.c_str(), xml.size(), NULL, NULL, 0);
 	if( doc == NULL ){
-		hybris_generic_error( "error parsing xml buffer" );
+		hyb_generic_error( "error parsing xml buffer" );
 	}
 
 	Object *hmap = xml_traverse( xmlDocGetRootElement(doc) );
