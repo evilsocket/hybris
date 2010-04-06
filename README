@@ -4,14 +4,10 @@ Infos & Documentation at <http://www.hybris-lang.org/>
 
 ### Cosa è Hybris ?
 
-Hybris, acronimo (non molto fantasioso lo riconosco!) di hybrid scripiting language, è un linguaggio di programmazione, nella fattispecie di scripting, procedurale al quale sto lavorando da diversi mesi. Il tutto è nato come un semplice gioco, dal fascino che provavo nel pensare di poter scrivere un interprete, se pur rudimentale, di un qualche tipo di linguaggio, interprete che con il tempo ho sviluppato fino ad arrivare ad un “prodotto” perfettamente utilizzabile e con enormi vantaggi rispetto ad altre sintassi e/o funzionalità.
+Hybris è un linguaggio di scripting con tipizzazione dinamica, ovvero un linguaggio che non richiede la dichiarazione esplicita del tipo di una variabile ma capisce come trattare la variabile in questione in base al valore con il quale viene inizializzata e successivamente trattata.
 
-### Perchè dovrebbe essere più comodo di altri linguaggi ?
+La grammatica e il set di funzionalità integrate nella libreria standard sono state realizzate con tre soli scopi, scopi che riassumono abbastanza bene il target qualitativo del progetto :
 
-Innanzitutto, devo precisare che durante lo sviluppo e l’impostazione della grammatica di base, ho raccolto le caratteristiche, le funzionalità, ecc che reputavo positive e utili nei linguaggi di programmazione che attualmente conosco. Di conseguenza si può pensare ad Hybris come ad un ibrido (da li il nome) di vari linguaggi che prende la parte migliore di ognuno.
-A partire dalla sintassi semplice e pulita del PHP, fino ad arrivare al supporto nativo per le espressioni regolari con relativo operatore del Perl o ad una certa interazione a basso livello come nel C .
-Questo è il primo aspetto che già per definizione lo rende in un certo qual modo migliore di altri linguaggi.
-Un altra delle caratteristiche alle quali ho pensato durante la sua creazione, è stata quella di includere nativamente alcune funzionalità che, se pur supportate da altri linguaggi, costituiscono delle porzioni “modulari” di questi altri interpreti, ovvero non risiedono nativamente nell’applicativo dell’interprete bensì in moduli dinamici appositamente installati per estendere le funzionalità del linguaggio.
-Nonostante lo stesso Hybris supporti una certa modularità, ho pensato che alcune features come la parserizzazione nativa di flussi XML, il supporto alle espressioni regolari, metodi semplici ed intuitivi per effettuare connessioni HTTP e HTTPS, ecc dovessero essere integrate nel linguaggio stesso considerando che ormai sono realtà che fanno parte del mondo informatico di tutti i giorni.
-Detto in parole povere, Hybris sarà in grado di parserizzare un flusso XML senza l’installazione di moduli aggiuntivi (vedere il sorgente di esempio xml.hs), così come sarà in grado di effettuare richieste http con una facilità estrema (esempio http.hs) o di sfruttare le espressioni regolari con un operatore =~ nativo (esempio pcre_operator.hs), il tutto, ribadisco, senza installare altro se non l’interprete principale.
-Diciamo che come linguaggio segue una filosofia “AIO” (All In One) continuando tuttavia a supportare dei moduli esterni tramite i quali ognuno potrà espanderlo come preferisce …. comodo no ? ^^
+    * Eliminare le caratteristiche inutili delle grammatiche fin’ora esistenti per ottenere uno stile pulito, intuitivo e soprattutto che non comporti inutili sprechi di tempo per la scrittura del codice.
+    * Includere nello standard quelle funzionalità che, benchè non siano incluse nei “core” degli altri linguaggi, son diventate per qualità e/o per necessità lo “stato dell’arte” nel mondo della programmazione.
+    * Mantenere una certa interazione a basso livello con il sistema operativo per fornire un linguaggio che, se pur di scripting ed estremamente astratto, abbia potenzialità simili e a volte analoghe a linguaggi compilati di basso livello. 
