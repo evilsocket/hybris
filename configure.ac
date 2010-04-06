@@ -93,6 +93,6 @@ AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS([bzero floor getcwd gethostbyname gettimeofday memset pow socket sqrt strchr strdup strrchr strtol])
 
-AC_CONFIG_FILES( [Makefile stdlib/Makefile])
+AC_CONFIG_FILES( [Makefile])
 
 AC_OUTPUT
