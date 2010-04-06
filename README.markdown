@@ -8,6 +8,6 @@ Hybris è un linguaggio di scripting con tipizzazione dinamica, ovvero un lingua
 
 La grammatica e il set di funzionalità integrate nella libreria standard sono state realizzate con tre soli scopi, scopi che riassumono abbastanza bene il target qualitativo del progetto :
 
-    * Eliminare le caratteristiche inutili delle grammatiche fin’ora esistenti per ottenere uno stile pulito, intuitivo e soprattutto che non comporti inutili sprechi di tempo per la scrittura del codice.
-    * Includere nello standard quelle funzionalità che, benchè non siano incluse nei “core” degli altri linguaggi, son diventate per qualità e/o per necessità lo “stato dell’arte” nel mondo della programmazione.
-    * Mantenere una certa interazione a basso livello con il sistema operativo per fornire un linguaggio che, se pur di scripting ed estremamente astratto, abbia potenzialità simili e a volte analoghe a linguaggi compilati di basso livello. 
+* Eliminare le caratteristiche inutili delle grammatiche fin’ora esistenti per ottenere uno stile pulito, intuitivo e soprattutto che non comporti inutili sprechi di tempo per la scrittura del codice.
+* Includere nello standard quelle funzionalità che, benchè non siano incluse nei “core” degli altri linguaggi, son diventate per qualità e/o per necessità lo “stato dell’arte” nel mondo della programmazione.
+* Mantenere una certa interazione a basso livello con il sistema operativo per fornire un linguaggio che, se pur di scripting ed estremamente astratto, abbia potenzialità simili e a volte analoghe a linguaggi compilati di basso livello. 
