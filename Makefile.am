@@ -34,7 +34,11 @@ SOURCES=src/common.cpp \
 	    src/engine.cpp \
 	    src/parser.cpp
 
-STDSRC=stdlib/std/io/network/http.cc \
+STDSRC=stdlib/std/hashing/md5.cc \
+	   stdlib/std/hashing/crc32.cc \
+	   stdlib/std/hashing/sha1.cc \
+	   stdlib/std/hashing/sha2.cc \
+	   stdlib/std/io/network/http.cc \
 	   stdlib/std/io/network/tcp.cc \
 	   stdlib/std/io/file.cc \
 	   stdlib/std/io/console.cc \

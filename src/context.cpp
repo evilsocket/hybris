@@ -201,6 +201,7 @@ void Context::loadModule( string path, string name ){
     }
 
     module_t *hmod    = new module_t;
+    str_split( path, "/", hmod->tree );
     hmod->name        = name;
     hmod->initializer = initializer;
     i = 0;

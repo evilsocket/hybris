@@ -165,6 +165,7 @@ include          BEGIN(T_INCLUSION);
 "default"       return T_DEFAULT;
 
 "struct"        return T_STRUCT;
+"class"         return T_CLASS;
 
 "return"        return T_RETURN;
 

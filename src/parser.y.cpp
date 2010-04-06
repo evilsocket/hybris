@@ -179,6 +179,7 @@ Context __context;
 %token T_RETURN
 %token T_CALL
 %token T_STRUCT
+%token T_CLASS
 %token T_PRIVATE
 %token T_PROTECTED
 %token T_PUBLIC
