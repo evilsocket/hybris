@@ -39,51 +39,41 @@ class Context;
 /* pre declaration of class Engine */
 class Engine;
 
-/* builtin function pointer prototype */
+/* initializer function pointer prototype */
+typedef void     (*initializer_t)( Context * );
+/* function pointer prototype */
 typedef Object * (*function_t)( Context *, vmem_t * );
 
-/* helper macro to declare a builtin function */
-#define HYBRIS_BUILTIN(name) Object *name( Context *ctx, vmem_t *data )
-/* helper macro to define a builtin function */
-#define HYBRIS_DEFINE_BUILTIN( ctx, name, func ) ctx->builtins.insert( name, new builtin_t( name, func ) )
-/* helper macro to define a builtin constant */
-#define HYBRIS_DEFINE_CONSTANT( ctx, name, value ) ctx->constants.push_back( new builtin_constant_t( name, new Object( value  ) ) )
+/* helper macro to declare a hybris function */
+#define HYBRIS_DEFINE_FUNCTION(name) Object *name( Context *ctx, vmem_t *data )
+/* helper macro to define a constant value */
+#define HYBRIS_DEFINE_CONSTANT( ctx, name, value ) ctx->vmem.add( (char *)name, new Object(value) )
 
-/* builtins definition list item structure */
-typedef struct _builtin {
+typedef struct _named_function_t {
     string     identifier;
     function_t function;
 
-    _builtin( string id, function_t f ) : identifier(id), function(f) {
+    _named_function_t( string i, function_t f ) :
+        identifier(i),
+        function(f){
 
     }
 }
-builtin_t;
+named_function_t;
 
-/* builtins' constants definition structure */
-typedef struct _builtin_constant {
-    string identifier;
-    Object *value;
-
-    _builtin_constant( string id, Object *v ) : identifier(id), value(v) {
-
-    }
-}
-builtin_constant_t;
+typedef vector<named_function_t *> named_functions_t;
 
 /* module structure definition */
 typedef struct _module_t {
-    string              name;
-    void (*initializer)( Context * );
-    vector<builtin_t *> functions;
+    string            name;
+    initializer_t     initializer;
+    named_functions_t functions;
 }
 module_t;
 
 /* module initializer function pointer prototype */
 typedef void (*initializer_t)( Context * );
 
-typedef vector<builtin_constant_t *> h_constants_t;
-typedef Map<builtin_t>               h_builtins_t;
 typedef vector<module_t *>           h_modules_t;
 
 class Context {
@@ -92,6 +82,11 @@ class Context {
         static void signal_handler( int signo );
 
         string mk_trace( char *function, vframe_t *frame );
+
+        void   str_split( string& str, string delimiters, vector<string>& tokens );
+
+        void   loadModule( string path, string name );
+        void   loadNamespace( string path );
 
     public  :
 
@@ -146,10 +141,6 @@ class Context {
         vmem_t         vtypes;
         /* execution arguments */
         h_args_t       args;
-        /* default constants */
-        h_constants_t  constants;
-        /* builtin functions */
-        h_builtins_t   builtins;
         /* dynamically loaded modules */
         h_modules_t    modules;
         /* code execution engine */
@@ -190,152 +181,8 @@ class Context {
 
         void init( int argc, char *argv[] );
         void release( int error = 0 );
-        void load( char *module );
+        void loadModule( char *module );
         function_t getFunction( char *identifier );
 };
-
-/* type.cc */
-HYBRIS_BUILTIN(hisint);
-HYBRIS_BUILTIN(hisfloat);
-HYBRIS_BUILTIN(hischar);
-HYBRIS_BUILTIN(hisstring);
-HYBRIS_BUILTIN(hisarray);
-HYBRIS_BUILTIN(hismap);
-HYBRIS_BUILTIN(hisalias);
-HYBRIS_BUILTIN(htypeof);
-HYBRIS_BUILTIN(hsizeof);
-HYBRIS_BUILTIN(htoint);
-HYBRIS_BUILTIN(htostring);
-HYBRIS_BUILTIN(htoxml);
-HYBRIS_BUILTIN(hfromxml);
-/* math.cc */
-HYBRIS_BUILTIN(hacos);
-HYBRIS_BUILTIN(hasin);
-HYBRIS_BUILTIN(hatan);
-HYBRIS_BUILTIN(hatan2);
-HYBRIS_BUILTIN(hceil);
-HYBRIS_BUILTIN(hcos);
-HYBRIS_BUILTIN(hcosh);
-HYBRIS_BUILTIN(hexp);
-HYBRIS_BUILTIN(hfabs);
-HYBRIS_BUILTIN(hfloor);
-HYBRIS_BUILTIN(hfmod);
-HYBRIS_BUILTIN(hlog);
-HYBRIS_BUILTIN(hlog10);
-HYBRIS_BUILTIN(hpow);
-HYBRIS_BUILTIN(hsin);
-HYBRIS_BUILTIN(hsinh);
-HYBRIS_BUILTIN(hsqrt);
-HYBRIS_BUILTIN(htan);
-HYBRIS_BUILTIN(htanh);
-/* binary.cc */
-HYBRIS_BUILTIN(hbinary);
-HYBRIS_BUILTIN(hpack);
-/* array.cc */
-HYBRIS_BUILTIN(harray);
-HYBRIS_BUILTIN(helements);
-HYBRIS_BUILTIN(hpop);
-HYBRIS_BUILTIN(hremove);
-HYBRIS_BUILTIN(hcontains);
-/* map.cc */
-HYBRIS_BUILTIN(hmap);
-HYBRIS_BUILTIN(hmapelements);
-HYBRIS_BUILTIN(hmappop);
-HYBRIS_BUILTIN(hunmap);
-HYBRIS_BUILTIN(hismapped);
-HYBRIS_BUILTIN(hhaskey);
-/* string.cc */
-HYBRIS_BUILTIN(hstrlen);
-HYBRIS_BUILTIN(hstrfind);
-HYBRIS_BUILTIN(hsubstr);
-HYBRIS_BUILTIN(hstrreplace);
-HYBRIS_BUILTIN(hstrsplit);
-/* matrix.cc */
-HYBRIS_BUILTIN(hmatrix);
-HYBRIS_BUILTIN(hcolumns);
-HYBRIS_BUILTIN(hrows);
-
-#ifdef PCRE_SUPPORT
-/* pcre.cc */
-HYBRIS_BUILTIN(hrex_match);
-HYBRIS_BUILTIN(hrex_matches);
-HYBRIS_BUILTIN(hrex_replace);
-#endif
-/* conio.cc */
-HYBRIS_BUILTIN(hprint);
-HYBRIS_BUILTIN(hprintln);
-HYBRIS_BUILTIN(hinput);
-/* process.cc */
-HYBRIS_BUILTIN(hexec);
-HYBRIS_BUILTIN(hfork);
-HYBRIS_BUILTIN(hgetpid);
-HYBRIS_BUILTIN(hwait);
-HYBRIS_BUILTIN(hpopen);
-HYBRIS_BUILTIN(hpclose);
-HYBRIS_BUILTIN(hexit);
-/* reflection.cc */
-HYBRIS_BUILTIN(hvar_names);
-HYBRIS_BUILTIN(hvar_values);
-HYBRIS_BUILTIN(huser_functions);
-HYBRIS_BUILTIN(hcore_functions);
-HYBRIS_BUILTIN(hdyn_functions);
-HYBRIS_BUILTIN(hcall);
-/* dll.cc */
-HYBRIS_BUILTIN(hdllopen);
-HYBRIS_BUILTIN(hdlllink);
-HYBRIS_BUILTIN(hdllcall);
-HYBRIS_BUILTIN(hdllclose);
-/* time.cc */
-HYBRIS_BUILTIN(hticks);
-HYBRIS_BUILTIN(husleep);
-HYBRIS_BUILTIN(hsleep);
-HYBRIS_BUILTIN(htime);
-HYBRIS_BUILTIN(hstrtime);
-HYBRIS_BUILTIN(hstrdate);
-/* fileio.cc */
-HYBRIS_BUILTIN(hfopen);
-HYBRIS_BUILTIN(hfseek);
-HYBRIS_BUILTIN(hftell);
-HYBRIS_BUILTIN(hfsize);
-HYBRIS_BUILTIN(hfread);
-HYBRIS_BUILTIN(hfgets);
-HYBRIS_BUILTIN(hfwrite);
-HYBRIS_BUILTIN(hfclose);
-HYBRIS_BUILTIN(hfile);
-HYBRIS_BUILTIN(hreaddir);
-/* netio.cc */
-HYBRIS_BUILTIN(hsettimeout);
-HYBRIS_BUILTIN(hconnect);
-HYBRIS_BUILTIN(hserver);
-HYBRIS_BUILTIN(haccept);
-HYBRIS_BUILTIN(hrecv);
-HYBRIS_BUILTIN(hsend);
-HYBRIS_BUILTIN(hclose);
-
-#ifdef HTTP_SUPPORT
-/* http.cc */
-HYBRIS_BUILTIN(hhttp);
-HYBRIS_BUILTIN(hhttp_get);
-HYBRIS_BUILTIN(hhttp_post);
-#endif
-
-#ifdef XML_SUPPORT
-/* xml.cc */
-HYBRIS_BUILTIN(hxml_load);
-HYBRIS_BUILTIN(hxml_parse);
-#endif
-
-/* encode.cc */
-HYBRIS_BUILTIN(hurlencode);
-HYBRIS_BUILTIN(hurldecode);
-HYBRIS_BUILTIN(hbase64encode);
-HYBRIS_BUILTIN(hbase64decode);
-
-#ifdef MT_SUPPORT
-/* pthreads.cc */
-HYBRIS_BUILTIN(hpthread_create);
-HYBRIS_BUILTIN(hpthread_exit);
-HYBRIS_BUILTIN(hpthread_join);
-#endif
 
 #endif

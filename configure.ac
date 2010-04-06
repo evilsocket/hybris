@@ -1,11 +1,12 @@
 AC_PREREQ([2.0])
-AC_INIT( [Hybris Scripting Language], [1.0b], [evilsocket@gmail.com], [hybris] )
-AM_INIT_AUTOMAKE( hybris, 1.0b )
+AC_INIT( [Hybris Scripting Language], [1.0 beta 2], [evilsocket@gmail.com], [hybris] )
+AM_INIT_AUTOMAKE( hybris, 1.0 beta 2 )
 AC_CONFIG_HEADERS([include/config.h])
 
-AC_DEFINE( AUTHOR,    "The Hybris Dev Team [http://www.hybris-lang.org/]", [] )
-AC_DEFINE( LIBS_PATH, "/usr/lib/hybris/libs/", [system path for libraries (.so dynamic libs)] )
-AC_DEFINE( MODS_PATH, "/usr/lib/hybris/modules/", [system path for modules (hybris global scripts)] )
+AC_DEFINE( AUTHOR,   "The Hybris Dev Team [http://www.hybris-lang.org/]", [] )
+AC_DEFINE( VERSION,  "1.0 beta 2", [] )
+AC_DEFINE( INC_PATH, "/usr/lib/hybris/include/", [system path for hybris global scripts] )
+AC_DEFINE( LIB_PATH, "/usr/lib/hybris/library/", [system path for libraries (.so dynamic libs)] )
 
 LEX=flex
 YACC=bison
@@ -30,22 +31,6 @@ AC_ARG_ENABLE( boundaries,
     AS_HELP_STRING([--disable-boundaries], [Disable boundaries check]),
     [ ac_disable_bc=yes ], [] )
 
-AC_ARG_ENABLE( pcre, 
-    AS_HELP_STRING([--disable-pcre], [Disable pcre support]),
-    [ ac_disable_pcre=yes ], [] )
-
-AC_ARG_ENABLE( http, 
-    AS_HELP_STRING([--disable-http], [Disable http support]),
-    [ ac_disable_http=yes ], [] )
-
-AC_ARG_ENABLE( xml, 
-    AS_HELP_STRING([--disable-xml], [Disable xml support]),
-    [ ac_disable_xml=yes ], [] )
-
-AC_ARG_ENABLE( mt, 
-    AS_HELP_STRING([--disable-mt], [Disable multi threading support]),
-    [ ac_disable_mt=yes ], [] )
-
 AC_ARG_ENABLE( memdebug, 
     AS_HELP_STRING([--enable-memdebug], [Enable memory debugging messages]),
     [ ac_enble_mdbg=yes ], [] )
@@ -56,31 +41,17 @@ fi
 if test "x${ac_disable_bc}" != xyes; then
 	AC_DEFINE( BOUNDS_CHECK, 1, [security check on bounds for array/map/matrix access] )
 fi
-if test "x${ac_disable_pcre}" != xyes; then
-	AC_DEFINE( PCRE_SUPPORT, 1, [support for regular expressions] )
-	AC_CHECK_LIB( [pcrecpp], [pcre_compile],     [], [AC_MSG_ERROR([libpcrecpp is missing])] ) 
-fi
-if test "x${ac_disable_http}" != xyes; then
-	AC_DEFINE( HTTP_SUPPORT, 1, [get/post http(s) methos support] )
-	AC_CHECK_LIB( [curl],    [curl_global_init], [], [AC_MSG_ERROR([libcurl is missing])] ) 
-	AC_CHECK_HEADERS( [curl/curl.h], [], [AC_MSG_ERROR([curl/curl.h header missing])] )
-fi
-if test "x${ac_disable_xml}" != xyes; then
-	AC_DEFINE( XML_SUPPORT, 1, [xml parsing support] )
-	AC_CHECK_LIB( [xml2],    [xmlReadFile],      [], [AC_MSG_ERROR([libxml2 is missing])] ) 
-fi
-if test "x${ac_disable_mt}" != xyes; then
-	AC_DEFINE( MT_SUPPORT, 1, [multi threading support] )
-	AC_CHECK_LIB( [pthread], [pthread_create], 	 [], [AC_MSG_ERROR([libpthread is missing])] ) 
-	AC_CHECK_HEADERS( [pthread.h], [], [AC_MSG_ERROR([pthread.h header missing])] )
-fi
 if test "x${ac_enble_mdbg}" == xyes; then
 	AC_DEFINE( MEM_DEBUG, 1, [memory allocation debug messages] )
 fi
 
 # Checks for libraries.
 AC_CHECK_LIB( [dl],  [dlsym],        [], [AC_MSG_ERROR([libdl is missing])] ) 
-AC_CHECK_LIB( [ffi], [ffi_prep_cif], [], [AC_MSG_ERROR([libffi is missing])] ) 
+AC_DEFINE( PCRE_SUPPORT, 1, [support for regular expressions] )
+AC_CHECK_LIB( [pcrecpp], [pcre_compile], [], [AC_MSG_ERROR([libpcrecpp is missing])] ) 
+AC_DEFINE( MT_SUPPORT, 1, [multi threading support] )
+AC_CHECK_LIB( [pthread], [pthread_create], [], [AC_MSG_ERROR([libpthread is missing])] )
+AC_CHECK_HEADERS( [pthread.h], [], [AC_MSG_ERROR([pthread.h header missing])] )
 # Checks for header files.
 AC_FUNC_ALLOCA
 AC_HEADER_RESOLV
@@ -122,6 +93,6 @@ AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS([bzero floor getcwd gethostbyname gettimeofday memset pow socket sqrt strchr strdup strrchr strtol])
 
-AC_CONFIG_FILES( [Makefile src/builtins/Makefile])
+AC_CONFIG_FILES( [Makefile stdlib/Makefile])
 
 AC_OUTPUT

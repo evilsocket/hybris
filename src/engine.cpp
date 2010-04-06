@@ -340,7 +340,7 @@ Object *Engine::onFunctionDeclaration( vframe_t *frame, Node *node ){
         hyb_syntax_error( "function '%s' already defined", function_name );
     }
     else if( ctx->getFunction( function_name ) != H_UNDEFINED ){
-        hyb_syntax_error( "function '%s' already defined as a language builtin", function_name );
+        hyb_syntax_error( "function '%s' already defined as a language function", function_name );
     }
     /* add the function to the code segment */
     vc->add( function_name, node );
@@ -364,7 +364,7 @@ Object *Engine::onStructureDeclaration( vframe_t *frame, Node * node ){
 
 Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
     char        *callname = (char *)call->value.m_call.c_str();
-    function_t   builtin;
+    function_t   function;
     Node        *node;
     vframe_t     stack;
     unsigned int i(0),
@@ -372,7 +372,7 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
     Object      *value  = H_UNDEFINED,
                 *result = H_UNDEFINED;
 
-    if( (builtin = ctx->getFunction( callname )) == H_UNDEFINED ){
+    if( (function = ctx->getFunction( callname )) == H_UNDEFINED ){
         return H_UNDEFINED;
     }
     /* do object assignment */
@@ -390,7 +390,7 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
     ctx->trace( callname, &stack );
 
     /* call the function */
-    result = builtin( ctx, &stack );
+    result = function( ctx, &stack );
 
     for( i = 0; i < children; i++ ){
         value = stack.at(i);
@@ -492,17 +492,17 @@ Object *Engine::onTypeCall( vframe_t *frame, Node *type ){
 
     // init structure attributes
     if( children > 0 ){
-        if( children > structure->value.m_struct_names.size() ){
+        if( children > structure->value.m_struct.size() ){
             hyb_syntax_error( "structure '%s' has %d attributes, initialized with %d",
                                  type_name,
-                                 structure->value.m_struct_names.size(),
+                                 structure->value.m_struct.size(),
                                  children );
         }
 
         for( i = 0; i < children; ++i ){
             object = exec( frame, type->child(i) );
 
-            structure->setAttribute( (char *)structure->value.m_struct_names[i].c_str(), object );
+            structure->setAttribute( (char *)structure->value.m_struct[i].name.c_str(), object );
 
             H_FREE_GARBAGE(object);
         }
@@ -521,6 +521,8 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
             *fn_pointer       = H_UNDEFINED;
     unsigned int children,
                  i;
+    /* we assume that dll module is already loaded */
+    function_t dllcall        = ctx->getFunction( "dllcall" );
 
     if( (fn_pointer = frame->get( callname )) == H_UNDEFINED ){
         if( threaded ){
@@ -554,7 +556,7 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
     ctx->trace( callname, &stack );
 
     /* call the function */
-    result = hdllcall( ctx, &stack );
+    result = dllcall( ctx, &stack );
 
     for( i = 0; i < children; i++ ){
         value = stack.at(i);
@@ -572,7 +574,7 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
 Object *Engine::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
     Object *result   = H_UNDEFINED;
 
-    /* check if function is a builtin */
+    /* check if function is a function */
     if( (result = onBuiltinFunctionCall( frame, call )) == H_UNDEFINED ){
         /* check for an user defined function */
         if( (result = onUserFunctionCall( frame, call, threaded )) == H_UNDEFINED ){

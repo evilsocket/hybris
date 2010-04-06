@@ -17,6 +17,11 @@
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "object.h"
+#include "node.h"
+
+NamedValue::NamedValue( string n, Object *v ) : name(n), value(v) {
+
+}
 
 const char *Object::type_name( Object *o ){
 	switch(o->type){
@@ -109,18 +114,32 @@ void * Object::operator new (size_t size){
 }
 #endif
 
+Object::Object( H_OBJECT_TYPE type ) :
+    type(type),
+    size(0)
+    #ifdef GC_SUPPORT
+    , attributes(H_OA_GARBAGE)
+    #endif
+{
+
+}
+
 Object::Object( long value ) :
     type(H_OT_INT),
-    size(sizeof(long)),
-    attributes(H_OA_GARBAGE)
+    size(sizeof(long))
+    #ifdef GC_SUPPORT
+    , attributes(H_OA_GARBAGE)
+    #endif
 {
     this->value.m_integer = value;
 }
 
 Object::Object( long value, unsigned int _is_extern ) :
     type(H_OT_INT),
-    size(sizeof(long)),
-    attributes(H_OA_GARBAGE)
+    size(sizeof(long))
+    #ifdef GC_SUPPORT
+    , attributes(H_OA_GARBAGE)
+    #endif
 {
     this->value.m_integer = value;
 	if( _is_extern ){
@@ -130,23 +149,29 @@ Object::Object( long value, unsigned int _is_extern ) :
 
 Object::Object( double value ) :
     type(H_OT_FLOAT),
-    size(sizeof(double)),
-    attributes(H_OA_GARBAGE)
+    size(sizeof(double))
+    #ifdef GC_SUPPORT
+    , attributes(H_OA_GARBAGE)
+    #endif
 {
     this->value.m_double = value;
 }
 
 Object::Object( char value ) :
     type(H_OT_CHAR),
-    size(sizeof(char)),
-    attributes(H_OA_GARBAGE)
+    size(sizeof(char))
+    #ifdef GC_SUPPORT
+    , attributes(H_OA_GARBAGE)
+    #endif
 {
     this->value.m_char = value;
 }
 
 Object::Object( char *value ) :
-    type(H_OT_STRING),
-    attributes(H_OA_GARBAGE)
+    type(H_OT_STRING)
+    #ifdef GC_SUPPORT
+    , attributes(H_OA_GARBAGE)
+    #endif
 {
     this->value.m_string = value;
 	parse_string( this->value.m_string );
@@ -155,8 +180,10 @@ Object::Object( char *value ) :
 
 Object::Object( vector<unsigned char>& data ) :
     type(H_OT_BINARY),
-    size(data.size()),
-    attributes(H_OA_GARBAGE)
+    size(data.size())
+    #ifdef GC_SUPPORT
+    , attributes(H_OA_GARBAGE)
+    #endif
 {
     vector<unsigned char>::iterator i;
 
@@ -167,24 +194,30 @@ Object::Object( vector<unsigned char>& data ) :
 
 Object::Object() :
     type(H_OT_ARRAY),
-    size(0),
-    attributes(H_OA_GARBAGE)
+    size(0)
+    #ifdef GC_SUPPORT
+    , attributes(H_OA_GARBAGE)
+    #endif
 {
 
 }
 
 Object::Object( unsigned int value ) :
     type(H_OT_ALIAS),
-    size(sizeof(unsigned int)),
-    attributes(H_OA_GARBAGE)
+    size(sizeof(unsigned int))
+    #ifdef GC_SUPPORT
+    , attributes(H_OA_GARBAGE)
+    #endif
 {
     this->value.m_alias = value;
 }
 
 Object::Object( unsigned int rows, unsigned int columns, vector<Object *>& data ) :
     type(H_OT_MATRIX),
-    size(0),
-    attributes(H_OA_GARBAGE)
+    size(0)
+    #ifdef GC_SUPPORT
+    , attributes(H_OA_GARBAGE)
+    #endif
 {
     unsigned int x, y;
 
@@ -218,10 +251,12 @@ Object::Object( unsigned int rows, unsigned int columns, vector<Object *>& data 
 
 Object::Object( Object *o ) :
     size(o->size),
-    type(o->type),
-    attributes(o->attributes)
+    type(o->type)
+    #ifdef GC_SUPPORT
+    , attributes(o->attributes)
+    #endif
 {
-	unsigned int i, j, attrs( o->value.m_struct_names.size() ), vals( o->value.m_struct_values.size() );
+	unsigned int i, j, attrs( o->value.m_struct.size() ), vals( attrs );
 
 	switch( type ){
 		case H_OT_INT    : value.m_integer    = o->value.m_integer;    break;
@@ -260,15 +295,15 @@ Object::Object( Object *o ) :
 		break;
 		case H_OT_STRUCT :
             for( i = 0; i < attrs; ++i ){
-                setAttribute( (char *)o->value.m_struct_names[i].c_str(), o->value.m_struct_values[i] );
+                setAttribute( (char *)o->value.m_struct[i].name.c_str(), o->value.m_struct[i].value );
             }
 		break;
 	}
-	attributes = o->attributes;
 }
 
+#ifdef GC_SUPPORT
 void Object::setGarbageAttribute( H_OBJECT_ATTRIBUTE mask ){
-    unsigned int i, j, vals( value.m_struct_values.size() );
+    unsigned int i, j, vals( value.m_struct.size() );
 
     /* not garbage */
     if( mask == ~H_OA_GARBAGE ){
@@ -309,14 +344,15 @@ void Object::setGarbageAttribute( H_OBJECT_ATTRIBUTE mask ){
 
         case H_OT_STRUCT :
             for( i = 0; i < vals; ++i ){
-                value.m_struct_values[i]->setGarbageAttribute(mask);
+                value.m_struct[i].value->setGarbageAttribute(mask);
             }
 		break;
     }
 }
+#endif
 
 Object& Object::assign( Object *o ){
-    unsigned int i, j,  attrs( o->value.m_struct_names.size() ), vals( o->value.m_struct_values.size() );
+    unsigned int i, j,  attrs( o->value.m_struct.size() ), vals( attrs );
 
 	release(false);
 
@@ -359,7 +395,7 @@ Object& Object::assign( Object *o ){
 		break;
 		case H_OT_STRUCT :
             for( i = 0; i < attrs; ++i ){
-                setAttribute( (char *)o->value.m_struct_names[i].c_str(), o->value.m_struct_values[i] );
+                setAttribute( (char *)o->value.m_struct[i].name.c_str(), o->value.m_struct[i].value );
             }
 		break;
 	}
@@ -430,13 +466,11 @@ void Object::release( bool reset_attributes /*= true*/ ){
         break;
 
         case H_OT_STRUCT :
-            for( i = 0; i < value.m_struct_values.size(); ++i ){
-                o = value.m_struct_values[i];
+            for( i = 0; i < value.m_struct.size(); ++i ){
+                o = value.m_struct[i].value;
                 delete o;
-                value.m_struct_values[i] = NULL;
             }
-            value.m_struct_values.clear();
-            value.m_struct_names.clear();
+            value.m_struct.clear();
         break;
     }
     size = 0;
@@ -462,11 +496,11 @@ int Object::equals( Object *o ){
 	}
 	unsigned int i, j;
 	switch( type ){
-		case H_OT_INT    : return value.m_integer    == o->value.m_integer;
-		case H_OT_ALIAS  : return value.m_alias  == o->value.m_alias;
+		case H_OT_INT    : return value.m_integer == o->value.m_integer;
+		case H_OT_ALIAS  : return value.m_alias   == o->value.m_alias;
 		case H_OT_FLOAT  : return value.m_double  == o->value.m_double;
-		case H_OT_CHAR   : return value.m_char   == o->value.m_char;
-		case H_OT_STRING : return value.m_string == o->value.m_string;
+		case H_OT_CHAR   : return value.m_char    == o->value.m_char;
+		case H_OT_STRING : return value.m_string  == o->value.m_string;
 		case H_OT_BINARY :
             for( i = 0; i < size; ++i ){
 				if( value.m_array[i]->equals( o->value.m_array[i] ) == 0 ){
@@ -508,14 +542,13 @@ int Object::equals( Object *o ){
             return 1;
 		break;
 		case H_OT_STRUCT :
-            if( value.m_struct_names.size()  != o->value.m_struct_names.size() ||
-                value.m_struct_values.size() != o->value.m_struct_values.size() ){
+            if( value.m_struct.size()  != o->value.m_struct.size() ){
                 return 0;
             }
 
-            for( i = 0; i < value.m_struct_names.size(); ++i ){
-                if( value.m_struct_names[i]  != o->value.m_struct_names[i] ||
-                    value.m_struct_values[i]->equals(o->value.m_struct_values[i]) == 0 ){
+            for( i = 0; i < value.m_struct.size(); ++i ){
+                if( value.m_struct[i].name != o->value.m_struct[i].name ||
+                    value.m_struct[i].value->equals(o->value.m_struct[i].value) == 0 ){
                     return 0;
                 }
                 return 1;
@@ -529,33 +562,29 @@ void Object::addAttribute( char *name ){
     type = H_OT_STRUCT;
     size++;
 
-    value.m_struct_names.push_back( string(name) );
-    value.m_struct_values.push_back( new Object((long)0) );
+    value.m_struct.push_back( NamedValue( string(name), new Object((long)0) ) );
 }
 
 Object *Object::getAttribute( char *name ){
-    int i, sz( value.m_struct_names.size() );
+    int i, sz( value.m_struct.size() );
 
     for( i = 0; i < sz; ++i ){
-        if( value.m_struct_names[i] == name ){
-            return value.m_struct_values[i];
+        if( value.m_struct[i].name == name ){
+            return value.m_struct[i].value;
         }
     }
     return NULL;
 }
 
 void Object::setAttribute( char *name, Object *value ){
-    int i, sz( this->value.m_struct_names.size() );
+    Object *o = NULL;
 
-    for( i = 0; i < sz; ++i ){
-        if( this->value.m_struct_names[i] == name ){
-            this->value.m_struct_values[i]->assign(value);
-            return;
-        }
+    if( (o = getAttribute(name)) != NULL ){
+        o->assign(value);
     }
-
-    this->value.m_struct_names.push_back( string(name) );
-    this->value.m_struct_values.push_back( new Object(value) );
+    else{
+        this->value.m_struct.push_back( NamedValue( string(name), new Object(value) ) );
+    }
 }
 
 int Object::mapFind( Object *map ){
@@ -576,7 +605,7 @@ Object * Object::getObject(){
 }
 
 void Object::print( unsigned int tabs /*= 0*/ ){
-	unsigned int i, j, vals( value.m_struct_names.size() );
+	unsigned int i, j, vals( value.m_struct.size() );
 	for( i = 0; i < tabs; ++i ) printf( "\t" );
 	switch(type){
 		case H_OT_INT    : printf( "%d",  value.m_integer );           break;
@@ -628,8 +657,8 @@ void Object::print( unsigned int tabs /*= 0*/ ){
             printf( "struct {\n" );
 			for( i = 0; i < vals; ++i ){
 			    for( j = 0; j <= tabs; ++j ) printf( "\t" );
-			    printf( "%s : ", value.m_struct_names[i].c_str() );
-                value.m_struct_values[i]->print( tabs + 1 );
+			    printf( "%s : ", value.m_struct[i].name.c_str() );
+                value.m_struct[i].value->print( tabs + 1 );
                 printf( "\n" );
 			}
 			for( i = 0; i < tabs; ++i ) printf( "\t" );

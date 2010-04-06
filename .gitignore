@@ -13,14 +13,14 @@ config.status
 configure
 install-sh
 ltmain.sh
-src/builtins/Makefile
-src/builtins/Makefile.in
+stdlib/Makefile
+stdlib/Makefile.in
 stamp-h1
 # Flex, bison and compiler generated files
 *.o
 *.lo
 *.so
-*.a
+*.so.*
 hybris
 include/lexer.h
 src/lexer.cpp

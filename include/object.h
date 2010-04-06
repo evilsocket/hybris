@@ -30,9 +30,7 @@
 #include <sstream>
 #include <vector>
 #include <iostream>
-#ifdef PCRE_SUPPORT
-    #include <pcrecpp.h>
-#endif
+#include <pcrecpp.h>
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -54,7 +52,8 @@ enum H_OBJECT_TYPE {
     H_OT_MAP,
     H_OT_ALIAS,
     H_OT_MATRIX,
-    H_OT_STRUCT
+    H_OT_STRUCT,
+    H_OT_CLASS
 };
 
 #ifdef GC_SUPPORT
@@ -77,6 +76,48 @@ enum H_OBJECT_TYPE {
 
 class Object;
 
+class NamedValue {
+public:
+    string  name;
+    Object *value;
+
+    NamedValue( string n, Object *v );
+};
+
+typedef vector<NamedValue>  struct_t;
+
+enum H_ACCESS_SPECIFIER {
+    H_AS_PRIVATE = 0,
+    H_AS_PROTECTED,
+    H_AS_PUBLIC,
+    H_AS_STATIC
+};
+
+template< class T > class NamedMember {
+public :
+    string             name;
+    T *                value;
+    H_ACCESS_SPECIFIER access;
+
+    NamedMember( string n, T *v, H_ACCESS_SPECIFIER a ) :
+        name(n),
+        value(v),
+        access(a) {
+
+    }
+};
+
+class Node;
+
+typedef NamedMember<Object> attribute_t;
+typedef NamedMember<Node>   method_t;
+
+class class_t {
+public :
+    vector<attribute_t> attributes;
+    vector<method_t>    methods;
+};
+
 class ObjectValue {
     public:
 
@@ -84,16 +125,18 @@ class ObjectValue {
         double           m_double;
         char             m_char;
         string           m_string;
+        unsigned int     m_alias;
+
         vector<Object *> m_array;
         vector<Object *> m_map;
-        unsigned int     m_alias;
 
         unsigned int     m_rows;
         unsigned int     m_columns;
         Object       *** m_matrix;
 
-        vector<string>   m_struct_names;
-        vector<Object *> m_struct_values;
+        struct_t         m_struct;
+
+        class_t          m_class;
 };
 
 class Object {
@@ -133,16 +176,20 @@ public  :
     void* operator new (size_t size);
     #endif
 
-    /* ctors */
+    /* explicit type ctor */
+    Object( H_OBJECT_TYPE type );
+    /* default ctor */
+    Object();
+    /* ctors by type/vale */
     Object( long value );
     Object( long value, unsigned int _is_extern );
     Object( double value );
     Object( char value );
     Object( char *value );
     Object( vector<unsigned char>& data );
-	Object();
 	Object( unsigned int value );
 	Object( unsigned int rows, unsigned int columns, vector<Object *>& data );
+	/* ctor by pointer */
     Object( Object *o );
     /* dtor, calls ::release */
     ~Object();

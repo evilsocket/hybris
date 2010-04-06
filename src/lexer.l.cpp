@@ -68,8 +68,8 @@ include          BEGIN(T_INCLUSION);
 
     string mod = yytext;
     if( (yyin = fopen( mod.c_str(), "r" )) == NULL ){
-        /* attempt to load from /usr/lib/hybris/libs/ */
-        if( (yyin = fopen( (LIBS_PATH + mod).c_str(), "r" )) == NULL ){
+        /* attempt to load from default include path */
+        if( (yyin = fopen( (INC_PATH + mod).c_str(), "r" )) == NULL ){
             hyb_generic_error( "Could not open '%s' for inclusion", yytext );
         }
     }
@@ -86,19 +86,17 @@ include          BEGIN(T_INCLUSION);
     }
 }
 
-"import"[ \n\t]+{identifier}[ \n\t]*";" {
-    char *sptr = yytext + strlen( "import " );
-    string module = MODS_PATH + string("mod_");
+"import"[ \n\t]+({identifier}?\.?\*?)*[ \n\t]*";" {
+    char *sptr;
+    string module("");
 
-    while( *sptr != ';' ){
-        module += *sptr;
-        sptr++;
+    for( sptr = yytext + strlen( "import " ); *sptr != ';'; sptr++ ){
+         module += *sptr;
     }
-    module += ".so";
 
     yytext = sptr;
 
-    __context.load( (char *)module.c_str() );
+    __context.loadModule( (char *)module.c_str() );
 }
 
 "#"             { hyb_lex_skip_line();    }
@@ -169,6 +167,11 @@ include          BEGIN(T_INCLUSION);
 "struct"        return T_STRUCT;
 
 "return"        return T_RETURN;
+
+"private"       return T_PRIVATE;
+"protected"     return T_PROTECTED;
+"public"        return T_PUBLIC;
+"static"        return T_STATIC;
 
 "function"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*")" {
 	yylval.function   = hyb_lex_function(yytext);

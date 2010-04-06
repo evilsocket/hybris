@@ -179,6 +179,10 @@ Context __context;
 %token T_RETURN
 %token T_CALL
 %token T_STRUCT
+%token T_PRIVATE
+%token T_PROTECTED
+%token T_PUBLIC
+%token T_STATIC
 
 %nonassoc T_IF_END
 %nonassoc T_SB_END
@@ -318,7 +322,7 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            | expression T_LOR expression                      { $$ = MK_LOR_NODE( $1, $3 ); }
            /* regex specific */
            | expression T_REGEX_OP expression                 { $$ = MK_PCRE_NODE( $1, $3 ); }
-           /* function call (consider two different cases due to builtin calls */
+           /* function call (consider two different cases due to hybris function calls */
 		   | T_IDENT    '(' T_ARGV_LIST ')'  %prec T_CALL_END { $$ = MK_CALL_NODE( $1, $3 ); }
            | expression '(' T_ARGV_LIST ')'                   { $$ = MK_CALL_NODE( $1, $3 ); }
            /* ternary operator */
@@ -332,7 +336,7 @@ int hyb_banner(){
     printf( "Hybris %s (built: %s %s)\n"
             "Released under GPL v3.0 by %s\n"
             "Compiled with :\n"
-            "\tModules path      : %s\n"
+            "\tLibrary path      : %s\n"
             "\tInclude path      : %s\n"
             #ifdef MEM_DEBUG
             "\tMemory Debug      : ON\n"
@@ -343,25 +347,13 @@ int hyb_banner(){
             #ifdef BOUNDS_CHECK
             "\tBoundaries check  : ON\n"
             #endif
-            #ifdef PCRE_SUPPORT
-            "\tPCRE              : ON\n"
-            #endif
-            #ifdef HTTP_SUPPORT
-            "\tHTTP              : ON\n"
-            #endif
-            #ifdef XML_SUPPORT
-            "\tXML               : ON\n"
-            #endif
-            #ifdef MT_SUPPORT
-            "\tMulti threading   : ON\n"
-            #endif
             ,
             VERSION,
             __DATE__,
             __TIME__,
             AUTHOR,
-            LIBS_PATH,
-            MODS_PATH );
+            LIB_PATH,
+            INC_PATH );
 }
 
 int hyb_usage( char *argvz ){
