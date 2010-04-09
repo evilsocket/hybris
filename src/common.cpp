@@ -133,32 +133,28 @@ ulong hyb_uticks(){
     return ((ts.tv_sec * 1000000) + ts.tv_usec);
 }
 
-const char * hyb_timediff( ulong uticks ){
+void hyb_timediff( ulong uticks, char *buffer ){
     #define MS_DELTA (1000.0)
     #define SS_DELTA (MS_DELTA * 1000.0)
     #define MM_DELTA (SS_DELTA * 60.0)
     #define HH_DELTA (MM_DELTA * 60.0)
 
-    char delta[0xFF] = {0};
-
     double ticks = (double)uticks;
 
     if( ticks < MS_DELTA ){
-        sprintf( delta, "%lf us", ticks );
+        sprintf( buffer, "%lf us", ticks );
     }
     else if( ticks < SS_DELTA ){
-        sprintf( delta, "%lf ms", ticks / MS_DELTA );
+        sprintf( buffer, "%lf ms", ticks / MS_DELTA );
     }
     else if( ticks < MM_DELTA ){
-        sprintf( delta, "%lf s", ticks / SS_DELTA );
+        sprintf( buffer, "%lf s", ticks / SS_DELTA );
     }
     else if( ticks < HH_DELTA ){
-        sprintf( delta, "%lf m", ticks / MM_DELTA );
+        sprintf( buffer, "%lf m", ticks / MM_DELTA );
     }
     else{
-        sprintf( delta, "%lf h", ticks / HH_DELTA );
+        sprintf( buffer, "%lf h", ticks / HH_DELTA );
     }
-
-    return delta;
 }
 

@@ -47,7 +47,10 @@ typedef Object * (*function_t)( Context *, vmem_t * );
 /* helper macro to declare a hybris function */
 #define HYBRIS_DEFINE_FUNCTION(name) Object *name( Context *ctx, vmem_t *data )
 /* helper macro to define a constant value */
-#define HYBRIS_DEFINE_CONSTANT( ctx, name, value ) ctx->vmem.add( (char *)name, new Object(value) )
+#define HYBRIS_DEFINE_CONSTANT( ctx, name, value ) ctx->vmem.add( (char *)name, &( Object(value) ) )
+
+#define HYB_TIMER_START 1
+#define HYB_TIMER_STOP  0
 
 typedef struct _named_function_t {
     string     identifier;
@@ -142,6 +145,8 @@ class Context {
         vmem_t         vtypes;
         /* execution arguments */
         h_args_t       args;
+        /* functions lookup hashtable cache */
+        Map<named_function_t> modules_cache;
         /* dynamically loaded modules */
         h_modules_t    modules;
         /* code execution engine */
@@ -166,16 +171,18 @@ class Context {
             unlock();
         }
 
-        inline void timer(){
+        inline void timer( int start = 0 ){
             if( args.tm_timer ){
                 /* first call */
-                if( args.tm_start == 0 ){
+                if( args.tm_start == 0 && start ){
                     args.tm_start = hyb_uticks();
                 }
                 /* last call */
-                else{
+                else if( !start ){
                     args.tm_end = hyb_uticks();
-                    printf( "\033[01;33m[TIME] Elapsed %s .\n\033[00m", hyb_timediff( args.tm_end - args.tm_start ) );
+                    char buffer[0xFF] = {0};
+                    hyb_timediff( args.tm_end - args.tm_start, buffer );
+                    printf( "\033[01;33m[TIME] Elapsed %s .\n\033[00m", buffer );
                 }
             }
         }

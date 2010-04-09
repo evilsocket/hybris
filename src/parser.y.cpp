@@ -203,9 +203,9 @@ Context __context;
 %type <argv> T_IDENT_LIST
 %%
 
-program    : body           { __context.timer(); }
+program    : body           { __context.timer( HYB_TIMER_STOP ); }
 
-body       : body statement { __context.timer();
+body       : body statement { __context.timer( HYB_TIMER_START );
                               __context.engine->exec( &__context.vmem, $2 );
                               RM_NODE($2);
                             }

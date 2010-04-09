@@ -90,7 +90,6 @@ void Context::init( int argc, char *argv[] ){
     int i;
     char name[0xFF] = {0};
 
-
     /* create code engine */
     engine = new Engine( this );
     /* save interpreter directory */
@@ -103,18 +102,13 @@ void Context::init( int argc, char *argv[] ){
     signal( SIGSEGV, Context::signal_handler );
 
     /* initialize command line arguments */
-    Object *o = new Object( static_cast<long>(argc - 1) );
-    vmem.add( (char *)"argc", o );
-    delete o;
+    vmem.add( (char *)"argc", &( Object( static_cast<long>(argc - 1) ) ) );
     for( i = 1; i < argc; ++i ){
         sprintf( name, "%d", i - 1 );
-        o = new Object(argv[i]);
-        vmem.add( name, o );
-        delete o;
+        vmem.add( name, &( Object( argv[i] ) ) );
     }
 
-    /* initialize constants */
-    /* misc */
+    /* initialize misc constants */
     HYBRIS_DEFINE_CONSTANT( this, "true",  static_cast<long>(1) );
     HYBRIS_DEFINE_CONSTANT( this, "false", static_cast<long>(0) );
 }
@@ -135,6 +129,20 @@ void Context::release( int error /*= 0*/ ){
 
     delete engine;
 
+    unsigned int i, j,
+                 ndyns( modules.size() ),
+                 nfuncs;
+
+    for( i = 0; i < ndyns; ++i ){
+        nfuncs = modules[i]->functions.size();
+        for( j = 0; j < nfuncs; ++j ){
+			delete modules[i]->functions[j];
+        }
+        delete modules[i];
+    }
+
+	modules.clear();
+	modules_cache.clear();
     vmem.release();
     vcode.release();
     vtypes.release();
@@ -257,13 +265,22 @@ function_t Context::getFunction( char *identifier ){
                  ndyns( modules.size() ),
                  nfuncs;
 
+    /* first check if it's already in cache */
+    named_function_t * cached_function = modules_cache.find(identifier);
+    if( cached_function != H_UNDEFINED ){
+		return cached_function->function;
+	}
+
     /* search it in dynamic loaded modules */
     for( i = 0; i < ndyns; ++i ){
         /* for each function of the module */
         nfuncs = modules[i]->functions.size();
         for( j = 0; j < nfuncs; ++j ){
             if( modules[i]->functions[j]->identifier == identifier ){
-                return modules[i]->functions[j]->function;
+                /* found it, add to the cache and return */
+                cached_function = modules[i]->functions[j];
+                modules_cache.insert( identifier, cached_function );
+                return cached_function->function;
             }
         }
     }

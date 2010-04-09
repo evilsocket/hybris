@@ -50,14 +50,14 @@ h_args_t;
 
 void yyerror( char *error );
 
-void         hyb_generic_warning( const char *format, ... );
-void         hyb_generic_error( const char *format, ... );
-void         hyb_syntax_error( const char *format, ... );
-void         hyb_type_assert( Object *o, H_OBJECT_TYPE type );
-void         hyb_type_assert( Object *o, H_OBJECT_TYPE type1, H_OBJECT_TYPE type2 );
-void         hyb_print_stacktrace( int force = 0 );
-int          hyb_file_exists ( char *filename );
-ulong        hyb_uticks();
-const char * hyb_timediff( ulong uticks );
+void  hyb_generic_warning( const char *format, ... );
+void  hyb_generic_error( const char *format, ... );
+void  hyb_syntax_error( const char *format, ... );
+void  hyb_type_assert( Object *o, H_OBJECT_TYPE type );
+void  hyb_type_assert( Object *o, H_OBJECT_TYPE type1, H_OBJECT_TYPE type2 );
+void  hyb_print_stacktrace( int force = 0 );
+int   hyb_file_exists ( char *filename );
+ulong hyb_uticks();
+void  hyb_timediff( ulong uticks, char *buffer );
 
 #endif
