@@ -409,8 +409,7 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
     char    *callname             = (char *)call->value.m_call.c_str(),
              function_name[0xFF]  = {0};
     Node    *function             = H_UNDEFINED,
-            *identifier           = H_UNDEFINED,
-            *clone                = H_UNDEFINED;
+            *identifier           = H_UNDEFINED;
     vframe_t stack;
     Object  *value                = H_UNDEFINED,
             *result               = H_UNDEFINED;
@@ -450,13 +449,12 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
 
     children = call->children();
     for( i = 0; i < children; ++i ){
-        clone = call->child(i);
-        value = exec( frame, clone );
-        /* prevent value from being deleted, we'll take care of it */
-        if( value != H_UNDEFINED ){
-            value->setGarbageAttribute( ~H_OA_GARBAGE );
-        }
-        stack.insert( (char *)identifiers[i].c_str(), value );
+        value = exec( frame, call->child(i) );
+        // this creates a copy of 'value' (fixes: #0000012)
+        stack.add( (char *)identifiers[i].c_str(), value );
+        /* at this point, the original value is not necessary anymore so
+           if it meets the garbage conditions we can free it */
+        H_FREE_GARBAGE(value);
     }
 
     ctx->trace( callname, &stack );
@@ -466,6 +464,8 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
 
     for( i = 0; i < children; i++ ){
         value = stack.at(i);
+        /* 'value' is obviously defined inside the 'stack', so
+           we can just consider null pointer and constant values */
         if( value != H_UNDEFINED && H_IS_NOT_CONSTANT(value) ){
             delete value;
         }
@@ -952,16 +952,16 @@ Object *Engine::onDote( vframe_t *frame, Node *node ){
 }
 
 Object *Engine::onAssign( vframe_t *frame, Node *node ){
-    Object *object = H_UNDEFINED,
-           *value  = H_UNDEFINED;
+    Object *object     = H_UNDEFINED,
+           *value      = H_UNDEFINED;
 
     if( node->child(0)->type() != H_NT_ATTRIBUTE ){
+        char   *identifier = (char *)node->child(0)->value.m_identifier.c_str();
+
         value  = exec( frame, node->child(1) );
-        object = frame->add( (char *)node->child(0)->value.m_identifier.c_str(), value );
+        object = frame->add( identifier, value );
     }
     else{
-        char *s_name = (char *)node->child(0)->value.m_identifier.c_str();
-
         object = exec( frame, node->child(0) );
         value  = exec( frame, node->child(1) );
 
