@@ -47,13 +47,13 @@ static size_t http_append_callback( void *ptr, size_t size, size_t nmemb, void *
 }
 
 HYBRIS_DEFINE_FUNCTION(hhttp_get){
-	if( data->size() < 2 ){
-		hyb_syntax_error( "function 'http_get' requires at least 2 parameters (called with %d)", data->size() );
+	if( HYB_ARGC() < 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'http_get' requires at least 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_STRING );
-	hyb_type_assert( data->at(1), H_OT_STRING );
-	if( data->size() >= 3 ){
-		hyb_type_assert( data->at(2), H_OT_MAP );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
+	if( HYB_ARGC() >= 3 ){
+		HYB_TYPE_ASSERT( HYB_ARGV(2), H_OT_MAP );
 	}
 
 	CURL  *cd;
@@ -61,10 +61,10 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 	struct curl_slist *headerlist = NULL;
 	string hbuffer,
 		   buffer,
-		   host = data->at(0)->value.m_string,
-		   page = data->at(1)->value.m_string,
+		   host = HYB_ARGV(0)->value.m_string,
+		   page = HYB_ARGV(1)->value.m_string,
 		   url;
-	unsigned int dohead = (data->size() >= 3 ? data->at(2)->lvalue() : 0),
+	unsigned int dohead = (HYB_ARGC() >= 3 ? HYB_ARGV(2)->lvalue() : 0),
 				 https  = !strncmp( "https://", host.c_str(), 8 );
 
 	curl_global_init(CURL_GLOBAL_ALL);
@@ -96,11 +96,11 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 		curl_easy_setopt( cd, CURLOPT_SSL_VERIFYHOST, 0L );
 	}
 
-	if( data->size() > 3 ){
-		hyb_type_assert( data->at(3), H_OT_MAP );
+	if( HYB_ARGC() > 3 ){
+		HYB_TYPE_ASSERT( HYB_ARGV(3), H_OT_MAP );
 		unsigned int i;
 		string header;
-		Object *headers = data->at(3);
+		Object *headers = HYB_ARGV(3);
 
 		for( i = 0; i < headers->value.m_map.size(); i++ ){
 			Object *name  = headers->value.m_map[i]->toString(),
@@ -135,14 +135,14 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 }
 
 HYBRIS_DEFINE_FUNCTION(hhttp_post){
-	if( data->size() < 3 ){
-		hyb_syntax_error( "function 'http_post' requires at least 3 parameters (called with %d)", data->size() );
+	if( HYB_ARGC() < 3 ){
+		hyb_throw( H_ET_SYNTAX, "function 'http_post' requires at least 3 parameters (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_STRING );
-	hyb_type_assert( data->at(1), H_OT_STRING );
-	hyb_type_assert( data->at(2), H_OT_MAP );
-	if( data->size() >= 3 ){
-		hyb_type_assert( data->at(3), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(2), H_OT_MAP );
+	if( HYB_ARGC() >= 3 ){
+		HYB_TYPE_ASSERT( HYB_ARGV(3), H_OT_INT );
 	}
 
 	CURL  *cd;
@@ -150,14 +150,14 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 	struct curl_httppost *formpost=NULL;
 	struct curl_httppost *lastptr=NULL;
 	struct curl_slist    *headerlist = NULL;
-	Object *post = data->at(2);
+	Object *post = HYB_ARGV(2);
 	string hbuffer,
 		   buffer,
-		   host = data->at(0)->value.m_string,
-		   page = data->at(1)->value.m_string,
+		   host = HYB_ARGV(0)->value.m_string,
+		   page = HYB_ARGV(1)->value.m_string,
 		   url;
 	unsigned int i,
-				 dohead = (data->size() >= 3 ? data->at(3)->lvalue() : 0),
+				 dohead = (HYB_ARGC() >= 3 ? HYB_ARGV(3)->lvalue() : 0),
 				 https  = !strncmp( "https://", host.c_str(), 8 );
 
 	curl_global_init(CURL_GLOBAL_ALL);
@@ -189,10 +189,10 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 		curl_easy_setopt( cd, CURLOPT_SSL_VERIFYHOST, 0L );
 	}
 
-	if( data->size() >= 4 ){
-		hyb_type_assert( data->at(4), H_OT_MAP );
+	if( HYB_ARGC() >= 4 ){
+		HYB_TYPE_ASSERT( HYB_ARGV(4), H_OT_MAP );
 		string header;
-		Object *headers = data->at(4);
+		Object *headers = HYB_ARGV(4);
 
 		for( i = 0; i < headers->value.m_map.size(); i++ ){
 			Object *name  = headers->value.m_map[i]->toString(),
@@ -243,24 +243,24 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 }
 
 HYBRIS_DEFINE_FUNCTION(hhttp){
-    if( data->size() < 1 ){
-		hyb_syntax_error( "function 'http' requires at least 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() < 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'http' requires at least 1 parameter (called with %d)", HYB_ARGC() );
 	}
-    hyb_type_assert( data->at(0), H_OT_INT );
+    HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
 
     vmem_t hdata;
-    int    method = data->at(0)->value.m_integer,
+    int    method = HYB_ARGV(0)->value.m_integer,
            i;
 
-    if( method == HTTP_GET && data->size() < 3 ){
-        hyb_syntax_error( "function 'http' requires at least 2 parameters if method=GET (called with %d)", data->size() );
+    if( method == HTTP_GET && HYB_ARGC() < 3 ){
+        hyb_throw( H_ET_SYNTAX, "function 'http' requires at least 2 parameters if method=GET (called with %d)", HYB_ARGC() );
     }
-    else if( method == HTTP_POST && data->size() < 4 ){
-        hyb_syntax_error( "function 'http' requires at least 3 parameters if method=POST (called with %d)", data->size() );
+    else if( method == HTTP_POST && HYB_ARGC() < 4 ){
+        hyb_throw( H_ET_SYNTAX, "function 'http' requires at least 3 parameters if method=POST (called with %d)", HYB_ARGC() );
     }
 
     for( i = 1; i < data->size(); i++ ){
-        hdata.insert( HANONYMOUSIDENTIFIER, data->at(i) );
+        hdata.insert( HANONYMOUSIDENTIFIER, HYB_ARGV(i) );
     }
 
     if( method == HTTP_GET ){
@@ -270,6 +270,6 @@ HYBRIS_DEFINE_FUNCTION(hhttp){
         return hhttp_post( ctx, &hdata );
     }
     else{
-        hyb_syntax_error( "function 'http', unknown method" );
+        hyb_throw( H_ET_SYNTAX, "function 'http', unknown method" );
     }
 }

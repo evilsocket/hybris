@@ -52,80 +52,80 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hisint){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'isint' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'isint' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( static_cast<long>(data->at(0)->type == H_OT_INT) );
+	return new Object( static_cast<long>(HYB_ARGV(0)->type == H_OT_INT) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisfloat){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'isfloat' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'isfloat' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( static_cast<long>(data->at(0)->type == H_OT_FLOAT) );
+	return new Object( static_cast<long>(HYB_ARGV(0)->type == H_OT_FLOAT) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hischar){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'ischar' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'ischar' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( static_cast<long>(data->at(0)->type == H_OT_CHAR) );
+	return new Object( static_cast<long>(HYB_ARGV(0)->type == H_OT_CHAR) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisstring){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'isstring' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'isstring' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( static_cast<long>(data->at(0)->type == H_OT_STRING) );
+	return new Object( static_cast<long>(HYB_ARGV(0)->type == H_OT_STRING) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisarray){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'isarray' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'isarray' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( static_cast<long>(data->at(0)->type == H_OT_ARRAY) );
+	return new Object( static_cast<long>(HYB_ARGV(0)->type == H_OT_ARRAY) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hismap){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'ismap' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'ismap' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( static_cast<long>(data->at(0)->type == H_OT_MAP) );
+	return new Object( static_cast<long>(HYB_ARGV(0)->type == H_OT_MAP) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisalias){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'isalias' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'isalias' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( static_cast<long>(data->at(0)->type == H_OT_ALIAS) );
+	return new Object( static_cast<long>(HYB_ARGV(0)->type == H_OT_ALIAS) );
 }
 
 HYBRIS_DEFINE_FUNCTION(htypeof){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'typeof' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'typeof' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( (char *)Object::type_name(data->at(0)) );
+	return new Object( (char *)Object::type_name(HYB_ARGV(0)) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsizeof){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'sizeof' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'sizeof' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( static_cast<long>( data->at(0)->size  ) );
+	return new Object( static_cast<long>( HYB_ARGV(0)->size  ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(htoint){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'toint' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'toint' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return data->at(0)->toInt();
+	return HYB_ARGV(0)->toInt();
 }
 
 HYBRIS_DEFINE_FUNCTION(htostring){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'tostring' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'tostring' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return data->at(0)->toString();
+	return HYB_ARGV(0)->toString();
 }
 
 /* xml conversion routines */
@@ -258,7 +258,7 @@ Object *xmlNode2Object( xmlNode *node ){
         return structure;
 	}
 	else{
-		hyb_generic_error( "'%s' invalid xml object type", node->name );
+		hyb_throw( H_ET_GENERIC, "'%s' invalid xml object type", node->name );
 	}
 }
 
@@ -326,7 +326,7 @@ string Object2Xml( Object *o, unsigned int tabs = 0 ){
 		break;
 
 		default :
-            hyb_generic_error( "could not convert %s type to xml", Object::type_name(o) );
+            hyb_throw( H_ET_GENERIC, "could not convert %s type to xml", Object::type_name(o) );
 	}
 
 	return xml.str().c_str();
@@ -334,24 +334,24 @@ string Object2Xml( Object *o, unsigned int tabs = 0 ){
 
 
 HYBRIS_DEFINE_FUNCTION(hfromxml){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'fromxml' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'fromxml' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
 	xmlDoc  *doc  = NULL;
 	xmlNode *root = NULL;
 
 	LIBXML_TEST_VERSION
 
-	string normalized = data->at(0)->value.m_string;
+	string normalized = HYB_ARGV(0)->value.m_string;
 	Object::replace( normalized, "\n", "" );
 	Object::replace( normalized, "\t", "" );
 	Object::replace( normalized, "\r", "" );
 
 	doc = xmlReadMemory( normalized.c_str(), normalized.size(), NULL, NULL, 0 );
 	if( doc == NULL ){
-		hyb_generic_error( "could not parse xml object" );
+		hyb_throw( H_ET_GENERIC, "could not parse xml object" );
 	}
 
 	Object *object = xmlNode2Object( xmlDocGetRootElement(doc) );
@@ -364,11 +364,11 @@ HYBRIS_DEFINE_FUNCTION(hfromxml){
 
 
 HYBRIS_DEFINE_FUNCTION(htoxml){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'toxml' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'toxml' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
 
-	string xml = Object2Xml( data->at(0) );
+	string xml = Object2Xml( HYB_ARGV(0) );
 
 	return new Object( (char *)xml.c_str() );
 }

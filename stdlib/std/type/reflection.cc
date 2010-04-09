@@ -77,23 +77,23 @@ HYBRIS_DEFINE_FUNCTION(hdyn_functions){
 }
 
 HYBRIS_DEFINE_FUNCTION(hcall){
-	if( data->size() < 1 ){
-		hyb_syntax_error( "function 'call' requires at least 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() < 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'call' requires at least 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
 	Node *call  = new Node(H_NT_CALL);
-    call->value.m_call = data->at(0)->value.m_string;
-	if( data->size() > 1 ){
+    call->value.m_call = HYB_ARGV(0)->value.m_string;
+	if( HYB_ARGC() > 1 ){
 		unsigned int i;
 		for( i = 1; i < data->size(); i++ ){
-			switch( data->at(i)->type ){
-				case H_OT_INT    : call->addChild( new ConstantNode(data->at(i)->value.m_integer) );                    break;
-				case H_OT_FLOAT  : call->addChild( new ConstantNode(data->at(i)->value.m_double) );                  break;
-				case H_OT_CHAR   : call->addChild( new ConstantNode(data->at(i)->value.m_char) );                   break;
-				case H_OT_STRING : call->addChild( new ConstantNode((char *)data->at(i)->value.m_string.c_str()) ); break;
+			switch( HYB_ARGV(i)->type ){
+				case H_OT_INT    : call->addChild( new ConstantNode(HYB_ARGV(i)->value.m_integer) );                    break;
+				case H_OT_FLOAT  : call->addChild( new ConstantNode(HYB_ARGV(i)->value.m_double) );                  break;
+				case H_OT_CHAR   : call->addChild( new ConstantNode(HYB_ARGV(i)->value.m_char) );                   break;
+				case H_OT_STRING : call->addChild( new ConstantNode((char *)HYB_ARGV(i)->value.m_string.c_str()) ); break;
 
-				default : hyb_generic_error( "type not supported for reflected call" );
+				default : hyb_throw( H_ET_GENERIC, "type not supported for reflected call" );
 			}
 		}
 	}

@@ -31,14 +31,14 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hrex_match){
-	if( data->size() != 2 ){
-		hyb_syntax_error( "function 'rex_match' requires 2 parameters (called with %d)", data->size() );
+	if( HYB_ARGC() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'rex_match' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_STRING );
-	hyb_type_assert( data->at(1), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
 
-	string rawreg  = data->at(0)->value.m_string,
-		   subject = data->at(1)->value.m_string,
+	string rawreg  = HYB_ARGV(0)->value.m_string,
+		   subject = HYB_ARGV(1)->value.m_string,
 		   regex;
 	int    opts;
 
@@ -51,14 +51,14 @@ HYBRIS_DEFINE_FUNCTION(hrex_match){
 }
 
 HYBRIS_DEFINE_FUNCTION(hrex_matches){
-	if( data->size() != 2 ){
-		hyb_syntax_error( "function 'rex_matches' requires 2 parameters (called with %d)", data->size() );
+	if( HYB_ARGC() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'rex_matches' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_STRING );
-	hyb_type_assert( data->at(1), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
 
-	string rawreg  = data->at(0)->value.m_string,
-		   subject = data->at(1)->value.m_string,
+	string rawreg  = HYB_ARGV(0)->value.m_string,
+		   subject = HYB_ARGV(1)->value.m_string,
 		   regex;
 	int    opts, i = 0;
 
@@ -72,7 +72,7 @@ HYBRIS_DEFINE_FUNCTION(hrex_matches){
 
     while( REGEX.FindAndConsume( &SUBJECT, &match ) == true ){
 		if( i++ > H_PCRE_MAX_MATCHES ){
-			hyb_generic_error( "something of your regex is forcing infinite matches" );
+			hyb_throw( H_ET_GENERIC, "something of your regex is forcing infinite matches" );
 		}
 		matches->push( new Object((char *)match.c_str()) );
 	}
@@ -81,16 +81,16 @@ HYBRIS_DEFINE_FUNCTION(hrex_matches){
 }
 
 HYBRIS_DEFINE_FUNCTION(hrex_replace){
-	if( data->size() != 3 ){
-		hyb_syntax_error( "function 'rex_replace' requires 2 parameters (called with %d)", data->size() );
+	if( HYB_ARGC() != 3 ){
+		hyb_throw( H_ET_SYNTAX, "function 'rex_replace' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_STRING );
-	hyb_type_assert( data->at(1), H_OT_STRING );
-	hyb_type_assert( data->at(2), H_OT_STRING, H_OT_CHAR );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
+	HYB_TYPES_ASSERT( HYB_ARGV(2), H_OT_STRING, H_OT_CHAR );
 
-	string rawreg  = data->at(0)->value.m_string,
-		   subject = data->at(1)->value.m_string,
-		   replace = (data->at(2)->type == H_OT_STRING ? data->at(2)->value.m_string : string("") + data->at(2)->value.m_char),
+	string rawreg  = HYB_ARGV(0)->value.m_string,
+		   subject = HYB_ARGV(1)->value.m_string,
+		   replace = (HYB_ARGV(2)->type == H_OT_STRING ? HYB_ARGV(2)->value.m_string : string("") + HYB_ARGV(2)->value.m_char),
 		   regex;
 	int    opts;
 

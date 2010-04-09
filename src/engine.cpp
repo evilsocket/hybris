@@ -283,7 +283,7 @@ Object *Engine::onIdentifier( vframe_t *frame, Node *node ){
         }
         // identifier not found
         else{
-            hyb_syntax_error( "'%s' undeclared identifier", identifier );
+            hyb_throw( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
         }
     }
 
@@ -305,10 +305,10 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
         owner = vm->get( identifier );
     }
     if( owner == H_UNDEFINED ){
-        hyb_syntax_error( "'%s' undeclared identifier", identifier );
+        hyb_throw( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
     }
     else if( owner->type != H_OT_STRUCT ){
-        hyb_syntax_error( "'%s' is not a structure identifier", identifier );
+        hyb_throw( H_ET_SYNTAX, "'%s' is not a structure identifier", identifier );
     }
 
     for( i = 0; i < attributes; ++i ){
@@ -316,7 +316,7 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
         child    = owner->getAttribute( child_id );
 
         if( child == H_UNDEFINED ){
-            hyb_syntax_error( "'%s' is not an attribute of %s", child_id, owner_id );
+            hyb_throw( H_ET_SYNTAX, "'%s' is not an attribute of %s", child_id, owner_id );
         }
         else if( child->type == H_OT_STRUCT ){
             owner    = child;
@@ -337,10 +337,10 @@ Object *Engine::onFunctionDeclaration( vframe_t *frame, Node *node ){
 
     /* check for double definition */
     if( vc->get(function_name) != H_UNDEFINED ){
-        hyb_syntax_error( "function '%s' already defined", function_name );
+        hyb_throw( H_ET_SYNTAX, "function '%s' already defined", function_name );
     }
     else if( ctx->getFunction( function_name ) != H_UNDEFINED ){
-        hyb_syntax_error( "function '%s' already defined as a language function", function_name );
+        hyb_throw( H_ET_SYNTAX, "function '%s' already defined as a language function", function_name );
     }
     /* add the function to the code segment */
     vc->add( function_name, node );
@@ -357,7 +357,7 @@ Object *Engine::onStructureDeclaration( vframe_t *frame, Node * node ){
         s->addAttribute( (char *)node->child(i)->value.m_identifier.c_str() );
     }
 
-    vt->add( s_name, s );
+    ctx->defineType( s_name, s );
 
     return H_UNDEFINED;
 }
@@ -442,7 +442,7 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
         if( threaded ){
            ctx->depool();
         }
-        hyb_syntax_error( "function '%s' requires %d parameters (called with %d)",
+        hyb_throw( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
                              function->value.m_function.c_str(),
                              identifiers.size(),
                              call->children() );
@@ -484,7 +484,7 @@ Object *Engine::onTypeCall( vframe_t *frame, Node *type ){
               *object    = H_UNDEFINED;
     int        i, children( type->children() );
 
-    if( (user_type = vt->find(type_name)) == H_UNDEFINED ){
+    if( (user_type = ctx->getType(type_name)) == H_UNDEFINED ){
         return H_UNDEFINED;
     }
 
@@ -493,7 +493,7 @@ Object *Engine::onTypeCall( vframe_t *frame, Node *type ){
     // init structure attributes
     if( children > 0 ){
         if( children > structure->value.m_struct.size() ){
-            hyb_syntax_error( "structure '%s' has %d attributes, initialized with %d",
+            hyb_throw( H_ET_SYNTAX, "structure '%s' has %d attributes, initialized with %d",
                                  type_name,
                                  structure->value.m_struct.size(),
                                  children );
@@ -582,7 +582,7 @@ Object *Engine::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*
             if( (result = onTypeCall( frame, call )) == H_UNDEFINED ){
                 /* finally check if the function is an extern identifier loaded by dll importing routines */
                 if( (result = onDllFunctionCall( frame, call, threaded )) == H_UNDEFINED ){
-                    hyb_syntax_error( "'%s' undeclared function identifier", call->value.m_call.c_str() );
+                    hyb_throw( H_ET_SYNTAX, "'%s' undeclared function identifier", call->value.m_call.c_str() );
                 }
             }
         }
@@ -601,7 +601,7 @@ Object *Engine::onDollar( vframe_t *frame, Node *node ){
     H_FREE_GARBAGE(o);
 
     if( (o = frame->get( (char *)name->value.m_string.c_str() )) == H_UNDEFINED ){
-        hyb_syntax_error( "'%s' undeclared identifier", (char *)name->value.m_string.c_str() );
+        hyb_throw( H_ET_SYNTAX, "'%s' undeclared identifier", (char *)name->value.m_string.c_str() );
     }
 
     H_FREE_GARBAGE(name);

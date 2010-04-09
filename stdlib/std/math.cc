@@ -63,298 +63,298 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hacos){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'acos' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'acos' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->type == H_OT_INT ){
-        return new Object((double)acos(data->at(0)->value.m_integer));
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        return new Object((double)acos(HYB_ARGV(0)->value.m_integer));
     }
     else{
-        return new Object((double)acos(data->at(0)->value.m_double));
+        return new Object((double)acos(HYB_ARGV(0)->value.m_double));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hasin){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'asin' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'asin' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->type == H_OT_INT ){
-        return new Object((double)asin(data->at(0)->value.m_integer));
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        return new Object((double)asin(HYB_ARGV(0)->value.m_integer));
     }
     else{
-        return new Object((double)asin(data->at(0)->value.m_double));
+        return new Object((double)asin(HYB_ARGV(0)->value.m_double));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hatan){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'atan' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'atan' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->type == H_OT_INT ){
-        return new Object((double)atan(data->at(0)->value.m_integer));
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        return new Object((double)atan(HYB_ARGV(0)->value.m_integer));
     }
     else{
-        return new Object((double)atan(data->at(0)->value.m_double));
+        return new Object((double)atan(HYB_ARGV(0)->value.m_double));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hatan2){
-    if( data->size() != 2 ){
-		hyb_syntax_error( "function 'atan2' requires 2 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'atan2' requires 2 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
-    hyb_type_assert( data->at(1), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
+    HYB_TYPES_ASSERT( HYB_ARGV(1), H_OT_INT, H_OT_FLOAT );
 
     double a, b;
 
-    if( data->at(0)->type == H_OT_INT ){
-        a = (double)data->at(0)->value.m_integer;
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        a = (double)HYB_ARGV(0)->value.m_integer;
     }
     else{
-        a = data->at(0)->value.m_double;
+        a = HYB_ARGV(0)->value.m_double;
     }
-    if( data->at(1)->type == H_OT_INT ){
-        b = (double)data->at(1)->value.m_integer;
+    if( HYB_ARGV(1)->type == H_OT_INT ){
+        b = (double)HYB_ARGV(1)->value.m_integer;
     }
     else{
-        b = data->at(1)->value.m_double;
+        b = HYB_ARGV(1)->value.m_double;
     }
     return new Object((double)atan2(a,b));
 }
 
 HYBRIS_DEFINE_FUNCTION(hceil){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'ceil' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'ceil' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->type == H_OT_INT ){
-        return new Object( static_cast<long>( ceil(data->at(0)->value.m_integer) ) );
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        return new Object( static_cast<long>( ceil(HYB_ARGV(0)->value.m_integer) ) );
     }
     else{
-        return new Object(static_cast<long>( ceil(data->at(0)->value.m_double) ) );
+        return new Object(static_cast<long>( ceil(HYB_ARGV(0)->value.m_double) ) );
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hcos){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'cos' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'cos' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->type == H_OT_INT ){
-        return new Object((double)cos(data->at(0)->value.m_integer));
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        return new Object((double)cos(HYB_ARGV(0)->value.m_integer));
     }
     else{
-        return new Object((double)cos(data->at(0)->value.m_double));
+        return new Object((double)cos(HYB_ARGV(0)->value.m_double));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hcosh){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'cosh' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'cosh' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->type == H_OT_INT ){
-        return new Object((double)cosh(data->at(0)->value.m_integer));
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        return new Object((double)cosh(HYB_ARGV(0)->value.m_integer));
     }
     else{
-        return new Object((double)cosh(data->at(0)->value.m_double));
+        return new Object((double)cosh(HYB_ARGV(0)->value.m_double));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hexp){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'exp' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'exp' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->type == H_OT_INT ){
-        return new Object((double)exp(data->at(0)->value.m_integer));
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        return new Object((double)exp(HYB_ARGV(0)->value.m_integer));
     }
     else{
-        return new Object((double)exp(data->at(0)->value.m_double));
+        return new Object((double)exp(HYB_ARGV(0)->value.m_double));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hfabs){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'fabs' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'fabs' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->type == H_OT_INT ){
-        return new Object((double)fabs(data->at(0)->value.m_integer));
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        return new Object((double)fabs(HYB_ARGV(0)->value.m_integer));
     }
     else{
-        return new Object((double)fabs(data->at(0)->value.m_double));
+        return new Object((double)fabs(HYB_ARGV(0)->value.m_double));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hfloor){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'floor' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'floor' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->type == H_OT_INT ){
-        return new Object( static_cast<long>( floor(data->at(0)->value.m_integer) ) );
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        return new Object( static_cast<long>( floor(HYB_ARGV(0)->value.m_integer) ) );
     }
     else{
-        return new Object( static_cast<long>( floor(data->at(0)->value.m_double) ) );
+        return new Object( static_cast<long>( floor(HYB_ARGV(0)->value.m_double) ) );
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hfmod){
-    if( data->size() != 2 ){
-		hyb_syntax_error( "function 'fmod' requires 2 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'fmod' requires 2 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
-    hyb_type_assert( data->at(1), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
+    HYB_TYPES_ASSERT( HYB_ARGV(1), H_OT_INT, H_OT_FLOAT );
 
     double a, b;
 
-    if( data->at(0)->type == H_OT_INT ){
-        a = (double)data->at(0)->value.m_integer;
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        a = (double)HYB_ARGV(0)->value.m_integer;
     }
     else{
-        a = data->at(0)->value.m_double;
+        a = HYB_ARGV(0)->value.m_double;
     }
-    if( data->at(1)->type == H_OT_INT ){
-        b = (double)data->at(1)->value.m_integer;
+    if( HYB_ARGV(1)->type == H_OT_INT ){
+        b = (double)HYB_ARGV(1)->value.m_integer;
     }
     else{
-        b = data->at(1)->value.m_double;
+        b = HYB_ARGV(1)->value.m_double;
     }
     return new Object((double)fmod(a,b));
 }
 
 HYBRIS_DEFINE_FUNCTION(hlog){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'hlog' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'hlog' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->type == H_OT_INT ){
-        return new Object((double)log(data->at(0)->value.m_integer));
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        return new Object((double)log(HYB_ARGV(0)->value.m_integer));
     }
     else{
-        return new Object((double)log(data->at(0)->value.m_double));
+        return new Object((double)log(HYB_ARGV(0)->value.m_double));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hlog10){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'log10' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'log10' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->type == H_OT_INT ){
-        return new Object((double)log10(data->at(0)->value.m_integer));
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        return new Object((double)log10(HYB_ARGV(0)->value.m_integer));
     }
     else{
-        return new Object((double)log10(data->at(0)->value.m_double));
+        return new Object((double)log10(HYB_ARGV(0)->value.m_double));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hpow){
-    if( data->size() != 2 ){
-		hyb_syntax_error( "function 'pow' requires 2 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'pow' requires 2 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
-    hyb_type_assert( data->at(1), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
+    HYB_TYPES_ASSERT( HYB_ARGV(1), H_OT_INT, H_OT_FLOAT );
 
     double a, b;
 
-    if( data->at(0)->type == H_OT_INT ){
-        a = (double)data->at(0)->value.m_integer;
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        a = (double)HYB_ARGV(0)->value.m_integer;
     }
     else{
-        a = data->at(0)->value.m_double;
+        a = HYB_ARGV(0)->value.m_double;
     }
-    if( data->at(1)->type == H_OT_INT ){
-        b = (double)data->at(1)->value.m_integer;
+    if( HYB_ARGV(1)->type == H_OT_INT ){
+        b = (double)HYB_ARGV(1)->value.m_integer;
     }
     else{
-        b = data->at(1)->value.m_double;
+        b = HYB_ARGV(1)->value.m_double;
     }
     return new Object((double)pow(a,b));
 }
 
 HYBRIS_DEFINE_FUNCTION(hsin){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'sin' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'sin' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->type == H_OT_INT ){
-        return new Object((double)sin(data->at(0)->value.m_integer));
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        return new Object((double)sin(HYB_ARGV(0)->value.m_integer));
     }
     else{
-        return new Object((double)sin(data->at(0)->value.m_double));
+        return new Object((double)sin(HYB_ARGV(0)->value.m_double));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hsinh){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'sinh' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'sinh' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->type == H_OT_INT ){
-        return new Object((double)sinh(data->at(0)->value.m_integer));
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        return new Object((double)sinh(HYB_ARGV(0)->value.m_integer));
     }
     else{
-        return new Object((double)sinh(data->at(0)->value.m_double));
+        return new Object((double)sinh(HYB_ARGV(0)->value.m_double));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hsqrt){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'sqrt' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'sqrt' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->type == H_OT_INT ){
-        return new Object((double)sqrt(data->at(0)->value.m_integer));
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        return new Object((double)sqrt(HYB_ARGV(0)->value.m_integer));
     }
     else{
-        return new Object((double)sqrt(data->at(0)->value.m_double));
+        return new Object((double)sqrt(HYB_ARGV(0)->value.m_double));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(htan){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'tan' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'tan' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->type == H_OT_INT ){
-        return new Object((double)tan(data->at(0)->value.m_integer));
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        return new Object((double)tan(HYB_ARGV(0)->value.m_integer));
     }
     else{
-        return new Object((double)tan(data->at(0)->value.m_double));
+        return new Object((double)tan(HYB_ARGV(0)->value.m_double));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(htanh){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'tanh' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'tanh' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT, H_OT_FLOAT );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
-    if( data->at(0)->type == H_OT_INT ){
-        return new Object((double)tanh(data->at(0)->value.m_integer));
+    if( HYB_ARGV(0)->type == H_OT_INT ){
+        return new Object((double)tanh(HYB_ARGV(0)->value.m_integer));
     }
     else{
-        return new Object((double)tanh(data->at(0)->value.m_double));
+        return new Object((double)tanh(HYB_ARGV(0)->value.m_double));
     }
 }
 

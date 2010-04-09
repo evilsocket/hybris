@@ -296,12 +296,12 @@ void sha1_finish( sha1_context *ctx, unsigned char output[20] )
 }
 
 HYBRIS_DEFINE_FUNCTION(hsha1){
-    if( data->size() != 1 ){
-        hyb_syntax_error( "function 'sha1' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+        hyb_throw( H_ET_SYNTAX, "function 'sha1' requires 1 parameter (called with %d)", HYB_ARGC() );
     }
-    hyb_type_assert( data->at(0), H_OT_STRING );
+    HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
-	string        str 	   = data->at(0)->value.m_string,
+	string        str 	   = HYB_ARGV(0)->value.m_string,
 				  str_hash("");
 	unsigned char hash[20] = {0};
 	char		  hex[3]   = {0};

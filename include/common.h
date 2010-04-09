@@ -48,13 +48,15 @@ typedef struct {
 }
 h_args_t;
 
+enum H_ERROR_TYPE {
+    H_ET_WARNING = 0,
+    H_ET_GENERIC,
+    H_ET_SYNTAX
+};
+
 void yyerror( char *error );
 
-void  hyb_generic_warning( const char *format, ... );
-void  hyb_generic_error( const char *format, ... );
-void  hyb_syntax_error( const char *format, ... );
-void  hyb_type_assert( Object *o, H_OBJECT_TYPE type );
-void  hyb_type_assert( Object *o, H_OBJECT_TYPE type1, H_OBJECT_TYPE type2 );
+void  hyb_throw( H_ERROR_TYPE type, const char *format, ... );
 void  hyb_print_stacktrace( int force = 0 );
 int   hyb_file_exists ( char *filename );
 ulong hyb_uticks();

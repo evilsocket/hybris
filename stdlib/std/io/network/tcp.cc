@@ -46,43 +46,43 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hsettimeout){
-	if( data->size() != 2 ){
-		hyb_syntax_error( "function 'settimeout' requires 2 parameters (called with %d)", data->size() );
+	if( HYB_ARGC() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'settimeout' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT );
-	hyb_type_assert( data->at(1), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_INT );
 
-	struct timeval tout = { 0 , data->at(1)->value.m_integer };
+	struct timeval tout = { 0 , HYB_ARGV(1)->value.m_integer };
 
-	setsockopt( data->at(0)->value.m_integer, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
-	setsockopt( data->at(0)->value.m_integer, SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
+	setsockopt( HYB_ARGV(0)->value.m_integer, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
+	setsockopt( HYB_ARGV(0)->value.m_integer, SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
 
 	return new Object( static_cast<long>(0) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hconnect){
-	hyb_type_assert( data->at(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
 	Object *_return = NULL;
-	if( data->size() >= 2 ){
+	if( HYB_ARGC() >= 2 ){
 		int sd = socket( AF_INET, SOCK_STREAM, 0 );
 		if( sd <= 0 ){
 			return new Object( static_cast<long>(-1) );
 		}
-		if( data->size() == 3 ){
-			hyb_type_assert( data->at(2), H_OT_INT );
-			struct timeval tout = { 0 , data->at(2)->value.m_integer };
+		if( HYB_ARGC() == 3 ){
+			HYB_TYPE_ASSERT( HYB_ARGV(2), H_OT_INT );
+			struct timeval tout = { 0 , HYB_ARGV(2)->value.m_integer };
 
 			setsockopt( sd, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
 			setsockopt( sd, SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
 		}
 
 		struct sockaddr_in server;
-		hostent * host = gethostbyname(data->at(0)->value.m_string.c_str());
+		hostent * host = gethostbyname(HYB_ARGV(0)->value.m_string.c_str());
 		if( host ){
 			bzero( &server, sizeof(server) );
 			server.sin_family      = AF_INET;
-			server.sin_port        = htons(data->at(1)->value.m_integer);
+			server.sin_port        = htons(HYB_ARGV(1)->value.m_integer);
 			bcopy( host->h_addr, &(server.sin_addr.s_addr), host->h_length );
 		}
 
@@ -93,29 +93,29 @@ HYBRIS_DEFINE_FUNCTION(hconnect){
 		_return = new Object( static_cast<long>(sd) );
     }
 	else{
-		hyb_syntax_error( "function 'connect' requires at least 2 parameters (called with %d)", data->size() );
+		hyb_throw( H_ET_SYNTAX, "function 'connect' requires at least 2 parameters (called with %d)", HYB_ARGC() );
 	}
     return _return;
 }
 
 HYBRIS_DEFINE_FUNCTION(hserver){
-	hyb_type_assert( data->at(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
 
 	Object *_return = NULL;
-	if( data->size() >= 1 ){
+	if( HYB_ARGC() >= 1 ){
 		int sd = socket( AF_INET, SOCK_STREAM, 0 );
 		if( sd <= 0 ){
 			return new Object( static_cast<long>(-1) );
 		}
-		if( data->size() == 2 ){
-			hyb_type_assert( data->at(1), H_OT_INT );
-			struct timeval tout = { 0 , data->at(1)->value.m_integer };
+		if( HYB_ARGC() == 2 ){
+			HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_INT );
+			struct timeval tout = { 0 , HYB_ARGV(1)->value.m_integer };
 
 			setsockopt( sd, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
 			setsockopt( sd, SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
 		}
 
-		short int port = data->at(0)->value.m_integer;
+		short int port = HYB_ARGV(0)->value.m_integer;
 		struct    sockaddr_in servaddr;
 
 		memset(&servaddr, 0, sizeof(servaddr));
@@ -134,17 +134,17 @@ HYBRIS_DEFINE_FUNCTION(hserver){
 		_return = new Object( static_cast<long>(sd) );
     }
 	else{
-		hyb_syntax_error( "function 'server' requires at least 1 parameters (called with %d)", data->size() );
+		hyb_throw( H_ET_SYNTAX, "function 'server' requires at least 1 parameters (called with %d)", HYB_ARGC() );
 	}
     return _return;
 }
 
 HYBRIS_DEFINE_FUNCTION(haccept){
-	hyb_type_assert( data->at(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
 
 	Object *_return = NULL;
-	if( data->size() >= 1 ){
-		int sd = data->at(0)->value.m_integer,
+	if( HYB_ARGC() >= 1 ){
+		int sd = HYB_ARGV(0)->value.m_integer,
 		    csd;
 
 		if( (csd = accept( sd, NULL, NULL) ) < 0 ) {
@@ -154,25 +154,25 @@ HYBRIS_DEFINE_FUNCTION(haccept){
 		_return = new Object( static_cast<long>(csd) );
 	}
 	else{
-		hyb_syntax_error( "function 'accept' requires 1 parameters (called with %d)", data->size() );
+		hyb_throw( H_ET_SYNTAX, "function 'accept' requires 1 parameters (called with %d)", HYB_ARGC() );
 	}
     return _return;
 }
 
 HYBRIS_DEFINE_FUNCTION(hrecv){
-	hyb_type_assert( data->at(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
 
 	bool isEOF	    = false,
 		 isEOL 		= false;
     Object *_return = NULL;
-    if( data->size() >= 2 ){
-		int sd            = data->at(0)->value.m_integer;
-		Object *object   = data->at(1);
+    if( HYB_ARGC() >= 2 ){
+		int sd            = HYB_ARGV(0)->value.m_integer;
+		Object *object   = HYB_ARGV(1);
 		unsigned int size, read = 0, i, n;
 		char c;
 		/* explicit size declaration */
-		if( data->size() == 3 ){
-			size = data->at(2)->value.m_integer;
+		if( HYB_ARGC() == 3 ){
+			size = HYB_ARGV(2)->value.m_integer;
 			switch( object->type ){
 				case H_OT_INT    : read = recv( sd, &object->value.m_integer, size, 0 ); break;
 				case H_OT_FLOAT  : read = recv( sd, &object->value.m_double, size, 0 );  break;
@@ -189,7 +189,7 @@ HYBRIS_DEFINE_FUNCTION(hrecv){
 						}
 					}
 				break;
-				case H_OT_ARRAY  : hyb_generic_error( "can not directly deserialize an array type" ); break;
+				case H_OT_ARRAY  : hyb_throw( H_ET_GENERIC, "can not directly deserialize an array type" ); break;
 			}
 			object->size = size;
 		}
@@ -218,35 +218,35 @@ HYBRIS_DEFINE_FUNCTION(hrecv){
 					}
 					object->size = read;
 				break;
-				case H_OT_ARRAY  : hyb_generic_error( "can not directly deserialize an array type" ); break;
+				case H_OT_ARRAY  : hyb_throw( H_ET_GENERIC, "can not directly deserialize an array type" ); break;
 			}
 		}
         _return = new Object( static_cast<long>(read) );
     }
 	else{
-		hyb_syntax_error( "function 'recv' requires 2 or 3 parameters (called with %d)", data->size() );
+		hyb_throw( H_ET_SYNTAX, "function 'recv' requires 2 or 3 parameters (called with %d)", HYB_ARGC() );
 	}
 
     return _return;
 }
 
 HYBRIS_DEFINE_FUNCTION(hsend){
-	hyb_type_assert( data->at(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
 
     Object *_return = NULL;
-    if( data->size() >= 2 ){
-		int sd           = data->at(0)->value.m_integer;
-		Object *object   = data->at(1);
+    if( HYB_ARGC() >= 2 ){
+		int sd           = HYB_ARGV(0)->value.m_integer;
+		Object *object   = HYB_ARGV(1);
 		unsigned int size, written = 0, i;
 		char c;
-		if( data->size() == 3 ){
-			size = data->at(2)->value.m_integer;
+		if( HYB_ARGC() == 3 ){
+			size = HYB_ARGV(2)->value.m_integer;
 			switch( object->type ){
 				case H_OT_INT    : written = send( sd, &object->value.m_integer,   size, 0 ); break;
 				case H_OT_FLOAT  : written = send( sd, &object->value.m_double, size, 0 ); break;
 				case H_OT_CHAR   : written = send( sd, &object->value.m_char,  size, 0 ); break;
 				case H_OT_STRING : written = send( sd, object->value.m_string.c_str(), size, 0 ); break;
-				case H_OT_ARRAY  : hyb_generic_error( "can not directly serialize an array type when specifying size" ); break;
+				case H_OT_ARRAY  : hyb_throw( H_ET_GENERIC, "can not directly serialize an array type when specifying size" ); break;
 			}
 		}
 		else{
@@ -263,7 +263,7 @@ HYBRIS_DEFINE_FUNCTION(hsend){
 							case H_OT_FLOAT  : written += send( sd, &element->value.m_double, sizeof(double), 0 ); break;
 							case H_OT_CHAR   : written += send( sd, &element->value.m_char,  sizeof(char), 0 ); break;
 							case H_OT_STRING : written += send( sd, element->value.m_string.c_str(), element->size, 0 ); break;
-							case H_OT_ARRAY  : hyb_generic_error( "can not directly serialize nested arrays" ); break;
+							case H_OT_ARRAY  : hyb_throw( H_ET_GENERIC, "can not directly serialize nested arrays" ); break;
 						}
 					}
 				break;
@@ -272,14 +272,14 @@ HYBRIS_DEFINE_FUNCTION(hsend){
         _return = new Object( static_cast<long>(written) );
     }
 	else{
-		hyb_syntax_error( "function 'send' requires 2 or 3 parameters (called with %d)", data->size() );
+		hyb_throw( H_ET_SYNTAX, "function 'send' requires 2 or 3 parameters (called with %d)", HYB_ARGC() );
 	}
     return _return;
 }
 
 HYBRIS_DEFINE_FUNCTION(hclose){
-    if( data->size() ){
-		close( data->at(0)->value.m_integer );
+    if( HYB_ARGC() ){
+		close( HYB_ARGV(0)->value.m_integer );
     }
     return new Object( static_cast<long>(0) );
 }

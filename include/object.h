@@ -35,9 +35,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-extern void hyb_syntax_error( const char *format, ... );
-extern void hyb_generic_error( const char *format, ... );
-
 using namespace std;
 
 /* object types */

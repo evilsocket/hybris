@@ -46,14 +46,14 @@ HYBRIS_DEFINE_FUNCTION(hticks){
 }
 
 HYBRIS_DEFINE_FUNCTION(husleep){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'usleep' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'usleep' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
 
 	struct timespec ts;
 
-    ts.tv_sec  = (long int)data->at(0)->value.m_integer / 1000000;
+    ts.tv_sec  = (long int)HYB_ARGV(0)->value.m_integer / 1000000;
     ts.tv_nsec = ts.tv_sec * 1000;
     nanosleep(&ts,&ts);
 
@@ -61,14 +61,14 @@ HYBRIS_DEFINE_FUNCTION(husleep){
 }
 
 HYBRIS_DEFINE_FUNCTION(hsleep){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'sleep' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'sleep' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
 
 	struct timespec ts;
 
-    ts.tv_sec  = (long int)data->at(0)->value.m_integer / 1000;
+    ts.tv_sec  = (long int)HYB_ARGV(0)->value.m_integer / 1000;
     ts.tv_nsec = ts.tv_sec * 1000;
     nanosleep(&ts,&ts);
 

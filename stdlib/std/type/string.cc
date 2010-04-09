@@ -34,48 +34,48 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hstrlen){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'strlen' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'strlen' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
-	return new Object( static_cast<long>( data->at(0)->value.m_string.size() ) );
+	return new Object( static_cast<long>( HYB_ARGV(0)->value.m_string.size() ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hstrfind){
-	if( data->size() != 2 ){
-		hyb_syntax_error( "function 'strfind' requires 2 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'strfind' requires 2 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_STRING );
-	hyb_type_assert( data->at(1), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
 
-	int found = data->at(0)->value.m_string.find( data->at(1)->value.m_string );
+	int found = HYB_ARGV(0)->value.m_string.find( HYB_ARGV(1)->value.m_string );
 
 	return new Object( static_cast<long>(found == string::npos ? -1 : found) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsubstr){
-	if( data->size() != 3 ){
-		hyb_syntax_error( "function 'substr' requires 3 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 3 ){
+		hyb_throw( H_ET_SYNTAX, "function 'substr' requires 3 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
-	string sub = data->at(0)->value.m_string.substr( data->at(1)->lvalue(), data->at(2)->lvalue() );
+	string sub = HYB_ARGV(0)->value.m_string.substr( HYB_ARGV(1)->lvalue(), HYB_ARGV(2)->lvalue() );
 
 	return new Object( (char *)sub.c_str() );
 }
 
 HYBRIS_DEFINE_FUNCTION(hstrreplace){
-	if( data->size() != 3 ){
-		hyb_syntax_error( "function 'strreplace' requires 3 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 3 ){
+		hyb_throw( H_ET_SYNTAX, "function 'strreplace' requires 3 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_STRING );
-	hyb_type_assert( data->at(1), H_OT_STRING );
-	hyb_type_assert( data->at(2), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(2), H_OT_STRING );
 
-	string str  = data->at(0)->value.m_string,
-		   find = data->at(1)->value.m_string,
-		   repl = data->at(2)->value.m_string;
+	string str  = HYB_ARGV(0)->value.m_string,
+		   find = HYB_ARGV(1)->value.m_string,
+		   repl = HYB_ARGV(2)->value.m_string;
 
 	unsigned int i;
 	for( ; (i = str.find( find )) != string::npos ; ){
@@ -86,14 +86,14 @@ HYBRIS_DEFINE_FUNCTION(hstrreplace){
 }
 
 HYBRIS_DEFINE_FUNCTION(hstrsplit){
-	if( data->size() != 2 ){
-		hyb_syntax_error( "function 'strsplit' requires 2 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'strsplit' requires 2 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_STRING );
-	hyb_type_assert( data->at(1), H_OT_STRING, H_OT_CHAR );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+	HYB_TYPES_ASSERT( HYB_ARGV(1), H_OT_STRING, H_OT_CHAR );
 
-	string str = data->at(0)->value.m_string,
-		   tok = (data->at(1)->type == H_OT_STRING ? data->at(1)->value.m_string : string("") + data->at(1)->value.m_char);
+	string str = HYB_ARGV(0)->value.m_string,
+		   tok = (HYB_ARGV(1)->type == H_OT_STRING ? HYB_ARGV(1)->value.m_string : string("") + HYB_ARGV(1)->value.m_char);
 	vector<string> parts;
     int start = 0, end = 0, i;
 

@@ -30,42 +30,42 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hmatrix){
-    if( data->size() < 2 ){
-		hyb_syntax_error( "function 'matrix' requires at least 2 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() < 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'matrix' requires at least 2 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT );
-    hyb_type_assert( data->at(1), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+    HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_INT );
 
-    unsigned int     rows    = data->at(0)->value.m_integer,
-                     columns = data->at(1)->value.m_integer,
-                     nvalues = data->size() - 2,
+    unsigned int     rows    = HYB_ARGV(0)->value.m_integer,
+                     columns = HYB_ARGV(1)->value.m_integer,
+                     nvalues = HYB_ARGC() - 2,
                      i;
     vector<Object *> values;
 
     if( nvalues != (rows * columns) ){
-        hyb_syntax_error( "unexpected number of values for the matrix, expected %d (%dx%d), given %d", rows*columns, rows, columns, nvalues );
+        hyb_throw( H_ET_SYNTAX, "unexpected number of values for the matrix, expected %d (%dx%d), given %d", rows*columns, rows, columns, nvalues );
     }
 
     for( i = 2; i < data->size(); i++ ){
-        values.push_back( new Object( data->at(i) ) );
+        values.push_back( new Object( HYB_ARGV(i) ) );
     }
 
     return new Object( rows, columns, values );
 }
 
 HYBRIS_DEFINE_FUNCTION(hcolumns){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'columns' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'columns' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_MATRIX );
-	return new Object( static_cast<long>( data->at(0)->value.m_columns ) );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MATRIX );
+	return new Object( static_cast<long>( HYB_ARGV(0)->value.m_columns ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hrows){
-    if( data->size() != 1 ){
-		hyb_syntax_error( "function 'rows' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'rows' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_MATRIX );
-	return new Object( static_cast<long>( data->at(0)->value.m_rows ) );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MATRIX );
+	return new Object( static_cast<long>( HYB_ARGV(0)->value.m_rows ) );
 }
 

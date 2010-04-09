@@ -83,12 +83,12 @@ Object *xml_traverse( xmlNode *node ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hxml_load){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'xml_load' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'xml_load' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
-	string   filename = data->at(0)->value.m_string;
+	string   filename = HYB_ARGV(0)->value.m_string;
 	xmlDoc  *doc  = NULL;
 	xmlNode *root = NULL;
 
@@ -96,7 +96,7 @@ HYBRIS_DEFINE_FUNCTION(hxml_load){
 
 	doc = xmlReadFile( filename.c_str(), NULL, 0);
 	if( doc == NULL ){
-		hyb_generic_error( "error loading or parsing '%s'", filename.c_str() );
+		hyb_throw( H_ET_GENERIC, "error loading or parsing '%s'", filename.c_str() );
 	}
 
 	Object *hmap = xml_traverse( xmlDocGetRootElement(doc) );
@@ -108,12 +108,12 @@ HYBRIS_DEFINE_FUNCTION(hxml_load){
 }
 
 HYBRIS_DEFINE_FUNCTION(hxml_parse){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'xml_parse' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'xml_parse' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
-	string   xml  = data->at(0)->value.m_string;
+	string   xml  = HYB_ARGV(0)->value.m_string;
 	xmlDoc  *doc  = NULL;
 	xmlNode *root = NULL;
 
@@ -121,7 +121,7 @@ HYBRIS_DEFINE_FUNCTION(hxml_parse){
 
 	doc = xmlReadMemory( xml.c_str(), xml.size(), NULL, NULL, 0);
 	if( doc == NULL ){
-		hyb_generic_error( "error parsing xml buffer" );
+		hyb_throw( H_ET_GENERIC, "error parsing xml buffer" );
 	}
 
 	Object *hmap = xml_traverse( xmlDocGetRootElement(doc) );

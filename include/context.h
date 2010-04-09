@@ -49,6 +49,19 @@ typedef Object * (*function_t)( Context *, vmem_t * );
 /* helper macro to define a constant value */
 #define HYBRIS_DEFINE_CONSTANT( ctx, name, value ) ctx->vmem.add( (char *)name, &( Object(value) ) )
 
+/* macro to easily access hybris functions parameters */
+#define HYB_ARGV(i) data->at(i)
+/* macro to easily access hybris functions parameters number */
+#define HYB_ARGC()  data->size()
+
+/* macros to assert an object type */
+#define HYB_TYPE_ASSERT(o,t)      if( (o)->type != t ){ \
+                                     hyb_throw( H_ET_SYNTAX, "'%s' is not a valid variable type", Object::type_name((o)) ); \
+                                  }
+#define HYB_TYPES_ASSERT(o,t1,t2) if( (o)->type != t1 && (o)->type != t2 ){ \
+                                     hyb_throw( H_ET_SYNTAX, "'%s' is not a valid variable type", Object::type_name((o)) ); \
+                                  }
+
 #define HYB_TIMER_START 1
 #define HYB_TIMER_STOP  0
 
@@ -188,9 +201,17 @@ class Context {
         }
 
         void init( int argc, char *argv[] );
-        void release( int error = 0 );
+        void release();
         void loadModule( char *module );
         function_t getFunction( char *identifier );
+
+        inline void defineType( char *name, Object *type ){
+            vtypes.add( name, type );
+        }
+
+        inline Object * getType( char *name ){
+            return vtypes.find(name);
+        }
 };
 
 #endif

@@ -36,51 +36,51 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hmap){
-	if( (data->size() % 2) != 0 ){
-		hyb_syntax_error( "function 'map' requires an even number of parameters (called with %d)", data->size() );
+	if( (HYB_ARGC() % 2) != 0 ){
+		hyb_throw( H_ET_SYNTAX, "function 'map' requires an even number of parameters (called with %d)", HYB_ARGC() );
 	}
 	unsigned int i;
 	Object *map = new Object();
 	for( i = 0; i < data->size(); i += 2 ){
-		map->map( data->at(i), data->at(i + 1) );
+		map->map( HYB_ARGV(i), HYB_ARGV(i + 1) );
 	}
 	return map;
 }
 
 HYBRIS_DEFINE_FUNCTION(hmapelements){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'mapelements' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'mapelements' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_MAP );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MAP );
 
-	return new Object( static_cast<long>( data->at(0)->value.m_map.size() ) );
+	return new Object( static_cast<long>( HYB_ARGV(0)->value.m_map.size() ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hmappop){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'mappop' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'mappop' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_MAP );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MAP );
 
-	return new Object( data->at(0)->mapPop() );
+	return new Object( HYB_ARGV(0)->mapPop() );
 }
 
 HYBRIS_DEFINE_FUNCTION(hunmap){
-	if( data->size() != 2 ){
-		hyb_syntax_error( "function 'unmap' requires 2 parameters (called with %d)", data->size() );
+	if( HYB_ARGC() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'unmap' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_MAP );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MAP );
 
-	return new Object( data->at(0)->unmap(data->at(1)) );
+	return new Object( HYB_ARGV(0)->unmap(HYB_ARGV(1)) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hismapped){
-	if( data->size() != 2 ){
-		hyb_syntax_error( "function 'ismapped' requires 2 parameters (called with %d)", data->size() );
+	if( HYB_ARGC() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'ismapped' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_MAP );
-	Object *map   = data->at(0),
-		    *find  = data->at(1);
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MAP );
+	Object *map   = HYB_ARGV(0),
+		    *find  = HYB_ARGV(1);
 	unsigned int i;
 
 	for( i = 0; i < map->value.m_array.size(); i++ ){
@@ -93,13 +93,13 @@ HYBRIS_DEFINE_FUNCTION(hismapped){
 }
 
 HYBRIS_DEFINE_FUNCTION(hhaskey){
-	if( data->size() != 2 ){
-		hyb_syntax_error( "function 'haskey' requires 2 parameters (called with %d)", data->size() );
+	if( HYB_ARGC() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'haskey' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_MAP );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MAP );
 
-	Object *map = data->at(0),
-           *key = data->at(1);
+	Object *map = HYB_ARGV(0),
+           *key = HYB_ARGV(1);
 	unsigned int i;
 
 	for( i = 0; i < map->value.m_map.size(); i++ ){

@@ -25,7 +25,7 @@ extern "C" named_function_t hybris_module_functions[] = {
     { "", NULL }
 };
 
-static unsigned long crc_table[] = { 
+static unsigned long crc_table[] = {
 	0x00000000L, 0x77073096L, 0xEE0E612CL, 0x990951BAL,
 	0x076DC419L, 0x706AF48FL, 0xE963A535L, 0x9E6495A3L,
 	0x0EDB8832L, 0x79DCB8A4L, 0xE0D5E91EL, 0x97D2D988L,
@@ -93,12 +93,12 @@ static unsigned long crc_table[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hcrc32){
-    if( data->size() != 1 ){
-        hyb_syntax_error( "function 'crc32' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+        hyb_throw( H_ET_SYNTAX, "function 'crc32' requires 1 parameter (called with %d)", HYB_ARGC() );
     }
-    hyb_type_assert( data->at(0), H_OT_STRING );
+    HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
-	string str = data->at(0)->value.m_string;
+	string str = HYB_ARGV(0)->value.m_string;
 
     unsigned long crc( 0xFFFFFFFF ), i, size(str.size());
 
@@ -106,6 +106,6 @@ HYBRIS_DEFINE_FUNCTION(hcrc32){
       crc = ((crc >> 8) & 0x00FFFFFF) ^ crc_table[(crc ^ (unsigned char)str[i]) & 0xFF];
     }
     crc ^= 0xFFFFFFFF;
-	
+
     return new Object( static_cast<long>(crc) );
 }

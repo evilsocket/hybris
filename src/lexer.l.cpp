@@ -49,7 +49,7 @@ extern Context __context;
 
 exponent   [eE][-+]?[0-9]+
 spaces     [ \n\t]+
-identifier [a-zA-Z][a-zA-Z0-9\_]*
+identifier [a-zA-Z\_][a-zA-Z0-9\_]*
 %%
 
 [ \t]+ ;
@@ -70,7 +70,7 @@ include          BEGIN(T_INCLUSION);
     if( (yyin = fopen( mod.c_str(), "r" )) == NULL ){
         /* attempt to load from default include path */
         if( (yyin = fopen( (INC_PATH + mod).c_str(), "r" )) == NULL ){
-            hyb_generic_error( "Could not open '%s' for inclusion", yytext );
+            hyb_throw( H_ET_GENERIC, "Could not open '%s' for inclusion", yytext );
         }
     }
 
@@ -187,7 +187,7 @@ include          BEGIN(T_INCLUSION);
 "'"                                    { yylval.byte    = hyb_lex_char('\'');   return T_CHAR; }
 "\""                                   { hyb_lex_string( '"', yylval.string );  return T_STRING; }
 
-. { hyb_syntax_error( "Unexpected token '%s'", yytext ); }
+. { hyb_throw( H_ET_SYNTAX, "Unexpected token '%s'", yytext ); }
 
 %%
 

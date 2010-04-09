@@ -37,45 +37,45 @@ HYBRIS_DEFINE_FUNCTION(harray){
 	unsigned int i;
 	Object *array = new Object();
 	for( i = 0; i < data->size(); i++ ){
-		array->push( data->at(i) );
+		array->push( HYB_ARGV(i) );
 	}
 	return array;
 }
 
 HYBRIS_DEFINE_FUNCTION(helements){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'elements' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'elements' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_ARRAY );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_ARRAY );
 
-	return new Object( static_cast<long>( data->at(0)->value.m_array.size() ) );
+	return new Object( static_cast<long>( HYB_ARGV(0)->value.m_array.size() ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hpop){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'pop' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'pop' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_ARRAY );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_ARRAY );
 
-	return new Object( data->at(0)->pop() );
+	return new Object( HYB_ARGV(0)->pop() );
 }
 
 HYBRIS_DEFINE_FUNCTION(hremove){
-	if( data->size() != 2 ){
-		hyb_syntax_error( "function 'remove' requires 2 parameters (called with %d)", data->size() );
+	if( HYB_ARGC() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'remove' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_ARRAY );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_ARRAY );
 
-	return new Object( data->at(0)->remove(data->at(1)) );
+	return new Object( HYB_ARGV(0)->remove(HYB_ARGV(1)) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hcontains){
-	if( data->size() != 2 ){
-		hyb_syntax_error( "function 'contains' requires 2 parameters (called with %d)", data->size() );
+	if( HYB_ARGC() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'contains' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_ARRAY );
-	Object *array = data->at(0),
-		    *find  = data->at(1);
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_ARRAY );
+	Object *array = HYB_ARGV(0),
+		    *find  = HYB_ARGV(1);
 	unsigned int i;
 
 	for( i = 0; i < array->value.m_array.size(); i++ ){

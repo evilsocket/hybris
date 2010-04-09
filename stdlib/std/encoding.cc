@@ -47,12 +47,12 @@ inline bool is_base64(unsigned char c) {
 
 HYBRIS_DEFINE_FUNCTION(hurlencode){
     Object *_return;
-    if( data->size() != 1 ){
-        hyb_syntax_error( "function 'urlencode' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+        hyb_throw( H_ET_SYNTAX, "function 'urlencode' requires 1 parameter (called with %d)", HYB_ARGC() );
     }
-    hyb_type_assert( data->at(0), H_OT_STRING );
+    HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
-    char *pstr = (char *)data->at(0)->value.m_string.c_str(),
+    char *pstr = (char *)HYB_ARGV(0)->value.m_string.c_str(),
          *buf  = (char *)malloc(strlen(pstr) * 3 + 1),
          *pbuf = buf;
 
@@ -81,12 +81,12 @@ HYBRIS_DEFINE_FUNCTION(hurlencode){
 
 HYBRIS_DEFINE_FUNCTION(hurldecode){
     Object *_return;
-    if( data->size() != 1 ){
-        hyb_syntax_error( "function 'urldecode' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+        hyb_throw( H_ET_SYNTAX, "function 'urldecode' requires 1 parameter (called with %d)", HYB_ARGC() );
     }
-    hyb_type_assert( data->at(0), H_OT_STRING );
+    HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
-    char *pstr = (char *)data->at(0)->value.m_string.c_str(),
+    char *pstr = (char *)HYB_ARGV(0)->value.m_string.c_str(),
          *buf  = (char *)malloc(strlen(pstr) + 1),
          *pbuf = buf;
 
@@ -116,17 +116,17 @@ HYBRIS_DEFINE_FUNCTION(hurldecode){
 }
 
 HYBRIS_DEFINE_FUNCTION(hbase64encode) {
-    if( data->size() != 1 ){
-        hyb_syntax_error( "function 'base64encode' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+        hyb_throw( H_ET_SYNTAX, "function 'base64encode' requires 1 parameter (called with %d)", HYB_ARGC() );
     }
-    hyb_type_assert( data->at(0), H_OT_STRING );
+    HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
     static const char b64_charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     std::string ret;
     unsigned char block_3[3];
     unsigned char block_4[4];
-    char * str = (char *)data->at(0)->value.m_string.c_str();
+    char * str = (char *)HYB_ARGV(0)->value.m_string.c_str();
     int i = 0,
         j = 0,
         size = strlen(str);;
@@ -167,14 +167,14 @@ HYBRIS_DEFINE_FUNCTION(hbase64encode) {
 }
 
 HYBRIS_DEFINE_FUNCTION(hbase64decode) {
-    if( data->size() != 1 ){
-        hyb_syntax_error( "function 'base64decode' requires 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() != 1 ){
+        hyb_throw( H_ET_SYNTAX, "function 'base64decode' requires 1 parameter (called with %d)", HYB_ARGC() );
     }
-    hyb_type_assert( data->at(0), H_OT_STRING );
+    HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
     static const std::string b64_charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     std::string ret;
-    char * str = (char *)data->at(0)->value.m_string.c_str();
+    char * str = (char *)HYB_ARGV(0)->value.m_string.c_str();
     int in_len = strlen(str),
         i = 0,
         j = 0,

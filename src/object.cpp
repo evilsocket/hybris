@@ -19,6 +19,8 @@
 #include "object.h"
 #include "node.h"
 
+extern void hyb_throw( H_ERROR_TYPE type, const char *format, ... );
+
 NamedValue::NamedValue( string n, Object *v ) : name(n), value(v) {
 
 }
@@ -599,7 +601,7 @@ int Object::mapFind( Object *map ){
 
 Object * Object::getObject(){
 	if( type != H_OT_ALIAS ){
-		hyb_generic_error( "invalid pointer reference" );
+		hyb_throw( H_ET_GENERIC, "invalid pointer reference" );
 	}
 	return (Object *)value.m_alias;
 }
@@ -708,7 +710,7 @@ void Object::parse_pcre( string& raw, string& regex, int& opts ){
 
 	if( blocks.size() ){
 		if( blocks.size() != 2 ){
-			hyb_syntax_error( "invalid pcre regular expression syntax" );
+			hyb_throw( H_ET_SYNTAX, "invalid pcre regular expression syntax" );
 		}
 		opts  = 0;
 		regex = blocks[0];
@@ -733,7 +735,7 @@ void Object::parse_pcre( string& raw, string& regex, int& opts ){
 
 Object *Object::regexp( Object *regexp ){
     if( assert_type( this, regexp, 1, H_OT_STRING ) == 0 ){
-		hyb_syntax_error( "invalid types for '~=' regexp operator (%s, %s)", type_name(this), type_name(regexp) );
+		hyb_throw( H_ET_SYNTAX, "invalid types for '~=' regexp operator (%s, %s)", type_name(this), type_name(regexp) );
 	}
 
 	string rawreg  = regexp->value.m_string,
@@ -759,7 +761,7 @@ Object *Object::regexp( Object *regexp ){
 
 		while( REGEX.FindAndConsume( &SUBJECT, &match ) == true ){
 			if( i++ > H_PCRE_MAX_MATCHES ){
-				hyb_generic_error( "something of your regex is forcing infinite matches" );
+				hyb_throw( H_ET_GENERIC, "something of your regex is forcing infinite matches" );
 			}
 			matches->push( new Object((char *)match.c_str()) );
 		}
@@ -777,7 +779,7 @@ void Object::input(){
 		case H_OT_STRING : cin >> value.m_string;  break;
 
 		default :
-             hyb_syntax_error( "could not read type '%s' from stdin", type_name(this) );
+             hyb_throw( H_ET_SYNTAX, "could not read type '%s' from stdin", type_name(this) );
 	}
 }
 
@@ -805,7 +807,7 @@ Object * Object::dot( Object *o ){
 		case H_OT_STRING : ret << value.m_string; break;
 
 		default :
-            hyb_syntax_error( "'%s' is an invalid type for '.' operator", type_name(this) );
+            hyb_throw( H_ET_SYNTAX, "'%s' is an invalid type for '.' operator", type_name(this) );
 	}
 	switch(o->type){
 		case H_OT_INT    : ret << o->value.m_integer;    break;
@@ -815,7 +817,7 @@ Object * Object::dot( Object *o ){
 		case H_OT_STRING : ret << o->value.m_string; break;
 
 		default :
-            hyb_syntax_error( "'%s' is an invalid type for '.' operator", type_name(o) );
+            hyb_throw( H_ET_SYNTAX, "'%s' is an invalid type for '.' operator", type_name(o) );
 	}
 
 	return new Object( (char *)ret.str().c_str() );
@@ -833,7 +835,7 @@ Object * Object::dotequal( Object *o ){
 		case H_OT_ALIAS  : sprintf( tmp, "0x%X", value.m_alias ); ret << tmp; break;
 
 		default:
-            hyb_syntax_error( "'%s' is an invalid type for '.=' operator", type_name(this) );
+            hyb_throw( H_ET_SYNTAX, "'%s' is an invalid type for '.=' operator", type_name(this) );
 	}
 	switch(o->type){
 		case H_OT_INT    : ret << o->value.m_integer;    break;
@@ -843,7 +845,7 @@ Object * Object::dotequal( Object *o ){
 		case H_OT_ALIAS  : sprintf( tmp, "0x%X", value.m_alias ); ret << tmp; break;
 
 		default :
-            hyb_syntax_error( "'%s' is an invalid type for '.=' operator", type_name(o) );
+            hyb_throw( H_ET_SYNTAX, "'%s' is an invalid type for '.=' operator", type_name(o) );
 	}
 
 	release(false);
@@ -870,7 +872,7 @@ Object * Object::toString(){
         break;
 
 		default :
-            hyb_generic_error( "could not convert '%s' to string", type_name(this) );
+            hyb_throw( H_ET_GENERIC, "could not convert '%s' to string", type_name(this) );
 	}
 	return new Object( (char *)ret.str().c_str() );
 }
@@ -884,7 +886,7 @@ Object * Object::toInt(){
 		case H_OT_STRING : ret = atol(value.m_string.c_str()); break;
 
 		default :
-            hyb_generic_error( "could not convert '%s' to int", type_name(this) );
+            hyb_throw( H_ET_GENERIC, "could not convert '%s' to int", type_name(this) );
 	}
 	return new Object( ret );
 }
@@ -928,11 +930,11 @@ Object *Object::map( Object *map, Object *o ){
 
 Object *Object::pop(){
 	if( type != H_OT_ARRAY ){
-		hyb_generic_error( "could not pop an element from a non array type" );
+		hyb_throw( H_ET_GENERIC, "could not pop an element from a non array type" );
 	}
 	#ifdef BOUNDS_CHECK
 	else if( value.m_array.size() <= 0 ){
-	    hyb_generic_error( "could not pop an element from an empty array" );
+	    hyb_throw( H_ET_GENERIC, "could not pop an element from an empty array" );
 	}
 	#endif
 
@@ -944,11 +946,11 @@ Object *Object::pop(){
 
 Object *Object::mapPop(){
 	if( type != H_OT_MAP ){
-		hyb_generic_error( "could not pop an element from a non map type" );
+		hyb_throw( H_ET_GENERIC, "could not pop an element from a non map type" );
 	}
 	#ifdef BOUNDS_CHECK
 	else if( value.m_array.size() <= 0 || value.m_map.size() <= 0 ){
-	    hyb_generic_error( "could not pop an element from an empty map" );
+	    hyb_throw( H_ET_GENERIC, "could not pop an element from an empty map" );
 	}
 	#endif
 
@@ -961,11 +963,11 @@ Object *Object::mapPop(){
 
 Object *Object::remove( Object *index ){
 	if( type != H_OT_ARRAY ){
-		hyb_generic_error( "could not remove an element from a non array type" );
+		hyb_throw( H_ET_GENERIC, "could not remove an element from a non array type" );
 	}
 	#ifdef BOUNDS_CHECK
 	else if( index->lvalue() >= value.m_array.size() ){
-	    hyb_generic_error( "index out of bounds" );
+	    hyb_throw( H_ET_GENERIC, "index out of bounds" );
 	}
 	#endif
 
@@ -978,7 +980,7 @@ Object *Object::remove( Object *index ){
 
 Object *Object::unmap( Object *map ){
 	if( type != H_OT_MAP ){
-		hyb_generic_error( "could not unmap an element from a non map type" );
+		hyb_throw( H_ET_GENERIC, "could not unmap an element from a non map type" );
 	}
 	int i = mapFind(map);
 	if( i != -1 ){
@@ -995,7 +997,7 @@ Object *Object::at( Object *index ){
 	if( type == H_OT_STRING ){
         #ifdef BOUNDS_CHECK
         if( index->lvalue() >= value.m_string.size() ){
-            hyb_generic_error( "index out of bounds" );
+            hyb_throw( H_ET_GENERIC, "index out of bounds" );
         }
         #endif
 		return new Object( value.m_string[ index->lvalue() ] );
@@ -1003,7 +1005,7 @@ Object *Object::at( Object *index ){
 	else if( type == H_OT_ARRAY || type == H_OT_BINARY  ){
         #ifdef BOUNDS_CHECK
         if( index->lvalue() >= value.m_array.size() ){
-            hyb_generic_error( "index out of bounds" );
+            hyb_throw( H_ET_GENERIC, "index out of bounds" );
         }
         #endif
 		return value.m_array[ index->lvalue() ];
@@ -1014,13 +1016,13 @@ Object *Object::at( Object *index ){
 			return new Object( value.m_array[i] );
 		}
 		else{
-			hyb_generic_error( "no mapped values for label '%s'", index->toString() );
+			hyb_throw( H_ET_GENERIC, "no mapped values for label '%s'", index->toString() );
 		}
 	}
 	else if( type == H_OT_MATRIX ){
 	    #ifdef BOUNDS_CHECK
         if( index->lvalue() >= value.m_columns ){
-            hyb_generic_error( "index out of bounds" );
+            hyb_throw( H_ET_GENERIC, "index out of bounds" );
         }
         #endif
         Object *array    = new Object();
@@ -1032,7 +1034,7 @@ Object *Object::at( Object *index ){
         return array;
 	}
 	else{
-		hyb_syntax_error( "'%s' is an invalid type for subscript operator", type_name(this) );
+		hyb_throw( H_ET_SYNTAX, "'%s' is an invalid type for subscript operator", type_name(this) );
 	}
 }
 
@@ -1044,7 +1046,7 @@ Object *Object::at( char *map ){
         return value.m_array[i];
 	}
 	else{
-        hyb_generic_error( "no mapped values for label '%s'", map );
+        hyb_throw( H_ET_GENERIC, "no mapped values for label '%s'", map );
 	}
 }
 
@@ -1052,18 +1054,18 @@ Object& Object::at( Object *index, Object *set ){
 	if( type == H_OT_STRING ){
 	    #ifdef BOUNDS_CHECK
         if( index->lvalue() >= value.m_string.size() ){
-            hyb_generic_error( "index out of bounds" );
+            hyb_throw( H_ET_GENERIC, "index out of bounds" );
         }
         #endif
 		value.m_string[ index->lvalue() ] = (char)set->lvalue();
 	}
 	else if( type == H_OT_BINARY ){
 	    if( set->type != H_OT_CHAR && set->type != H_OT_INT && set->type != H_OT_FLOAT ){
-	        hyb_syntax_error( "binary type allows only char, int or float types in its subscript operator" );
+	        hyb_throw( H_ET_SYNTAX, "binary type allows only char, int or float types in its subscript operator" );
 	    }
 	    #ifdef BOUNDS_CHECK
         if( index->lvalue() >= value.m_array.size() ){
-            hyb_generic_error( "index out of bounds" );
+            hyb_throw( H_ET_GENERIC, "index out of bounds" );
         }
         #endif
 		delete value.m_array[ index->lvalue() ];
@@ -1074,7 +1076,7 @@ Object& Object::at( Object *index, Object *set ){
 	else if( type == H_OT_ARRAY ){
 	    #ifdef BOUNDS_CHECK
         if( index->lvalue() >= value.m_array.size() ){
-            hyb_generic_error( "index out of bounds" );
+            hyb_throw( H_ET_GENERIC, "index out of bounds" );
         }
         #endif
 		delete value.m_array[ index->lvalue() ];
@@ -1091,7 +1093,7 @@ Object& Object::at( Object *index, Object *set ){
 		}
 	}
 	else{
-		hyb_syntax_error( "'%s' is an invalid type for subscript operator", type_name(this) );
+		hyb_throw( H_ET_SYNTAX, "'%s' is an invalid type for subscript operator", type_name(this) );
 	}
 
 	return *this;
@@ -1099,10 +1101,10 @@ Object& Object::at( Object *index, Object *set ){
 
 Object* Object::range( Object *to ){
     if( assert_type( this, to, 2, H_OT_CHAR, H_OT_INT ) == 0 ){
-		hyb_syntax_error( "invalid type for range operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for range operator" );
 	}
 	if( type != to->type ){
-        hyb_syntax_error( "types must be the same for range operator" );
+        hyb_throw( H_ET_SYNTAX, "types must be the same for range operator" );
     }
 
     Object *range = new Object();
@@ -1147,7 +1149,7 @@ Object * Object::operator - (){
 		case H_OT_CHAR   : return new Object( static_cast<char>(~value.m_char + 1) );  break;
 
 		default :
-            hyb_syntax_error( "unexpected %s type for unary minus operator", type_name(this) );
+            hyb_throw( H_ET_SYNTAX, "unexpected %s type for unary minus operator", type_name(this) );
 	}
 }
 
@@ -1158,7 +1160,7 @@ Object * Object::operator ! (){
 		case H_OT_CHAR   : return new Object( static_cast<char>(!value.m_char) );  break;
 
 		default :
-            hyb_syntax_error( "unexpected %s type for unary not operator", type_name(this) );
+            hyb_throw( H_ET_SYNTAX, "unexpected %s type for unary not operator", type_name(this) );
 	}
 }
 
@@ -1188,7 +1190,7 @@ Object * Object::factorial(){
 		break;
 
 		default :
-            hyb_syntax_error( "unexpected %s type for factorial operator", type_name(this) );
+            hyb_throw( H_ET_SYNTAX, "unexpected %s type for factorial operator", type_name(this) );
 	}
 }
 
@@ -1199,7 +1201,7 @@ Object& Object::operator ++ (){
 		case H_OT_CHAR   : ++value.m_char;  break;
 
 		default :
-            hyb_syntax_error( "unexpected %s type for increment operator", type_name(this) );
+            hyb_throw( H_ET_SYNTAX, "unexpected %s type for increment operator", type_name(this) );
 	}
 	return *this;
 }
@@ -1211,14 +1213,14 @@ Object& Object::operator -- (){
 		case H_OT_CHAR   : --value.m_char;  break;
 
 		default :
-            hyb_syntax_error( "unexpected %s type for decrement operator", type_name(this) );
+            hyb_throw( H_ET_SYNTAX, "unexpected %s type for decrement operator", type_name(this) );
 	}
 	return *this;
 }
 
 Object * Object::operator + ( Object *o ){
 	if( assert_type( this, o, 4, H_OT_CHAR, H_OT_INT, H_OT_FLOAT, H_OT_MATRIX ) == 0 ){
-		hyb_syntax_error( "invalid type for addition operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for addition operator" );
 	}
 
 	if( type == H_OT_FLOAT ){
@@ -1233,7 +1235,7 @@ Object * Object::operator + ( Object *o ){
 
         if( o->type == H_OT_MATRIX ){
             if( value.m_rows != o->value.m_rows || value.m_columns != o->value.m_columns ){
-                hyb_syntax_error( "matrices have to be the same size" );
+                hyb_throw( H_ET_SYNTAX, "matrices have to be the same size" );
             }
             for( x = 0; x < value.m_rows; ++x ){
                 for( y = 0; y < value.m_columns; ++y ){
@@ -1257,7 +1259,7 @@ Object * Object::operator + ( Object *o ){
 
 Object * Object::operator += ( Object *o ){
 	if( assert_type( this, o, 4, H_OT_CHAR, H_OT_INT, H_OT_FLOAT, H_OT_MATRIX ) == 0 ){
-		hyb_syntax_error( "invalid type for addition operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for addition operator" );
 	}
 
 	if( type == H_OT_FLOAT ){
@@ -1271,7 +1273,7 @@ Object * Object::operator += ( Object *o ){
 
         if( o->type == H_OT_MATRIX ){
             if( value.m_rows != o->value.m_rows || value.m_columns != o->value.m_columns ){
-                hyb_syntax_error( "matrices have to be the same size" );
+                hyb_throw( H_ET_SYNTAX, "matrices have to be the same size" );
             }
             for( x = 0; x < value.m_rows; ++x ){
                 for( y = 0; y < value.m_columns; ++y ){
@@ -1296,7 +1298,7 @@ Object * Object::operator += ( Object *o ){
 
 Object * Object::operator - ( Object *o ){
 	if( assert_type( this, o, 4, H_OT_CHAR, H_OT_INT, H_OT_FLOAT, H_OT_MATRIX ) == 0 ){
-		hyb_syntax_error( "invalid type for subtraction operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for subtraction operator" );
 	}
 
 	if( type == H_OT_FLOAT ){
@@ -1311,7 +1313,7 @@ Object * Object::operator - ( Object *o ){
 
         if( o->type == H_OT_MATRIX ){
             if( value.m_rows != o->value.m_rows || value.m_columns != o->value.m_columns ){
-                hyb_syntax_error( "matrices have to be the same size" );
+                hyb_throw( H_ET_SYNTAX, "matrices have to be the same size" );
             }
             for( x = 0; x < value.m_rows; ++x ){
                 for( y = 0; y < value.m_columns; ++y ){
@@ -1335,7 +1337,7 @@ Object * Object::operator - ( Object *o ){
 
 Object * Object::operator -= ( Object *o ){
 	if( assert_type( this, o, 4, H_OT_CHAR, H_OT_INT, H_OT_FLOAT, H_OT_MATRIX ) == 0 ){
-		hyb_syntax_error( "invalid type for subtraction operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for subtraction operator" );
 	}
 
 	if( type == H_OT_FLOAT ){
@@ -1349,7 +1351,7 @@ Object * Object::operator -= ( Object *o ){
 
         if( o->type == H_OT_MATRIX ){
             if( value.m_rows != o->value.m_rows || value.m_columns != o->value.m_columns ){
-                hyb_syntax_error( "matrices have to be the same size" );
+                hyb_throw( H_ET_SYNTAX, "matrices have to be the same size" );
             }
             for( x = 0; x < value.m_rows; ++x ){
                 for( y = 0; y < value.m_columns; ++y ){
@@ -1373,7 +1375,7 @@ Object * Object::operator -= ( Object *o ){
 
 Object * Object::operator * ( Object *o ){
 	if( assert_type( this, o, 4, H_OT_CHAR, H_OT_INT, H_OT_FLOAT, H_OT_MATRIX ) == 0 ){
-		hyb_syntax_error( "invalid type for multiplication operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for multiplication operator" );
 	}
 
 	if( type == H_OT_FLOAT ){
@@ -1388,7 +1390,7 @@ Object * Object::operator * ( Object *o ){
 
 	    if( o->type == H_OT_MATRIX ){
             if( value.m_columns != o->value.m_rows ){
-                hyb_syntax_error( "first matrix columns have to be the same size of second matrix rows" );
+                hyb_throw( H_ET_SYNTAX, "first matrix columns have to be the same size of second matrix rows" );
             }
             vector<Object *> dummy;
             matrix = new Object( this->value.m_columns, o->value.m_rows, dummy );
@@ -1417,7 +1419,7 @@ Object * Object::operator * ( Object *o ){
 
 Object * Object::operator *= ( Object *o ){
 	if( assert_type( this, o, 4, H_OT_CHAR, H_OT_INT, H_OT_FLOAT, H_OT_MATRIX ) == 0 ){
-		hyb_syntax_error( "invalid type for multiplication operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for multiplication operator" );
 	}
 
 	if( type == H_OT_FLOAT ){
@@ -1432,7 +1434,7 @@ Object * Object::operator *= ( Object *o ){
 
 	    if( o->type == H_OT_MATRIX ){
             if( value.m_columns != o->value.m_rows ){
-                hyb_syntax_error( "first matrix columns have to be the same size of second matrix rows" );
+                hyb_throw( H_ET_SYNTAX, "first matrix columns have to be the same size of second matrix rows" );
             }
             vector<Object *> dummy;
             matrix = new Object( this->value.m_columns, o->value.m_rows, dummy );
@@ -1464,7 +1466,7 @@ Object * Object::operator *= ( Object *o ){
 
 Object * Object::operator / ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for division operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for division operator" );
 	}
 
 	if( type == H_OT_FLOAT ){
@@ -1480,7 +1482,7 @@ Object * Object::operator / ( Object *o ){
 
 Object * Object::operator /= ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for division operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for division operator" );
 	}
 
 	if( type == H_OT_FLOAT ){
@@ -1497,7 +1499,7 @@ Object * Object::operator /= ( Object *o ){
 
 Object * Object::operator % ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for modulus operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for modulus operator" );
 	}
 
 	long a = lvalue(), b = o->lvalue(), mod;
@@ -1518,7 +1520,7 @@ Object * Object::operator % ( Object *o ){
 
 Object * Object::operator %= ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for modulus operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for modulus operator" );
 	}
 
     long a = lvalue(), b = o->lvalue(), mod;
@@ -1544,7 +1546,7 @@ Object * Object::operator %= ( Object *o ){
 
 Object * Object::operator & ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for and operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for and operator" );
 	}
 
 	return new Object( static_cast<long>(lvalue() & o->lvalue()) );
@@ -1552,7 +1554,7 @@ Object * Object::operator & ( Object *o ){
 
 Object * Object::operator &= ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for and operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for and operator" );
 	}
 
 	int val = lvalue() & o->lvalue();
@@ -1567,7 +1569,7 @@ Object * Object::operator &= ( Object *o ){
 
 Object * Object::operator | ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for or operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for or operator" );
 	}
 
 	return new Object( static_cast<long>(lvalue() | o->lvalue()) );
@@ -1575,7 +1577,7 @@ Object * Object::operator | ( Object *o ){
 
 Object * Object::operator |= ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for or operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for or operator" );
 	}
 
 	int val = lvalue() | o->lvalue();
@@ -1590,7 +1592,7 @@ Object * Object::operator |= ( Object *o ){
 
 Object * Object::operator << ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for left shift operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for left shift operator" );
 	}
 
 	return new Object( static_cast<long>(lvalue() << o->lvalue()) );
@@ -1598,7 +1600,7 @@ Object * Object::operator << ( Object *o ){
 
 Object * Object::operator <<= ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for left shift operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for left shift operator" );
 	}
 
 	int val = lvalue() << o->lvalue();
@@ -1613,7 +1615,7 @@ Object * Object::operator <<= ( Object *o ){
 
 Object * Object::operator >> ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for right shift operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for right shift operator" );
 	}
 
 	return new Object( static_cast<long>(lvalue() >> o->lvalue()) );
@@ -1621,7 +1623,7 @@ Object * Object::operator >> ( Object *o ){
 
 Object * Object::operator >>= ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for right shift operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for right shift operator" );
 	}
 
 	int val = lvalue() >> o->lvalue();
@@ -1636,7 +1638,7 @@ Object * Object::operator >>= ( Object *o ){
 
 Object * Object::operator ^ ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for xor operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for xor operator" );
 	}
 
 	return new Object( static_cast<long>(lvalue() ^ o->lvalue()) );
@@ -1644,7 +1646,7 @@ Object * Object::operator ^ ( Object *o ){
 
 Object * Object::operator ^= ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for xor operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for xor operator" );
 	}
 
 	int val = lvalue() ^ o->lvalue();
@@ -1659,7 +1661,7 @@ Object * Object::operator ^= ( Object *o ){
 
 Object * Object::operator ~ (){
 	if( assert_type( this, NULL, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for not operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for not operator" );
 	}
 
 	return new Object( static_cast<long>(~lvalue()) );
@@ -1667,7 +1669,7 @@ Object * Object::operator ~ (){
 
 Object * Object::lnot (){
 	if( assert_type( this, NULL, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for logical not operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for logical not operator" );
 	}
 
 	return new Object( static_cast<long>(!lvalue()) );
@@ -1683,7 +1685,7 @@ Object * Object::operator != ( Object *o ){
 
 Object * Object::operator < ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid types for '<' comparision operator (%s, %s)", type_name(this), type_name(o) );
+		hyb_throw( H_ET_SYNTAX, "invalid types for '<' comparision operator (%s, %s)", type_name(this), type_name(o) );
 	}
 
 	return new Object( static_cast<long>(lvalue() < o->lvalue()) );
@@ -1691,7 +1693,7 @@ Object * Object::operator < ( Object *o ){
 
 Object * Object::operator > ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid types for '>' comparision operator (%s, %s)", type_name(this), type_name(o) );
+		hyb_throw( H_ET_SYNTAX, "invalid types for '>' comparision operator (%s, %s)", type_name(this), type_name(o) );
 	}
 
 	return new Object( static_cast<long>(lvalue() > o->lvalue()) );
@@ -1699,7 +1701,7 @@ Object * Object::operator > ( Object *o ){
 
 Object * Object::operator <= ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid types for '<=' comparision operator (%s, %s)", type_name(this), type_name(o) );
+		hyb_throw( H_ET_SYNTAX, "invalid types for '<=' comparision operator (%s, %s)", type_name(this), type_name(o) );
 	}
 
 	return new Object( static_cast<long>(lvalue() <= o->lvalue()) );
@@ -1707,7 +1709,7 @@ Object * Object::operator <= ( Object *o ){
 
 Object * Object::operator >= ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid types for '>=' comparision operator (%s, %s)", type_name(this), type_name(o) );
+		hyb_throw( H_ET_SYNTAX, "invalid types for '>=' comparision operator (%s, %s)", type_name(this), type_name(o) );
 	}
 
 	return new Object( static_cast<long>(lvalue() >= o->lvalue()) );
@@ -1715,7 +1717,7 @@ Object * Object::operator >= ( Object *o ){
 
 Object * Object::operator || ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for '||' logical operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for '||' logical operator" );
 	}
 
 	return new Object( static_cast<long>(lvalue() || o->lvalue()) );
@@ -1723,7 +1725,7 @@ Object * Object::operator || ( Object *o ){
 
 Object * Object::operator && ( Object *o ){
 	if( assert_type( this, o, 3, H_OT_CHAR, H_OT_INT, H_OT_FLOAT ) == 0 ){
-		hyb_syntax_error( "invalid type for '&&' logical operator" );
+		hyb_throw( H_ET_SYNTAX, "invalid type for '&&' logical operator" );
 	}
 
 	return new Object( static_cast<long>(lvalue() && o->lvalue()) );

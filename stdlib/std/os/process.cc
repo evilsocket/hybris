@@ -40,13 +40,13 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hexec){
-	hyb_type_assert( data->at(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
     Object *_return = NULL;
-    if( data->size() ){
-        _return = new Object( static_cast<long>( system( data->at(0)->value.m_string.c_str() ) ) );
+    if( HYB_ARGC() ){
+        _return = new Object( static_cast<long>( system( HYB_ARGV(0)->value.m_string.c_str() ) ) );
     }
 	else{
-		hyb_syntax_error( "function 'exec' requires 1 parameter (called with %d)", data->size() );
+		hyb_throw( H_ET_SYNTAX, "function 'exec' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
     return _return;
 }
@@ -60,38 +60,38 @@ HYBRIS_DEFINE_FUNCTION(hgetpid){
 }
 
 HYBRIS_DEFINE_FUNCTION(hwait){
-	if( data->size() != 1 ){
-		hyb_syntax_error( "function 'wait' requires 1 parameter (called with %d)", data->size() );
+	if( HYB_ARGC() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'wait' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	hyb_type_assert( data->at(0), H_OT_INT );
-    return new Object( static_cast<long>( wait( &data->at(0)->value.m_integer ) ) );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+    return new Object( static_cast<long>( wait( &HYB_ARGV(0)->value.m_integer ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hpopen){
-	hyb_type_assert( data->at(0), H_OT_STRING );
-	hyb_type_assert( data->at(1), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
 
-    if( data->size() == 2 ){
-        return new Object( reinterpret_cast<long>( popen( data->at(0)->value.m_string.c_str(), data->at(1)->value.m_string.c_str() ) ) );
+    if( HYB_ARGC() == 2 ){
+        return new Object( reinterpret_cast<long>( popen( HYB_ARGV(0)->value.m_string.c_str(), HYB_ARGV(1)->value.m_string.c_str() ) ) );
     }
 	else{
-		hyb_syntax_error( "function 'popen' requires 2 parameters (called with %d)", data->size() );
+		hyb_throw( H_ET_SYNTAX, "function 'popen' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
 }
 
 HYBRIS_DEFINE_FUNCTION(hpclose){
-	hyb_type_assert( data->at(0), H_OT_INT );
-    if( data->size() ){
-		pclose( (FILE *)data->at(0)->value.m_integer );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+    if( HYB_ARGC() ){
+		pclose( (FILE *)HYB_ARGV(0)->value.m_integer );
     }
     return new Object(static_cast<long>(0));
 }
 
 HYBRIS_DEFINE_FUNCTION(hexit){
     int code = 0;
-    if( data->size() > 0 ){
-		hyb_type_assert( data->at(0), H_OT_INT );
-		code = data->at(0)->value.m_integer;
+    if( HYB_ARGC() > 0 ){
+		HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+		code = HYB_ARGV(0)->value.m_integer;
 	}
 	exit(code);
 

@@ -44,77 +44,59 @@ void yyerror( char *error ){
 	if( strchr( error, '\n' ) ){
 		fprintf( stderr, "[LINE %d] %s", yylineno, error );
 		hyb_print_stacktrace();
-        __context.release(1);
+        __context.release();
     	exit(-1);
 	}
 	else{
 		fprintf( stderr, "[LINE %d] %s .\n", yylineno, error );
 		hyb_print_stacktrace();
-        __context.release(1);
+        __context.release();
     	exit(-1);
 	}
 }
 
-void hyb_generic_warning( const char *format, ... ){
+void hyb_throw( H_ERROR_TYPE type, const char *format, ... ){
     char message[0xFF] = {0},
          error[0xFF] = {0};
     va_list ap;
-
-    va_start( ap, format );
-    vsprintf( message, format, ap );
-    va_end(ap);
-
-    sprintf( error, "\033[01;33mWARNING : %s .\n\033[00m", message );
-    yyerror(error);
-}
-
-void hyb_generic_error( const char *format, ... ){
-    char message[0xFF] = {0},
-         error[0xFF] = {0};
-    va_list ap;
-    extern Context __context;
-
-    va_start( ap, format );
-    vsprintf( message, format, ap );
-    va_end(ap);
-
-    sprintf( error, "\033[22;31mERROR : %s .\n\033[00m", message );
-    yyerror(error);
-    hyb_print_stacktrace();
-    __context.release(1);
-    exit(-1);
-}
-
-void hyb_syntax_error( const char *format, ... ){
-    char message[0xFF] = {0},
-         error[0xFF] = {0};
-    va_list ap;
+    bool fault(false);
     extern int yylineno;
-    extern Context __context;
 
     va_start( ap, format );
-    vsprintf( message, format, ap );
+        vsprintf( message, format, ap );
     va_end(ap);
 
-    sprintf( error, "\033[22;31mSyntax error on line %d : %s .\n\033[00m", yylineno, message );
+    switch( type ){
+        // simple warning, only print message and continue
+        case H_ET_WARNING :
+            sprintf( error, "\033[01;33mWARNING : %s .\n\033[00m", message );
+            yyerror(error);
+        break;
+        // generic error (file not found, module not found, ecc), print, release and exit
+        case H_ET_GENERIC :
+            sprintf( error, "\033[22;31mERROR : %s .\n\033[00m", message );
+            fault = true;
+        break;
+        // syntax error, same as generic one but print line number
+        case H_ET_SYNTAX  :
+            sprintf( error, "\033[22;31mSyntax error on line %d : %s .\n\033[00m", yylineno, message );
+            fault = true;
+        break;
+    }
+
+    // print error message
     yyerror(error);
-    hyb_print_stacktrace();
-    __context.release(1);
-    exit(-1);
-}
 
-void hyb_type_assert( Object *o, H_OBJECT_TYPE type ){
-	if( o->type != type ){
-		hyb_syntax_error( "'%s' is not a valid variable type", Object::type_name(o) );
-	}
+    if( fault ){
+        extern Context __context;
+        // print function stack trace
+        hyb_print_stacktrace();
+        // release the context
+        __context.release();
+        // exit
+        exit(-1);
+    }
 }
-
-void hyb_type_assert( Object *o, H_OBJECT_TYPE type1, H_OBJECT_TYPE type2 ){
-	if( o->type != type1 && o->type != type2 ){
-		hyb_syntax_error( "'%s' is not a valid variable type", Object::type_name(o) );
-	}
-}
-
 
 int hyb_file_exists( char *filename ){
     FILE *fp = fopen( filename, "r" );

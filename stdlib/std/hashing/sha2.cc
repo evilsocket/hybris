@@ -39,9 +39,9 @@ typedef struct
     unsigned long state[8];
     unsigned char buffer[64];
 
-    unsigned char ipad[64]; 
-    unsigned char opad[64]; 
-    int is224;                
+    unsigned char ipad[64];
+    unsigned char opad[64];
+    int is224;
 }
 sha2_context;
 
@@ -306,21 +306,21 @@ void sha2_finish( sha2_context *ctx, unsigned char output[32] )
 }
 
 HYBRIS_DEFINE_FUNCTION(hsha2){
-    if( data->size() < 1 ){
-        hyb_syntax_error( "function 'sha2' requires at least 1 parameter (called with %d)", data->size() );
+    if( HYB_ARGC() < 1 ){
+        hyb_throw( H_ET_SYNTAX, "function 'sha2' requires at least 1 parameter (called with %d)", HYB_ARGC() );
     }
-    hyb_type_assert( data->at(0), H_OT_STRING );
-    
+    HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+
     int is224 = SHA256;
-    if( data->size() == 2 ){
-		hyb_type_assert( data->at(1), H_OT_INT );
-		is224 = data->at(1)->value.m_integer;
+    if( HYB_ARGC() == 2 ){
+		HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_INT );
+		is224 = HYB_ARGV(1)->value.m_integer;
 		if( is224 != SHA256 && is224 != SHA224 ){
-			 hyb_syntax_error( "function 'sha2' admits as second parameter only SHA256 or SHA224 constants" );
+			 hyb_throw( H_ET_SYNTAX, "function 'sha2' admits as second parameter only SHA256 or SHA224 constants" );
 		}
 	}
 
-	string        str 	   = data->at(0)->value.m_string,
+	string        str 	   = HYB_ARGV(0)->value.m_string,
 				  str_hash("");
 	unsigned char hash[32] = {0};
 	char		  hex[3]   = {0};
