@@ -72,7 +72,13 @@ Object *xml_traverse( xmlNode *node ){
 			for( xmlNode *child = node->children; child; child = child->next ){
 				/* child element */
 				if( child->type == XML_ELEMENT_NODE ){
-                    h_xmlChildren->push( xml_traverse(child) );
+                    /* create a map for the child if it doesn't exist yet */
+					Object childname((char *)child->name);
+					if( h_xmlChildren->mapFind(&childname) == -1 ){
+						h_xmlChildren->map( new Object((char *)child->name), new Object() );
+					}
+					/* push the child into the array */
+					h_xmlChildren->at((char *)child->name)->push( xml_traverse(child) );
 				}
 				/* node raw content */
 				else{
