@@ -29,6 +29,14 @@ extern "C" named_function_t hybris_module_functions[] = {
 	{ "", NULL }
 };
 
+static Object *__xmlNode_type = H_UNDEFINED;
+
+extern "C" void hybris_module_init( Context * ctx ){
+    char *xmlNode_attributes[] = { "name", "attributes", "data", "children" };
+
+    __xmlNode_type = HYBRIS_DEFINE_STRUCTURE( ctx, "xmlNode", 4, xmlNode_attributes );
+}
+
 int xml_isinvalid( char *str ){
 	if( str != NULL ){
 		int len = strlen(str), i;
@@ -42,44 +50,46 @@ int xml_isinvalid( char *str ){
 }
 
 Object *xml_traverse( xmlNode *node ){
+    Object *h_xmlNode = new Object(__xmlNode_type);
 	if( node->type == XML_ELEMENT_NODE ){
-		/* check for empty names (usually indentation) */
+	    /* check for empty names (usually indentation) */
 		if( xml_isinvalid((char *)node->name) == 0 ){
-			Object *hnode = new Object();
-			/* create attributes array */
-			hnode->map( new Object((char *)"<attributes>"), new Object() );
-			Object *attributes = hnode->at((char *)"<attributes>");
+			Object *h_xmlAttributes = new Object(),
+                   *h_xmlChildren   = new Object();
+
+            /* set node name */
+			h_xmlNode->setAttribute( "name", new Object( (char *)node->name ) );
+
+			/* fill attributes array */
 			for( xmlAttr *a = node->properties; a; a = a->next ){
 				const xmlChar *value = xmlNodeGetContent(a->children);
-				attributes->map( new Object((char *)a->name), new Object((char *)value) );
+				h_xmlAttributes->map( new Object((char *)a->name), new Object((char *)value) );
 				xmlFree((void*)value);
 			}
+            /* set attributes */
+            h_xmlNode->setAttribute( "attributes", h_xmlAttributes );
 			/* start children evaluation */
 			for( xmlNode *child = node->children; child; child = child->next ){
 				/* child element */
 				if( child->type == XML_ELEMENT_NODE ){
-					/* create a map for the child if it doesn't exist yet */
-					Object childname((char *)child->name);
-					if( hnode->mapFind(&childname) == -1 ){
-						hnode->map( new Object((char *)child->name), new Object() );
-					}
-					/* push the child into the array */
-					hnode->at((char *)child->name)->push( xml_traverse(child) );
+                    h_xmlChildren->push( xml_traverse(child) );
 				}
 				/* node raw content */
 				else{
 					const xmlChar *content = xmlNodeGetContent(child);
 					if( xml_isinvalid((char *)content) == 0 ){
 						/* add the content */
-						hnode->map( new Object((char *)"<data>"), new Object((char *)content) );
+						h_xmlNode->setAttribute( "data", new Object((char *)content) );
 						xmlFree((void*)content);
 					}
 				}
 			}
-			return hnode;
+			/* set children */
+			h_xmlNode->setAttribute( "children", h_xmlChildren );
 		}
 	}
-	return new Object((char *)"");
+
+	return h_xmlNode;
 }
 
 HYBRIS_DEFINE_FUNCTION(hxml_load){

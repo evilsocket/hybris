@@ -44,10 +44,12 @@ typedef void     (*initializer_t)( Context * );
 /* function pointer prototype */
 typedef Object * (*function_t)( Context *, vmem_t * );
 
-/* helper macro to declare a hybris function */
+/* macro to declare a hybris function */
 #define HYBRIS_DEFINE_FUNCTION(name) Object *name( Context *ctx, vmem_t *data )
-/* helper macro to define a constant value */
+/* macro to define a constant value */
 #define HYBRIS_DEFINE_CONSTANT( ctx, name, value ) ctx->vmem.add( (char *)name, &( Object(value) ) )
+/* macro to define a new structure type given its name and its attribute names */
+#define HYBRIS_DEFINE_STRUCTURE( ctx, name, n, attrs ) ctx->defineType( name, n, attrs )
 
 /* macro to easily access hybris functions parameters */
 #define HYB_ARGV(i) data->at(i)
@@ -204,6 +206,17 @@ class Context {
         void release();
         void loadModule( char *module );
         function_t getFunction( char *identifier );
+
+        inline Object * defineType( char *name, int nattrs, char *attributes[] ){
+            Object *type = new Object();
+            unsigned int i;
+
+            for( i = 0; i < nattrs; ++i ){
+                type->addAttribute( attributes[i] );
+            }
+
+            return vtypes.add( name, type );
+        }
 
         inline void defineType( char *name, Object *type ){
             vtypes.add( name, type );
