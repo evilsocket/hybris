@@ -8,7 +8,7 @@ LIBXML_LFLAGS= `xml2-config --libs`
 LIBFFI_CFLAGS= `pkg-config libffi --cflags`
 LIBFFI_LFLAGS= `pkg-config libffi --libs`
 STDLIB_LFLAGS= -ldl -lpcrecpp -lcurl -lpthread $(LIBXML_LFLAGS) $(LIBFFI_LFLAGS) 
-STDLIB_CFLAGS= $(WFLAGS) -I./include/ -L. $(OPTIMIZATION) -fPIC $(LIBXML_CFLAGS) $(LIBFFI_CFLAGS)  -lhybris -lc -shared
+STDLIB_CFLAGS= $(WFLAGS) -L. -I./include/ $(OPTIMIZATION) -fPIC $(LIBXML_CFLAGS) $(LIBFFI_CFLAGS)  -lhybris -lc -shared
 PREFIX=/usr
 TARGET=hybris
 
@@ -66,7 +66,9 @@ all: src/lexer.cpp src/parser.cpp lib hybris stdlib
 
 lib: $(LOBJECTS)
 	$(CC) -shared -Wl,-soname,libhybris.so.1 -o lib$(TARGET).so.1.0 $(LIBOBJ)
-
+	ln -sf lib$(TARGET).so.1.0 lib$(TARGET).so
+	ln -sf lib$(TARGET).so.1.0 lib$(TARGET).so.1
+	
 hybris: $(OBJECTS)
 	$(CC) src/*.o -o $(TARGET) $(CFLAGS) $(LFLAGS)
 
@@ -91,6 +93,8 @@ src/lexer.cpp: src/lexer.l.cpp
 clean:
 	rm -f src/lexer.cpp include/lexer.h include/parser.h src/parser.hpp src/parser.cpp src/*.o src/*.lo $(TARGET)
 	rm -f lib$(TARGET).so.1.0
+	rm -f lib$(TARGET).so
+	rm -f lib$(TARGET).so.1
 	rm -rf stdlib/build
 	
 install:
@@ -106,3 +110,11 @@ install:
 	ln -sf $(PREFIX)/lib/lib$(TARGET).so.1.0 $(PREFIX)/lib/lib$(TARGET).so.1
 	ldconfig
 	cp -rf stdlib/build/* /usr/lib/hybris/library/
+
+uninstall:
+	rm -rf $(PREFIX)/bin/$(TARGET) 
+	rm -rf $(PREFIX)/lib/$(TARGET)
+	rm -rf $(PREFIX)/include/$(TARGET)
+	rm -rf $(PREFIX)/lib/lib$(TARGET).so.1.0
+	rm -rf $(PREFIX)/lib/lib$(TARGET).so
+	rm -rf $(PREFIX)/lib/lib$(TARGET).so.1
