@@ -33,15 +33,16 @@ HYBRIS_DEFINE_FUNCTION(hbinary){
 	}
 	vector<unsigned char> stream;
 	unsigned int          i;
-	Object               *integer = H_UNDEFINED;
 
 	for( i = 0; i < data->size(); ++i ){
         HYB_TYPES_ASSERT( HYB_ARGV(i), H_OT_INT, H_OT_CHAR );
-        integer = HYB_ARGV(i)->toInt();
 
-        stream.push_back( (unsigned char)integer->value.m_integer );
-
-        delete integer;
+        if( HYB_ARGV(i)->type == H_OT_INT ){
+            stream.push_back( (unsigned char)(long)(*HYB_ARGV(i)) );
+        }
+        else{
+            stream.push_back( (unsigned char)(char)(*HYB_ARGV(i)) );
+        }
 	}
 
     return new Object(stream);
@@ -60,7 +61,7 @@ void do_simple_packing( vector<unsigned char>& stream, Object *o, int size ){
 			}
 		break;
 		case H_OT_CHAR   :
-			stream.push_back( (unsigned char)o->value.m_char );
+			stream.push_back( (unsigned char)(char)(*o) );
 		break;
 		case H_OT_FLOAT  :
 			for( i = 0; i < size; ++i ){
@@ -69,12 +70,12 @@ void do_simple_packing( vector<unsigned char>& stream, Object *o, int size ){
 		break;
 		case H_OT_STRING :
 			for( i = 0; i < size; ++i ){
-				stream.push_back( (unsigned char)o->value.m_string[i] );
+				stream.push_back( (unsigned char)((const char *)(*o))[i] );
 			}
 		break;
 		case H_OT_BINARY :
 			for( i = 0; i < size; ++i ){
-				stream.push_back( (unsigned char)o->value.m_array[i]->value.m_char );
+				stream.push_back( (unsigned char)(char)(*o->value.m_array[i]) );
 			}
 		break;
 
@@ -106,9 +107,10 @@ HYBRIS_DEFINE_FUNCTION(hpack){
 			if( (HYB_ARGC() - 1) != o->value.m_array.size() ){
 				hyb_throw( H_ET_SYNTAX, "not enough parameters to pack an array of %d elements (given %d)", o->value.m_array.size(), HYB_ARGC() );
 			}
-			for( i = 1, j = 0; i < data->size(); ++i, ++j ){
+			for( i = 1, j = 0; i < HYB_ARGC(); ++i, ++j ){
 				HYB_TYPE_ASSERT( HYB_ARGV(i), H_OT_INT );
-				size = HYB_ARGV(i)->value.m_integer;
+
+				size = (long)(*HYB_ARGV(i));
 				do_simple_packing( stream, o->value.m_array[j], size );
 			}
 		break;
@@ -116,9 +118,10 @@ HYBRIS_DEFINE_FUNCTION(hpack){
 			if( (HYB_ARGC() - 1) != o->value.m_struct.size() ){
 				hyb_throw( H_ET_SYNTAX, "not enough parameters to pack a structure with %d attributes (given %d)", o->value.m_struct.size(), HYB_ARGC() );
 			}
-			for( i = 1, j = 0; i < data->size(); ++i, ++j ){
+			for( i = 1, j = 0; i < HYB_ARGC(); ++i, ++j ){
 				HYB_TYPE_ASSERT( HYB_ARGV(i), H_OT_INT );
-				size = HYB_ARGV(i)->value.m_integer;
+
+				size = (long)(*HYB_ARGV(i));
 				do_simple_packing( stream, o->value.m_struct[j].value, size );
 			}
 		break;

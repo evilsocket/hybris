@@ -50,24 +50,25 @@ int xml_isinvalid( char *str ){
 }
 
 Object *xml_traverse( xmlNode *node ){
-    Object *h_xmlNode = new Object(__xmlNode_type);
+    Object *h_xmlNode = MK_CLONE_OBJ(__xmlNode_type);
 	if( node->type == XML_ELEMENT_NODE ){
 	    /* check for empty names (usually indentation) */
 		if( xml_isinvalid((char *)node->name) == 0 ){
-			Object *h_xmlAttributes = new Object(),
-                   *h_xmlChildren   = new Object();
+			Object *h_xmlAttributes = MK_TMP_COLLECTION_OBJ(),
+                   *h_xmlChildren   = MK_TMP_COLLECTION_OBJ();
 
             /* set node name */
-			h_xmlNode->setAttribute( "name", new Object( (char *)node->name ) );
+			h_xmlNode->setAttribute( "name", MK_TMP_STRING_OBJ(node->name) );
 
 			/* fill attributes array */
 			for( xmlAttr *a = node->properties; a; a = a->next ){
 				const xmlChar *value = xmlNodeGetContent(a->children);
-				h_xmlAttributes->map( new Object((char *)a->name), new Object((char *)value) );
+				h_xmlAttributes->map( MK_TMP_STRING_OBJ(a->name), MK_TMP_STRING_OBJ(value) );
 				xmlFree((void*)value);
 			}
             /* set attributes */
             h_xmlNode->setAttribute( "attributes", h_xmlAttributes );
+
 			/* start children evaluation */
 			for( xmlNode *child = node->children; child; child = child->next ){
 				/* child element */
@@ -75,17 +76,17 @@ Object *xml_traverse( xmlNode *node ){
                     /* create a map for the child if it doesn't exist yet */
 					Object childname((char *)child->name);
 					if( h_xmlChildren->mapFind(&childname) == -1 ){
-						h_xmlChildren->map( new Object((char *)child->name), new Object() );
+						h_xmlChildren->map( MK_TMP_STRING_OBJ(child->name), MK_TMP_COLLECTION_OBJ() );
 					}
 					/* push the child into the array */
-					h_xmlChildren->at((char *)child->name)->push( xml_traverse(child) );
+					h_xmlChildren->at((char *)child->name)->push_ref( xml_traverse(child) );
 				}
 				/* node raw content */
 				else{
 					const xmlChar *content = xmlNodeGetContent(child);
 					if( xml_isinvalid((char *)content) == 0 ){
 						/* add the content */
-						h_xmlNode->setAttribute( "data", new Object((char *)content) );
+						h_xmlNode->setAttribute( "data", MK_TMP_STRING_OBJ(content) );
 						xmlFree((void*)content);
 					}
 				}
@@ -104,7 +105,7 @@ HYBRIS_DEFINE_FUNCTION(hxml_load){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
-	string   filename = HYB_ARGV(0)->value.m_string;
+	string   filename = (const char *)(*HYB_ARGV(0));
 	xmlDoc  *doc  = NULL;
 	xmlNode *root = NULL;
 
@@ -115,12 +116,12 @@ HYBRIS_DEFINE_FUNCTION(hxml_load){
 		hyb_throw( H_ET_GENERIC, "error loading or parsing '%s'", filename.c_str() );
 	}
 
-	Object *hmap = xml_traverse( xmlDocGetRootElement(doc) );
+	Object *node = xml_traverse( xmlDocGetRootElement(doc) );
 
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
 
-	return hmap;
+	return node;
 }
 
 HYBRIS_DEFINE_FUNCTION(hxml_parse){
@@ -129,7 +130,7 @@ HYBRIS_DEFINE_FUNCTION(hxml_parse){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
-	string   xml  = HYB_ARGV(0)->value.m_string;
+	string   xml  = (const char *)(*HYB_ARGV(0));
 	xmlDoc  *doc  = NULL;
 	xmlNode *root = NULL;
 
@@ -140,10 +141,10 @@ HYBRIS_DEFINE_FUNCTION(hxml_parse){
 		hyb_throw( H_ET_GENERIC, "error parsing xml buffer" );
 	}
 
-	Object *hmap = xml_traverse( xmlDocGetRootElement(doc) );
+	Object *node = xml_traverse( xmlDocGetRootElement(doc) );
 
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
 
-	return hmap;
+	return node;
 }

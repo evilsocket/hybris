@@ -35,16 +35,16 @@ extern "C" named_function_t hybris_module_functions[] = {
 
 HYBRIS_DEFINE_FUNCTION(hvar_names){
 	unsigned int i;
-	Object *array = new Object();
+	Object *array = MK_COLLECTION_OBJ();
 	for( i = 0; i < ctx->vmem.size(); i++ ){
-		array->push( new Object((char *)ctx->vmem.label(i)) );
+		array->push_ref( MK_STRING_OBJ(ctx->vmem.label(i)) );
 	}
 	return array;
 }
 
 HYBRIS_DEFINE_FUNCTION(hvar_values){
 	unsigned int i;
-	Object *array = new Object();
+	Object *array = MK_COLLECTION_OBJ();
 	for( i = 0; i < ctx->vmem.size(); i++ ){
 		array->push( ctx->vmem.at(i) );
 	}
@@ -53,9 +53,9 @@ HYBRIS_DEFINE_FUNCTION(hvar_values){
 
 HYBRIS_DEFINE_FUNCTION(huser_functions){
 	unsigned int i;
-	Object *array = new Object();
+	Object *array = MK_COLLECTION_OBJ();
 	for( i = 0; i < ctx->vcode.size(); i++ ){
-		array->push( new Object((char *)ctx->vcode.label(i)) );
+		array->push_ref( MK_STRING_OBJ(ctx->vcode.label(i)) );
 	}
 	return array;
 }
@@ -63,15 +63,15 @@ HYBRIS_DEFINE_FUNCTION(huser_functions){
 HYBRIS_DEFINE_FUNCTION(hdyn_functions){
     unsigned int i, j, mods = ctx->modules.size(), dyns;
 
-    Object *map = new Object();
+    Object *map = MK_COLLECTION_OBJ();
     for( i = 0; i < mods; i++ ){
         module_t *mod = ctx->modules[i];
-        Object   *dyn = new Object();
+        Object   *dyn = MK_TMP_COLLECTION_OBJ();
         dyns          = mod->functions.size();
         for( j = 0; j < dyns; j++ ){
-            dyn->push( new Object( (char *)mod->functions[j]->identifier.c_str() ) );
+            dyn->push( MK_TMP_STRING_OBJ( mod->functions[j]->identifier.c_str() ) );
         }
-        map->map( new Object( (char *)mod->name.c_str() ), dyn );
+        map->map( MK_TMP_STRING_OBJ( mod->name.c_str() ), dyn );
     }
     return map;
 }
@@ -82,18 +82,19 @@ HYBRIS_DEFINE_FUNCTION(hcall){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
-	Node *call  = new Node(H_NT_CALL);
-    call->value.m_call = HYB_ARGV(0)->value.m_string;
+	Node *call         = new Node(H_NT_CALL);
+    call->value.m_call = (const char *)(*HYB_ARGV(0));
 	if( HYB_ARGC() > 1 ){
 		unsigned int i;
-		for( i = 1; i < data->size(); i++ ){
+		for( i = 1; i < HYB_ARGC(); ++i ){
 			switch( HYB_ARGV(i)->type ){
-				case H_OT_INT    : call->addChild( new ConstantNode(HYB_ARGV(i)->value.m_integer) );                    break;
-				case H_OT_FLOAT  : call->addChild( new ConstantNode(HYB_ARGV(i)->value.m_double) );                  break;
-				case H_OT_CHAR   : call->addChild( new ConstantNode(HYB_ARGV(i)->value.m_char) );                   break;
-				case H_OT_STRING : call->addChild( new ConstantNode((char *)HYB_ARGV(i)->value.m_string.c_str()) ); break;
+				case H_OT_INT    : call->addChild( new ConstantNode( (long)(*HYB_ARGV(i)) ) );   break;
+				case H_OT_FLOAT  : call->addChild( new ConstantNode( (double)(*HYB_ARGV(i)) ) ); break;
+				case H_OT_CHAR   : call->addChild( new ConstantNode( (char)(*HYB_ARGV(i)) ) );   break;
+				case H_OT_STRING : call->addChild( new ConstantNode( (char *)(*HYB_ARGV(i)) ) ); break;
 
-				default : hyb_throw( H_ET_GENERIC, "type not supported for reflected call" );
+				default :
+                    hyb_throw( H_ET_GENERIC, "type %s not supported for reflected call", Object::type_name(HYB_ARGV(i)) );
 			}
 		}
 	}

@@ -61,8 +61,8 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 	struct curl_slist *headerlist = NULL;
 	string hbuffer,
 		   buffer,
-		   host = HYB_ARGV(0)->value.m_string,
-		   page = HYB_ARGV(1)->value.m_string,
+		   host = (const char *)(*HYB_ARGV(0)),
+		   page = (const char *)(*HYB_ARGV(1)),
 		   url;
 	unsigned int dohead = (HYB_ARGC() >= 3 ? HYB_ARGV(2)->lvalue() : 0),
 				 https  = !strncmp( "https://", host.c_str(), 8 );
@@ -124,12 +124,12 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 	}
 
 	if( !dohead ){
-		return new Object( (char *)buffer.c_str() );
+		return MK_STRING_OBJ(buffer.c_str());
 	}
 	else{
-		Object *array = new Object();
-		array->push( new Object( (char *)hbuffer.c_str() ) );
-		array->push( new Object( (char *)buffer.c_str() ) );
+		Object *array = MK_COLLECTION_OBJ();
+		array->push_ref( MK_STRING_OBJ(hbuffer.c_str()) );
+		array->push_ref( MK_STRING_OBJ(buffer.c_str()) );
 		return array;
 	}
 }
@@ -153,8 +153,8 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 	Object *post = HYB_ARGV(2);
 	string hbuffer,
 		   buffer,
-		   host = HYB_ARGV(0)->value.m_string,
-		   page = HYB_ARGV(1)->value.m_string,
+		   host = (const char *)(*HYB_ARGV(0)),
+		   page = (const char *)(*HYB_ARGV(1)),
 		   url;
 	unsigned int i,
 				 dohead = (HYB_ARGC() >= 3 ? HYB_ARGV(3)->lvalue() : 0),
@@ -196,7 +196,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 
 		for( i = 0; i < headers->value.m_map.size(); i++ ){
 			Object *name  = headers->value.m_map[i]->toString(),
-					*value = headers->value.m_array[i]->toString();
+                   *value = headers->value.m_array[i]->toString();
 			header     = name->value.m_string + ": " + value->value.m_string;
 			headerlist = curl_slist_append( headerlist, header.c_str() );
 			delete name;
@@ -207,7 +207,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 
 	for( i = 0; i < post->value.m_map.size(); i++ ){
 		Object *name  = post->value.m_map[i]->toString(),
-				*value = post->value.m_array[i]->toString();
+               *value = post->value.m_array[i]->toString();
 
 		curl_formadd( &formpost, &lastptr,
 		 		      CURLFORM_COPYNAME, name->value.m_string.c_str(),
@@ -232,12 +232,12 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 	}
 
 	if( !dohead ){
-		return new Object( (char *)buffer.c_str() );
+		return MK_STRING_OBJ(buffer.c_str());
 	}
 	else{
-		Object *array = new Object();
-		array->push( new Object( (char *)hbuffer.c_str() ) );
-		array->push( new Object( (char *)buffer.c_str() ) );
+		Object *array = MK_COLLECTION_OBJ();
+		array->push_ref( MK_STRING_OBJ(hbuffer.c_str()) );
+		array->push_ref( MK_STRING_OBJ(buffer.c_str()) );
 		return array;
 	}
 }
@@ -249,7 +249,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp){
     HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
 
     vmem_t hdata;
-    int    method = HYB_ARGV(0)->value.m_integer,
+    int    method = (long)(*HYB_ARGV(0)),
            i;
 
     if( method == HTTP_GET && HYB_ARGC() < 3 ){
@@ -259,7 +259,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp){
         hyb_throw( H_ET_SYNTAX, "function 'http' requires at least 3 parameters if method=POST (called with %d)", HYB_ARGC() );
     }
 
-    for( i = 1; i < data->size(); i++ ){
+    for( i = 1; i < HYB_ARGC(); ++i ){
         hdata.insert( HANONYMOUSIDENTIFIER, HYB_ARGV(i) );
     }
 

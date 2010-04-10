@@ -98,7 +98,7 @@ HYBRIS_DEFINE_FUNCTION(hdllopen){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
-    return new Object( reinterpret_cast<long>( dlopen( HYB_ARGV(0)->value.m_string.c_str(), RTLD_LAZY ) ) );
+    return PTR_TO_INT_OBJ( dlopen( (const char *)(*HYB_ARGV(0)), RTLD_LAZY ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hdlllink){
@@ -108,9 +108,9 @@ HYBRIS_DEFINE_FUNCTION(hdlllink){
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT    );
 	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
 
-    void *hdll = reinterpret_cast<void *>( HYB_ARGV(0)->value.m_integer );
+    void *hdll = reinterpret_cast<void *>( (long)(*HYB_ARGV(0)) );
 
-    return new Object( reinterpret_cast<long>( dlsym( hdll, HYB_ARGV(1)->value.m_string.c_str() ) ), 1 );
+    return new Object( reinterpret_cast<long>( dlsym( hdll, (const char *)(*HYB_ARGV(1)) ) ), 1 );
 }
 
 HYBRIS_DEFINE_FUNCTION(hdllcall){
@@ -124,7 +124,7 @@ HYBRIS_DEFINE_FUNCTION(hdllcall){
     HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
 
     typedef int (* function_t)(void);
-    function_t function = (function_t)HYB_ARGV(0)->value.m_integer;
+    function_t function = (function_t)(long)(*HYB_ARGV(0));
 
     ffi_cif    cif;
     ffi_arg    ul_ret;
@@ -169,7 +169,7 @@ HYBRIS_DEFINE_FUNCTION(hdllcall){
 		}
 	}
 
-    return new Object( static_cast<long>(ul_ret) );
+    return MK_INT_OBJ(ul_ret);
 }
 
 HYBRIS_DEFINE_FUNCTION(hdllclose){
@@ -178,8 +178,8 @@ HYBRIS_DEFINE_FUNCTION(hdllclose){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
 
-	dlclose( (void *)HYB_ARGV(0)->value.m_integer );
+	dlclose( (void *)(long)(*HYB_ARGV(0)) );
 
-    return new Object( static_cast<long>(0) );
+    return MK_INT_OBJ(0);
 }
 

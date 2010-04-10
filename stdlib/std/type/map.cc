@@ -40,7 +40,7 @@ HYBRIS_DEFINE_FUNCTION(hmap){
 		hyb_throw( H_ET_SYNTAX, "function 'map' requires an even number of parameters (called with %d)", HYB_ARGC() );
 	}
 	unsigned int i;
-	Object *map = new Object();
+	Object *map = MK_COLLECTION_OBJ();
 	for( i = 0; i < data->size(); i += 2 ){
 		map->map( HYB_ARGV(i), HYB_ARGV(i + 1) );
 	}
@@ -53,7 +53,7 @@ HYBRIS_DEFINE_FUNCTION(hmapelements){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MAP );
 
-	return new Object( static_cast<long>( HYB_ARGV(0)->value.m_map.size() ) );
+    return MK_INT_OBJ( HYB_ARGV(0)->value.m_map.size() );
 }
 
 HYBRIS_DEFINE_FUNCTION(hmappop){
@@ -62,7 +62,7 @@ HYBRIS_DEFINE_FUNCTION(hmappop){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MAP );
 
-	return new Object( HYB_ARGV(0)->mapPop() );
+	return HYB_ARGV(0)->mapPop();
 }
 
 HYBRIS_DEFINE_FUNCTION(hunmap){
@@ -71,7 +71,7 @@ HYBRIS_DEFINE_FUNCTION(hunmap){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MAP );
 
-	return new Object( HYB_ARGV(0)->unmap(HYB_ARGV(1)) );
+	return HYB_ARGV(0)->unmap(HYB_ARGV(1));
 }
 
 HYBRIS_DEFINE_FUNCTION(hismapped){
@@ -80,16 +80,16 @@ HYBRIS_DEFINE_FUNCTION(hismapped){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MAP );
 	Object *map   = HYB_ARGV(0),
-		    *find  = HYB_ARGV(1);
+           *find  = HYB_ARGV(1);
 	unsigned int i;
 
 	for( i = 0; i < map->value.m_array.size(); i++ ){
 		if( map->value.m_array[i]->equals(find) ){
-			return new Object( static_cast<long>(i) );
+			return MK_INT_OBJ(i);
 		}
 	}
 
-	return new Object( static_cast<long>(-1) );
+	return MK_INT_OBJ(-1);
 }
 
 HYBRIS_DEFINE_FUNCTION(hhaskey){
@@ -104,9 +104,9 @@ HYBRIS_DEFINE_FUNCTION(hhaskey){
 
 	for( i = 0; i < map->value.m_map.size(); i++ ){
 		if( map->value.m_map[i]->equals(key) ){
-			return new Object( static_cast<long>(i) );
+			return MK_INT_OBJ(i);
 		}
 	}
 
-	return new Object( static_cast<long>(-1) );
+	return MK_INT_OBJ(-1);
 }

@@ -69,10 +69,10 @@ HYBRIS_DEFINE_FUNCTION(hacos){
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
     if( HYB_ARGV(0)->type == H_OT_INT ){
-        return new Object((double)acos(HYB_ARGV(0)->value.m_integer));
+        return MK_FLOAT_OBJ( acos((long)(*HYB_ARGV(0)) ));
     }
     else{
-        return new Object((double)acos(HYB_ARGV(0)->value.m_double));
+        return MK_FLOAT_OBJ( acos((double)(*HYB_ARGV(0)) ));
     }
 }
 
@@ -83,10 +83,10 @@ HYBRIS_DEFINE_FUNCTION(hasin){
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
     if( HYB_ARGV(0)->type == H_OT_INT ){
-        return new Object((double)asin(HYB_ARGV(0)->value.m_integer));
+        return MK_FLOAT_OBJ( asin((long)(*HYB_ARGV(0)) ));
     }
     else{
-        return new Object((double)asin(HYB_ARGV(0)->value.m_double));
+        return MK_FLOAT_OBJ( asin((double)(*HYB_ARGV(0)) ));
     }
 }
 
@@ -97,10 +97,10 @@ HYBRIS_DEFINE_FUNCTION(hatan){
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
     if( HYB_ARGV(0)->type == H_OT_INT ){
-        return new Object((double)atan(HYB_ARGV(0)->value.m_integer));
+        return MK_FLOAT_OBJ( atan((long)(*HYB_ARGV(0)) ));
     }
     else{
-        return new Object((double)atan(HYB_ARGV(0)->value.m_double));
+        return MK_FLOAT_OBJ( atan((double)(*HYB_ARGV(0)) ));
     }
 }
 
@@ -125,7 +125,7 @@ HYBRIS_DEFINE_FUNCTION(hatan2){
     else{
         b = HYB_ARGV(1)->value.m_double;
     }
-    return new Object((double)atan2(a,b));
+    return MK_FLOAT_OBJ( atan2(a,b));
 }
 
 HYBRIS_DEFINE_FUNCTION(hceil){
@@ -135,10 +135,10 @@ HYBRIS_DEFINE_FUNCTION(hceil){
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
     if( HYB_ARGV(0)->type == H_OT_INT ){
-        return new Object( static_cast<long>( ceil(HYB_ARGV(0)->value.m_integer) ) );
+        return MK_INT_OBJ( ceil((long)(*HYB_ARGV(0)) ) );
     }
     else{
-        return new Object(static_cast<long>( ceil(HYB_ARGV(0)->value.m_double) ) );
+        return MK_INT_OBJ( ceil((double)(*HYB_ARGV(0)) ) );
     }
 }
 
@@ -149,10 +149,10 @@ HYBRIS_DEFINE_FUNCTION(hcos){
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
     if( HYB_ARGV(0)->type == H_OT_INT ){
-        return new Object((double)cos(HYB_ARGV(0)->value.m_integer));
+        return MK_FLOAT_OBJ( cos((long)(*HYB_ARGV(0)) ));
     }
     else{
-        return new Object((double)cos(HYB_ARGV(0)->value.m_double));
+        return MK_FLOAT_OBJ( cos((double)(*HYB_ARGV(0)) ));
     }
 }
 
@@ -163,10 +163,10 @@ HYBRIS_DEFINE_FUNCTION(hcosh){
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
     if( HYB_ARGV(0)->type == H_OT_INT ){
-        return new Object((double)cosh(HYB_ARGV(0)->value.m_integer));
+        return MK_FLOAT_OBJ( cosh((long)(*HYB_ARGV(0)) ));
     }
     else{
-        return new Object((double)cosh(HYB_ARGV(0)->value.m_double));
+        return MK_FLOAT_OBJ( cosh((double)(*HYB_ARGV(0)) ));
     }
 }
 
@@ -177,10 +177,10 @@ HYBRIS_DEFINE_FUNCTION(hexp){
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
     if( HYB_ARGV(0)->type == H_OT_INT ){
-        return new Object((double)exp(HYB_ARGV(0)->value.m_integer));
+        return MK_FLOAT_OBJ( exp((long)(*HYB_ARGV(0)) ));
     }
     else{
-        return new Object((double)exp(HYB_ARGV(0)->value.m_double));
+        return MK_FLOAT_OBJ( exp((double)(*HYB_ARGV(0)) ));
     }
 }
 
@@ -191,10 +191,10 @@ HYBRIS_DEFINE_FUNCTION(hfabs){
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
     if( HYB_ARGV(0)->type == H_OT_INT ){
-        return new Object((double)fabs(HYB_ARGV(0)->value.m_integer));
+        return MK_FLOAT_OBJ( fabs((long)(*HYB_ARGV(0)) ));
     }
     else{
-        return new Object((double)fabs(HYB_ARGV(0)->value.m_double));
+        return MK_FLOAT_OBJ( fabs((double)(*HYB_ARGV(0)) ));
     }
 }
 
@@ -205,10 +205,10 @@ HYBRIS_DEFINE_FUNCTION(hfloor){
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
     if( HYB_ARGV(0)->type == H_OT_INT ){
-        return new Object( static_cast<long>( floor(HYB_ARGV(0)->value.m_integer) ) );
+        return MK_INT_OBJ( floor((long)(*HYB_ARGV(0)) ) );
     }
     else{
-        return new Object( static_cast<long>( floor(HYB_ARGV(0)->value.m_double) ) );
+        return MK_INT_OBJ( floor((double)(*HYB_ARGV(0)) ) );
     }
 }
 
@@ -233,7 +233,7 @@ HYBRIS_DEFINE_FUNCTION(hfmod){
     else{
         b = HYB_ARGV(1)->value.m_double;
     }
-    return new Object((double)fmod(a,b));
+    return MK_FLOAT_OBJ( fmod(a,b));
 }
 
 HYBRIS_DEFINE_FUNCTION(hlog){
@@ -243,10 +243,10 @@ HYBRIS_DEFINE_FUNCTION(hlog){
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
     if( HYB_ARGV(0)->type == H_OT_INT ){
-        return new Object((double)log(HYB_ARGV(0)->value.m_integer));
+        return MK_FLOAT_OBJ( log((long)(*HYB_ARGV(0)) ));
     }
     else{
-        return new Object((double)log(HYB_ARGV(0)->value.m_double));
+        return MK_FLOAT_OBJ( log((double)(*HYB_ARGV(0)) ));
     }
 }
 
@@ -257,10 +257,10 @@ HYBRIS_DEFINE_FUNCTION(hlog10){
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
     if( HYB_ARGV(0)->type == H_OT_INT ){
-        return new Object((double)log10(HYB_ARGV(0)->value.m_integer));
+        return MK_FLOAT_OBJ( log10((long)(*HYB_ARGV(0)) ));
     }
     else{
-        return new Object((double)log10(HYB_ARGV(0)->value.m_double));
+        return MK_FLOAT_OBJ( log10((double)(*HYB_ARGV(0)) ));
     }
 }
 
@@ -285,7 +285,7 @@ HYBRIS_DEFINE_FUNCTION(hpow){
     else{
         b = HYB_ARGV(1)->value.m_double;
     }
-    return new Object((double)pow(a,b));
+    return MK_FLOAT_OBJ( pow(a,b));
 }
 
 HYBRIS_DEFINE_FUNCTION(hsin){
@@ -295,10 +295,10 @@ HYBRIS_DEFINE_FUNCTION(hsin){
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
     if( HYB_ARGV(0)->type == H_OT_INT ){
-        return new Object((double)sin(HYB_ARGV(0)->value.m_integer));
+        return MK_FLOAT_OBJ( sin((long)(*HYB_ARGV(0)) ));
     }
     else{
-        return new Object((double)sin(HYB_ARGV(0)->value.m_double));
+        return MK_FLOAT_OBJ( sin((double)(*HYB_ARGV(0)) ));
     }
 }
 
@@ -309,10 +309,10 @@ HYBRIS_DEFINE_FUNCTION(hsinh){
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
     if( HYB_ARGV(0)->type == H_OT_INT ){
-        return new Object((double)sinh(HYB_ARGV(0)->value.m_integer));
+        return MK_FLOAT_OBJ( sinh((long)(*HYB_ARGV(0)) ));
     }
     else{
-        return new Object((double)sinh(HYB_ARGV(0)->value.m_double));
+        return MK_FLOAT_OBJ( sinh((double)(*HYB_ARGV(0)) ));
     }
 }
 
@@ -323,10 +323,10 @@ HYBRIS_DEFINE_FUNCTION(hsqrt){
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
     if( HYB_ARGV(0)->type == H_OT_INT ){
-        return new Object((double)sqrt(HYB_ARGV(0)->value.m_integer));
+        return MK_FLOAT_OBJ( sqrt((long)(*HYB_ARGV(0)) ));
     }
     else{
-        return new Object((double)sqrt(HYB_ARGV(0)->value.m_double));
+        return MK_FLOAT_OBJ( sqrt((double)(*HYB_ARGV(0)) ));
     }
 }
 
@@ -337,10 +337,10 @@ HYBRIS_DEFINE_FUNCTION(htan){
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
     if( HYB_ARGV(0)->type == H_OT_INT ){
-        return new Object((double)tan(HYB_ARGV(0)->value.m_integer));
+        return MK_FLOAT_OBJ( tan((long)(*HYB_ARGV(0)) ));
     }
     else{
-        return new Object((double)tan(HYB_ARGV(0)->value.m_double));
+        return MK_FLOAT_OBJ( tan((double)(*HYB_ARGV(0)) ));
     }
 }
 
@@ -351,10 +351,10 @@ HYBRIS_DEFINE_FUNCTION(htanh){
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_FLOAT );
 
     if( HYB_ARGV(0)->type == H_OT_INT ){
-        return new Object((double)tanh(HYB_ARGV(0)->value.m_integer));
+        return MK_FLOAT_OBJ( tanh(HYB_ARGV(0)->value.m_integer));
     }
     else{
-        return new Object((double)tanh(HYB_ARGV(0)->value.m_double));
+        return MK_FLOAT_OBJ( tanh((double)(*HYB_ARGV(0)) ));
     }
 }
 

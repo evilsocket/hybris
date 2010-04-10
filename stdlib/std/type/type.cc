@@ -55,63 +55,63 @@ HYBRIS_DEFINE_FUNCTION(hisint){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'isint' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( static_cast<long>(HYB_ARGV(0)->type == H_OT_INT) );
+	return MK_INT_OBJ( HYB_ARGV(0)->type == H_OT_INT );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisfloat){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'isfloat' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( static_cast<long>(HYB_ARGV(0)->type == H_OT_FLOAT) );
+	return MK_INT_OBJ( HYB_ARGV(0)->type == H_OT_FLOAT );
 }
 
 HYBRIS_DEFINE_FUNCTION(hischar){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'ischar' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( static_cast<long>(HYB_ARGV(0)->type == H_OT_CHAR) );
+	return MK_INT_OBJ( HYB_ARGV(0)->type == H_OT_CHAR );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisstring){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'isstring' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( static_cast<long>(HYB_ARGV(0)->type == H_OT_STRING) );
+	return MK_INT_OBJ( HYB_ARGV(0)->type == H_OT_STRING );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisarray){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'isarray' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( static_cast<long>(HYB_ARGV(0)->type == H_OT_ARRAY) );
+	return MK_INT_OBJ( HYB_ARGV(0)->type == H_OT_ARRAY );
 }
 
 HYBRIS_DEFINE_FUNCTION(hismap){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'ismap' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( static_cast<long>(HYB_ARGV(0)->type == H_OT_MAP) );
+	return MK_INT_OBJ( HYB_ARGV(0)->type == H_OT_MAP );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisalias){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'isalias' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( static_cast<long>(HYB_ARGV(0)->type == H_OT_ALIAS) );
+	return MK_INT_OBJ( HYB_ARGV(0)->type == H_OT_ALIAS );
 }
 
 HYBRIS_DEFINE_FUNCTION(htypeof){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'typeof' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( (char *)Object::type_name(HYB_ARGV(0)) );
+	return MK_STRING_OBJ( Object::type_name(HYB_ARGV(0)) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsizeof){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'sizeof' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return new Object( static_cast<long>( HYB_ARGV(0)->size  ) );
+	return MK_INT_OBJ( HYB_ARGV(0)->size );
 }
 
 HYBRIS_DEFINE_FUNCTION(htoint){
@@ -151,19 +151,19 @@ Object *xmlNode2Object( xmlNode *node ){
 	char *data = (char *)(node->children ? node->children->content : NULL);
 
 	if( strcmp( (char *)node->name, "int" ) == 0 ){
-		return new Object( static_cast<long>( atoi(data) ) );
+		return MK_INT_OBJ( atoi(data) );
 	}
 	else if( strcmp( (char *)node->name, "alias" ) == 0 ){
-		return new Object( (unsigned int)atoi(data) );
+	    return MK_ALIAS_OBJ( atoi(data) );
 	}
 	else if( strcmp( (char *)node->name, "char" ) == 0 ){
-		return new Object( (char)data[0] );
+	    return MK_CHAR_OBJ( data[0] );
 	}
 	else if( strcmp( (char *)node->name, "float" ) == 0 ){
-		return new Object( (double)strtod(data,NULL) );
+	    return MK_FLOAT_OBJ( strtod(data,NULL) );
 	}
 	else if( strcmp( (char *)node->name, "string" ) == 0 ){
-		return new Object( data );
+	    return MK_STRING_OBJ( data );
 	}
 	else if( strcmp( (char *)node->name, "binary" ) == 0 ){
 		vector<unsigned char> stream;
@@ -177,17 +177,17 @@ Object *xmlNode2Object( xmlNode *node ){
 		return new Object(stream);
 	}
 	else if( strcmp( (char *)node->name, "array" ) == 0 ){
-		Object *array  = new Object();
+		Object *array  = MK_COLLECTION_OBJ();
 		xmlNode *child = NULL;
 		for( child = node->children; child; child = child->next ){
 			if( child->type == XML_ELEMENT_NODE) {
-				array->push( xmlNode2Object(child) );
+				array->push_ref( xmlNode2Object(child) );
 			}
 		}
 		return array;
 	}
 	else if( strcmp( (char *)node->name, "map" ) == 0 ){
-		Object *map      = new Object();
+		Object *map      = MK_COLLECTION_OBJ();
 		xmlNode *child   = NULL,
 				*mapping = NULL,
 				*object  = NULL;
@@ -195,14 +195,14 @@ Object *xmlNode2Object( xmlNode *node ){
 			if( child->type == XML_ELEMENT_NODE ){
 				mapping = child;
 				object  = child->next;
-				map->map( xmlNode2Object(mapping), xmlNode2Object(object) );
+				map->map_ref( xmlNode2Object(mapping), xmlNode2Object(object) );
 				child = child->next;
 			}
 		}
 		return map;
 	}
 	else if( strcmp( (char *)node->name, "matrix" ) == 0 ){
-        Object *matrix = new Object();
+        Object *matrix = MK_COLLECTION_OBJ();
         xmlNode *child = NULL,
                 *row   = NULL,
                 *item  = NULL;
@@ -251,7 +251,7 @@ Object *xmlNode2Object( xmlNode *node ){
                 last_attr = (char *)child->children->content;
             }
             else{
-                structure->setAttribute( (char *)last_attr.c_str(), xmlNode2Object(child) );
+                structure->setAttribute_ref( (char *)last_attr.c_str(), xmlNode2Object(child) );
             }
         }
 
@@ -329,7 +329,7 @@ string Object2Xml( Object *o, unsigned int tabs = 0 ){
             hyb_throw( H_ET_GENERIC, "could not convert %s type to xml", Object::type_name(o) );
 	}
 
-	return xml.str().c_str();
+	return xml.str();
 }
 
 
@@ -370,5 +370,5 @@ HYBRIS_DEFINE_FUNCTION(htoxml){
 
 	string xml = Object2Xml( HYB_ARGV(0) );
 
-	return new Object( (char *)xml.c_str() );
+	return MK_STRING_OBJ( xml.c_str() );
 }

@@ -39,7 +39,7 @@ HYBRIS_DEFINE_FUNCTION(hstrlen){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
-	return new Object( static_cast<long>( HYB_ARGV(0)->value.m_string.size() ) );
+	return MK_INT_OBJ( HYB_ARGV(0)->value.m_string.size() );
 }
 
 HYBRIS_DEFINE_FUNCTION(hstrfind){
@@ -51,7 +51,7 @@ HYBRIS_DEFINE_FUNCTION(hstrfind){
 
 	int found = HYB_ARGV(0)->value.m_string.find( HYB_ARGV(1)->value.m_string );
 
-	return new Object( static_cast<long>(found == string::npos ? -1 : found) );
+	return MK_INT_OBJ( found == string::npos ? -1 : found );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsubstr){
@@ -62,7 +62,7 @@ HYBRIS_DEFINE_FUNCTION(hsubstr){
 
 	string sub = HYB_ARGV(0)->value.m_string.substr( HYB_ARGV(1)->lvalue(), HYB_ARGV(2)->lvalue() );
 
-	return new Object( (char *)sub.c_str() );
+	return MK_STRING_OBJ( sub.c_str() );
 }
 
 HYBRIS_DEFINE_FUNCTION(hstrreplace){
@@ -82,7 +82,7 @@ HYBRIS_DEFINE_FUNCTION(hstrreplace){
 		str.replace( i, find.length(), repl );
 	}
 
-	return new Object( (char *)str.c_str() );
+	return MK_STRING_OBJ( str.c_str() );
 }
 
 HYBRIS_DEFINE_FUNCTION(hstrsplit){
@@ -103,10 +103,9 @@ HYBRIS_DEFINE_FUNCTION(hstrsplit){
 	}
 	parts.push_back( str.substr(start) );
 
-   	Object *array = new Object();
+   	Object *array = MK_COLLECTION_OBJ();
 	for( i = 0; i < parts.size(); i++ ){
-		Object tmp( (char *)parts[i].c_str() );
-		array->push(&tmp);
+		array->push_ref( MK_STRING_OBJ( parts[i].c_str() ) );
 	}
 
 	return array;

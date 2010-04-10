@@ -53,6 +53,28 @@ enum H_OBJECT_TYPE {
     H_OT_CLASS
 };
 
+// macros to easily create objects at runtime
+#define MK_INT_OBJ(v)        new Object( static_cast<long>(v) )
+#define MK_EXT_OBJ(v,e)      new Object( static_cast<long>(v), static_cast<unsigned int>(e) )
+#define MK_FLOAT_OBJ(v)      new Object( static_cast<double>(v) )
+#define MK_CHAR_OBJ(v)       new Object( static_cast<char>(v) )
+#define MK_STRING_OBJ(v)     new Object( (char *)(v) )
+#define MK_ALIAS_OBJ(v)      new Object( static_cast<unsigned int>(v) )
+#define MK_CLONE_OBJ(o)      new Object( static_cast<Object *>(o) )
+#define MK_COLLECTION_OBJ(o) new Object()
+// this one takes a C pointer and returns an H_OT_INTEGER representing its address
+#define PTR_TO_INT_OBJ(p)    new Object( reinterpret_cast<long>(p) )
+// same as before, but for tmp objects that are cloned inside methods (no need for dynamic allocation)
+#define MK_TMP_INT_OBJ(v)        &( Object( static_cast<long>(v) ) )
+#define MK_TMP_EXT_OBJ(v,e)      &( Object( static_cast<long>(v), static_cast<unsigned int>(e) ) )
+#define MK_TMP_FLOAT_OBJ(v)      &( Object( static_cast<double>(v) ) )
+#define MK_TMP_CHAR_OBJ(v)       &( Object( static_cast<char>(v) ) )
+#define MK_TMP_STRING_OBJ(v)     &( Object( (char *)(v) ) )
+#define MK_TMP_ALIAS_OBJ(v)      &( Object( static_cast<unsigned int>(v) ) )
+#define MK_TMP_CLONE_OBJ(o)      &( Object( static_cast<Object *>(o) ) )
+#define MK_TMP_COLLECTION_OBJ(o) &( Object() )
+#define PTR_TO_TMP_INT_OBJ(p)    &( Object( reinterpret_cast<long>(p) ) )
+
 #ifdef GC_SUPPORT
     typedef unsigned char H_OBJECT_ATTRIBUTE;
 
@@ -169,6 +191,13 @@ public  :
     /* value of the object */
     ObjectValue        value;
 
+    /* inline cast operators to access the object value */
+    inline operator long(){ return value.m_integer; }
+    inline operator double(){ return value.m_double; }
+    inline operator char(){ return value.m_char; }
+    inline operator const char *(){ return value.m_string.c_str(); }
+    inline operator char *(){ return (char *)value.m_string.c_str(); }
+
 	#ifdef MEM_DEBUG
     void* operator new (size_t size);
     #endif
@@ -198,6 +227,7 @@ public  :
 	void     addAttribute( char *name );
     Object  *getAttribute( char *name );
     void     setAttribute( char *name, Object *value );
+    void     setAttribute_ref( char *name, Object *value );
 
 	int mapFind( Object *map );
 
@@ -219,6 +249,7 @@ public  :
 	Object *push( Object *o );
 	Object *push_ref( Object *o );
 	Object *map( Object *map, Object *o );
+	Object *map_ref( Object *map, Object *o );
 	Object *pop();
 	Object *mapPop();
 	Object *remove( Object *index );

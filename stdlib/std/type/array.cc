@@ -35,7 +35,7 @@ extern "C" named_function_t hybris_module_functions[] = {
 
 HYBRIS_DEFINE_FUNCTION(harray){
 	unsigned int i;
-	Object *array = new Object();
+	Object *array = MK_COLLECTION_OBJ();
 	for( i = 0; i < data->size(); i++ ){
 		array->push( HYB_ARGV(i) );
 	}
@@ -48,7 +48,7 @@ HYBRIS_DEFINE_FUNCTION(helements){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_ARRAY );
 
-	return new Object( static_cast<long>( HYB_ARGV(0)->value.m_array.size() ) );
+    return MK_INT_OBJ( HYB_ARGV(0)->value.m_array.size() );
 }
 
 HYBRIS_DEFINE_FUNCTION(hpop){
@@ -57,7 +57,7 @@ HYBRIS_DEFINE_FUNCTION(hpop){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_ARRAY );
 
-	return new Object( HYB_ARGV(0)->pop() );
+	return HYB_ARGV(0)->pop();
 }
 
 HYBRIS_DEFINE_FUNCTION(hremove){
@@ -66,7 +66,7 @@ HYBRIS_DEFINE_FUNCTION(hremove){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_ARRAY );
 
-	return new Object( HYB_ARGV(0)->remove(HYB_ARGV(1)) );
+	return HYB_ARGV(0)->remove(HYB_ARGV(1));
 }
 
 HYBRIS_DEFINE_FUNCTION(hcontains){
@@ -74,19 +74,17 @@ HYBRIS_DEFINE_FUNCTION(hcontains){
 		hyb_throw( H_ET_SYNTAX, "function 'contains' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_ARRAY );
+
 	Object *array = HYB_ARGV(0),
-		    *find  = HYB_ARGV(1);
+           *find  = HYB_ARGV(1);
 	unsigned int i;
 
 	for( i = 0; i < array->value.m_array.size(); i++ ){
-		Object *boolean = ((*find) == array->value.m_array[i]);
-		if( boolean->lvalue() ){
-			delete boolean;
-			return new Object( static_cast<long>(i) );
+		if( array->value.m_array[i]->equals(find) ){
+			return MK_INT_OBJ(i);
 		}
-		delete boolean;
 	}
 
-	return new Object( static_cast<long>(-1) );
+	return MK_INT_OBJ(-1);
 }
 

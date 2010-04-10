@@ -43,7 +43,7 @@ HYBRIS_DEFINE_FUNCTION(hexec){
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
     Object *_return = NULL;
     if( HYB_ARGC() ){
-        _return = new Object( static_cast<long>( system( HYB_ARGV(0)->value.m_string.c_str() ) ) );
+        _return = MK_INT_OBJ( system( (const char *)(*HYB_ARGV(0)) ) );
     }
 	else{
 		hyb_throw( H_ET_SYNTAX, "function 'exec' requires 1 parameter (called with %d)", HYB_ARGC() );
@@ -52,11 +52,11 @@ HYBRIS_DEFINE_FUNCTION(hexec){
 }
 
 HYBRIS_DEFINE_FUNCTION(hfork){
-    return new Object( static_cast<long>( fork() ) );
+    return MK_INT_OBJ( fork() );
 }
 
 HYBRIS_DEFINE_FUNCTION(hgetpid){
-    return new Object( static_cast<long>( getpid() ) );
+    return MK_INT_OBJ( getpid() );
 }
 
 HYBRIS_DEFINE_FUNCTION(hwait){
@@ -64,7 +64,8 @@ HYBRIS_DEFINE_FUNCTION(hwait){
 		hyb_throw( H_ET_SYNTAX, "function 'wait' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
-    return new Object( static_cast<long>( wait( &HYB_ARGV(0)->value.m_integer ) ) );
+
+	return MK_INT_OBJ( wait( &HYB_ARGV(0)->value.m_integer ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hpopen){
@@ -72,7 +73,7 @@ HYBRIS_DEFINE_FUNCTION(hpopen){
 	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
 
     if( HYB_ARGC() == 2 ){
-        return new Object( reinterpret_cast<long>( popen( HYB_ARGV(0)->value.m_string.c_str(), HYB_ARGV(1)->value.m_string.c_str() ) ) );
+        return  PTR_TO_INT_OBJ( popen( (const char *)(*HYB_ARGV(0)), (const char *)(*HYB_ARGV(1)) ) );
     }
 	else{
 		hyb_throw( H_ET_SYNTAX, "function 'popen' requires 2 parameters (called with %d)", HYB_ARGC() );
@@ -82,18 +83,18 @@ HYBRIS_DEFINE_FUNCTION(hpopen){
 HYBRIS_DEFINE_FUNCTION(hpclose){
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
     if( HYB_ARGC() ){
-		pclose( (FILE *)HYB_ARGV(0)->value.m_integer );
+		pclose( (FILE *)(long)(*HYB_ARGV(0)) );
     }
-    return new Object(static_cast<long>(0));
+    return MK_INT_OBJ(0);
 }
 
 HYBRIS_DEFINE_FUNCTION(hexit){
     int code = 0;
     if( HYB_ARGC() > 0 ){
 		HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
-		code = HYB_ARGV(0)->value.m_integer;
+		code = (long)(*HYB_ARGV(0));
 	}
 	exit(code);
 
-    return new Object(static_cast<long>(0));
+    return MK_INT_OBJ(0);
 }

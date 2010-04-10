@@ -36,8 +36,8 @@ HYBRIS_DEFINE_FUNCTION(hmatrix){
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
     HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_INT );
 
-    unsigned int     rows    = HYB_ARGV(0)->value.m_integer,
-                     columns = HYB_ARGV(1)->value.m_integer,
+    unsigned int     rows    = (long)(*HYB_ARGV(0)),
+                     columns = (long)(*HYB_ARGV(1)),
                      nvalues = HYB_ARGC() - 2,
                      i;
     vector<Object *> values;
@@ -47,7 +47,7 @@ HYBRIS_DEFINE_FUNCTION(hmatrix){
     }
 
     for( i = 2; i < data->size(); i++ ){
-        values.push_back( new Object( HYB_ARGV(i) ) );
+        values.push_back( MK_CLONE_OBJ( HYB_ARGV(i) ) );
     }
 
     return new Object( rows, columns, values );
@@ -58,7 +58,8 @@ HYBRIS_DEFINE_FUNCTION(hcolumns){
 		hyb_throw( H_ET_SYNTAX, "function 'columns' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MATRIX );
-	return new Object( static_cast<long>( HYB_ARGV(0)->value.m_columns ) );
+
+	return MK_INT_OBJ( HYB_ARGV(0)->value.m_columns );
 }
 
 HYBRIS_DEFINE_FUNCTION(hrows){
@@ -66,6 +67,7 @@ HYBRIS_DEFINE_FUNCTION(hrows){
 		hyb_throw( H_ET_SYNTAX, "function 'rows' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MATRIX );
-	return new Object( static_cast<long>( HYB_ARGV(0)->value.m_rows ) );
+
+	return MK_INT_OBJ( HYB_ARGV(0)->value.m_rows );
 }
 

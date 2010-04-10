@@ -64,7 +64,7 @@ HYBRIS_DEFINE_FUNCTION(hfopen){
 
     Object *_return = NULL;
     if( HYB_ARGC() == 2 ){
-        _return = new Object( reinterpret_cast<long>( fopen( HYB_ARGV(0)->value.m_string.c_str(), HYB_ARGV(1)->value.m_string.c_str() ) ) );
+        _return = PTR_TO_INT_OBJ( fopen( (const char *)(*HYB_ARGV(0)), (const char *)(*HYB_ARGV(1)) ) );
     }
 	else{
 		hyb_throw( H_ET_SYNTAX, "function 'fopen' requires 2 parameters (called with %d)", HYB_ARGC() );
@@ -80,7 +80,7 @@ HYBRIS_DEFINE_FUNCTION(hfseek){
 	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_INT );
 	HYB_TYPE_ASSERT( HYB_ARGV(3), H_OT_INT );
 
-	return new Object( static_cast<long>( fseek( (FILE *)HYB_ARGV(0)->value.m_integer, HYB_ARGV(1)->value.m_integer, HYB_ARGV(2)->value.m_integer ) ) );
+	return MK_INT_OBJ( fseek( (FILE *)(long)(*HYB_ARGV(0)), (long)(*HYB_ARGV(1)), (long)(*HYB_ARGV(2)) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hftell){
@@ -89,7 +89,7 @@ HYBRIS_DEFINE_FUNCTION(hftell){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
 
-	return new Object( static_cast<long>( ftell( (FILE *)HYB_ARGV(0)->value.m_integer ) ) );
+    return MK_INT_OBJ( ftell( (FILE *)(long)(*HYB_ARGV(0)) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfsize){
@@ -97,24 +97,28 @@ HYBRIS_DEFINE_FUNCTION(hfsize){
 		hyb_throw( H_ET_SYNTAX, "function 'fsize' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
 	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_STRING );
-	int size = 0;
+	int size = 0, pos;
+	FILE *fp;
+
 	if( HYB_ARGV(0)->type == H_OT_INT ){
-		int pos = ftell((FILE *)HYB_ARGV(0)->value.m_integer);
-		fseek( (FILE *)HYB_ARGV(0)->value.m_integer, 0, SEEK_END );
-		size = ftell( (FILE *)HYB_ARGV(0)->value.m_integer );
-		fseek( (FILE *)HYB_ARGV(0)->value.m_integer, pos, SEEK_SET );
+	    fp  = (FILE *)(long)(*HYB_ARGV(0));
+		pos = ftell(fp);
+
+		fseek( fp, 0, SEEK_END );
+		size = ftell( fp );
+		fseek( fp, pos, SEEK_SET );
 	}
 	else{
-		FILE *fp = fopen( HYB_ARGV(0)->value.m_string.c_str(), "r" );
+		fp = fopen( (const char *)(*HYB_ARGV(0)), "r" );
 		if( fp == NULL ){
-			hyb_throw( H_ET_GENERIC, "'%s' no such file or directory", HYB_ARGV(0)->value.m_string.c_str() );
+			hyb_throw( H_ET_GENERIC, "'%s' no such file or directory", (const char *)(*HYB_ARGV(0)) );
 		}
 		fseek( fp, 0, SEEK_END );
 		size = ftell( fp );
 		fclose(fp);
 	}
 
-	return new Object( static_cast<long>(size) );
+	return MK_INT_OBJ(size);
 }
 
 HYBRIS_DEFINE_FUNCTION(hfread){
@@ -122,7 +126,7 @@ HYBRIS_DEFINE_FUNCTION(hfread){
 
     Object *_return = NULL;
     if( HYB_ARGC() >= 2 ){
-		FILE *fp          = (FILE *)HYB_ARGV(0)->value.m_integer;
+		FILE *fp = (FILE *)(long)(*HYB_ARGV(0));
 		if( !fp ){
 			hyb_throw( H_ET_GENERIC, "invalid file descriptor" );
 		}
@@ -131,18 +135,20 @@ HYBRIS_DEFINE_FUNCTION(hfread){
 		char c;
 		/* explicit size declaration */
 		if( HYB_ARGC() == 3 ){
-			size = HYB_ARGV(2)->value.m_integer;
+			size = (long)(*HYB_ARGV(2));
 			switch( object->type ){
 				case H_OT_INT    : read = fread( &object->value.m_integer,   1, size, fp ); break;
-				case H_OT_FLOAT  : read = fread( &object->value.m_double, 1, size, fp ); break;
-				case H_OT_CHAR   : read = fread( &object->value.m_char,  1, size, fp ); break;
+				case H_OT_FLOAT  : read = fread( &object->value.m_double, 1, size, fp );    break;
+				case H_OT_CHAR   : read = fread( &object->value.m_char,  1, size, fp );     break;
 				case H_OT_STRING :
 					for( i = 0; i < size; i++ ){
 						read += fread( &c, 1, sizeof(char), fp );
 						object->value.m_string += c;
 					}
 				break;
-				case H_OT_ARRAY  : hyb_throw( H_ET_GENERIC, "can not directly deserialize an array type" ); break;
+
+				default :
+                    hyb_throw( H_ET_GENERIC, "can not directly deserialize type %s", Object::type_name(object) );
 			}
 			object->size = size;
 		}
@@ -150,8 +156,8 @@ HYBRIS_DEFINE_FUNCTION(hfread){
 		else{
 			switch( object->type ){
 				case H_OT_INT    : object->size = read = fread( &object->value.m_integer,   1, sizeof(long), fp ); break;
-				case H_OT_FLOAT  : object->size = read = fread( &object->value.m_double, 1, sizeof(double), fp ); break;
-				case H_OT_CHAR   : object->size = read = fread( &object->value.m_char,  1, sizeof(char), fp ); break;
+				case H_OT_FLOAT  : object->size = read = fread( &object->value.m_double, 1, sizeof(double), fp );  break;
+				case H_OT_CHAR   : object->size = read = fread( &object->value.m_char,  1, sizeof(char), fp );     break;
 				case H_OT_STRING :
 					while( (c = fgetc(fp)) != '\n' && c != '\r' && c != 0x00 ){
 						object->value.m_string += c;
@@ -159,10 +165,12 @@ HYBRIS_DEFINE_FUNCTION(hfread){
 					}
 					object->size = read;
 				break;
-				case H_OT_ARRAY  : hyb_throw( H_ET_GENERIC, "can not directly deserialize an array type" ); break;
+
+				default :
+                    hyb_throw( H_ET_GENERIC, "can not directly deserialize type %s", Object::type_name(object) );
 			}
 		}
-        _return = new Object( static_cast<long>(read) );
+        _return = MK_INT_OBJ(read);
     }
 	else{
 		hyb_throw( H_ET_SYNTAX, "function 'fread' requires 2 or 3 parameters (called with %d)", HYB_ARGC() );
@@ -175,7 +183,7 @@ HYBRIS_DEFINE_FUNCTION(hfwrite){
 
     Object *_return = NULL;
     if( HYB_ARGC() >= 2 ){
-		FILE *fp          = (FILE *)HYB_ARGV(0)->value.m_integer;
+		FILE *fp = (FILE *)(long)(*HYB_ARGV(0));
 		if( !fp ){
 			hyb_throw( H_ET_GENERIC, "invalid file descriptor" );
 		}
@@ -183,40 +191,48 @@ HYBRIS_DEFINE_FUNCTION(hfwrite){
 		unsigned int size, written = 0, i;
 		char c;
 		if( HYB_ARGC() == 3 ){
-			size = HYB_ARGV(2)->value.m_integer;
+			size = (long)(*HYB_ARGV(2));
 			switch( object->type ){
-				case H_OT_INT    : written = fwrite( &object->value.m_integer,   1, size, fp ); break;
-				case H_OT_FLOAT  : written = fwrite( &object->value.m_double, 1, size, fp ); break;
-				case H_OT_CHAR   : written = fwrite( &object->value.m_char,  1, size, fp ); break;
+				case H_OT_INT    : written = fwrite( &object->value.m_integer,   1, size, fp );     break;
+				case H_OT_FLOAT  : written = fwrite( &object->value.m_double, 1, size, fp );        break;
+				case H_OT_CHAR   : written = fwrite( &object->value.m_char,  1, size, fp );         break;
 				case H_OT_STRING : written = fwrite( object->value.m_string.c_str(), 1, size, fp ); break;
-				case H_OT_ARRAY  : hyb_throw( H_ET_GENERIC, "can not directly serialize an array type when specifying size" ); break;
+
+				default :
+                    hyb_throw( H_ET_GENERIC, "can not directly serialize type %s", Object::type_name(object) );
 			}
 		}
 		else{
 			switch( object->type ){
-				case H_OT_INT    : written = fwrite( &object->value.m_integer,   1, sizeof(long), fp ); break;
-				case H_OT_FLOAT  : written = fwrite( &object->value.m_double, 1, sizeof(double), fp ); break;
-				case H_OT_CHAR   : written = fwrite( &object->value.m_char,  1, sizeof(char), fp ); break;
+				case H_OT_INT    : written = fwrite( &object->value.m_integer,   1, sizeof(long), fp );     break;
+				case H_OT_FLOAT  : written = fwrite( &object->value.m_double, 1, sizeof(double), fp );      break;
+				case H_OT_CHAR   : written = fwrite( &object->value.m_char,  1, sizeof(char), fp );         break;
 				case H_OT_STRING : written = fwrite( object->value.m_string.c_str(), 1, object->size, fp ); break;
 				case H_OT_ARRAY  :
 					for( i = 0; i < object->size; i++ ){
 						Object *element = object->value.m_array[i];
 						switch( element->type ){
-							case H_OT_INT    : written += fwrite( &element->value.m_integer,   1, sizeof(long), fp ); break;
-							case H_OT_FLOAT  : written += fwrite( &element->value.m_double, 1, sizeof(double), fp ); break;
-							case H_OT_CHAR   : written += fwrite( &element->value.m_char,  1, sizeof(char), fp ); break;
+							case H_OT_INT    : written += fwrite( &element->value.m_integer,   1, sizeof(long), fp );      break;
+							case H_OT_FLOAT  : written += fwrite( &element->value.m_double, 1, sizeof(double), fp );       break;
+							case H_OT_CHAR   : written += fwrite( &element->value.m_char,  1, sizeof(char), fp );          break;
 							case H_OT_STRING : written += fwrite( element->value.m_string.c_str(), 1, element->size, fp ); break;
-							case H_OT_ARRAY  : hyb_throw( H_ET_GENERIC, "can not directly serialize nested arrays" ); break;
+
+							default :
+                                hyb_throw( H_ET_GENERIC, "can not directly serialize nested type %s", Object::type_name(element) );
 						}
 					}
 				break;
+
+				default :
+                    hyb_throw( H_ET_GENERIC, "can not directly serialize type %s", Object::type_name(object) );
 			}
 		}
-        _return = new Object( static_cast<long>(written) );
+        _return = MK_INT_OBJ(written);
     }
 	else{
 		hyb_throw( H_ET_SYNTAX, "function 'fwrite' requires 2 or 3 parameters (called with %d)", HYB_ARGC() );
 	}
+
     return _return;
 }
 
@@ -228,20 +244,20 @@ HYBRIS_DEFINE_FUNCTION(hfgets){
 
 	char line[0xFFFF] = {0};
 
-	if( fgets( line, 0xFFFF, (FILE *)HYB_ARGV(0)->value.m_integer ) ){
-		return new Object(line);
+	if( fgets( line, 0xFFFF, (FILE *)(long)(*HYB_ARGV(0)) ) ){
+		return MK_STRING_OBJ(line);
 	}
 	else{
-		return new Object(static_cast<long>(0));
+		return MK_INT_OBJ(0);
 	}
 }
 
 HYBRIS_DEFINE_FUNCTION(hfclose){
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
     if( HYB_ARGC() ){
-		fclose( (FILE *)HYB_ARGV(0)->value.m_integer );
+		fclose( (FILE *)(long)(*HYB_ARGV(0)) );
     }
-    return new Object(static_cast<long>(0));
+    return MK_INT_OBJ(0);
 }
 
 HYBRIS_DEFINE_FUNCTION(hfile){
@@ -250,9 +266,9 @@ HYBRIS_DEFINE_FUNCTION(hfile){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
-	FILE *fp = fopen( HYB_ARGV(0)->value.m_string.c_str(), "rt" );
+	FILE *fp = fopen( (const char *)(*HYB_ARGV(0)), "rt" );
 	if( !fp ){
-		hyb_throw( H_ET_GENERIC, "could not open '%s' for reading", HYB_ARGV(0)->value.m_string.c_str() );
+		hyb_throw( H_ET_GENERIC, "could not open '%s' for reading", (const char *)(*HYB_ARGV(0)) );
 	}
 
 	string buffer;
@@ -263,7 +279,7 @@ HYBRIS_DEFINE_FUNCTION(hfile){
 
 	buffer[ buffer.size() - 2 ] = 0x00;
 
-    return new Object((char *)buffer.c_str());
+    return MK_STRING_OBJ(buffer.c_str());
 }
 
 void readdir_recurse( char *root, char *dir, Object *vector ){
@@ -291,9 +307,9 @@ void readdir_recurse( char *root, char *dir, Object *vector ){
 		else{
 			name = string(path) + string(ent->d_name);
 		}
-        file->map( new Object((char *)"name"), new Object((char *)name.c_str()) );
-        file->map( new Object((char *)"type"), new Object(static_cast<long>(ent->d_type)) );
-        vector->push(file);
+        file->map( MK_TMP_STRING_OBJ("name"), MK_TMP_STRING_OBJ(name.c_str()) );
+        file->map( MK_TMP_STRING_OBJ("type"), MK_TMP_INT_OBJ(ent->d_type) );
+        vector->push_ref(file);
         if( ent->d_type == DT_DIR && strcmp( ent->d_name, ".." ) != 0 && strcmp( ent->d_name, "." ) != 0 ){
             readdir_recurse( path, ent->d_name, vector );
         }
@@ -304,27 +320,27 @@ void readdir_recurse( char *root, char *dir, Object *vector ){
 
 HYBRIS_DEFINE_FUNCTION(hreaddir){
     if( HYB_ARGC() < 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'file' requires at least 1 parameter (called with %d)", HYB_ARGC() );
+		hyb_throw( H_ET_SYNTAX, "function 'readdir' requires at least 1 parameter (called with %d)", HYB_ARGC() );
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
 
     DIR           *dir;
     struct dirent *ent;
 
-    if( (dir = opendir( HYB_ARGV(0)->value.m_string.c_str() )) == NULL ) {
-        hyb_throw( H_ET_GENERIC, "could not open directory '%s' for reading", HYB_ARGV(0)->value.m_string.c_str() );
+    if( (dir = opendir( (const char *)(*HYB_ARGV(0)) )) == NULL ) {
+        hyb_throw( H_ET_GENERIC, "could not open directory '%s' for reading", (const char *)(*HYB_ARGV(0)) );
     }
 
-    Object *files 	  = new Object();
+    Object *files 	  = MK_COLLECTION_OBJ();
 	int     recursive = ( HYB_ARGC() > 1 && HYB_ARGV(1)->lvalue() );
     while( (ent = readdir(dir)) != NULL ){
-        Object *file = new Object();
-        file->map( new Object((char *)"name"), new Object((char *)ent->d_name) );
-        file->map( new Object((char *)"type"), new Object(static_cast<long>(ent->d_type)) );
-        files->push(file);
+        Object *file = MK_COLLECTION_OBJ();
+        file->map( MK_TMP_STRING_OBJ("name"), MK_TMP_STRING_OBJ(ent->d_name) );
+        file->map( MK_TMP_STRING_OBJ("type"), MK_TMP_INT_OBJ(ent->d_type) );
+        files->push_ref(file);
         if( recursive ){
             if( ent->d_type == DT_DIR && strcmp( ent->d_name, ".." ) != 0 && strcmp( ent->d_name, "." ) != 0 ){
-                readdir_recurse( (char *)HYB_ARGV(0)->value.m_string.c_str(), ent->d_name, files );
+                readdir_recurse( (char *)(*HYB_ARGV(0)), ent->d_name, files );
             }
         }
     }

@@ -42,19 +42,20 @@ void * hyb_pthread_worker( void *arg ){
 
     ctx->pool();
 
-    Node *call  = new Node(H_NT_CALL);
-    call->value.m_call = HYB_ARGV(0)->value.m_string;
+    Node *call         = new Node(H_NT_CALL);
+    call->value.m_call = (const char *)(*HYB_ARGV(0));
+
 	if( HYB_ARGC() > 1 ){
 		unsigned int i;
 		for( i = 1; i < data->size(); i++ ){
 			switch( HYB_ARGV(i)->type ){
-				case H_OT_INT    : call->addChild( new ConstantNode(HYB_ARGV(i)->value.m_integer) );                    break;
-				case H_OT_FLOAT  : call->addChild( new ConstantNode(HYB_ARGV(i)->value.m_double) );                  break;
-				case H_OT_CHAR   : call->addChild( new ConstantNode(HYB_ARGV(i)->value.m_char) );                   break;
-				case H_OT_STRING : call->addChild( new ConstantNode((char *)HYB_ARGV(i)->value.m_string.c_str()) ); break;
+				case H_OT_INT    : call->addChild( new ConstantNode( (long)(*HYB_ARGV(i)) ) );   break;
+				case H_OT_FLOAT  : call->addChild( new ConstantNode( (double)(*HYB_ARGV(i)) ) ); break;
+				case H_OT_CHAR   : call->addChild( new ConstantNode( (char)(*HYB_ARGV(i)) ) );   break;
+				case H_OT_STRING : call->addChild( new ConstantNode( (char *)(*HYB_ARGV(i)) ) ); break;
 				default :
                     ctx->depool();
-                    hyb_throw( H_ET_GENERIC, "type not supported for pthread call" );
+                    hyb_throw( H_ET_GENERIC, "type %d not supported for pthread call", Object::type_name(HYB_ARGV(i)) );
 			}
 		}
 	}
@@ -85,7 +86,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
     args->ctx  = ctx;
     pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args );
 
-    return new Object( static_cast<long>(tid) );
+    return MK_INT_OBJ(tid);
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_exit){
@@ -101,7 +102,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_join){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
 
-    pthread_t tid = static_cast<pthread_t>( HYB_ARGV(0)->value.m_integer );
+    pthread_t tid = static_cast<pthread_t>( (long)(*HYB_ARGV(0)) );
     void *status;
 
     pthread_join( tid, &status );

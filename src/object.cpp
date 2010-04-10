@@ -589,6 +589,18 @@ void Object::setAttribute( char *name, Object *value ){
     }
 }
 
+void Object::setAttribute_ref( char *name, Object *value ){
+    Object *o = NULL;
+
+    if( (o = getAttribute(name)) != NULL ){
+        o->assign(value);
+        delete value;
+    }
+    else{
+        this->value.m_struct.push_back( NamedValue( string(name), value ) );
+    }
+}
+
 int Object::mapFind( Object *map ){
 	unsigned int i;
 	for( i = 0; i < size; ++i ){
@@ -923,6 +935,14 @@ Object *Object::push_ref( Object *o ){
 Object *Object::map( Object *map, Object *o ){
 	value.m_map.push_back( new Object(map) );
 	value.m_array.push_back( new Object(o) );
+	type = H_OT_MAP;
+	size = value.m_map.size();
+	return this;
+}
+
+Object *Object::map_ref( Object *map, Object *o ){
+	value.m_map.push_back( map );
+	value.m_array.push_back( o );
 	type = H_OT_MAP;
 	size = value.m_map.size();
 	return this;

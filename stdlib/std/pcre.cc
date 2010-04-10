@@ -47,7 +47,7 @@ HYBRIS_DEFINE_FUNCTION(hrex_match){
 	pcrecpp::RE_Options OPTS(opts);
 	pcrecpp::RE         REGEX( regex.c_str(), OPTS );
 
-	return new Object( (long)REGEX.PartialMatch(subject.c_str()) );
+	return MK_INT_OBJ( REGEX.PartialMatch(subject.c_str()) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hrex_matches){
@@ -68,13 +68,13 @@ HYBRIS_DEFINE_FUNCTION(hrex_matches){
 	pcrecpp::RE          REGEX( regex.c_str(), OPTS );
 	pcrecpp::StringPiece SUBJECT( subject.c_str() );
 	string   match;
-	Object  *matches = new Object();
+	Object  *matches = MK_COLLECTION_OBJ();
 
     while( REGEX.FindAndConsume( &SUBJECT, &match ) == true ){
 		if( i++ > H_PCRE_MAX_MATCHES ){
 			hyb_throw( H_ET_GENERIC, "something of your regex is forcing infinite matches" );
 		}
-		matches->push( new Object((char *)match.c_str()) );
+		matches->push_ref( MK_STRING_OBJ(match.c_str()) );
 	}
 
 	return matches;
@@ -88,9 +88,9 @@ HYBRIS_DEFINE_FUNCTION(hrex_replace){
 	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
 	HYB_TYPES_ASSERT( HYB_ARGV(2), H_OT_STRING, H_OT_CHAR );
 
-	string rawreg  = HYB_ARGV(0)->value.m_string,
-		   subject = HYB_ARGV(1)->value.m_string,
-		   replace = (HYB_ARGV(2)->type == H_OT_STRING ? HYB_ARGV(2)->value.m_string : string("") + HYB_ARGV(2)->value.m_char),
+	string rawreg  = (const char *)(*HYB_ARGV(0)),
+		   subject = (const char *)(*HYB_ARGV(1)),
+		   replace = (HYB_ARGV(2)->type == H_OT_STRING ? (const char *)(*HYB_ARGV(2)) : string("") + (char)(*HYB_ARGV(2))),
 		   regex;
 	int    opts;
 
@@ -101,5 +101,5 @@ HYBRIS_DEFINE_FUNCTION(hrex_replace){
 
 	REGEX.GlobalReplace( replace.c_str(), &subject );
 
-	return new Object( (char *)subject.c_str() );
+	return MK_STRING_OBJ( subject.c_str() );
 }
