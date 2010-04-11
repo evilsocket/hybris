@@ -1,4 +1,4 @@
-CC=g++
+CXX=g++
 WFLAGS= -w
 OPTIMIZATION= -O3 -funroll-loops -fno-rtti -fomit-frame-pointer -ffast-math -fno-stack-protector -ffunction-sections
 CFLAGS= -Iinclude/ $(WFLAGS) $(OPTIMIZATION) 
@@ -11,6 +11,14 @@ STDLIB_LFLAGS= -ldl -lpcrecpp -lcurl -lpthread $(LIBXML_LFLAGS) $(LIBFFI_LFLAGS)
 STDLIB_CFLAGS= $(WFLAGS) -L. -I./include/ $(OPTIMIZATION) -fPIC $(LIBXML_CFLAGS) $(LIBFFI_CFLAGS)  -lhybris -lc -shared
 PREFIX=/usr
 TARGET=hybris
+
+NO_COLOR=\x1b[0m
+OK_COLOR=\x1b[32;01m
+ERROR_COLOR=\x1b[31;01m
+WARN_COLOR=\x1b[33;01m
+OK_STRING=$(OK_COLOR) OK\n$(NO_COLOR)
+ERROR_STRING=$(ERROR_COLOR)[ERRORS]\n$(NO_COLOR)
+WARN_STRING=$(WARN_COLOR)[WARNINGS]\n$(NO_COLOR)
 
 LIBOBJ=src/context.lo \
 	   src/common.lo \
@@ -40,6 +48,7 @@ STDSRC=stdlib/std/hashing/md5.cc \
 	   stdlib/std/hashing/sha2.cc \
 	   stdlib/std/io/network/http.cc \
 	   stdlib/std/io/network/tcp.cc \
+	   stdlib/std/io/network/smtp.cc \
 	   stdlib/std/io/file.cc \
 	   stdlib/std/io/console.cc \
 	   stdlib/std/io/xml.cc \
@@ -65,30 +74,74 @@ STDOBJ=$(STDSRC:.cc=.so)
 all: src/lexer.cpp src/parser.cpp lib hybris stdlib
 
 lib: $(LOBJECTS)
-	$(CC) -shared -Wl,-soname,libhybris.so.1 -o lib$(TARGET).so.1.0 $(LIBOBJ)
-	ln -sf lib$(TARGET).so.1.0 lib$(TARGET).so
-	ln -sf lib$(TARGET).so.1.0 lib$(TARGET).so.1
+	@printf "\x1b[33;01m@ Creating lib$(TARGET).so.1.0 ..."
+	@$(CXX) -shared -Wl,-soname,libhybris.so.1 -o lib$(TARGET).so.1.0 $(LIBOBJ) 2> hybris.tmp.log || touch hybris.tmp.errors
+	@if test -e hybris.tmp.errors; \
+		then printf "$(ERROR_STRING)" && cat hybris.tmp.log; \
+	elif test -s hybris.tmp.log; \
+		then printf "$(WARN_STRING)" && cat hybris.tmp.log; \
+	else printf "$(OK_STRING)"; \
+	fi
+	@rm -f hybris.tmp.errors hybris.tmp.log
+	@ln -sf lib$(TARGET).so.1.0 lib$(TARGET).so
+	@ln -sf lib$(TARGET).so.1.0 lib$(TARGET).so.1
 	
 hybris: $(OBJECTS)
-	$(CC) src/*.o -o $(TARGET) $(CFLAGS) $(LFLAGS)
+	@printf "\x1b[33;01m@ Creating $(TARGET) ..."
+	@$(CXX) src/*.o -o $(TARGET) $(CFLAGS) $(LFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
+	@if test -e hybris.tmp.errors; \
+		then printf "$(ERROR_STRING)" && cat hybris.tmp.log; \
+	elif test -s hybris.tmp.log; \
+		then printf "$(WARN_STRING)" && cat hybris.tmp.log; \
+	else printf "$(OK_STRING)"; \
+	fi
+	@rm -f hybris.tmp.errors hybris.tmp.log
 
 stdlib: $(STDOBJ)
 		
 .cpp.o: 
-	$(CC) -c $< -o $@ $(CFLAGS)
+	@printf "@ Compiling $< ..."
+	@$(CXX) -c $< -o $@ $(CFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
+	@if test -e hybris.tmp.errors; \
+		then printf "$(ERROR_STRING)" && cat hybris.tmp.log; \
+	elif test -s hybris.tmp.log; \
+		then printf "$(WARN_STRING)" && cat hybris.tmp.log; \
+	else printf "$(OK_STRING)"; \
+	fi
+	@rm -f hybris.tmp.errors hybris.tmp.log
 	
 .cpp.lo:
-	$(CC) -c $< -o $@ $(CFLAGS) -fPIC
+	@printf "@ Compiling $< ..."
+	@$(CXX) -c $< -o $@ $(CFLAGS) -fPIC 2> hybris.tmp.log || touch hybris.tmp.errors
+	@if test -e hybris.tmp.errors; \
+		then printf "$(ERROR_STRING)" && cat hybris.tmp.log; \
+	elif test -s hybris.tmp.log; \
+		then printf "$(WARN_STRING)" && cat hybris.tmp.log; \
+	else printf "$(OK_STRING)"; \
+	fi
+	@rm -f hybris.tmp.errors hybris.tmp.log
 
 .cc.so: 
-	mkdir -p `dirname $< | sed -e 's/stdlib/stdlib\/build/'`
-	g++ $< -o `dirname $< | sed -e 's/stdlib/stdlib\/build/'`/`basename $< .cc`.so $(STDLIB_CFLAGS) $(STDLIB_LFLAGS)
+	@printf "@ Compiling $< ..."
+	@mkdir -p `dirname $< | sed -e 's/stdlib/stdlib\/build/'`
+	@$(CXX) $< -o `dirname $< | sed -e 's/stdlib/stdlib\/build/'`/`basename $< .cc`.so $(STDLIB_CFLAGS) $(STDLIB_LFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
+	@if test -e hybris.tmp.errors; \
+		then printf "$(ERROR_STRING)" && cat hybris.tmp.log; \
+	elif test -s hybris.tmp.log; \
+		then printf "$(WARN_STRING)" && cat hybris.tmp.log; \
+	else printf "$(OK_STRING)"; \
+	fi
+	@rm -f hybris.tmp.errors hybris.tmp.log
 	
 src/parser.cpp: src/parser.y.cpp
-	bison -y -d -o $@ $? 
+	@printf "\x1b[33;01m@ Creating $@ ... "
+	@bison -y -d -o $@ $? 2> /dev/null
+	@printf "$(OK_STRING)";
 
 src/lexer.cpp: src/lexer.l.cpp
-	flex -o $@ $? 
+	@printf "\x1b[33;01m@ Creating $@ ... "
+	@flex -o $@ $? 2> /dev/null
+	@printf "$(OK_STRING)";
 
 clean:
 	rm -f src/lexer.cpp include/lexer.h include/parser.h src/parser.hpp src/parser.cpp src/*.o src/*.lo $(TARGET)

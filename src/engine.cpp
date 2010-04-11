@@ -19,6 +19,7 @@
 #include "engine.h"
 #include "parser.hpp"
 
+
 Engine::Engine( Context *context ) :
     ctx(context),
     vm(&context->vmem),
@@ -402,7 +403,7 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
     ctx->detrace();
 
     /* return function evaluation value */
-    return (result == H_UNDEFINED ? new Object((unsigned int)0) : result);
+    return (result == H_UNDEFINED ? MK_INT_OBJ(0) : result);
 }
 
 Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
@@ -464,9 +465,8 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
 
     for( i = 0; i < children; i++ ){
         value = stack.at(i);
-        /* 'value' is obviously defined inside the 'stack', so
-           we can just consider null pointer and constant values */
-        if( value != H_UNDEFINED && H_IS_NOT_CONSTANT(value) ){
+        // 'value' is obviously defined inside the 'stack', so we can just skip null pointers
+        if( value != H_UNDEFINED  ){
             delete value;
         }
     }
@@ -474,7 +474,7 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
     ctx->detrace();
 
     /* return function evaluation value */
-    return (result == H_UNDEFINED ? new Object((unsigned int)0) : result);
+    return (result == H_UNDEFINED ? MK_INT_OBJ(0) : result);
 }
 
 Object *Engine::onTypeCall( vframe_t *frame, Node *type ){
@@ -568,7 +568,7 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
     ctx->detrace();
 
     /* return function evaluation value */
-    return (result == H_UNDEFINED ? new Object((unsigned int)0) : result);
+    return (result == H_UNDEFINED ? MK_INT_OBJ(0) : result);
 }
 
 Object *Engine::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){

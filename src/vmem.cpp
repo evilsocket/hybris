@@ -59,6 +59,7 @@ Object *VirtualMemory::add( char *identifier, Object *object ){
         #endif
         replace( identifier, old, o );
 
+        // release will set the old value as garbage
         old->release();
 
         return o;
