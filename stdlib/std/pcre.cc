@@ -38,16 +38,16 @@ HYBRIS_DEFINE_FUNCTION(hrex_match){
 	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
 
 	string rawreg  = STRING_ARGV(0),
-		   subject = HYB_ARGV(1)->value.m_string,
+		   subject = STRING_ARGV(1),
 		   regex;
 	int    opts;
 
-	Object::parse_pcre( rawreg, regex, opts );
+	string_parse_pcre( rawreg, regex, opts );
 
 	pcrecpp::RE_Options OPTS(opts);
 	pcrecpp::RE         REGEX( regex.c_str(), OPTS );
 
-	return MK_INT_OBJ( REGEX.PartialMatch(subject.c_str()) );
+	return OB_DOWNCAST( MK_INT_OBJ( REGEX.PartialMatch(subject.c_str()) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hrex_matches){
@@ -58,23 +58,23 @@ HYBRIS_DEFINE_FUNCTION(hrex_matches){
 	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
 
 	string rawreg  = STRING_ARGV(0),
-		   subject = HYB_ARGV(1)->value.m_string,
+		   subject = STRING_ARGV(1),
 		   regex;
 	int    opts, i = 0;
 
-	Object::parse_pcre( rawreg, regex, opts );
+	string_parse_pcre( rawreg, regex, opts );
 
 	pcrecpp::RE_Options  OPTS(opts);
 	pcrecpp::RE          REGEX( regex.c_str(), OPTS );
 	pcrecpp::StringPiece SUBJECT( subject.c_str() );
 	string   match;
-	Object  *matches = MK_COLLECTION_OBJ();
+	Object  *matches = OB_DOWNCAST( MK_VECTOR_OBJ() );
 
     while( REGEX.FindAndConsume( &SUBJECT, &match ) == true ){
 		if( i++ > H_PCRE_MAX_MATCHES ){
 			hyb_throw( H_ET_GENERIC, "something of your regex is forcing infinite matches" );
 		}
-		matches->push_ref( MK_STRING_OBJ(match.c_str()) );
+		ob_cl_push_reference( matches, OB_DOWNCAST( MK_STRING_OBJ(match.c_str()) ) );
 	}
 
 	return matches;
@@ -88,18 +88,18 @@ HYBRIS_DEFINE_FUNCTION(hrex_replace){
 	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
 	HYB_TYPES_ASSERT( HYB_ARGV(2), otString, otChar );
 
-	string rawreg  = (const char *)(*HYB_ARGV(0)),
-		   subject = (const char *)(*HYB_ARGV(1)),
-		   replace = (HYB_ARGV(2)->type == otString ? (const char *)(*HYB_ARGV(2)) : string("") + (char)(*HYB_ARGV(2))),
+	string rawreg  = STRING_ARGV(0).c_str(),
+		   subject = STRING_ARGV(1).c_str(),
+		   replace = IS_STRING_TYPE( HYB_ARGV(2) ) ? STRING_ARGV(2).c_str() : string("") + (char)ob_ivalue(HYB_ARGV(2)),
 		   regex;
 	int    opts;
 
-	Object::parse_pcre( rawreg, regex, opts );
+	string_parse_pcre( rawreg, regex, opts );
 
 	pcrecpp::RE_Options OPTS(opts);
 	pcrecpp::RE         REGEX( regex.c_str(), OPTS );
 
 	REGEX.GlobalReplace( replace.c_str(), &subject );
 
-	return MK_STRING_OBJ( subject.c_str() );
+	return OB_DOWNCAST( MK_STRING_OBJ( subject.c_str() ) );
 }

@@ -87,6 +87,10 @@ void map_free( Object *me ){
     mme->items = 0;
 }
 
+size_t map_get_size( Object *me ){
+	return MAP_UPCAST(me)->items;
+}
+
 int map_cmp( Object *me, Object *cmp ){
     if( !IS_MAP_TYPE(cmp) ){
         return 1;
@@ -137,6 +141,10 @@ double map_fvalue( Object *me ){
 
 bool map_lvalue( Object *me ){
     return static_cast<bool>( MAP_UPCAST(me)->items );
+}
+
+string map_svalue( Object *o ){
+	return string( "<map>" );
 }
 
 void map_print( Object *me, int tabs ){
@@ -257,11 +265,14 @@ IMPLEMENT_TYPE(Map) {
 	map_set_references, // set_references
 	map_clone, // clone
 	map_free, // free
+	map_get_size, // get_size
+	0, // serialize
+	0, // deserialize
 	map_cmp, // cmp
 	map_ivalue, // ivalue
 	map_fvalue, // fvalue
 	map_lvalue, // lvalue
-	0, // svalue
+	map_svalue, // svalue
 	map_print, // print
 	0, // scanf
 	0, // to_string

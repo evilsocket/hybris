@@ -137,6 +137,33 @@ Object *string_clone( Object *me ){
     return (Object *)MK_STRING_OBJ( STRING_UPCAST(me)->value.c_str() );
 }
 
+size_t string_get_size( Object *me ){
+	return STRING_UPCAST(me)->items;
+}
+
+byte *string_serialize( Object *o, size_t size ){
+	size_t s   	  = (size > ob_get_size(o) ? ob_get_size(o) : size);
+	byte  *buffer = new byte[s];
+
+	memcpy( buffer, STRING_UPCAST(o)->value.c_str(), s );
+
+	return buffer;
+}
+
+Object *string_deserialize( Object *o, byte *buffer, size_t size ){
+	if( size ){
+		o = OB_DOWNCAST( MK_STRING_OBJ("") );
+		char *tmp = new char[size + 1];
+		memset( &tmp, 0x00,   size + 1 );
+		memcpy( &tmp, buffer, size );
+
+		STRING_UPCAST(o)->value = tmp;
+
+		delete[] tmp;
+	}
+	return o;
+}
+
 int string_cmp( Object *me, Object *cmp ){
     string svalue = ob_svalue(cmp),
            mvalue = STRING_UPCAST(me)->value;
@@ -260,6 +287,14 @@ Object *string_assign( Object *me, Object *op ){
     return me;
 }
 
+Object *string_l_same( Object *me, Object *op ){
+    return (Object *)MK_INT_OBJ( (STRING_UPCAST(me))->value == ob_svalue(op) );
+}
+
+Object *string_l_diff( Object *me, Object *op ){
+    return (Object *)MK_INT_OBJ( (STRING_UPCAST(me))->value != ob_svalue(op) );
+}
+
 /** collection operators **/
 Object *string_cl_concat( Object *me, Object *op ){
     string mvalue = ob_svalue(me),
@@ -314,6 +349,9 @@ IMPLEMENT_TYPE(String) {
 	string_set_references, // set_references
 	string_clone, // clone
 	0, // free
+	string_get_size, // get_size
+	string_serialize, // serialize
+	string_deserialize, // deserialize
 	string_cmp, // cmp
 	string_ivalue, // ivalue
 	string_fvalue, // fvalue
@@ -360,8 +398,8 @@ IMPLEMENT_TYPE(String) {
 
 	/** logic operators **/
     0, // l_not
-    0, // l_same
-    0, // l_diff
+    string_l_same, // l_same
+    string_l_diff, // l_diff
     0, // l_less
     0, // l_greater
     0, // l_less_or_same

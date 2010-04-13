@@ -21,10 +21,11 @@
 
 #include "config.h"
 #include <memory.h>
-#include <vector>
 #include <stdio.h>
+#ifdef MT_SUPPORT
+#	include <pthread.h>
+#endif
 
-using std::vector;
 /*
  * This is the new (and hopefully the last one) garbage
  * collector implementation.
@@ -44,7 +45,7 @@ using std::vector;
  * instantly to the gc_track function.
  * No manually deletion is necessary.
  */
-#define GC_DEFAULT_MEMORY_THRESHOLD 100000
+#define GC_DEFAULT_MEMORY_THRESHOLD 2048000
 
 /*
  * Better be safe than sorry :P
@@ -60,31 +61,48 @@ struct _Object;
  *
  * pobj : Is a pointer to the object to track.
  * size : The size of the object itself.
+ * next : Pointer to the next item in the pool.
+ * prev : Pointer to the previous item in the pool.
  */
 typedef struct _gc_item {
     struct _Object *pobj;
     size_t          size;
 
+    _gc_item       *next;
+    _gc_item       *prev;
+
     _gc_item( struct _Object *p, size_t s ) : pobj(p), size(s) { }
 }
 gc_item_t;
 
-typedef vector<gc_item_t *> gc_pool_t;
 /*
  * Main gc structure, kinda of the "head" of the pool.
  *
- * pool		 : Tracked objects vector.
+ * pool_*    : Tracked objects list head and tail pointers .
  * items	 : Number of items in the pool.
  * usage	 : Global memory usage, in bytes.
  * threshold : If usage >= this, the gc is triggered.
+ * mutex     : Mutex to lock the pool while collecting.
  */
 typedef struct _gc {
-    gc_pool_t pool;
-    size_t    items;
-    size_t    usage;
-    size_t    threshold;
+	gc_item_t 	   *pool_head;
+    gc_item_t 	   *pool_tail;
+    size_t     		items;
+    size_t     		usage;
+    size_t     	 	threshold;
+	#ifdef MT_SUPPORT
+	pthread_mutex_t mutex;
+	#endif
 
-    _gc() : items(0), usage(0), threshold(GC_DEFAULT_MEMORY_THRESHOLD) { }
+    _gc() : pool_head(NULL),
+    		pool_tail(NULL),
+			items(0),
+			usage(0),
+			threshold(GC_DEFAULT_MEMORY_THRESHOLD)
+			#ifdef MT_SUPPORT
+			,mutex(PTHREAD_MUTEX_INITIALIZER)
+			#endif
+	{ }
 }
 gc_t;
 

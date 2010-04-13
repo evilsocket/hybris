@@ -52,8 +52,8 @@ HYBRIS_DEFINE_FUNCTION(hurlencode){
     }
     HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
 
-    char *pstr = (char *)(*HYB_ARGV(0)),
-         *buf  = (char *)malloc(strlen(pstr) * 3 + 1),
+    char *pstr = (char *)STRING_ARGV(0).c_str(),
+         *buf  = (char *)malloc( strlen(pstr) * 3 + 1 ),
          *pbuf = buf;
 
     while(*pstr){
@@ -72,7 +72,7 @@ HYBRIS_DEFINE_FUNCTION(hurlencode){
     }
     *pbuf = '\0';
 
-    _return = MK_STRING_OBJ(buf);
+    _return = OB_DOWNCAST( MK_STRING_OBJ(buf) );
 
     free(buf);
 
@@ -86,7 +86,7 @@ HYBRIS_DEFINE_FUNCTION(hurldecode){
     }
     HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
 
-    char *pstr = (char *)(*HYB_ARGV(0)),
+    char *pstr = (char *)STRING_ARGV(0).c_str(),
          *buf  = (char *)malloc(strlen(pstr) + 1),
          *pbuf = buf;
 
@@ -108,7 +108,7 @@ HYBRIS_DEFINE_FUNCTION(hurldecode){
 
     *pbuf = '\0';
 
-    _return = MK_STRING_OBJ(buf);
+    _return = OB_DOWNCAST( MK_STRING_OBJ(buf) );
 
     free(buf);
 
@@ -126,7 +126,7 @@ HYBRIS_DEFINE_FUNCTION(hbase64encode) {
     std::string ret;
     unsigned char block_3[3];
     unsigned char block_4[4];
-    char * str = (char *)(*HYB_ARGV(0));
+    char * str = (char *)STRING_ARGV(0).c_str();
     int i = 0,
         j = 0,
         size = strlen(str);;
@@ -163,7 +163,7 @@ HYBRIS_DEFINE_FUNCTION(hbase64encode) {
         }
     }
 
-    return MK_STRING_OBJ(ret.c_str());
+    return OB_DOWNCAST( MK_STRING_OBJ(ret.c_str()) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hbase64decode) {
@@ -174,7 +174,7 @@ HYBRIS_DEFINE_FUNCTION(hbase64decode) {
 
     static const std::string b64_charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     std::string ret;
-    char * str = (char *)(*HYB_ARGV(0));
+    char * str = (char *)STRING_ARGV(0).c_str();
     int in_len = strlen(str),
         i = 0,
         j = 0,
@@ -218,5 +218,5 @@ HYBRIS_DEFINE_FUNCTION(hbase64decode) {
         }
     }
 
-    return MK_STRING_OBJ(ret.c_str());
+    return OB_DOWNCAST( MK_STRING_OBJ(ret.c_str()) );
 }

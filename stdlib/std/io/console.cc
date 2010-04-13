@@ -31,7 +31,7 @@ extern "C" named_function_t hybris_module_functions[] = {
 
 HYBRIS_DEFINE_FUNCTION(hprint){
     unsigned int i;
-    for( i = 0; i < data->size(); i++ ){
+    for( i = 0; i < HYB_ARGC(); ++i ){
         ob_print( HYB_ARGV(i) );
     }
     return NULL;
@@ -40,7 +40,7 @@ HYBRIS_DEFINE_FUNCTION(hprint){
 HYBRIS_DEFINE_FUNCTION(hprintln){
     if( HYB_ARGC() ){
         unsigned int i;
-        for( i = 0; i < data->size(); i++ ){
+        for( i = 0; i < HYB_ARGC(); ++i ){
             ob_print( HYB_ARGV(i) );
             printf( "\n" );
         }

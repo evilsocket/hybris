@@ -46,6 +46,10 @@ Object *struct_clone( Object *me ){
     return (Object *)sclone;
 }
 
+size_t struct_get_size( Object *me ){
+	return STRUCT_UPCAST(me)->items;
+}
+
 void struct_free( Object *me ){
     StructureObjectValueIterator vi;
     StructureObject *sme = STRUCT_UPCAST(me);
@@ -199,6 +203,9 @@ IMPLEMENT_TYPE(Structure) {
 	struct_set_references, // set_references
 	struct_clone, // clone
 	struct_free, // free
+	struct_get_size, // get_size
+	0, // serialize
+	0, // deserialize
 	struct_cmp, // cmp
 	struct_ivalue, // ivalue
 	struct_fvalue, // fvalue

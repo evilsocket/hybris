@@ -28,6 +28,35 @@ Object *int_clone( Object *me ){
     return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value );
 }
 
+Object *alias_clone( Object *me ){
+    return (Object *)MK_ALIAS_OBJ( (INT_UPCAST(me))->value );
+}
+
+Object *extern_clone( Object *me ){
+    return (Object *)MK_EXTERN_OBJ( (INT_UPCAST(me))->value );
+}
+
+size_t int_get_size( Object *me ){
+	return sizeof(long);
+}
+
+byte *int_serialize( Object *o, size_t size ){
+	size_t s   	  = (size > ob_get_size(o) ? ob_get_size(o) : size);
+	byte  *buffer = new byte[s];
+
+	memcpy( buffer, &((INT_UPCAST(o))->value), s );
+
+	return buffer;
+}
+
+Object *int_deserialize( Object *o, byte *buffer, size_t size ){
+	if( size ){
+		o = OB_DOWNCAST( MK_INT_OBJ(0) );
+		memcpy( &((INT_UPCAST(o))->value), buffer, size );
+	}
+	return o;
+}
+
 int int_cmp( Object *me, Object *cmp ){
     long ivalue = ob_ivalue(cmp),
          mvalue = (INT_UPCAST(me))->value;
@@ -97,7 +126,7 @@ Object *int_range( Object *a, Object *b ){
 	int     i, start, end;
 	Object *range = (Object *)MK_VECTOR_OBJ();
 
-	if( ob_cmp( a, b ) == 1 ){
+	if( ob_cmp( a, b ) == -1 ){
 		start = (INT_UPCAST(a))->value;
 		end   = (INT_UPCAST(b))->value;
 	}
@@ -393,6 +422,9 @@ IMPLEMENT_TYPE(Integer) {
 	int_set_references, // set_references
 	int_clone, // clone
 	0, // free
+	int_get_size, // get_size
+	int_serialize, // serialize
+	int_deserialize, // deserialize
 	int_cmp, // cmp
 	int_ivalue, // ivalue
 	int_fvalue, // fvalue
@@ -474,8 +506,11 @@ IMPLEMENT_TYPE(Alias) {
 
 	/** generic function pointers **/
 	int_set_references, // set_references
-	int_clone, // clone
+	alias_clone, // clone
 	0, // free
+	int_get_size, // get_size
+	int_serialize, // serialize
+	int_deserialize, // deserialize
 	int_cmp, // cmp
 	int_ivalue, // ivalue
 	int_fvalue, // fvalue
@@ -557,8 +592,11 @@ IMPLEMENT_TYPE(Extern) {
 
 	/** generic function pointers **/
 	int_set_references, // set_references
-	int_clone, // clone
+	extern_clone, // clone
 	0, // free
+	int_get_size, // get_size
+	int_serialize, // serialize
+	int_deserialize, // deserialize
 	int_cmp, // cmp
 	int_ivalue, // ivalue
 	int_fvalue, // fvalue

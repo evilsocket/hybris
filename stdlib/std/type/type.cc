@@ -114,7 +114,7 @@ HYBRIS_DEFINE_FUNCTION(hsizeof){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'sizeof' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return OB_DOWNCAST( MK_INT_OBJ( HYB_ARGV(0)->type->size ) );
+	return OB_DOWNCAST( MK_INT_OBJ( ob_get_size(HYB_ARGV(0)) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(htoint){
@@ -153,7 +153,7 @@ unsigned int htoi( const char *ptr ){
 Object *xmlNode2Object( xmlNode *node ){
 	char *data = (char *)(node->children ? node->children->content : NULL);
 
-	if( strcmp( (char *)node->name, "int" ) == 0 ){
+	if( strcmp( (char *)node->name, "integer" ) == 0 ){
 		return OB_DOWNCAST( MK_INT_OBJ( atoi(data) ) );
 	}
 	else if( strcmp( (char *)node->name, "alias" ) == 0 ){

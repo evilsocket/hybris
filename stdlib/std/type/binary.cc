@@ -37,51 +37,30 @@ HYBRIS_DEFINE_FUNCTION(hbinary){
 	for( i = 0; i < data->size(); ++i ){
         HYB_TYPES_ASSERT( HYB_ARGV(i), otInteger, otChar );
 
-        if( HYB_ARGV(i)->type == otInteger ){
-            stream.push_back( (unsigned char)(long)(*HYB_ARGV(i)) );
+        if( IS_INTEGER_TYPE( HYB_ARGV(i) ) ){
+            stream.push_back( (unsigned char)INT_ARGV(i) );
         }
         else{
-            stream.push_back( (unsigned char)(char)(*HYB_ARGV(i)) );
+            stream.push_back( (unsigned char)CHAR_ARGV(i) );
         }
 	}
 
-    return new Object(stream);
+    return OB_DOWNCAST( MK_BINARY_OBJ(stream) );
 }
 
-void do_simple_packing( vector<unsigned char>& stream, Object *o, int size ){
-	unsigned int i;
+void do_simple_packing( vector<byte>& stream, Object *o, size_t size ){
+	byte  *buffer;
+	size_t i;
 
-	if( size > o->size ){
-		hyb_throw( H_ET_SYNTAX, "could not pack more bytes than the object owns (trying to pack type '%s' of %d bytes to %d bytes)", Object::type_name(o), o->size, size );
+	if( size > ob_get_size(o) ){
+		hyb_throw( H_ET_SYNTAX, "could not pack more bytes than the object owns (trying to pack type '%s' of %d bytes to %d bytes)", o->type->name, ob_get_size(o), size );
 	}
-	switch( o->type ){
-		case otInteger    :
-			for( i = 0; i < size; ++i ){
-				stream.push_back( ((unsigned char *)&(o->value.m_integer))[i] );
-			}
-		break;
-		case otChar   :
-			stream.push_back( (unsigned char)(char)(*o) );
-		break;
-		case Float_Type  :
-			for( i = 0; i < size; ++i ){
-				stream.push_back( ((unsigned char *)&(o->value.m_double))[i] );
-			}
-		break;
-		case otString :
-			for( i = 0; i < size; ++i ){
-				stream.push_back( (unsigned char)((const char *)(*o))[i] );
-			}
-		break;
-		case H_OT_BINARY :
-			for( i = 0; i < size; ++i ){
-				stream.push_back( (unsigned char)(char)(*o->value.m_array[i]) );
-			}
-		break;
 
-		default:
-			hyb_throw( H_ET_SYNTAX, "function 'pack' does not support nested structured types" );
+	buffer = ob_serialize( o, size );
+	for( i = 0; i < size; ++i ){
+		stream.push_back( buffer[i] );
 	}
+	delete[] buffer;
 }
 
 HYBRIS_DEFINE_FUNCTION(hpack){
@@ -90,47 +69,42 @@ HYBRIS_DEFINE_FUNCTION(hpack){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(1), otInteger );
 
-	unsigned char	   	  byte;
-	vector<unsigned char> stream;
-	unsigned int 		  i, j, size( HYB_ARGV(1)->value.m_integer );
-	Object               *o = HYB_ARGV(0);
+	vector<byte> stream;
+	size_t 		 i, j, size( INT_ARGV(1) );
+	Object      *o = HYB_ARGV(0);
 
-	switch( o->type ){
-		case otInteger    :
-		case otChar   :
-		case Float_Type  :
-		case otString :
-		case H_OT_BINARY :
+	switch( o->type->code ){
+		case otInteger :
+		case otChar    :
+		case otFloat   :
+		case otString  :
+		case otBinary  :
 			do_simple_packing( stream, o, size );
 		break;
 		case otVector  :
-			if( (HYB_ARGC() - 1) != o->value.m_array.size() ){
-				hyb_throw( H_ET_SYNTAX, "not enough parameters to pack an array of %d elements (given %d)", o->value.m_array.size(), HYB_ARGC() );
+			if( (HYB_ARGC() - 1) != ob_get_size(o) ){
+				hyb_throw( H_ET_SYNTAX, "not enough parameters to pack an array of %d elements (given %d)", ob_get_size(o), HYB_ARGC() );
 			}
 			for( i = 1, j = 0; i < HYB_ARGC(); ++i, ++j ){
 				HYB_TYPE_ASSERT( HYB_ARGV(i), otInteger );
-
-				size = (long)(*HYB_ARGV(i));
-				do_simple_packing( stream, o->value.m_array[j], size );
+				do_simple_packing( stream, VECTOR_UPCAST(o)->value[j], INT_ARGV(i) );
 			}
 		break;
-		case H_OT_STRUCT :
-			if( (HYB_ARGC() - 1) != o->value.m_struct.size() ){
-				hyb_throw( H_ET_SYNTAX, "not enough parameters to pack a structure with %d attributes (given %d)", o->value.m_struct.size(), HYB_ARGC() );
+		case otStructure :
+			if( (HYB_ARGC() - 1) != ob_get_size(o) ){
+				hyb_throw( H_ET_SYNTAX, "not enough parameters to pack a structure with %d attributes (given %d)", ob_get_size(o), HYB_ARGC() );
 			}
 			for( i = 1, j = 0; i < HYB_ARGC(); ++i, ++j ){
 				HYB_TYPE_ASSERT( HYB_ARGV(i), otInteger );
-
-				size = (long)(*HYB_ARGV(i));
-				do_simple_packing( stream, o->value.m_struct[j].value, size );
+				do_simple_packing( stream, STRUCT_UPCAST(o)->values[j], INT_ARGV(i) );
 			}
 		break;
 
 		default:
-			hyb_throw( H_ET_SYNTAX, "unsupported %s type in pack function", Object::type_name(o) );
+			hyb_throw( H_ET_SYNTAX, "unsupported %s type in pack function", o->type->name );
 	}
 
-	return new Object(stream);
+	return OB_DOWNCAST( MK_BINARY_OBJ(stream) );
 }
 
 

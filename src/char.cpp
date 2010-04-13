@@ -28,6 +28,26 @@ Object *char_clone( Object *me ){
     return (Object *)MK_CHAR_OBJ( CHAR_UPCAST(me)->value );
 }
 
+size_t char_get_size( Object *me ){
+	return sizeof(char);
+}
+
+byte *char_serialize( Object *o, size_t size ){
+	byte *buffer = new byte;
+
+	*buffer = (byte)CHAR_UPCAST(o)->value;
+
+	return buffer;
+}
+
+Object *char_deserialize( Object *o, byte *buffer, size_t size ){
+	if( size ){
+		o = OB_DOWNCAST( MK_CHAR_OBJ(*buffer) );
+	}
+
+	return o;
+}
+
 int char_cmp( Object *me, Object *cmp ){
     long ivalue = ob_ivalue(cmp),
          mvalue = CHAR_UPCAST(me)->value;
@@ -99,8 +119,7 @@ Object *char_range( Object *a, Object *b ){
 	int  i;
 	Object *range = OB_DOWNCAST( MK_VECTOR_OBJ() );
 
-
-	if( ob_cmp( a, b ) == 1 ){
+	if( ob_cmp( a, b ) == -1 ){
 		start = CHAR_UPCAST(a)->value;
 		end   = CHAR_UPCAST(b)->value;
 	}
@@ -384,6 +403,9 @@ IMPLEMENT_TYPE(Char) {
 	char_set_references, // set_references
 	char_clone, // clone
 	0, // free
+	char_get_size, // get_size
+	char_serialize, // serialize
+	char_deserialize, // deserialize
 	char_cmp, // cmp
 	char_ivalue, // ivalue
 	char_fvalue, // fvalue

@@ -30,7 +30,7 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 typedef struct {
-    vmem_t      *data;
+    vmem_t  *data;
     Context *ctx;
 }
 thread_args_t;
@@ -43,19 +43,19 @@ void * hyb_pthread_worker( void *arg ){
     ctx->pool();
 
     Node *call         = new Node(H_NT_CALL);
-    call->value.m_call = (const char *)(*HYB_ARGV(0));
+    call->value.m_call = STRING_ARGV(0).c_str();
 
 	if( HYB_ARGC() > 1 ){
 		unsigned int i;
-		for( i = 1; i < data->size(); i++ ){
-			switch( HYB_ARGV(i)->type ){
-				case otInteger    : call->addChild( new ConstantNode( (long)(*HYB_ARGV(i)) ) );   break;
-				case Float_Type  : call->addChild( new ConstantNode( (double)(*HYB_ARGV(i)) ) ); break;
-				case otChar   : call->addChild( new ConstantNode( (char)(*HYB_ARGV(i)) ) );   break;
-				case otString : call->addChild( new ConstantNode( (char *)(*HYB_ARGV(i)) ) ); break;
+		for( i = 1; i < HYB_ARGC(); ++i ){
+			switch( HYB_ARGV(i)->type->code ){
+				case otInteger : call->addChild( new ConstantNode( INT_ARGV(i) ) );   break;
+				case otFloat   : call->addChild( new ConstantNode( FLOAT_ARGV(i) ) ); break;
+				case otChar    : call->addChild( new ConstantNode( CHAR_ARGV(i) ) );   break;
+				case otString  : call->addChild( new ConstantNode( (char *)STRING_ARGV(i).c_str() ) ); break;
 				default :
                     ctx->depool();
-                    hyb_throw( H_ET_GENERIC, "type %d not supported for pthread call", Object::type_name(HYB_ARGV(i)) );
+                    hyb_throw( H_ET_GENERIC, "type %d not supported for pthread call", HYB_ARGV(i)->type->name );
 			}
 		}
 	}
@@ -65,7 +65,6 @@ void * hyb_pthread_worker( void *arg ){
     delete _return;
 
     args->data->release();
-
     delete args;
 
     ctx->depool();
@@ -86,14 +85,14 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
     args->ctx  = ctx;
     pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args );
 
-    return MK_INT_OBJ(tid);
+    return OB_DOWNCAST( MK_INT_OBJ(tid) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_exit){
     ctx->depool();
 
 	pthread_exit(NULL);
-    return NULL;
+    return OB_DOWNCAST( MK_INT_OBJ(0) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_join){
@@ -102,13 +101,13 @@ HYBRIS_DEFINE_FUNCTION(hpthread_join){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
 
-    pthread_t tid = static_cast<pthread_t>( (long)(*HYB_ARGV(0)) );
+    pthread_t tid = static_cast<pthread_t>( INT_ARGV(0) );
     void *status;
 
     pthread_join( tid, &status );
 
     ctx->depool();
 
-    return NULL;
+    return OB_DOWNCAST( MK_INT_OBJ(0) );
 }
 

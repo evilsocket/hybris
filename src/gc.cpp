@@ -23,27 +23,64 @@ extern void hyb_throw( H_ERROR_TYPE type, const char *format, ... );
 
 gc_t __gc;
 
-void gc_free( gc_item_t *item,  gc_pool_t::iterator &index ){
+inline void gc_lock(){
+	#ifdef MT_SUPPORT
+	pthread_mutex_lock( &__gc.mutex );
+	#endif
+}
+
+inline void gc_unlock(){
+	#ifdef MT_SUPPORT
+	pthread_mutex_unlock( &__gc.mutex );
+	#endif
+}
+
+void gc_pool_append( gc_item_t *item ){
+	if( __gc.pool_head == NULL ){
+		__gc.pool_head = item;
+		item->prev     = NULL;
+	}
+	else{
+		__gc.pool_tail->next = item;
+		item->prev 			 = __gc.pool_tail;
+	}
+
+	__gc.pool_tail = item;
+	item->next 	   = NULL;
+}
+
+void gc_pool_remove( gc_item_t *item ) {
+	if( item->prev == NULL ){
+		__gc.pool_head = item->next;
+	}
+	else{
+		item->prev->next = item->next;
+	}
+	if( item->next == NULL ){
+		__gc.pool_tail = item->prev;
+	}
+	else{
+		item->next->prev = item->prev;
+	}
+	delete item;
+}
+
+
+void gc_free( gc_item_t *item ){
     #ifdef MEM_DEBUG
-        printf( "[MEM DEBUG] Releasing %p [%s] [%d bytes] [%d references].\n", item->pobj, item->pobj->type->name, item->pobj->ref );
+        printf( "[MEM DEBUG] Releasing %p [%s] [%d bytes] [%d references].\n",
+        		item->pobj,
+        		item->pobj->type->name,
+        		ob_get_size(item->pobj),
+        		item->pobj->ref );
     #endif
 
     __gc.items--;
     __gc.usage -= item->size;
 
     delete item->pobj;
-    delete item;
 
-    /**
-     * NOTE: To remove the item from the pool, we should use :
-     *
-     *      __gc.pool.erase(index)
-     *
-     * but the std::vector::erase method is way much slower than this, therefore
-     * let's put an "empty block" in the pool and upon the next iteration we will
-     * simply skip it.
-     */
-    (*index) = NULL;
+    gc_pool_remove(item);
 }
 
 struct _Object *gc_track( struct _Object *o, size_t size ){
@@ -56,9 +93,13 @@ struct _Object *gc_track( struct _Object *o, size_t size ){
         hyb_throw( H_ET_GENERIC, "out of memory" );
     }
 
+    gc_lock();
+
     __gc.items++;
     __gc.usage += size;
-    __gc.pool.push_back( new gc_item_t(o,size) );
+    gc_pool_append( new gc_item_t(o,size) );
+
+    gc_unlock();
 
     return o;
 }
@@ -69,48 +110,54 @@ void gc_collect(){
      * threshold.
      */
     if( __gc.usage >= __gc.threshold ){
-        gc_pool_t::iterator i;
-        for( i = __gc.pool.begin(); i != __gc.pool.end(); i++ ){
-            /*
-             * Skip empty blocks.
-             */
-            gc_item_t *item = (*i);
-            if( item != NULL ){
-                /*
-                 * Skip constant objects because they are part of the execution tree nodes.
-                 */
-                struct _Object *o = item->pobj;
-                if( (o->attributes & H_OA_CONSTANT) != H_OA_CONSTANT ){
-                    /*
-                     * Skip objects that are still referenced somewhere.
-                     */
-                    if( o->ref <= 0 ){
-                        /**
-                         * Finally execute garbage collection
-                         */
-                        gc_free( item, i );
-                    }
-                    #ifdef MEM_DEBUG
-                    else{
-                        printf( "[MEM DEBUG] Skipping %p [%s] [%d bytes] [%d references].\n", item->pobj, item->pobj->type->name, item->pobj->ref );
-                    }
-                    #endif
-                }
-                #ifdef MEM_DEBUG
-                else{
-                    printf( "[MEM DEBUG] Skipping constant %p [%s] [%d bytes] [%d references].\n", item->pobj, item->pobj->type->name, item->pobj->ref );
-                }
-                #endif
-            }
+        gc_item_t *item;
+        for( item = __gc.pool_head; item; item = item->next ){
+			/*
+			 * Skip constant objects because they are part of the execution tree nodes.
+			 */
+			struct _Object *o = item->pobj;
+			if( (o->attributes & H_OA_CONSTANT) != H_OA_CONSTANT ){
+				/*
+				 * Skip objects that are still referenced somewhere.
+				 */
+				gc_lock();
+				if( o->ref <= 0 ){
+					/**
+					 * Finally execute garbage collection
+					 */
+					gc_free( item );
+				}
+				#ifdef MEM_DEBUG
+				else{
+					printf( "[MEM DEBUG] Skipping %p [%s] [%d bytes] [%d references].\n",
+							item->pobj,
+							item->pobj->type->name,
+							ob_get_size(item->pobj),
+							item->pobj->ref );
+				}
+				#endif
+				gc_unlock();
+			}
+			#ifdef MEM_DEBUG
+			else{
+				printf( "[MEM DEBUG] Skipping constant %p [%s] [%d bytes] [%d references].\n",
+						item->pobj,
+						item->pobj->type->name,
+						ob_get_size(item->pobj),
+						item->pobj->ref );
+			}
+			#endif
+
         }
     }
 }
 
 void gc_release(){
-    gc_pool_t::iterator i;
-    for( i = __gc.pool.begin(); i != __gc.pool.end(); i++ ){
-        if( (*i) != NULL  ){
-            gc_free( *i, i );
-        }
+	gc_item_t *item;
+
+	gc_lock();
+	for( item = __gc.pool_head; item; item = item->next ){
+        gc_free( item );
     }
+	gc_unlock();
 }

@@ -68,13 +68,35 @@ bool ob_free( Object *o ){
     return false;
 }
 
+size_t  ob_get_size( Object *o ){
+	if( o->type->get_size != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->get_size(o);
+	}
+	/*
+	 * Should we trig an error?
+	 */
+	return 0;
+}
+
+byte * ob_serialize( Object *o, size_t size ){
+	if( o->type->serialize != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->serialize(o,size);
+	}
+	hyb_throw( H_ET_SYNTAX, "couldn't serialize '%s'", o->type->name );
+}
+
+Object *ob_deserialize( Object *o, byte *buffer, size_t size ){
+	if( o->type->deserialize != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->deserialize(o,buffer,size);
+	}
+	hyb_throw( H_ET_SYNTAX, "couldn't deserialize '%s'", o->type->name );
+}
+
 int ob_cmp( Object *o, Object * cmp ){
     if( o->type->cmp != HYB_UNIMPLEMENTED_FUNCTION ){
         return o->type->cmp(o,cmp);
     }
-    else{
-        hyb_throw( H_ET_SYNTAX, "couldn't compare '%s' object with '%s' object", o->type->name, cmp->type->name );
-    }
+    hyb_throw( H_ET_SYNTAX, "couldn't compare '%s' object with '%s' object", o->type->name, cmp->type->name );
 }
 
 long ob_ivalue( Object * o ){

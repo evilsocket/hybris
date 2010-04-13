@@ -54,8 +54,8 @@ Object *xml_traverse( xmlNode *node ){
 	if( node->type == XML_ELEMENT_NODE ){
 	    /* check for empty names (usually indentation) */
 		if( xml_isinvalid((char *)node->name) == 0 ){
-			StructureObject *h_xmlAttributes = MK_STRUCT_OBJ();
-            MapObject       *h_xmlChildren   = MK_MAP_OBJ();
+			MapObject *h_xmlAttributes = MK_MAP_OBJ(),
+					  *h_xmlChildren   = MK_MAP_OBJ();
 
             /* set node name */
             ob_set_attribute_reference( h_xmlNode, "name", OB_DOWNCAST( MK_STRING_OBJ(node->name) ) );
@@ -78,14 +78,20 @@ Object *xml_traverse( xmlNode *node ){
 				/* child element */
 				if( child->type == XML_ELEMENT_NODE ){
                     /* create a map for the child if it doesn't exist yet */
-					StringObject *childname = MK_TMP_STRING_OBJ((char *)child->name);
-					if( map_find( OB_DOWNCAST(h_xmlChildren), OB_DOWNCAST(childname) ) == -1 ){
-						ob_cl_set( OB_DOWNCAST(h_xmlChildren),
-								   OB_DOWNCAST(MK_TMP_STRING_OBJ(child->name)),
-								   OB_DOWNCAST( MK_TMP_INT_OBJ(0) ) );
+					StringObject childname((char *)child->name);
+
+					if( map_find( OB_DOWNCAST(h_xmlChildren), OB_DOWNCAST(&childname) ) == -1 ){
+						ob_cl_set_reference( OB_DOWNCAST(h_xmlChildren),
+											 OB_DOWNCAST(&childname),
+											 OB_DOWNCAST(MK_VECTOR_OBJ()) );
 					}
+
 					/* push the child into the array */
-					ob_cl_push_reference( ob_cl_at( OB_DOWNCAST(h_xmlChildren), OB_DOWNCAST(childname) ), xml_traverse(child) );
+					ob_cl_set_reference(
+							ob_cl_at( OB_DOWNCAST(h_xmlChildren), OB_DOWNCAST(&childname) ),
+							OB_DOWNCAST(&childname),
+							xml_traverse(child) );
+
 				}
 				/* node raw content */
 				else{

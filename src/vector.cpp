@@ -57,6 +57,10 @@ void vector_free( Object *me ){
     vme->value.clear();
 }
 
+size_t vector_get_size( Object *me ){
+	return VECTOR_UPCAST(me)->items;
+}
+
 int vector_cmp( Object *me, Object *cmp ){
     if( !IS_VECTOR_TYPE(cmp) ){
         return 1;
@@ -101,6 +105,10 @@ double vector_fvalue( Object *me ){
 
 bool vector_lvalue( Object *me ){
     return static_cast<bool>( VECTOR_UPCAST(me)->items );
+}
+
+string vector_svalue( Object *o ){
+	return string( "<vector>" );
 }
 
 void vector_print( Object *me, int tabs ){
@@ -222,11 +230,14 @@ IMPLEMENT_TYPE(Vector) {
 	vector_set_references, // set_references
 	vector_clone, // clone
 	vector_free, // free
+	vector_get_size, // get_size
+	0, // serialize
+	0, // deserialize
 	vector_cmp, // cmp
 	vector_ivalue, // ivalue
 	vector_fvalue, // fvalue
 	vector_lvalue, // lvalue
-	0, // svalue
+	vector_svalue, // svalue
 	vector_print, // print
 	0, // scanf
 	0, // to_string

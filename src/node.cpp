@@ -93,21 +93,27 @@ Node *Node::clone(){
         case H_NT_EXPRESSION   :
             clone = new ExpressionNode( value.m_expression, 0 );
             for( i = 0; i < sz; ++i ){
-                clone->push_back( child(i)->clone() );
+            	if( child(i) ){
+            		clone->push_back( child(i)->clone() );
+            	}
             }
         break;
 
         case H_NT_STATEMENT  :
             clone = new StatementNode( value.m_statement, 0 );
             for( i = 0; i < sz; ++i ){
-                clone->push_back( child(i)->clone() );
+            	if( child(i) ){
+            		clone->push_back( child(i)->clone() );
+            	}
             }
         break;
 
         case H_NT_FUNCTION   :
             clone = new FunctionNode( value.m_function.c_str() );
             for( i = 0; i < sz; ++i ){
-                clone->push_back( child(i)->clone() );
+            	if( child(i) ){
+            		clone->push_back( child(i)->clone() );
+            	}
             }
         break;
 
@@ -119,7 +125,9 @@ Node *Node::clone(){
                 clone = new CallNode( value.m_alias_call, NULL );
             }
             for( i = 0; i < sz; ++i ){
-                clone->push_back( child(i)->clone() );
+            	if( child(i) ){
+            		clone->push_back( child(i)->clone() );
+            	}
             }
         break;
     }

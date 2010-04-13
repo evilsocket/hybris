@@ -28,6 +28,27 @@ Object *float_clone( Object *me ){
     return (Object *)MK_FLOAT_OBJ( FLOAT_UPCAST(me)->value );
 }
 
+size_t float_get_size( Object *me ){
+	return sizeof(double);
+}
+
+byte *float_serialize( Object *o, size_t size ){
+	size_t i, s   = (size > ob_get_size(o) ? ob_get_size(o) : size);
+	byte  *buffer = new byte[s];
+
+	memcpy( buffer, &(FLOAT_UPCAST(o)->value), s );
+
+	return buffer;
+}
+
+Object *float_deserialize( Object *o, byte *buffer, size_t size ){
+	if( size ){
+		o = OB_DOWNCAST( MK_FLOAT_OBJ(0) );
+		memcpy( &(FLOAT_UPCAST(o)->value), buffer, size );
+	}
+	return o;
+}
+
 int float_cmp( Object *me, Object *cmp ){
     double fvalue = ob_fvalue(cmp),
            mvalue = FLOAT_UPCAST(me)->value;
@@ -349,6 +370,9 @@ IMPLEMENT_TYPE(Float) {
 	float_set_references, // set_references
 	float_clone, // clone
 	0, // free
+	float_get_size, // get_size
+	float_serialize, // serialize
+	float_deserialize, // deserialize
 	float_cmp, // cmp
 	float_ivalue, // ivalue
 	float_fvalue, // fvalue

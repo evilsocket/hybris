@@ -77,6 +77,10 @@ void matrix_free( Object *me ){
     mme->items      = 0;
 }
 
+size_t matrix_get_size( Object *me ){
+	return MATRIX_UPCAST(me)->items;
+}
+
 int matrix_cmp( Object *me, Object *cmp ){
     if( !IS_MATRIX_TYPE(cmp) ){
         return 1;
@@ -127,6 +131,10 @@ double matrix_fvalue( Object *me ){
 
 bool matrix_lvalue( Object *me ){
     return static_cast<bool>( MATRIX_UPCAST(me)->items );
+}
+
+string matrix_svalue( Object *me ){
+	return string("<matrix>");
 }
 
 void matrix_print( Object *me, int tabs ){
@@ -388,11 +396,14 @@ IMPLEMENT_TYPE(Matrix) {
 	matrix_set_references, // set_references
 	matrix_clone, // clone
 	matrix_free, // free
+	matrix_get_size, // get_size
+	0, // serialize
+	0, // deserialize
 	matrix_cmp, // cmp
 	matrix_ivalue, // ivalue
 	matrix_fvalue, // fvalue
 	matrix_lvalue, // lvalue
-	0, // svalue
+	matrix_svalue, // svalue
 	matrix_print, // print
 	0, // scanf
 	0, // to_string

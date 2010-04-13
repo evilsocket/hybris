@@ -43,7 +43,7 @@ HYBRIS_DEFINE_FUNCTION(hticks){
     timeval ts;
     gettimeofday(&ts,0);
 
-    return MK_INT_OBJ( ts.tv_sec * 1000 + (ts.tv_usec / 1000) );
+    return OB_DOWNCAST( MK_INT_OBJ( ts.tv_sec * 1000 + (ts.tv_usec / 1000) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(husleep){
@@ -54,11 +54,11 @@ HYBRIS_DEFINE_FUNCTION(husleep){
 
 	struct timespec ts;
 
-    ts.tv_sec  = (long)(*HYB_ARGV(0)) / 1000000;
+    ts.tv_sec  = INT_ARGV(0) / 1000000;
     ts.tv_nsec = ts.tv_sec * 1000;
     nanosleep(&ts,&ts);
 
-	return MK_INT_OBJ(0);
+	return OB_DOWNCAST( MK_INT_OBJ(0) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsleep){
@@ -69,29 +69,29 @@ HYBRIS_DEFINE_FUNCTION(hsleep){
 
 	struct timespec ts;
 
-    ts.tv_sec  = (long)(*HYB_ARGV(0)) / 1000;
+    ts.tv_sec  = INT_ARGV(0) / 1000;
     ts.tv_nsec = ts.tv_sec * 1000;
     nanosleep(&ts,&ts);
 
-	return MK_INT_OBJ(0);
+	return OB_DOWNCAST( MK_INT_OBJ(0) );
 }
 
 HYBRIS_DEFINE_FUNCTION(htime){
-	Object *map = MK_COLLECTION_OBJ();
+	Object *map = OB_DOWNCAST( MK_MAP_OBJ() );
 	time_t raw;
 	struct tm * ti;
 
 	time(&raw);
 	ti = localtime(&raw);
 
-	map->map( MK_TMP_STRING_OBJ("sec"),   MK_TMP_INT_OBJ(ti->tm_sec) );
-	map->map( MK_TMP_STRING_OBJ("min"),   MK_TMP_INT_OBJ(ti->tm_min) );
-	map->map( MK_TMP_STRING_OBJ("hour"),  MK_TMP_INT_OBJ(ti->tm_hour) );
-	map->map( MK_TMP_STRING_OBJ("mday"),  MK_TMP_INT_OBJ(ti->tm_mday) );
-	map->map( MK_TMP_STRING_OBJ("month"), MK_TMP_INT_OBJ(ti->tm_mon + 1) );
-	map->map( MK_TMP_STRING_OBJ("year"),  MK_TMP_INT_OBJ(ti->tm_year + 1900) );
-	map->map( MK_TMP_STRING_OBJ("wday"),  MK_TMP_INT_OBJ(ti->tm_wday + 1) );
-	map->map( MK_TMP_STRING_OBJ("yday"),  MK_TMP_INT_OBJ(ti->tm_yday + 1) );
+	ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ("sec") ),   OB_DOWNCAST( MK_INT_OBJ(ti->tm_sec) ) );
+	ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ("min") ),   OB_DOWNCAST( MK_INT_OBJ(ti->tm_min) ) );
+	ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ("hour") ),  OB_DOWNCAST( MK_INT_OBJ(ti->tm_hour) ) );
+	ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ("mday") ),  OB_DOWNCAST( MK_INT_OBJ(ti->tm_mday) ) );
+	ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ("month") ), OB_DOWNCAST( MK_INT_OBJ(ti->tm_mon + 1) ) );
+	ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ("year") ),  OB_DOWNCAST( MK_INT_OBJ(ti->tm_year + 1900) ) );
+	ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ("wday") ),  OB_DOWNCAST( MK_INT_OBJ(ti->tm_wday + 1) ) );
+	ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ("yday") ),  OB_DOWNCAST( MK_INT_OBJ(ti->tm_yday + 1) ) );
 
 	return map;
 }
@@ -106,7 +106,7 @@ HYBRIS_DEFINE_FUNCTION(hstrtime){
 
 	sprintf( stime, "%d:%d:%d", ti->tm_hour, ti->tm_min, ti->tm_sec );
 
-	return MK_STRING_OBJ(stime);
+	return OB_DOWNCAST( MK_STRING_OBJ(stime) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hstrdate){
@@ -119,5 +119,5 @@ HYBRIS_DEFINE_FUNCTION(hstrdate){
 
 	sprintf( sdate, "%d/%d/%d", ti->tm_mon + 1, ti->tm_mday, ti->tm_year + 1900 );
 
-	return MK_STRING_OBJ(sdate);
+	return OB_DOWNCAST( MK_STRING_OBJ(sdate) );
 }

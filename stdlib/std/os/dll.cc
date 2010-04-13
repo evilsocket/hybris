@@ -49,12 +49,12 @@ typedef struct {
 }
 dll_arg_t;
 
-unsigned char *binary_serialize( Object *o ){
-    unsigned int   i, size( o->size );
-    unsigned char *buffer = new unsigned char[ size ];
+byte *binary_serialize( Object *o ){
+    size_t i, size( ob_get_size(o) );
+    byte *buffer = new byte[ size ];
 
     for( i = 0; i < size; ++i ){
-        buffer[i] = (unsigned char)o->value.m_array[i]->value.m_char;
+        buffer[i] = (byte)ob_ivalue( BINARY_UPCAST(o)->value[i] );
     }
 
     return buffer;
@@ -62,33 +62,33 @@ unsigned char *binary_serialize( Object *o ){
 
 static void ctype_convert( Object *o, dll_arg_t *pa ) {
     pa->dynamic = false;
-	if( o->type == H_OT_VOID ){
+	if( o->type->code == otVoid ){
         pa->type    = &ffi_type_pointer;
         pa->value.p = H_UNDEFINED;
 	}
-    else if( o->type == otInteger ){
+    else if( o->type->code == otInteger || o->type->code == otAlias || o->type->code == otExtern ){
 		pa->type    = &ffi_type_sint;
-		pa->value.i = o->value.m_integer;
+		pa->value.i = ob_ivalue(o);
 	}
-	else if( o->type == otChar ){
+	else if( o->type->code == otChar ){
         pa->type    = &ffi_type_schar;
-        pa->value.c = o->value.m_char;
+        pa->value.c = ob_ivalue(o);
 	}
-	else if( o->type == Float_Type ){
+	else if( o->type->code == otFloat ){
 	    pa->type    = &ffi_type_double;
-        pa->value.d = o->value.m_double;
+        pa->value.d = ob_fvalue(o);
 	}
-    else if( o->type == otString ){
+    else if( o->type->code == otString ){
 		pa->type    = &ffi_type_pointer;
-		pa->value.p = (void *)o->value.m_string.c_str();
+		pa->value.p = (void *)STRING_VALUE(o).c_str();
 	}
-	else if( o->type == H_OT_BINARY ){
+	else if( o->type->code == otBinary ){
 	    pa->dynamic = true;
         pa->type    = &ffi_type_pointer;
         pa->value.p = (void *)binary_serialize(o);
 	}
 	else{
-        hyb_throw( H_ET_SYNTAX, "could not use '%s' type for dllcall function", Object::type_name(o) );
+        hyb_throw( H_ET_SYNTAX, "could not use '%s' type for dllcall function", o->type->name );
 	}
 }
 
@@ -98,19 +98,19 @@ HYBRIS_DEFINE_FUNCTION(hdllopen){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
 
-    return PTR_TO_INT_OBJ( dlopen( (const char *)(*HYB_ARGV(0)), RTLD_LAZY ) );
+    return OB_DOWNCAST( PTR_TO_INT_OBJ( dlopen( STRING_ARGV(0).c_str(), RTLD_LAZY ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hdlllink){
     if( HYB_ARGC() != 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'dlllink' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger    );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
 	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
 
-    void *hdll = reinterpret_cast<void *>( (long)(*HYB_ARGV(0)) );
+    void *hdll = reinterpret_cast<void *>( INT_ARGV(0) );
 
-    return new Object( reinterpret_cast<long>( dlsym( hdll, (const char *)(*HYB_ARGV(1)) ) ), 1 );
+    return OB_DOWNCAST( MK_EXTERN_OBJ( H_ADDRESS_OF( dlsym( hdll, STRING_ARGV(1).c_str() ) ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hdllcall){
@@ -121,10 +121,10 @@ HYBRIS_DEFINE_FUNCTION(hdllcall){
         hyb_throw( H_ET_SYNTAX, "function 'dllcall' support at max %d parameters (called with %d)", CALL_MAX_ARGS, HYB_ARGC() );
     }
 
-    HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
+    HYB_TYPE_ASSERT( HYB_ARGV(0), otExtern );
 
     typedef int (* function_t)(void);
-    function_t function = (function_t)(long)(*HYB_ARGV(0));
+    function_t function = (function_t)EXTERN_ARGV(0);
 
     ffi_cif    cif;
     ffi_arg    ul_ret;
@@ -169,7 +169,7 @@ HYBRIS_DEFINE_FUNCTION(hdllcall){
 		}
 	}
 
-    return MK_INT_OBJ(ul_ret);
+    return OB_DOWNCAST( MK_INT_OBJ(ul_ret) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hdllclose){
@@ -178,8 +178,8 @@ HYBRIS_DEFINE_FUNCTION(hdllclose){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
 
-	dlclose( (void *)(long)(*HYB_ARGV(0)) );
+	dlclose( (void *)INT_ARGV(0) );
 
-    return MK_INT_OBJ(0);
+    return OB_DOWNCAST( MK_INT_OBJ(0) );
 }
 

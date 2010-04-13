@@ -59,6 +59,35 @@ void binary_free( Object *me ){
     bme->value.clear();
 }
 
+size_t binary_get_size( Object *me ){
+	return BINARY_UPCAST(me)->items;
+}
+
+byte *binary_serialize( Object *o, size_t size ){
+	size_t i, s   = (size > ob_get_size(o) ? ob_get_size(o) : size);
+	byte  *buffer = new byte[s];
+	BinaryObject *bme = (BinaryObject *)o;
+
+	for( i = 0; i < s; ++i ){
+		buffer[i] = (byte)ob_ivalue( bme->value[i] );
+	}
+
+	return buffer;
+}
+
+Object *binary_deserialize( Object *o, byte *buffer, size_t size ){
+	size_t i;
+
+	if( size ){
+		o = OB_DOWNCAST( MK_BINARY_OBJ() );
+		for( i = 0; i < size; ++i ){
+			ob_cl_push( o, OB_DOWNCAST( MK_INT_OBJ(buffer[i]) ) );
+		}
+	}
+
+	return o;
+}
+
 int binary_cmp( Object *me, Object *cmp ){
     if( !IS_BINARY_TYPE(cmp) ){
         return 1;
@@ -103,6 +132,10 @@ double binary_fvalue( Object *me ){
 
 bool binary_lvalue( Object *me ){
     return static_cast<bool>( BINARY_UPCAST(me)->items );
+}
+
+string binary_svalue( Object *me ){
+	return string("<binary>");
 }
 
 void binary_print( Object *me, int tabs ){
@@ -209,11 +242,14 @@ IMPLEMENT_TYPE(Binary) {
 	binary_set_references, // set_references
 	binary_clone, // clone
 	binary_free, // free
+	binary_get_size, // get_size
+	binary_serialize, // serialize
+	binary_deserialize, // deserialize
 	binary_cmp, // cmp
 	binary_ivalue, // ivalue
 	binary_fvalue, // fvalue
 	binary_lvalue, // lvalue
-	0, // svalue
+	binary_svalue, // svalue
 	binary_print, // print
 	0, // scanf
 	0, // to_string

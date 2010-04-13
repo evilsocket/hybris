@@ -59,9 +59,9 @@ protected :
     hash_table_t      *m_table;
 
     inline int search_index( char *label ){
-		unsigned int i, j,
-                     size( m_elements ),
-                     send( size - 1 );
+		int i, j,
+        	size( m_elements ),
+            send( size - 1 );
 
 		for( i = 0, j = send; i < size && j >= 0; ++i, --j ){
 			if( m_map[i]->label == label ){
@@ -74,9 +74,9 @@ protected :
 	}
 
 	inline int search_index( value_t *value ){
-		unsigned int  i, j,
-                      size( m_elements ),
-                      send( size - 1 );
+		int  i, j,
+        	 size( m_elements ),
+             send( size - 1 );
 		ulong v_address( H_ADDRESS_OF(value) );
 
 		for( i = 0, j = send; i < size && j >= 0; ++i, --j ){

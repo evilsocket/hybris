@@ -68,7 +68,7 @@ HYBRIS_DEFINE_FUNCTION(hacos){
 	}
 	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         return (Object *)MK_FLOAT_OBJ( acos(INT_ARGV(0) ));
     }
     else{
@@ -82,7 +82,7 @@ HYBRIS_DEFINE_FUNCTION(hasin){
 	}
 	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         return (Object *)MK_FLOAT_OBJ( asin(INT_ARGV(0) ));
     }
     else{
@@ -96,7 +96,7 @@ HYBRIS_DEFINE_FUNCTION(hatan){
 	}
 	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         return (Object *)MK_FLOAT_OBJ( atan(INT_ARGV(0) ));
     }
     else{
@@ -113,13 +113,13 @@ HYBRIS_DEFINE_FUNCTION(hatan2){
 
     double a, b;
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         a = (double)INT_VALUE( HYB_ARGV(0) );
     }
     else{
         a = FLOAT_VALUE( HYB_ARGV(0) );
     }
-    if( IS_otInt( HYB_ARGV(1) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(1) ) ){
         b = (double)INT_VALUE( HYB_ARGV(0) );
     }
     else{
@@ -135,7 +135,7 @@ HYBRIS_DEFINE_FUNCTION(hceil){
 
 	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         return (Object *)MK_INT_OBJ( ceil(INT_ARGV(0) ) );
     }
     else{
@@ -149,7 +149,7 @@ HYBRIS_DEFINE_FUNCTION(hcos){
 	}
 	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         return (Object *)MK_FLOAT_OBJ( cos(INT_ARGV(0) ));
     }
     else{
@@ -163,7 +163,7 @@ HYBRIS_DEFINE_FUNCTION(hcosh){
 	}
 	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         return (Object *)MK_FLOAT_OBJ( cosh(INT_ARGV(0) ));
     }
     else{
@@ -177,7 +177,7 @@ HYBRIS_DEFINE_FUNCTION(hexp){
 	}
 	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         return (Object *)MK_FLOAT_OBJ( exp(INT_ARGV(0) ));
     }
     else{
@@ -191,7 +191,7 @@ HYBRIS_DEFINE_FUNCTION(hfabs){
 	}
 	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         return (Object *)MK_FLOAT_OBJ( fabs(INT_ARGV(0) ));
     }
     else{
@@ -205,7 +205,7 @@ HYBRIS_DEFINE_FUNCTION(hfloor){
 	}
 	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         return (Object *)MK_INT_OBJ( floor(INT_ARGV(0) ) );
     }
     else{
@@ -222,13 +222,13 @@ HYBRIS_DEFINE_FUNCTION(hfmod){
 
     double a, b;
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         a = (double)INT_VALUE( HYB_ARGV(0) );
     }
     else{
         a = FLOAT_VALUE( HYB_ARGV(0) );
     }
-    if( IS_otInt( HYB_ARGV(1) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(1) ) ){
         b = (double)INT_VALUE( HYB_ARGV(0) );
     }
     else{
@@ -243,7 +243,7 @@ HYBRIS_DEFINE_FUNCTION(hlog){
 	}
 	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         return (Object *)MK_FLOAT_OBJ( log(INT_ARGV(0) ));
     }
     else{
@@ -257,7 +257,7 @@ HYBRIS_DEFINE_FUNCTION(hlog10){
 	}
 	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         return (Object *)MK_FLOAT_OBJ( log10(INT_ARGV(0) ));
     }
     else{
@@ -274,13 +274,13 @@ HYBRIS_DEFINE_FUNCTION(hpow){
 
     double a, b;
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         a = (double)INT_VALUE( HYB_ARGV(0) );
     }
     else{
         a = FLOAT_VALUE( HYB_ARGV(0) );
     }
-    if( IS_otInt( HYB_ARGV(1) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(1) ) ){
         b = (double)INT_VALUE( HYB_ARGV(0) );
     }
     else{
@@ -295,7 +295,7 @@ HYBRIS_DEFINE_FUNCTION(hsin){
 	}
 	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         return (Object *)MK_FLOAT_OBJ( sin(INT_ARGV(0) ));
     }
     else{
@@ -309,7 +309,7 @@ HYBRIS_DEFINE_FUNCTION(hsinh){
 	}
 	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         return (Object *)MK_FLOAT_OBJ( sinh(INT_ARGV(0) ));
     }
     else{
@@ -323,7 +323,7 @@ HYBRIS_DEFINE_FUNCTION(hsqrt){
 	}
 	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         return (Object *)MK_FLOAT_OBJ( sqrt(INT_ARGV(0) ));
     }
     else{
@@ -337,7 +337,7 @@ HYBRIS_DEFINE_FUNCTION(htan){
 	}
 	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         return (Object *)MK_FLOAT_OBJ( tan(INT_ARGV(0) ));
     }
     else{
@@ -351,7 +351,7 @@ HYBRIS_DEFINE_FUNCTION(htanh){
 	}
 	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
 
-    if( IS_otInt( HYB_ARGV(0) ) ){
+    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
         return (Object *)MK_FLOAT_OBJ( tanh(INT_VALUE( HYB_ARGV(0) )));
     }
     else{

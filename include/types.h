@@ -32,6 +32,8 @@
 using std::vector;
 using std::string;
 
+typedef unsigned char byte;
+
 /*
  *  Helper macro to obtain the address of a pointer
  */
@@ -114,6 +116,8 @@ typedef struct _Object {
     BASE_OBJECT_HEADER;
 }
 Object;
+
+
 /*
  * Type function pointers descriptors .
  */
@@ -121,6 +125,12 @@ Object;
 typedef void     (*ob_set_references_function_t)( Object *o, int );
 // free object inner buffer if any
 typedef void     (*ob_free_function_t)          ( Object * );
+// return the size of the object, or its items if it's a collection
+typedef size_t   (*ob_size_function_t)          ( Object * );
+// serialize the object, if size = 0 ignore it and take the object default size
+typedef byte *   (*ob_serialize_function_t)     ( Object *, size_t );
+// deserialize the object from a buffer
+typedef Object * (*ob_deserialize_function_t)   ( Object *, byte *, size_t );
 // {a} == {b} ?
 typedef int      (*ob_cmp_function_t)           ( Object *, Object * );
 // get the integer value rapresentation of the object
@@ -183,6 +193,9 @@ typedef struct _object_type_t {
     ob_set_references_function_t set_references;
     ob_unary_function_t         clone;
     ob_free_function_t          free;
+    ob_size_function_t			get_size;
+    ob_serialize_function_t     serialize;
+    ob_deserialize_function_t   deserialize;
     ob_cmp_function_t           cmp;
     ob_ivalue_function_t        ivalue;
     ob_fvalue_function_t        fvalue;
@@ -267,6 +280,9 @@ bool    ob_is_type_in( Object *o, ... );
 void    ob_set_references( Object *o, int ref );
 Object* ob_clone( Object *o );
 bool    ob_free( Object *o );
+size_t  ob_get_size( Object *o );
+byte *  ob_serialize( Object *, size_t );
+Object *ob_deserialize( Object *, byte *, size_t );
 int     ob_cmp( Object *o, Object * cmp );
 long    ob_ivalue( Object *o );
 double  ob_fvalue( Object *o );
@@ -381,6 +397,9 @@ ExternObject;
 #define MK_ALIAS_OBJ(v)   ALIAS_UPCAST( (gc_track( OB_DOWNCAST( new AliasObject( static_cast<long>(v) ) ), sizeof(AliasObject) )) )
 #define MK_EXTERN_OBJ(v)  EXTERN_UPCAST( (gc_track( OB_DOWNCAST( new ExternObject( static_cast<long>(v) ) ), sizeof(ExternObject) )) )
 #define INT_VALUE(o)      (((IntegerObject *)(o))->value)
+#define ALIAS_VALUE(o)    (((AliasObject *)(o))->value)
+#define EXTERN_VALUE(o)   (((ExternObject *)(o))->value)
+
 /*
  * A macro to cast any pointer into an Integer representing its address.
  */
@@ -432,6 +451,8 @@ DECLARE_TYPE(String);
 
 void string_parse( string& s );
 void string_replace( string &source, const string find, string replace );
+int  string_classify_pcre( string& r );
+void string_parse_pcre( string& raw, string& regex, int& opts );
 
 typedef struct _StringObject {
     BASE_OBJECT_HEADER;

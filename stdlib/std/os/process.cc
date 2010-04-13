@@ -43,7 +43,7 @@ HYBRIS_DEFINE_FUNCTION(hexec){
 	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
     Object *_return = NULL;
     if( HYB_ARGC() ){
-        _return = MK_INT_OBJ( system( (const char *)(*HYB_ARGV(0)) ) );
+        _return = OB_DOWNCAST( MK_INT_OBJ( system( STRING_ARGV(0).c_str() ) ) );
     }
 	else{
 		hyb_throw( H_ET_SYNTAX, "function 'exec' requires 1 parameter (called with %d)", HYB_ARGC() );
@@ -52,11 +52,11 @@ HYBRIS_DEFINE_FUNCTION(hexec){
 }
 
 HYBRIS_DEFINE_FUNCTION(hfork){
-    return MK_INT_OBJ( fork() );
+    return OB_DOWNCAST( MK_INT_OBJ( fork() ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hgetpid){
-    return MK_INT_OBJ( getpid() );
+    return OB_DOWNCAST( MK_INT_OBJ( getpid() ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hwait){
@@ -65,7 +65,7 @@ HYBRIS_DEFINE_FUNCTION(hwait){
 	}
 	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
 
-	return MK_INT_OBJ( wait( &HYB_ARGV(0)->value.m_integer ) );
+	return OB_DOWNCAST( MK_INT_OBJ( wait( &(INT_ARGV(0)) ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hpopen){
@@ -73,7 +73,7 @@ HYBRIS_DEFINE_FUNCTION(hpopen){
 	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
 
     if( HYB_ARGC() == 2 ){
-        return  PTR_TO_INT_OBJ( popen( (const char *)(*HYB_ARGV(0)), (const char *)(*HYB_ARGV(1)) ) );
+        return  OB_DOWNCAST( PTR_TO_INT_OBJ( popen( STRING_ARGV(0).c_str(), STRING_ARGV(1).c_str() ) ) );
     }
 	else{
 		hyb_throw( H_ET_SYNTAX, "function 'popen' requires 2 parameters (called with %d)", HYB_ARGC() );
@@ -83,18 +83,18 @@ HYBRIS_DEFINE_FUNCTION(hpopen){
 HYBRIS_DEFINE_FUNCTION(hpclose){
 	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
     if( HYB_ARGC() ){
-		pclose( (FILE *)(long)(*HYB_ARGV(0)) );
+		pclose( (FILE *)INT_ARGV(0) );
     }
-    return MK_INT_OBJ(0);
+    return OB_DOWNCAST( MK_INT_OBJ(0) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hexit){
     int code = 0;
     if( HYB_ARGC() > 0 ){
 		HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
-		code = (long)(*HYB_ARGV(0));
+		code = (long)INT_ARGV(0);
 	}
 	exit(code);
 
-    return MK_INT_OBJ(0);
+    return OB_DOWNCAST( MK_INT_OBJ(0) );
 }

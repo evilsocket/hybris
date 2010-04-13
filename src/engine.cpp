@@ -256,16 +256,16 @@ Node * Engine::findEntryPoint( vframe_t *frame, Node *call, char *name ){
 		return function;
 	}
 	/* then search for a function alias */
-	Object *alias = H_UNDEFINED;
-	if( (alias = frame->get( callname )) != H_UNDEFINED && IS_ALIAS_TYPE(alias) ){
-	    strcpy( name, vc->label( ((AliasObject *)alias)->value ) );
-		return vc->at( ((AliasObject *)alias)->value );
+	AliasObject *alias = ALIAS_UPCAST( frame->get( callname ) );
+	if( alias != H_UNDEFINED && IS_ALIAS_TYPE(alias) ){
+	    strcpy( name, vc->label( alias->value ) );
+		return vc->at( alias->value );
 	}
 	/* try to evaluate the call as an alias itself */
 	if( call->value.m_alias_call != NULL ){
-		alias = exec( frame, call->value.m_alias_call );
+		alias = (AliasObject *)exec( frame, call->value.m_alias_call );
 		if( IS_ALIAS_TYPE(alias) ){
-		    strcpy( name, vc->label( ((AliasObject *)alias)->value ) );
+		    strcpy( name, vc->label( alias->value ) );
 			return vc->find( name );
 		}
 	}
@@ -280,14 +280,14 @@ Object *Engine::onIdentifier( vframe_t *frame, Node *node ){
 
 	/*
 	 * First thing first, search for the identifier definition on
-	 * the function local stack frame. 
+	 * the function local stack frame.
 	 */
 	if( (o = frame->get(identifier)) != H_UNDEFINED ){
 		return o;
 	}
 	/*
 	 * Let's check if the address of this frame si different from
-	 * global frame one, in that case try to search the definition 
+	 * global frame one, in that case try to search the definition
 	 * on the global frame too.
 	 */
 	else if( H_ADDRESS_OF(frame) != H_ADDRESS_OF(vm) && (o = vm->get( identifier )) != H_UNDEFINED ){
@@ -424,7 +424,8 @@ Object *Engine::onStructureDeclaration( vframe_t *frame, Node * node ){
 }
 
 Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
-    char        *callname = (char *)call->value.m_call.c_str();
+    char        *callname = (char *)call->value.m_call.c_str(),
+    		     identifier[0xFF] = {0};
     function_t   function;
     Node        *node;
     vframe_t     stack;
@@ -441,12 +442,16 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
         /* create function stack value */
         node  = call->child(i);
         value = exec( frame, node );
-        /*
-         * Value references count is set to zero now, builtins
-         * do not care about reference counting, so this object will
-         * be safely freed after the function call by the gc.
-         */
-        stack.insert( HANONYMOUSIDENTIFIER, value );
+		/*
+		 * Create a temporary identifier to not overwrite the function pointer itself.
+		 */
+		sprintf( identifier, "%s%d", HANONYMOUSIDENTIFIER, i );
+		/*
+		 * Value references count is set to zero now, builtins
+		 * do not care about reference counting, so this object will
+		 * be safely freed after the function call by the gc.
+		 */
+		stack.insert( identifier, value );
     }
 
     ctx->trace( callname, &stack );
@@ -586,7 +591,7 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
         }
         return H_UNDEFINED;
     }
-    else if( (fn_pointer->attributes & H_OA_EXTERN) != H_OA_EXTERN ){
+    else if( IS_EXTERN_TYPE(fn_pointer) == false ){
         if( threaded ){
             ctx->depool();
         }
@@ -803,17 +808,17 @@ Object *Engine::onFor( vframe_t *frame, Node *node ){
 Object *Engine::onForeach( vframe_t *frame, Node *node ){
     int     i, size;
     Node   *body;
-    Object *map    = H_UNDEFINED,
+    Object *v      = H_UNDEFINED,
            *result = H_UNDEFINED;
     char   *identifier;
 
     identifier = (char *)node->child(0)->value.m_identifier.c_str();
-    map        = exec( frame, node->child(1) );
+    v          = exec( frame, node->child(1) );
     body       = node->child(2);
-    size       = MAP_UPCAST(map)->items;
+    size       = ob_get_size(v);
 
     for( i = 0; i < size; ++i ){
-        frame->add( identifier, MAP_UPCAST(map)->keys[i] );
+        frame->add( identifier, VECTOR_UPCAST(v)->value[i] );
         result = exec( frame, body );
     }
 
@@ -832,7 +837,7 @@ Object *Engine::onForeachm( vframe_t *frame, Node *node ){
     value_identifier = (char *)node->child(1)->value.m_identifier.c_str();
     map              = exec( frame, node->child(2) );
     body             = node->child(3);
-    size             = MAP_UPCAST(map)->items;
+    size             = ob_get_size(map);
 
     for( i = 0; i < size; ++i ){
         frame->add( key_identifier,   MAP_UPCAST(map)->keys[i] );
