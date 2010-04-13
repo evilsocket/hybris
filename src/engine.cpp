@@ -319,30 +319,57 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
               *owner_id   = identifier,
               *child_id   = NULL;
 
-    // search for the identifier on the function frame
+    /*
+	 * Search for the identifier on the function frame.
+	 */
     owner = frame->get( identifier );
     if( owner == H_UNDEFINED && H_ADDRESS_OF(frame) != H_ADDRESS_OF(vm) ){
-        // search it on the global frame if it's different from local frame
+        /*
+		 * Search it on the global frame if it's different from local frame.
+		 */
         owner = vm->get( identifier );
     }
-    if( owner == H_UNDEFINED ){
+	/*
+	 * Nope :( not defined anywhere.
+	 */
+    else if( owner == H_UNDEFINED ){
         hyb_throw( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
     }
+	/*
+	 * Ok, definetly it's defined "somewhere", but we don't know exactly where.
+	 * That could be the user types definition segments, who knows (the gc should),
+	 * anyway, check if it's REALLY a user defined type.
+	 */
     else if( IS_STRUCT_TYPE(owner) == false ){
         hyb_throw( H_ET_SYNTAX, "'%s' is not a structure identifier", identifier );
     }
-
+	/* 
+	 * Loop each element of the chain :
+	 * 
+	 * foo->bar->moo->...->X
+	 * 
+	 * Until last element 'X' of this chain is found.
+	 */
     for( i = 0; i < attributes; ++i ){
         child_id = (char *)node->child(i)->value.m_identifier.c_str();
         child    = ob_get_attribute( owner, child_id );
-
+		/*
+		 * Something went wrong dude!
+		 */
         if( child == H_UNDEFINED ){
             hyb_throw( H_ET_SYNTAX, "'%s' is not an attribute of %s", child_id, owner_id );
         }
+		/*
+		 * Ok, let's consider the next element and shift
+		 * relationships between owner and child pointers.
+		 */
         else if( IS_STRUCT_TYPE(child) ){
             owner    = child;
             owner_id = child_id;
         }
+		/*
+		 * Hello Mr. 'X', you are the last element of the chain!
+		 */
         else{
             return child;
         }
@@ -350,6 +377,16 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
 }
 
 Object *Engine::onConstant( vframe_t *frame, Node *node ){
+	/*
+	 * Constants are obviously not evaluated every time, just
+	 * the first time when the parser is traveling around the
+	 * syntaxy tree and founds out a constant.
+	 * For this reason, constants do NOT go out of scope, out
+	 * of references, out of fuel, out-what-u-like-most.
+	 * If the garbage collector detects an object to be a constant,
+	 * (the object->attributes bitmask is set to H_OT_CONSTANT), it
+	 * simply skip it in the loop.
+	 */
     return node->value.m_constant;
 }
 
@@ -378,8 +415,8 @@ Object *Engine::onStructureDeclaration( vframe_t *frame, Node * node ){
         ob_add_attribute( s, (char *)node->child(i)->value.m_identifier.c_str() );
     }
     /*
-     * ::defineType will take care of the structure attributes to prevent it to be 
-     * garbage collected.
+     * ::defineType will take care of the structure attributes 
+	 * to prevent it to be garbage collected (see ::onConstant).
      */
     ctx->defineType( s_name, s );
 
@@ -494,6 +531,10 @@ Object *Engine::onTypeCall( vframe_t *frame, Node *type ){
               *object    = H_UNDEFINED;
     int        i, children( type->children() );
 
+	/*
+	 * Search for the used defined type calls, most like C++
+	 * class constructors but without strict prototypes.
+	 */ 
     if( (user_type = ctx->getType(type_name)) == H_UNDEFINED ){
         return H_UNDEFINED;
     }
@@ -502,6 +543,11 @@ Object *Engine::onTypeCall( vframe_t *frame, Node *type ){
 
     // init structure attributes
     if( children > 0 ){
+		/*
+		 * It's ok to initialize less attributes that the structure 
+		 * has (non ini'ed attributes are set to 0 by default), but
+		 * you can not set more attributes than the structure have.
+		 */
         if( children > STRUCT_UPCAST(structure)->items ){
             hyb_throw( H_ET_SYNTAX, "structure '%s' has %d attributes, initialized with %d",
                                  type_name,
