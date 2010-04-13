@@ -227,10 +227,20 @@ class Context {
                 ob_add_attribute( (Object *)type, attributes[i] );
             }
 
+           /*
+            * Prevent the structure definition from being deleted by the gc.
+            */
+            type->attributes |= H_OA_CONSTANT;
+
             return vtypes.insert( name, (Object *)type );
         }
 
         inline void defineType( char *name, Object *type ){
+           /*
+            * Prevent the structure definition from being deleted by the gc.
+            */
+            type->attributes |= H_OA_CONSTANT;
+
             vtypes.insert( name, type );
         }
 
