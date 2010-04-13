@@ -366,10 +366,9 @@ Object *Engine::onStructureDeclaration( vframe_t *frame, Node * node ){
         ob_add_attribute( s, (char *)node->child(i)->value.m_identifier.c_str() );
     }
     /*
-     * Prevent the structure definition from being deleted by the gc.
+     * ::defineType will take care of the structure attributes to prevent it to be 
+     * garbage collected.
      */
-    s->attributes |= H_OA_CONSTANT;
-
     ctx->defineType( s_name, s );
 
     return H_UNDEFINED;
