@@ -24,7 +24,7 @@
 #include <dlfcn.h>
 #include <sys/types.h>
 #include <dirent.h>
-#include "object.h"
+#include "types.h"
 #include "vmem.h"
 #include "vcode.h"
 #include "engine.h"
@@ -47,21 +47,33 @@ typedef Object * (*function_t)( Context *, vmem_t * );
 /* macro to declare a hybris function */
 #define HYBRIS_DEFINE_FUNCTION(name) Object *name( Context *ctx, vmem_t *data )
 /* macro to define a constant value */
-#define HYBRIS_DEFINE_CONSTANT( ctx, name, value ) ctx->vmem.add( (char *)name, &( Object(value) ) )
+#define HYBRIS_DEFINE_CONSTANT( ctx, name, value ) ctx->vmem.add( (char *)name, (Object *)value )
 /* macro to define a new structure type given its name and its attribute names */
 #define HYBRIS_DEFINE_STRUCTURE( ctx, name, n, attrs ) ctx->defineType( name, n, attrs )
 
 /* macro to easily access hybris functions parameters */
-#define HYB_ARGV(i) data->at(i)
+#define HYB_ARGV(i) (data->at(i))
 /* macro to easily access hybris functions parameters number */
-#define HYB_ARGC()  data->size()
+#define HYB_ARGC()  (data->size())
+/* typed versions of HYB_ARGV macro */
+#define INT_ARGV(i)    INT_VALUE( HYB_ARGV(i) )
+#define ALIAS_ARGV(i)  ALIAS_VALUE( HYB_ARGV(i) )
+#define EXTERN_ARGV(i) EXTERN_VALUE( HYB_ARGV(i) )
+#define FLOAT_ARGV(i)  FLOAT_VALUE( HYB_ARGV(i) )
+#define CHAR_ARGV(i)   CHAR_VALUE( HYB_ARGV(i) )
+#define STRING_ARGV(i) STRING_VALUE( HYB_ARGV(i) )
+#define BINARY_ARGV(i) BINARY_VALUE( HYB_ARGV(i) )
+#define VECTOR_ARGV(i) VECTOR_VALUE( HYB_ARGV(i) )
+#define MAP_ARGV(i)    MAP_VALUE( HYB_ARGV(i) )
+#define MATRIX_ARGV(i) MATRIX_VALUE( HYB_ARGV(i) )
+#define STRUCT_ARGV(i) STRUCT_VALUE( HYB_ARGV(i) )
 
 /* macros to assert an object type */
-#define HYB_TYPE_ASSERT(o,t)      if( (o)->type != t ){ \
-                                     hyb_throw( H_ET_SYNTAX, "'%s' is not a valid variable type", Object::type_name((o)) ); \
+#define HYB_TYPE_ASSERT(o,t)      if( !(o->type->code == t) ){ \
+                                     hyb_throw( H_ET_SYNTAX, "'%s' is not a valid variable type", o->type->name ); \
                                   }
-#define HYB_TYPES_ASSERT(o,t1,t2) if( (o)->type != t1 && (o)->type != t2 ){ \
-                                     hyb_throw( H_ET_SYNTAX, "'%s' is not a valid variable type", Object::type_name((o)) ); \
+#define HYB_TYPES_ASSERT(o,t1,t2) if( !(o->type->code == t1) && !(o->type->code == t2) ){ \
+                                     hyb_throw( H_ET_SYNTAX, "'%s' is not a valid variable type", o->type->name ); \
                                   }
 
 #define HYB_TIMER_START 1
@@ -208,18 +220,18 @@ class Context {
         function_t getFunction( char *identifier );
 
         inline Object * defineType( char *name, int nattrs, char *attributes[] ){
-            Object *type = new Object();
-            unsigned int i;
+            StructureObject *type = MK_STRUCT_OBJ();
+            unsigned int     i;
 
             for( i = 0; i < nattrs; ++i ){
-                type->addAttribute( attributes[i] );
+                ob_add_attribute( (Object *)type, attributes[i] );
             }
 
-            return vtypes.add( name, type );
+            return vtypes.insert( name, (Object *)type );
         }
 
         inline void defineType( char *name, Object *type ){
-            vtypes.add( name, type );
+            vtypes.insert( name, type );
         }
 
         inline Object * getType( char *name ){

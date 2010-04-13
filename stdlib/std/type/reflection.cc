@@ -88,8 +88,8 @@ HYBRIS_DEFINE_FUNCTION(hcall){
 		unsigned int i;
 		for( i = 1; i < HYB_ARGC(); ++i ){
 			switch( HYB_ARGV(i)->type ){
-				case H_OT_INT    : call->addChild( new ConstantNode( (long)(*HYB_ARGV(i)) ) );   break;
-				case H_OT_FLOAT  : call->addChild( new ConstantNode( (double)(*HYB_ARGV(i)) ) ); break;
+				case Integer_Type    : call->addChild( new ConstantNode( (long)(*HYB_ARGV(i)) ) );   break;
+				case Float_Type  : call->addChild( new ConstantNode( (double)(*HYB_ARGV(i)) ) ); break;
 				case H_OT_CHAR   : call->addChild( new ConstantNode( (char)(*HYB_ARGV(i)) ) );   break;
 				case H_OT_STRING : call->addChild( new ConstantNode( (char *)(*HYB_ARGV(i)) ) ); break;
 

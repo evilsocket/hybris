@@ -1,0 +1,675 @@
+/*
+ * This file is part of the Hybris programming language interpreter.
+ *
+ * Copyleft of Simone Margaritelli aka evilsocket <evilsocket@gmail.com>
+ *
+ * Hybris is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Hybris is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
+*/
+#include "types.h"
+#include "common.h"
+
+#define HYB_UNIMPLEMENTED_FUNCTION 0
+
+extern void hyb_throw( H_ERROR_TYPE type, const char *format, ... );
+
+bool ob_is_type_in( Object *o, ... ){
+    va_list        ap;
+	object_type_t *ptype;
+
+	va_start( ap, o );
+	do{
+		ptype = va_arg( ap, object_type_t * );
+		if( o->type->code == ptype->code ){
+            return true;
+		}
+	}
+	while(ptype);
+	va_end(ap);
+
+	return false;
+}
+
+void ob_set_references( Object *o, int ref ){
+    if( o->type->set_references != HYB_UNIMPLEMENTED_FUNCTION ){
+        return o->type->set_references(o,ref);
+    }
+}
+
+Object* ob_clone( Object *o ){
+    if( o->type->clone != HYB_UNIMPLEMENTED_FUNCTION ){
+        return o->type->clone(o);
+    }
+    else{
+        hyb_throw( H_ET_SYNTAX, "couldn't copy the object type '%s'", o->type->name );
+    }
+}
+
+bool ob_free( Object *o ){
+    /*
+     * In any case, decrement object reference counter.
+     */
+    ob_set_references( o, -1 );
+
+    if( o->type->free != HYB_UNIMPLEMENTED_FUNCTION ){
+        o->type->free(o);
+        return true;
+    }
+    return false;
+}
+
+int ob_cmp( Object *o, Object * cmp ){
+    if( o->type->cmp != HYB_UNIMPLEMENTED_FUNCTION ){
+        return o->type->cmp(o,cmp);
+    }
+    else{
+        hyb_throw( H_ET_SYNTAX, "couldn't compare '%s' object with '%s' object", o->type->name, cmp->type->name );
+    }
+}
+
+long ob_ivalue( Object * o ){
+    if( IS_INTEGER_TYPE(o) ){
+        return INT_UPCAST(o)->value;
+    }
+    else if( o->type->ivalue != HYB_UNIMPLEMENTED_FUNCTION ){
+        return o->type->ivalue(o);
+    }
+    else if( o->type->lvalue != HYB_UNIMPLEMENTED_FUNCTION ){
+        return (long)o->type->lvalue(o);
+    }
+    else{
+        hyb_throw( H_ET_SYNTAX, "couldn't get the integer value of type '%s'", o->type->name );
+    }
+    return 0;
+}
+
+double ob_fvalue( Object *o ){
+    if( IS_FLOAT_TYPE(o) ){
+        return FLOAT_UPCAST(o)->value;
+    }
+    else if( o->type->fvalue != HYB_UNIMPLEMENTED_FUNCTION ){
+        return o->type->fvalue(o);
+    }
+    else if( o->type->ivalue != HYB_UNIMPLEMENTED_FUNCTION ){
+        return (double)o->type->ivalue(o);
+    }
+    else if( o->type->lvalue != HYB_UNIMPLEMENTED_FUNCTION ){
+        return (double)o->type->lvalue(o);
+    }
+    else{
+        hyb_throw( H_ET_SYNTAX, "couldn't get the float value of type '%s'", o->type->name );
+    }
+    return 0.0;
+}
+
+bool ob_lvalue( Object *o ){
+    if( o->type->lvalue != HYB_UNIMPLEMENTED_FUNCTION ){
+        return o->type->lvalue(o);
+    }
+    else{
+        hyb_throw( H_ET_SYNTAX, "couldn't get the logical value of the object type '%s'", o->type->name );
+    }
+}
+
+string ob_svalue( Object *o ){
+    if( o->type->svalue != HYB_UNIMPLEMENTED_FUNCTION ){
+        return o->type->svalue(o);
+    }
+    else{
+        hyb_throw( H_ET_SYNTAX, "couldn't get the string rapresentation of the object type '%s'", o->type->name );
+    }
+}
+
+void ob_print( Object *o, int tabs /* = 0 */){
+    if( o->type->print != HYB_UNIMPLEMENTED_FUNCTION ){
+        return o->type->print(o,tabs);
+    }
+    else{
+        hyb_throw( H_ET_SYNTAX, "couldn't print the object type '%s'", o->type->name );
+    }
+}
+
+void ob_input( Object *o ){
+    if( o->type->scanf != HYB_UNIMPLEMENTED_FUNCTION ){
+        return o->type->scanf(o);
+    }
+    else{
+        hyb_throw( H_ET_SYNTAX, "couldn't read the object type '%s' from stdin", o->type->name );
+    }
+}
+
+Object *ob_to_string( Object *o ){
+	if( o->type->to_string != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->to_string(o);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "couldn't convert object type '%s' to string", o->type->name );
+	}
+}
+
+Object *ob_to_int( Object *o ){
+	if( o->type->to_int != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->to_int(o);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "couldn't convert object type '%s' to int", o->type->name );
+	}
+}
+
+Object *ob_from_int( Object *o ){
+	if( o->type->from_int != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->from_int(o);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "couldn't convert object type '%s' from int", o->type->name );
+	}
+}
+
+Object *ob_from_float( Object *o ){
+    if( o->type->from_float != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->from_float(o);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "couldn't convert object type '%s' from float", o->type->name );
+	}
+}
+
+Object *ob_range( Object *a, Object *b ){
+	/*
+	 * Range ( '..' ) operator admits only integer and char operands,
+	 * both of the same type, so :
+	 *
+	 * int .. int   : OK
+	 * char .. char : OK
+	 * char .. int  : Syntax error "types must be the same for '..' operator"
+	 * ...
+	 */
+	if( ob_is_type_in( a, &Char_Type, &Integer_Type, NULL ) == false ){
+        hyb_throw( H_ET_SYNTAX, "invalid type '%s' for left operand of '..'", a->type->name );
+    }
+    else if( ob_is_type_in( b, &Char_Type, &Integer_Type, NULL ) == false ){
+        hyb_throw( H_ET_SYNTAX, "invalid type %s for right operand '..'", a->type->name );
+    }
+    else if( OB_SAME_TYPE(a,b) == false ){
+		hyb_throw( H_ET_SYNTAX, "types must be the same for '..' operator" );
+	}
+
+	if( a->type->range != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->range(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '..' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_apply_regexp( Object *a, Object *b ){
+	if( a->type->regexp != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->regexp(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '~=' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_assign( Object *a, Object *b ){
+	if( a->type->assign != HYB_UNIMPLEMENTED_FUNCTION ){
+	    /**
+	     * NOTE: If a and b are of the same type, instead of cloning b inside a,
+	     * there's only value assignation.
+	     * This is a special case because if 'b' is a collection type (and we
+	     * do not know in this function yet), we should increment the reference
+	     * counters of its inner items, so let the assign function pointer
+	     * handle this.
+	     *
+	     * TODO: Write iteration function pointers to handle such cases inside
+	     * this functions and to let specialized functions not be aware of
+	     * garbage collection details OR implement a function pointer to set
+	     * references only for a collection items.
+	     */
+		return a->type->assign(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '=' for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_factorial( Object *o ){
+	if( o->type->factorial != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->factorial(o);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '!' operator for object type '%s'", o->type->name );
+	}
+}
+
+Object *ob_increment( Object *o ){
+	if( o->type->increment != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->increment(o);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '++' operator for object type '%s'", o->type->name );
+	}
+}
+
+Object *ob_decrement( Object *o ){
+	if( o->type->decrement != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->decrement(o);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '--' operator for object type '%s'", o->type->name );
+	}
+}
+
+Object *ob_uminus( Object *o ){
+	if( o->type->minus != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->minus(o);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '-' operator for object type '%s'", o->type->name );
+	}
+}
+
+Object *ob_add( Object *a, Object *b ){
+	if( a->type->add != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->add(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '+' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_sub( Object *a, Object *b ){
+	if( a->type->sub != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->sub(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '-' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_mul( Object *a, Object *b ){
+	if( a->type->mul != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->mul(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '*' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_div( Object *a, Object *b ){
+	if( a->type->div != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->div(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '/' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_mod( Object *a, Object *b ){
+	if( a->type->mod != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->mod(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '%' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_inplace_add( Object *a, Object *b ){
+	if( a->type->inplace_add != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->inplace_add(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '+=' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_inplace_sub( Object *a, Object *b ){
+	if( a->type->inplace_sub != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->inplace_sub(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '-=' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_inplace_mul( Object *a, Object *b ){
+	if( a->type->inplace_mul != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->inplace_mul(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '*=' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_inplace_div( Object *a, Object *b ){
+	if( a->type->inplace_div != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->inplace_div(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '/=' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_inplace_mod( Object *a, Object *b ){
+	if( a->type->inplace_mod != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->inplace_mod(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '%=' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_bw_and( Object *a, Object *b ){
+	if( a->type->bw_and != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->bw_and(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '&' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_bw_or( Object *a, Object *b ){
+	if( a->type->bw_or != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->bw_or(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '|' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_bw_not( Object *o ){
+	if( o->type->bw_not != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->bw_not(o);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '~' operator for object type '%s'", o->type->name );
+	}
+}
+
+Object *ob_bw_xor( Object *a, Object *b ){
+	if( a->type->bw_xor != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->bw_xor(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '^' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_bw_lshift( Object *a, Object *b ){
+	if( a->type->bw_lshift != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->bw_lshift(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '<<' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_bw_rshift( Object *a, Object *b ){
+	if( a->type->bw_rshift != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->bw_rshift(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '>>' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_bw_inplace_and( Object *a, Object *b ){
+	if( a->type->bw_inplace_and != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->bw_inplace_and(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '&=' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_bw_inplace_or( Object *a, Object *b ){
+	if( a->type->bw_inplace_or != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->bw_inplace_or(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '|=' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_bw_inplace_xor( Object *a, Object *b ){
+	if( a->type->bw_inplace_xor != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->bw_inplace_xor(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '^=' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_bw_inplace_lshift( Object *a, Object *b ){
+	if( a->type->bw_inplace_lshift != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->bw_inplace_lshift(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '<<=' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_bw_inplace_rshift( Object *a, Object *b ){
+	if( a->type->bw_inplace_rshift != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->bw_inplace_rshift(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '>>=' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_l_not( Object *o ){
+	if( o->type->l_not != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->l_not(o);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '!' operator for object type '%s'", o->type->name );
+	}
+}
+
+Object *ob_l_same( Object *a, Object *b ){
+	if( a->type->l_same != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->l_same(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '==' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_l_diff( Object *a, Object *b ){
+	if( a->type->l_diff != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->l_diff(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '!=' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_l_less( Object *a, Object *b ){
+	if( a->type->l_less != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->l_less(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '<' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_l_greater( Object *a, Object *b ){
+	if( a->type->l_greater != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->l_greater(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '>' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_l_less_or_same( Object *a, Object *b ){
+	if( a->type->l_less_or_same != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->l_less_or_same(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '<=' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_l_greater_or_same( Object *a, Object *b ){
+	if( a->type->l_greater_or_same != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->l_greater_or_same(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '>=' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_l_or( Object *a, Object *b ){
+	if( a->type->l_or != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->l_or(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '||' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_l_and( Object *a, Object *b ){
+	if( a->type->l_and != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->l_and(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '&&' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_cl_concat( Object *a, Object *b ){
+	if( a->type->cl_concat != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->cl_concat(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '.' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_cl_inplace_concat( Object *a, Object *b ){
+	if( a->type->cl_inplace_concat != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->cl_inplace_concat(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '.=' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_cl_push( Object *a, Object *b ){
+	if( a->type->cl_push != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->cl_push(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_cl_push_reference( Object *a, Object *b ){
+	if( a->type->cl_push_reference != HYB_UNIMPLEMENTED_FUNCTION ){
+	    ob_set_references( b, +1 );
+		return a->type->cl_push_reference(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_cl_pop( Object *o ){
+	if( o->type->cl_pop != HYB_UNIMPLEMENTED_FUNCTION ){
+		Object *item = o->type->cl_pop(o);
+		ob_set_references( item, -1 );
+		return item;
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", o->type->name );
+	}
+}
+
+Object *ob_cl_remove( Object *a, Object *b ){
+	if( a->type->cl_remove != HYB_UNIMPLEMENTED_FUNCTION ){
+		Object *item = a->type->cl_remove(a,b);
+		ob_set_references( item, -1 );
+		return item;
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_cl_at( Object *a, Object *b ){
+	if( a->type->cl_at != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->cl_at(a,b);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_cl_set( Object *a, Object *b, Object *c ){
+    if( a->type->cl_set != HYB_UNIMPLEMENTED_FUNCTION ){
+		return a->type->cl_set(a,b,c);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '[] =' operator for object type '%s'", a->type->name );
+	}
+}
+
+Object *ob_cl_set_reference( Object *a, Object *b, Object *c ){
+    if( a->type->cl_set_reference != HYB_UNIMPLEMENTED_FUNCTION ){
+        ob_set_references( c, +1 );
+		return a->type->cl_set_reference(a,b,c);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "invalid '[] =' operator for object type '%s'", a->type->name );
+	}
+}
+
+void ob_add_attribute( Object *s, char *a ){
+    if( s->type->add_attribute != HYB_UNIMPLEMENTED_FUNCTION ){
+		return s->type->add_attribute(s,a);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a structure", s->type->name );
+	}
+}
+
+Object *ob_get_attribute( Object *s, char *a ){
+    if( s->type->get_attribute != HYB_UNIMPLEMENTED_FUNCTION ){
+		return s->type->get_attribute(s,a);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a structure", s->type->name );
+	}
+}
+
+void ob_set_attribute( Object *s, char *a, Object *v ){
+    if( s->type->set_attribute != HYB_UNIMPLEMENTED_FUNCTION ){
+		return s->type->set_attribute(s,a,v);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a structure", s->type->name );
+	}
+}
+
+void ob_set_attribute_reference( Object *s, char *a, Object *v ){
+    if( s->type->set_attribute_reference != HYB_UNIMPLEMENTED_FUNCTION ){
+        ob_set_references( v, +1 );
+		return s->type->set_attribute_reference(s,a,v);
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a structure", s->type->name );
+	}
+}
+

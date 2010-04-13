@@ -56,7 +56,7 @@ Node::~Node(){
     clear();
 
     if( value.m_constant != NULL ){
-        value.m_constant->release();
+        ob_free( value.m_constant );
 	}
 }
 
@@ -70,12 +70,20 @@ Node *Node::clone(){
 
     switch( m_type ){
         case H_NT_CONSTANT   :
-            switch( value.m_constant->type ){
-                case H_OT_INT    : clone = new ConstantNode( value.m_constant->value.m_integer );                    break;
-                case H_OT_FLOAT  : clone = new ConstantNode( value.m_constant->value.m_double );                  break;
-                case H_OT_CHAR   : clone = new ConstantNode( value.m_constant->value.m_char );                   break;
-                case H_OT_STRING : clone = new ConstantNode( (char *)value.m_constant->value.m_string.c_str() ); break;
+
+            if( IS_INTEGER_TYPE(value.m_constant) ){
+                clone = new ConstantNode( INT_UPCAST(value.m_constant)->value );
             }
+            else if( IS_FLOAT_TYPE(value.m_constant) ){
+                clone = new ConstantNode( FLOAT_UPCAST(value.m_constant)->value );
+            }
+            else if( IS_CHAR_TYPE(value.m_constant) ){
+                clone = new ConstantNode( CHAR_UPCAST(value.m_constant)->value );
+            }
+            else if( IS_STRING_TYPE(value.m_constant) ){
+                clone = new ConstantNode( (char *)STRING_UPCAST(value.m_constant)->value.c_str() );
+            }
+
         break;
 
         case H_NT_IDENTIFIER :
@@ -121,7 +129,7 @@ Node *Node::clone(){
 
 /* constants */
 ConstantNode::ConstantNode( long v ) : Node(H_NT_CONSTANT) {
-    value.m_constant = new Object(v);
+    value.m_constant = (Object *)MK_INT_OBJ(v);
     #ifdef GC_SUPPORT
     value.m_constant->attributes |= H_OA_CONSTANT;
     value.m_constant->attributes &= ~H_OA_GARBAGE;
@@ -129,7 +137,7 @@ ConstantNode::ConstantNode( long v ) : Node(H_NT_CONSTANT) {
 }
 
 ConstantNode::ConstantNode( double v ) : Node(H_NT_CONSTANT) {
-    value.m_constant = new Object(v);
+    value.m_constant = (Object *)MK_FLOAT_OBJ(v);
     #ifdef GC_SUPPORT
     value.m_constant->attributes |= H_OA_CONSTANT;
     value.m_constant->attributes &= ~H_OA_GARBAGE;
@@ -137,7 +145,7 @@ ConstantNode::ConstantNode( double v ) : Node(H_NT_CONSTANT) {
 }
 
 ConstantNode::ConstantNode( char v ) : Node(H_NT_CONSTANT) {
-    value.m_constant = new Object(v);
+    value.m_constant = (Object *)MK_CHAR_OBJ(v);
     #ifdef GC_SUPPORT
     value.m_constant->attributes |= H_OA_CONSTANT;
     value.m_constant->attributes &= ~H_OA_GARBAGE;
@@ -145,7 +153,7 @@ ConstantNode::ConstantNode( char v ) : Node(H_NT_CONSTANT) {
 }
 
 ConstantNode::ConstantNode( char *v ) : Node(H_NT_CONSTANT) {
-    value.m_constant = new Object(v);
+    value.m_constant = (Object *)MK_STRING_OBJ(v);
     #ifdef GC_SUPPORT
     value.m_constant->attributes |= H_OA_CONSTANT;
     value.m_constant->attributes &= ~H_OA_GARBAGE;

@@ -33,8 +33,8 @@ HYBRIS_DEFINE_FUNCTION(hmatrix){
     if( HYB_ARGC() < 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'matrix' requires at least 2 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
-    HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
+    HYB_TYPE_ASSERT( HYB_ARGV(1), Integer_Type );
 
     unsigned int     rows    = (long)(*HYB_ARGV(0)),
                      columns = (long)(*HYB_ARGV(1)),

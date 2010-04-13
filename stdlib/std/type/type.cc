@@ -55,14 +55,14 @@ HYBRIS_DEFINE_FUNCTION(hisint){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'isint' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return MK_INT_OBJ( HYB_ARGV(0)->type == H_OT_INT );
+	return MK_INT_OBJ( HYB_ARGV(0)->type == Integer_Type );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisfloat){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'isfloat' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	return MK_INT_OBJ( HYB_ARGV(0)->type == H_OT_FLOAT );
+	return MK_INT_OBJ( HYB_ARGV(0)->type == Float_Type );
 }
 
 HYBRIS_DEFINE_FUNCTION(hischar){
@@ -270,9 +270,9 @@ string Object2Xml( Object *o, unsigned int tabs = 0 ){
 
 	for( i = 0; i < tabs; ++i ){ xtabs += "\t"; }
 	switch( o->type ){
-		case H_OT_INT    : xml << xtabs << "<int>"    << o->value.m_integer << "</int>\n";    break;
+		case Integer_Type    : xml << xtabs << "<int>"    << o->value.m_integer << "</int>\n";    break;
 		case H_OT_ALIAS  : xml << xtabs << "<alias>"  << o->value.m_alias   << "</alias>\n";  break;
-		case H_OT_FLOAT  : xml << xtabs << "<float>"  << o->value.m_double  << "</float>\n";  break;
+		case Float_Type  : xml << xtabs << "<float>"  << o->value.m_double  << "</float>\n";  break;
 		case H_OT_CHAR   : xml << xtabs << "<char>"   << o->value.m_char    << "</char>\n";   break;
 		case H_OT_STRING : xml << xtabs << "<string>" << o->value.m_string  << "</string>\n"; break;
 		case H_OT_BINARY :

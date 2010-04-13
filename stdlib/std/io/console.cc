@@ -32,7 +32,7 @@ extern "C" named_function_t hybris_module_functions[] = {
 HYBRIS_DEFINE_FUNCTION(hprint){
     unsigned int i;
     for( i = 0; i < data->size(); i++ ){
-        HYB_ARGV(i)->print();
+        ob_print( HYB_ARGV(i) );
     }
     return NULL;
 }
@@ -41,7 +41,8 @@ HYBRIS_DEFINE_FUNCTION(hprintln){
     if( HYB_ARGC() ){
         unsigned int i;
         for( i = 0; i < data->size(); i++ ){
-            HYB_ARGV(i)->println();
+            ob_print( HYB_ARGV(i) );
+            printf( "\n" );
         }
     }
     else{
@@ -53,12 +54,12 @@ HYBRIS_DEFINE_FUNCTION(hprintln){
 HYBRIS_DEFINE_FUNCTION(hinput){
     Object *_return;
     if( HYB_ARGC() == 2 ){
-        HYB_ARGV(0)->print();
-        HYB_ARGV(1)->input();
+        ob_print( HYB_ARGV(0) );
+        ob_input( HYB_ARGV(1) );
         _return = HYB_ARGV(1);
     }
     else if( HYB_ARGC() == 1 ){
-        HYB_ARGV(0)->input();
+        ob_input( HYB_ARGV(0) );
         _return = HYB_ARGV(0);
     }
 	else{

@@ -50,7 +50,7 @@ HYBRIS_DEFINE_FUNCTION(husleep){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'usleep' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
 
 	struct timespec ts;
 
@@ -65,7 +65,7 @@ HYBRIS_DEFINE_FUNCTION(hsleep){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'sleep' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
 
 	struct timespec ts;
 

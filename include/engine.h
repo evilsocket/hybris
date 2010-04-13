@@ -21,16 +21,6 @@
 
 #include "hybris.h"
 
-#ifdef GC_SUPPORT
-/* determine whenever an object is garbage and not a constant */
-#   define H_IS_GARBAGE(o)      ((o->attributes & H_OA_GARBAGE)  == H_OA_GARBAGE)
-#   define H_IS_NOT_CONSTANT(o) ((o->attributes & H_OA_CONSTANT) != H_OA_CONSTANT)
-/* deallocate garbage and non constant objects */
-#   define H_FREE_GARBAGE(o) if( o != H_UNDEFINED && H_IS_GARBAGE(o) && H_IS_NOT_CONSTANT(o) ){ delete o; o = H_UNDEFINED; }
-#else
-#   define H_FREE_GARBAGE(o) // o
-#endif
-
 class Context;
 
 class Engine {
@@ -61,7 +51,7 @@ class Engine {
         Object *onFunctionCall( vframe_t *, Node *, int threaded = 0 );
         Object *onDollar( vframe_t *, Node * );
         Object *onPointer( vframe_t *, Node * );
-        Object *onObject( vframe_t *, Node * );
+    /** Object *onObject( vframe_t *, Node * ); **/
         Object *onReturn( vframe_t *, Node * );
         Object *onRange( vframe_t *, Node * );
         Object *onSubscriptAdd( vframe_t *, Node * );

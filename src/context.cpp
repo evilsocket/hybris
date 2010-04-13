@@ -33,7 +33,7 @@ string Context::mk_trace( char *function, vframe_t *frame ){
                  i_end( size - 1 );
 
     for( i = 0; i < size; ++i ){
-        trace += " " + frame->at(i)->svalue() + (i < i_end ? "," : "");
+        trace += " " + ob_svalue( frame->at(i) ) + (i < i_end ? "," : "");
     }
     trace += " )";
 
@@ -102,18 +102,18 @@ void Context::init( int argc, char *argv[] ){
     signal( SIGSEGV, Context::signal_handler );
 
     /* initialize command line arguments */
-    HYBRIS_DEFINE_CONSTANT( this, "argc",  static_cast<long>(argc - 1) );
+    HYBRIS_DEFINE_CONSTANT( this, "argc", MK_TMP_INT_OBJ(argc - 1) );
     for( i = 1; i < argc; ++i ){
         sprintf( name, "%d", i - 1 );
-        HYBRIS_DEFINE_CONSTANT( this, name, argv[i] );
+        HYBRIS_DEFINE_CONSTANT( this, name, MK_TMP_STRING_OBJ(argv[i]) );
     }
     /* initialize misc constants */
-    HYBRIS_DEFINE_CONSTANT( this, "true",  static_cast<long>(1) );
-    HYBRIS_DEFINE_CONSTANT( this, "false", static_cast<long>(0) );
+    HYBRIS_DEFINE_CONSTANT( this, "true",  MK_TMP_INT_OBJ(1) );
+    HYBRIS_DEFINE_CONSTANT( this, "false", MK_TMP_INT_OBJ(0) );
 
-    HYBRIS_DEFINE_CONSTANT( this, "__VERSION__",  VERSION );
-    HYBRIS_DEFINE_CONSTANT( this, "__LIB_PATH__", LIB_PATH );
-    HYBRIS_DEFINE_CONSTANT( this, "__INC_PATH__", INC_PATH );
+    HYBRIS_DEFINE_CONSTANT( this, "__VERSION__",  MK_TMP_STRING_OBJ(VERSION) );
+    HYBRIS_DEFINE_CONSTANT( this, "__LIB_PATH__", MK_TMP_STRING_OBJ(LIB_PATH) );
+    HYBRIS_DEFINE_CONSTANT( this, "__INC_PATH__", MK_TMP_STRING_OBJ(INC_PATH) );
 }
 
 void Context::release(){
@@ -149,6 +149,7 @@ void Context::release(){
     vmem.release();
     vcode.release();
     vtypes.release();
+    gc_release();
 }
 
 void Context::loadNamespace( string path ){

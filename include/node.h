@@ -19,7 +19,7 @@
 #ifndef _HNODE_H_
 #	define _HNODE_H_
 
-
+#include "types.h"
 #include "common.h"
 #include <vector>
 #include <list>

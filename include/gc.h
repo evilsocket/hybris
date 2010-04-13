@@ -16,50 +16,49 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef _HCOMMON_H_
-#	define _HCOMMON_H_
+#ifndef _HGC_H_
+#	define _HGC_H_
 
-#include <stdlib.h>
+#include "config.h"
+#include <memory.h>
+#include <vector>
 #include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <signal.h>
-#include <setjmp.h>
 
-#include "types.h"
+using std::vector;
 
-#define HMAXARGS 200
+/*
+ * Better be safe than sorry :P
+ */
+#ifndef size_t
+	typedef unsigned int size_t;
+#endif
 
-typedef struct {
-    char function[0xFF];
-    int  argc;
-    char argv[HMAXARGS][0xFF];
+#define GC_DEFAULT_MEMORY_THRESHOLD 100000
+
+struct _Object;
+
+typedef struct _gc_item {
+    struct _Object *pobj;
+    size_t          size;
+
+    _gc_item( struct _Object *p, size_t s ) : pobj(p), size(s) { }
 }
-function_decl_t;
+gc_item_t;
 
-typedef struct {
-    char source[0xFF];
-    char rootpath[0xFF];
-    int  stacktrace;
+typedef vector<gc_item_t *> gc_pool_t;
 
-    int           tm_timer;
-    ulong tm_start;
-    ulong tm_end;
+typedef struct _gc {
+    gc_pool_t pool;
+    size_t    items;
+    size_t    usage;
+    size_t    threshold;
+
+    _gc() : items(0), usage(0), threshold(GC_DEFAULT_MEMORY_THRESHOLD) { }
 }
-h_args_t;
+gc_t;
 
-enum H_ERROR_TYPE {
-    H_ET_WARNING = 0,
-    H_ET_GENERIC,
-    H_ET_SYNTAX
-};
-
-void yyerror( char *error );
-
-void  hyb_throw( H_ERROR_TYPE type, const char *format, ... );
-void  hyb_print_stacktrace( int force = 0 );
-int   hyb_file_exists ( char *filename );
-ulong hyb_uticks();
-void  hyb_timediff( ulong uticks, char *buffer );
+struct _Object *gc_track( struct _Object *o, size_t size );
+void            gc_collect();
+void            gc_release();
 
 #endif

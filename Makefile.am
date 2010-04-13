@@ -1,6 +1,6 @@
 CXX=g++
 WFLAGS= -w
-OPTIMIZATION= -O3 -funroll-loops -fno-rtti -fomit-frame-pointer -ffast-math -fno-stack-protector -ffunction-sections
+OPTIMIZATION= -O2 -funroll-loops -fno-rtti -fomit-frame-pointer -ffast-math -fno-stack-protector -ffunction-sections
 CFLAGS= -Iinclude/ $(WFLAGS) $(OPTIMIZATION) 
 LFLAGS= -ldl -lpcrecpp -lpthread
 LIBXML_CFLAGS= `xml2-config --cflags`
@@ -21,10 +21,20 @@ ERROR_STRING=$(ERROR_COLOR)[ERRORS]\n$(NO_COLOR)
 WARN_STRING=$(WARN_COLOR)[WARNINGS]\n$(NO_COLOR)
 
 LIBOBJ=src/context.lo \
+       src/gc.lo \
 	   src/common.lo \
 	   src/engine.lo \
 	   src/node.lo \
-	   src/object.lo \
+	   src/types.lo \
+	   src/binary.lo \
+	   src/char.lo \
+	   src/float.lo \
+	   src/integer.lo \
+	   src/map.lo \
+	   src/matrix.lo \
+	   src/string.lo \
+	   src/structure.lo \
+	   src/vector.lo \
 	   src/hashtable.lo \
 	   src/vmem.lo \
 	   src/vcode.lo \
@@ -32,13 +42,23 @@ LIBOBJ=src/context.lo \
 	   src/lexer.lo
 
 SOURCES=src/common.cpp \
+		src/gc.cpp \
 		src/lexer.cpp \
 		src/context.cpp \
 		src/hashtable.cpp \
 		src/vmem.cpp \
 		src/vcode.cpp \
 		src/node.cpp \
-		src/object.cpp \
+		src/types.cpp \
+		src/binary.cpp \
+		src/char.cpp \
+		src/float.cpp \
+		src/integer.cpp \
+		src/map.cpp \
+		src/matrix.cpp \
+		src/string.cpp \
+		src/structure.cpp \
+		src/vector.cpp \
 	    src/engine.cpp \
 	    src/parser.cpp
 
@@ -77,7 +97,7 @@ lib: $(LOBJECTS)
 	@printf "\x1b[33;01m@ Creating lib$(TARGET).so.1.0 ..."
 	@$(CXX) -shared -Wl,-soname,libhybris.so.1 -o lib$(TARGET).so.1.0 $(LIBOBJ) 2> hybris.tmp.log || touch hybris.tmp.errors
 	@if test -e hybris.tmp.errors; \
-		then printf "$(ERROR_STRING)" && cat hybris.tmp.log; \
+		then printf "$(ERROR_STRING)" && cat hybris.tmp.log && exit 1; \
 	elif test -s hybris.tmp.log; \
 		then printf "$(WARN_STRING)" && cat hybris.tmp.log; \
 	else printf "$(OK_STRING)"; \
@@ -90,7 +110,7 @@ hybris: $(OBJECTS)
 	@printf "\x1b[33;01m@ Creating $(TARGET) ..."
 	@$(CXX) src/*.o -o $(TARGET) $(CFLAGS) $(LFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
 	@if test -e hybris.tmp.errors; \
-		then printf "$(ERROR_STRING)" && cat hybris.tmp.log; \
+		then printf "$(ERROR_STRING)" && cat hybris.tmp.log && exit 1; \
 	elif test -s hybris.tmp.log; \
 		then printf "$(WARN_STRING)" && cat hybris.tmp.log; \
 	else printf "$(OK_STRING)"; \
@@ -100,10 +120,10 @@ hybris: $(OBJECTS)
 stdlib: $(STDOBJ)
 		
 .cpp.o: 
-	@printf "@ Compiling $< ..."
+	@rm -f hybris.tmp.* && printf "@ Compiling $< ..."
 	@$(CXX) -c $< -o $@ $(CFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
 	@if test -e hybris.tmp.errors; \
-		then printf "$(ERROR_STRING)" && cat hybris.tmp.log; \
+		then printf "$(ERROR_STRING)" && cat hybris.tmp.log && exit 1; \
 	elif test -s hybris.tmp.log; \
 		then printf "$(WARN_STRING)" && cat hybris.tmp.log; \
 	else printf "$(OK_STRING)"; \
@@ -111,10 +131,10 @@ stdlib: $(STDOBJ)
 	@rm -f hybris.tmp.errors hybris.tmp.log
 	
 .cpp.lo:
-	@printf "@ Compiling $< ..."
+	@rm -f hybris.tmp.* && printf "@ Compiling $< ..."
 	@$(CXX) -c $< -o $@ $(CFLAGS) -fPIC 2> hybris.tmp.log || touch hybris.tmp.errors
 	@if test -e hybris.tmp.errors; \
-		then printf "$(ERROR_STRING)" && cat hybris.tmp.log; \
+		then printf "$(ERROR_STRING)" && cat hybris.tmp.log && exit 1; \
 	elif test -s hybris.tmp.log; \
 		then printf "$(WARN_STRING)" && cat hybris.tmp.log; \
 	else printf "$(OK_STRING)"; \
@@ -122,11 +142,11 @@ stdlib: $(STDOBJ)
 	@rm -f hybris.tmp.errors hybris.tmp.log
 
 .cc.so: 
-	@printf "@ Compiling $< ..."
+	@rm -f hybris.tmp.* && printf "@ Compiling $< ..."
 	@mkdir -p `dirname $< | sed -e 's/stdlib/stdlib\/build/'`
 	@$(CXX) $< -o `dirname $< | sed -e 's/stdlib/stdlib\/build/'`/`basename $< .cc`.so $(STDLIB_CFLAGS) $(STDLIB_LFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
 	@if test -e hybris.tmp.errors; \
-		then printf "$(ERROR_STRING)" && cat hybris.tmp.log; \
+		then printf "$(ERROR_STRING)" && cat hybris.tmp.log && exit 1; \
 	elif test -s hybris.tmp.log; \
 		then printf "$(WARN_STRING)" && cat hybris.tmp.log; \
 	else printf "$(OK_STRING)"; \
@@ -149,6 +169,7 @@ clean:
 	rm -f lib$(TARGET).so
 	rm -f lib$(TARGET).so.1
 	rm -rf stdlib/build
+	rm -f hybris.tmp.*
 	
 install:
 	install -m 0755 $(TARGET) $(PREFIX)/bin/

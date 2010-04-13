@@ -20,7 +20,6 @@
 #   define _HHYBRIS_H_
 
 #include "context.h"
-#include "object.h"
 #include "vmem.h"
 #include "vcode.h"
 #include "node.h"

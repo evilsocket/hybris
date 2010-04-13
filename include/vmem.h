@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "map.h"
-#include "object.h"
+#include "types.h"
 
 /* helper macro to obtain the address of a pointer */
 #define H_ADDRESS_OF(o)      reinterpret_cast<ulong>(o)

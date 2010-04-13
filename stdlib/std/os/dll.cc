@@ -66,7 +66,7 @@ static void ctype_convert( Object *o, dll_arg_t *pa ) {
         pa->type    = &ffi_type_pointer;
         pa->value.p = H_UNDEFINED;
 	}
-    else if( o->type == H_OT_INT ){
+    else if( o->type == Integer_Type ){
 		pa->type    = &ffi_type_sint;
 		pa->value.i = o->value.m_integer;
 	}
@@ -74,7 +74,7 @@ static void ctype_convert( Object *o, dll_arg_t *pa ) {
         pa->type    = &ffi_type_schar;
         pa->value.c = o->value.m_char;
 	}
-	else if( o->type == H_OT_FLOAT ){
+	else if( o->type == Float_Type ){
 	    pa->type    = &ffi_type_double;
         pa->value.d = o->value.m_double;
 	}
@@ -105,7 +105,7 @@ HYBRIS_DEFINE_FUNCTION(hdlllink){
     if( HYB_ARGC() != 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'dlllink' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT    );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type    );
 	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
 
     void *hdll = reinterpret_cast<void *>( (long)(*HYB_ARGV(0)) );
@@ -121,7 +121,7 @@ HYBRIS_DEFINE_FUNCTION(hdllcall){
         hyb_throw( H_ET_SYNTAX, "function 'dllcall' support at max %d parameters (called with %d)", CALL_MAX_ARGS, HYB_ARGC() );
     }
 
-    HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+    HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
 
     typedef int (* function_t)(void);
     function_t function = (function_t)(long)(*HYB_ARGV(0));
@@ -176,7 +176,7 @@ HYBRIS_DEFINE_FUNCTION(hdllclose){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'dllclose' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
 
 	dlclose( (void *)(long)(*HYB_ARGV(0)) );
 

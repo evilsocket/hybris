@@ -313,7 +313,7 @@ HYBRIS_DEFINE_FUNCTION(hsha2){
 
     int is224 = SHA256;
     if( HYB_ARGC() == 2 ){
-		HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_INT );
+		HYB_TYPE_ASSERT( HYB_ARGV(1), Integer_Type );
 		is224 = HYB_ARGV(1)->value.m_integer;
 		if( is224 != SHA256 && is224 != SHA224 ){
 			 hyb_throw( H_ET_SYNTAX, "function 'sha2' admits as second parameter only SHA256 or SHA224 constants" );

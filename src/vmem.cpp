@@ -19,14 +19,11 @@
 #include "vmem.h"
 
 VirtualMemory::VirtualMemory() : Map<Object>() {
-    #ifdef MEM_DEBUG
-    printf( "[MEM DEBUG] !!! Virtual memory table initialized .\n" );
-    #endif
+
 }
 
-
 VirtualMemory::~VirtualMemory(){
-    // release();
+
 }
 
 Object *VirtualMemory::get( char *identifier ){
@@ -40,10 +37,10 @@ Object *VirtualMemory::add( char *identifier, Object *object ){
     /* if object does not exist yet, create a new one */
     if( (old = get( identifier )) == H_UNDEFINED ){
         if( object != H_UNDEFINED ){
-            o = new Object(object);
-            #ifdef GC_SUPPORT
-                o->setGarbageAttribute( ~H_OA_GARBAGE );
-            #endif
+            o = ob_clone(object);
+
+            ob_set_references( o, +1 );
+
             insert( identifier, o );
         }
         else{
@@ -53,14 +50,13 @@ Object *VirtualMemory::add( char *identifier, Object *object ){
     }
     /* else set the new value */
     else{
-        o = new Object(object);
-        #ifdef GC_SUPPORT
-            o->setGarbageAttribute( ~H_OA_GARBAGE );
-        #endif
+        o = ob_clone(object);
+
+        ob_set_references( o, +1 );
+
         replace( identifier, old, o );
 
-        // release will set the old value as garbage
-        old->release();
+        ob_free(old);
 
         return o;
     }
@@ -72,25 +68,12 @@ VirtualMemory *VirtualMemory::clone(){
     VirtualMemory *clone = new VirtualMemory;
 
     for( i = 0; i < m_elements; ++i ){
-        clone->insert( (char *)label(i), new Object( at(i) ) );
+        clone->insert( (char *)label(i), ob_clone( at(i) ) );
     }
 
     return clone;
 }
 
 void VirtualMemory::release(){
-    unsigned int i;
-    Object      *o;
-
-    for( i = 0; i < m_elements; ++i ){
-        o = at(i);
-        if( o != H_UNDEFINED && o->size ){
-            #ifdef MEM_DEBUG
-                printf( "[MEM DEBUG] !!! releasing '%s' value at 0x%X (- %d bytes)\n", Object::type_name(o), o,  o->size );
-            #endif
-            delete o;
-        }
-    }
-
     clear();
 }

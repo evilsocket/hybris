@@ -76,9 +76,9 @@ HYBRIS_DEFINE_FUNCTION(hfseek){
 	if( HYB_ARGC() != 3 ){
 		hyb_throw( H_ET_SYNTAX, "function 'fseek' requires 3 parameters (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_INT );
-	HYB_TYPE_ASSERT( HYB_ARGV(3), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), Integer_Type );
+	HYB_TYPE_ASSERT( HYB_ARGV(3), Integer_Type );
 
 	return MK_INT_OBJ( fseek( (FILE *)(long)(*HYB_ARGV(0)), (long)(*HYB_ARGV(1)), (long)(*HYB_ARGV(2)) ) );
 }
@@ -87,7 +87,7 @@ HYBRIS_DEFINE_FUNCTION(hftell){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'ftell' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
 
     return MK_INT_OBJ( ftell( (FILE *)(long)(*HYB_ARGV(0)) ) );
 }
@@ -96,11 +96,11 @@ HYBRIS_DEFINE_FUNCTION(hfsize){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'fsize' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), H_OT_INT, H_OT_STRING );
+	HYB_TYPES_ASSERT( HYB_ARGV(0), Integer_Type, H_OT_STRING );
 	int size = 0, pos;
 	FILE *fp;
 
-	if( HYB_ARGV(0)->type == H_OT_INT ){
+	if( HYB_ARGV(0)->type == Integer_Type ){
 	    fp  = (FILE *)(long)(*HYB_ARGV(0));
 		pos = ftell(fp);
 
@@ -122,7 +122,7 @@ HYBRIS_DEFINE_FUNCTION(hfsize){
 }
 
 HYBRIS_DEFINE_FUNCTION(hfread){
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
 
     Object *_return = NULL;
     if( HYB_ARGC() >= 2 ){
@@ -137,8 +137,8 @@ HYBRIS_DEFINE_FUNCTION(hfread){
 		if( HYB_ARGC() == 3 ){
 			size = (long)(*HYB_ARGV(2));
 			switch( object->type ){
-				case H_OT_INT    : read = fread( &object->value.m_integer,   1, size, fp ); break;
-				case H_OT_FLOAT  : read = fread( &object->value.m_double, 1, size, fp );    break;
+				case Integer_Type    : read = fread( &object->value.m_integer,   1, size, fp ); break;
+				case Float_Type  : read = fread( &object->value.m_double, 1, size, fp );    break;
 				case H_OT_CHAR   : read = fread( &object->value.m_char,  1, size, fp );     break;
 				case H_OT_STRING :
 					for( i = 0; i < size; i++ ){
@@ -155,8 +155,8 @@ HYBRIS_DEFINE_FUNCTION(hfread){
 		/* handle size by type */
 		else{
 			switch( object->type ){
-				case H_OT_INT    : object->size = read = fread( &object->value.m_integer,   1, sizeof(long), fp ); break;
-				case H_OT_FLOAT  : object->size = read = fread( &object->value.m_double, 1, sizeof(double), fp );  break;
+				case Integer_Type    : object->size = read = fread( &object->value.m_integer,   1, sizeof(long), fp ); break;
+				case Float_Type  : object->size = read = fread( &object->value.m_double, 1, sizeof(double), fp );  break;
 				case H_OT_CHAR   : object->size = read = fread( &object->value.m_char,  1, sizeof(char), fp );     break;
 				case H_OT_STRING :
 					while( (c = fgetc(fp)) != '\n' && c != '\r' && c != 0x00 ){
@@ -179,7 +179,7 @@ HYBRIS_DEFINE_FUNCTION(hfread){
 }
 
 HYBRIS_DEFINE_FUNCTION(hfwrite){
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
 
     Object *_return = NULL;
     if( HYB_ARGC() >= 2 ){
@@ -193,8 +193,8 @@ HYBRIS_DEFINE_FUNCTION(hfwrite){
 		if( HYB_ARGC() == 3 ){
 			size = (long)(*HYB_ARGV(2));
 			switch( object->type ){
-				case H_OT_INT    : written = fwrite( &object->value.m_integer,   1, size, fp );     break;
-				case H_OT_FLOAT  : written = fwrite( &object->value.m_double, 1, size, fp );        break;
+				case Integer_Type    : written = fwrite( &object->value.m_integer,   1, size, fp );     break;
+				case Float_Type  : written = fwrite( &object->value.m_double, 1, size, fp );        break;
 				case H_OT_CHAR   : written = fwrite( &object->value.m_char,  1, size, fp );         break;
 				case H_OT_STRING : written = fwrite( object->value.m_string.c_str(), 1, size, fp ); break;
 
@@ -204,16 +204,16 @@ HYBRIS_DEFINE_FUNCTION(hfwrite){
 		}
 		else{
 			switch( object->type ){
-				case H_OT_INT    : written = fwrite( &object->value.m_integer,   1, sizeof(long), fp );     break;
-				case H_OT_FLOAT  : written = fwrite( &object->value.m_double, 1, sizeof(double), fp );      break;
+				case Integer_Type    : written = fwrite( &object->value.m_integer,   1, sizeof(long), fp );     break;
+				case Float_Type  : written = fwrite( &object->value.m_double, 1, sizeof(double), fp );      break;
 				case H_OT_CHAR   : written = fwrite( &object->value.m_char,  1, sizeof(char), fp );         break;
 				case H_OT_STRING : written = fwrite( object->value.m_string.c_str(), 1, object->size, fp ); break;
 				case H_OT_ARRAY  :
 					for( i = 0; i < object->size; i++ ){
 						Object *element = object->value.m_array[i];
 						switch( element->type ){
-							case H_OT_INT    : written += fwrite( &element->value.m_integer,   1, sizeof(long), fp );      break;
-							case H_OT_FLOAT  : written += fwrite( &element->value.m_double, 1, sizeof(double), fp );       break;
+							case Integer_Type    : written += fwrite( &element->value.m_integer,   1, sizeof(long), fp );      break;
+							case Float_Type  : written += fwrite( &element->value.m_double, 1, sizeof(double), fp );       break;
 							case H_OT_CHAR   : written += fwrite( &element->value.m_char,  1, sizeof(char), fp );          break;
 							case H_OT_STRING : written += fwrite( element->value.m_string.c_str(), 1, element->size, fp ); break;
 
@@ -240,7 +240,7 @@ HYBRIS_DEFINE_FUNCTION(hfgets){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'fgets' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
 
 	char line[0xFFFF] = {0};
 
@@ -253,7 +253,7 @@ HYBRIS_DEFINE_FUNCTION(hfgets){
 }
 
 HYBRIS_DEFINE_FUNCTION(hfclose){
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
     if( HYB_ARGC() ){
 		fclose( (FILE *)(long)(*HYB_ARGV(0)) );
     }

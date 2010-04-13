@@ -63,7 +63,7 @@ HYBRIS_DEFINE_FUNCTION(hwait){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'wait' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
 
 	return MK_INT_OBJ( wait( &HYB_ARGV(0)->value.m_integer ) );
 }
@@ -81,7 +81,7 @@ HYBRIS_DEFINE_FUNCTION(hpopen){
 }
 
 HYBRIS_DEFINE_FUNCTION(hpclose){
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
     if( HYB_ARGC() ){
 		pclose( (FILE *)(long)(*HYB_ARGV(0)) );
     }
@@ -91,7 +91,7 @@ HYBRIS_DEFINE_FUNCTION(hpclose){
 HYBRIS_DEFINE_FUNCTION(hexit){
     int code = 0;
     if( HYB_ARGC() > 0 ){
-		HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+		HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
 		code = (long)(*HYB_ARGV(0));
 	}
 	exit(code);

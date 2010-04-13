@@ -142,7 +142,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
 	HYB_TYPE_ASSERT( HYB_ARGV(2), H_OT_MAP );
 	if( HYB_ARGC() >= 3 ){
-		HYB_TYPE_ASSERT( HYB_ARGV(3), H_OT_INT );
+		HYB_TYPE_ASSERT( HYB_ARGV(3), Integer_Type );
 	}
 
 	CURL  *cd;
@@ -246,7 +246,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp){
     if( HYB_ARGC() < 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'http' requires at least 1 parameter (called with %d)", HYB_ARGC() );
 	}
-    HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_INT );
+    HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
 
     vmem_t hdata;
     int    method = (long)(*HYB_ARGV(0)),

@@ -37,6 +37,8 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
         return H_UNDEFINED;
     }
 
+    Object *sreturn = H_UNDEFINED;
+
     switch(node->type()){
 
         /* identifier */
@@ -97,7 +99,12 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                     return onAssign( frame, node );
                 /* expression ; */
                 case T_EOSTMT  :
-                    return onEostmt( frame, node );
+                    sreturn = onEostmt( frame, node );
+                    /********************************************
+                     *          Do garbage collection.
+                     *********************************************/
+                    gc_collect();
+                    return sreturn;
                 /* return */
                 case T_RETURN :
                     return onReturn( frame, node );
@@ -107,8 +114,9 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                 /* * */
                 case T_PTR :
                     return onPointer( frame, node );
-                case T_OBJ :
+                /** TODO case T_OBJ :
                     return onObject( frame, node );
+                **/
                 /* expression .. expression */
                 case T_RANGE :
                     return onRange( frame, node );
@@ -249,15 +257,15 @@ Node * Engine::findEntryPoint( vframe_t *frame, Node *call, char *name ){
 	}
 	/* then search for a function alias */
 	Object *alias = H_UNDEFINED;
-	if( (alias = frame->get( callname )) != H_UNDEFINED && alias->type == H_OT_ALIAS ){
-	    strcpy( name, vc->label( alias->value.m_alias ) );
-		return vc->at( alias->value.m_alias );
+	if( (alias = frame->get( callname )) != H_UNDEFINED && IS_ALIAS_TYPE(alias) ){
+	    strcpy( name, vc->label( ((AliasObject *)alias)->value ) );
+		return vc->at( ((AliasObject *)alias)->value );
 	}
 	/* try to evaluate the call as an alias itself */
 	if( call->value.m_alias_call != NULL ){
 		alias = exec( frame, call->value.m_alias_call );
-		if( alias->type == H_OT_ALIAS ){
-		    strcpy( name, vc->label( alias->value.m_alias ) );
+		if( IS_ALIAS_TYPE(alias) ){
+		    strcpy( name, vc->label( ((AliasObject *)alias)->value ) );
 			return vc->find( name );
 		}
 	}
@@ -280,7 +288,7 @@ Object *Engine::onIdentifier( vframe_t *frame, Node *node ){
     if( o == H_UNDEFINED ){
         idx = vc->index( identifier );
         if( idx != -1 ){
-            o = new Object((unsigned int)idx);
+            o = (Object *)MK_ALIAS_OBJ(idx);
         }
         // identifier not found
         else{
@@ -308,18 +316,18 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
     if( owner == H_UNDEFINED ){
         hyb_throw( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
     }
-    else if( owner->type != H_OT_STRUCT ){
+    else if( IS_STRUCT_TYPE(owner) == false ){
         hyb_throw( H_ET_SYNTAX, "'%s' is not a structure identifier", identifier );
     }
 
     for( i = 0; i < attributes; ++i ){
         child_id = (char *)node->child(i)->value.m_identifier.c_str();
-        child    = owner->getAttribute( child_id );
+        child    = ob_get_attribute( owner, child_id );
 
         if( child == H_UNDEFINED ){
             hyb_throw( H_ET_SYNTAX, "'%s' is not an attribute of %s", child_id, owner_id );
         }
-        else if( child->type == H_OT_STRUCT ){
+        else if( IS_STRUCT_TYPE(child) ){
             owner    = child;
             owner_id = child_id;
         }
@@ -352,11 +360,15 @@ Object *Engine::onFunctionDeclaration( vframe_t *frame, Node *node ){
 Object *Engine::onStructureDeclaration( vframe_t *frame, Node * node ){
     int        i, attributes( node->children() );
     char      *s_name = (char *)node->value.m_identifier.c_str();
-    Object    *s      = new Object();
+    Object    *s      = (Object *)MK_STRUCT_OBJ();
 
     for( i = 0; i < attributes; ++i ){
-        s->addAttribute( (char *)node->child(i)->value.m_identifier.c_str() );
+        ob_add_attribute( s, (char *)node->child(i)->value.m_identifier.c_str() );
     }
+    /*
+     * Prevent the structure definition from being deleted by the gc.
+     */
+    s->attributes |= H_OA_CONSTANT;
 
     ctx->defineType( s_name, s );
 
@@ -381,10 +393,11 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
         /* create function stack value */
         node  = call->child(i);
         value = exec( frame, node );
-        /* prevent value from being deleted, we'll take care of it */
-        if( value != H_UNDEFINED ){
-            value->setGarbageAttribute( ~H_OA_GARBAGE );
-        }
+        /*
+         * Value references count is set to zero now, builtins
+         * do not care about reference counting, so this object will
+         * be safely freed after the function call by the gc.
+         */
         stack.insert( HANONYMOUSIDENTIFIER, value );
     }
 
@@ -393,17 +406,10 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
     /* call the function */
     result = function( ctx, &stack );
 
-    for( i = 0; i < children; i++ ){
-        value = stack.at(i);
-        if( value != H_UNDEFINED && H_IS_NOT_CONSTANT(value) ){
-            delete value;
-        }
-    }
-
     ctx->detrace();
 
     /* return function evaluation value */
-    return (result == H_UNDEFINED ? MK_INT_OBJ(0) : result);
+    return (result == H_UNDEFINED ? (Object *)MK_INT_OBJ(0) : result);
 }
 
 Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
@@ -451,11 +457,12 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
     children = call->children();
     for( i = 0; i < children; ++i ){
         value = exec( frame, call->child(i) );
-        // this creates a copy of 'value' (fixes: #0000012)
-        stack.add( (char *)identifiers[i].c_str(), value );
-        /* at this point, the original value is not necessary anymore so
-           if it meets the garbage conditions we can free it */
-        H_FREE_GARBAGE(value);
+        /*
+         * Value references count is set to zero now, builtins
+         * do not care about reference counting, so this object will
+         * be safely freed after the function call by the gc.
+         */
+        stack.insert( (char *)identifiers[i].c_str(), value );
     }
 
     ctx->trace( callname, &stack );
@@ -463,18 +470,10 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
     /* call the function */
     result = exec( &stack, function->child(body) );
 
-    for( i = 0; i < children; i++ ){
-        value = stack.at(i);
-        // 'value' is obviously defined inside the 'stack', so we can just skip null pointers
-        if( value != H_UNDEFINED  ){
-            delete value;
-        }
-    }
-
     ctx->detrace();
 
     /* return function evaluation value */
-    return (result == H_UNDEFINED ? MK_INT_OBJ(0) : result);
+    return (result == H_UNDEFINED ? (Object *)MK_INT_OBJ(0) : result);
 }
 
 Object *Engine::onTypeCall( vframe_t *frame, Node *type ){
@@ -488,23 +487,21 @@ Object *Engine::onTypeCall( vframe_t *frame, Node *type ){
         return H_UNDEFINED;
     }
 
-    structure = new Object(user_type);
+    structure = ob_clone(user_type);
 
     // init structure attributes
     if( children > 0 ){
-        if( children > structure->value.m_struct.size() ){
+        if( children > STRUCT_UPCAST(structure)->items ){
             hyb_throw( H_ET_SYNTAX, "structure '%s' has %d attributes, initialized with %d",
                                  type_name,
-                                 structure->value.m_struct.size(),
+                                 STRUCT_UPCAST(structure)->items,
                                  children );
         }
 
         for( i = 0; i < children; ++i ){
             object = exec( frame, type->child(i) );
 
-            structure->setAttribute( (char *)structure->value.m_struct[i].name.c_str(), object );
-
-            H_FREE_GARBAGE(object);
+            ob_set_attribute( structure, (char *)STRUCT_UPCAST(structure)->names[i].c_str(), object );
         }
     }
 
@@ -515,14 +512,16 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
     char    *callname         = (char *)call->value.m_call.c_str(),
              identifier[0xFF] = {0};
     vframe_t stack;
-    Node    *clone            = H_UNDEFINED;
     Object  *value            = H_UNDEFINED,
             *result           = H_UNDEFINED,
             *fn_pointer       = H_UNDEFINED;
     unsigned int children,
                  i;
-    /* we assume that dll module is already loaded */
-    function_t dllcall        = ctx->getFunction( "dllcall" );
+    /*
+     * We assume that dll module is already loaded, otherwise there shouldn't be
+     * any onDllFunctionCall call .
+     */
+    function_t dllcall = ctx->getFunction( "dllcall" );
 
     if( (fn_pointer = frame->get( callname )) == H_UNDEFINED ){
         if( threaded ){
@@ -541,15 +540,16 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
     stack.insert( HANONYMOUSIDENTIFIER, fn_pointer );
     children = call->children();
     for( i = 0; i < children; ++i ){
-        clone = call->child(i);
-        value = exec( frame, clone );
-        /* prevent value from being deleted, we'll take care of it */
-        if( value != H_UNDEFINED ){
-            value->setGarbageAttribute( ~H_OA_GARBAGE );
-        }
-
-        // create a temporary identifier to not overwrite the function pointer itself
+        value = exec( frame, call->child(i) );
+        /*
+         * Create a temporary identifier to not overwrite the function pointer itself.
+         */
         sprintf( identifier, "%s%d", HANONYMOUSIDENTIFIER, i );
+        /*
+         * Value references count is set to zero now, builtins
+         * do not care about reference counting, so this object will
+         * be safely freed after the function call by the gc.
+         */
         stack.insert( identifier, value );
     }
 
@@ -558,21 +558,14 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
     /* call the function */
     result = dllcall( ctx, &stack );
 
-    for( i = 0; i < children; i++ ){
-        value = stack.at(i);
-        if( value != H_UNDEFINED && H_IS_NOT_CONSTANT(value) ){
-            delete value;
-        }
-    }
-
     ctx->detrace();
 
     /* return function evaluation value */
-    return (result == H_UNDEFINED ? MK_INT_OBJ(0) : result);
+    return (result == H_UNDEFINED ? (Object *)MK_INT_OBJ(0) : result);
 }
 
 Object *Engine::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
-    Object *result   = H_UNDEFINED;
+    Object *result = H_UNDEFINED;
 
     /* check if function is a function */
     if( (result = onBuiltinFunctionCall( frame, call )) == H_UNDEFINED ){
@@ -596,15 +589,11 @@ Object *Engine::onDollar( vframe_t *frame, Node *node ){
            *name = H_UNDEFINED;
 
     o    = exec( frame, node->child(0) );
-    name = o->toString();
+    name = ob_to_string(o);
 
-    H_FREE_GARBAGE(o);
-
-    if( (o = frame->get( (char *)name->value.m_string.c_str() )) == H_UNDEFINED ){
-        hyb_throw( H_ET_SYNTAX, "'%s' undeclared identifier", (char *)name->value.m_string.c_str() );
+    if( (o = frame->get( (char *)STRING_UPCAST(name)->value.c_str() )) == H_UNDEFINED ){
+        hyb_throw( H_ET_SYNTAX, "'%s' undeclared identifier", STRING_UPCAST(name)->value.c_str() );
     }
-
-    H_FREE_GARBAGE(name);
 
     return o;
 }
@@ -614,13 +603,12 @@ Object *Engine::onPointer( vframe_t *frame, Node *node ){
            *res = H_UNDEFINED;
 
     o   = exec( frame, node->child(0) );
-    res = new Object( (unsigned int)( H_ADDRESS_OF(o) ) );
-
-    H_FREE_GARBAGE(o);
+    res = (Object *)PTR_TO_INT_OBJ(o);
 
     return res;
 }
-
+/**
+TODO:
 Object *Engine::onObject( vframe_t *frame, Node *node ){
     Object *o   = H_UNDEFINED,
            *res = H_UNDEFINED;
@@ -628,16 +616,11 @@ Object *Engine::onObject( vframe_t *frame, Node *node ){
     o   = exec( frame, node->child(0) );
     res = o->getObject();
 
-    H_FREE_GARBAGE(o);
-
     return res;
 }
-
+**/
 Object *Engine::onReturn( vframe_t *frame, Node *node ){
-    Object *o = H_UNDEFINED;
-
-    o = exec(  frame, node->child(0) );
-    return o;
+    return exec(  frame, node->child(0) );
 }
 
 Object *Engine::onRange( vframe_t *frame, Node *node ){
@@ -647,10 +630,7 @@ Object *Engine::onRange( vframe_t *frame, Node *node ){
 
     from  = exec( frame, node->child(0) );
     to    = exec( frame, node->child(1) );
-    range = from->range( to );
-
-    H_FREE_GARBAGE(from);
-    H_FREE_GARBAGE(to);
+    range = ob_range( from, to );
 
     return range;
 }
@@ -662,10 +642,7 @@ Object *Engine::onSubscriptAdd( vframe_t *frame, Node *node ){
 
     array  = exec( frame, node->child(0) );
     object = exec( frame, node->child(1) );
-    res    = array->push(object);
-
-    H_FREE_GARBAGE(array);
-    H_FREE_GARBAGE(object);
+    res    = ob_cl_push( array, object );
 
     return res;
 }
@@ -680,18 +657,17 @@ Object *Engine::onSubscriptGet( vframe_t *frame, Node *node ){
         identifier    = exec( frame, node->child(0) );
         array         = exec( frame, node->child(1) );
         index         = exec( frame, node->child(2) );
-        (*identifier) = array->at( index );
-        result        = identifier;
 
-        H_FREE_GARBAGE(array);
+        ob_assign( identifier,
+                    ob_cl_at( array, index )
+                  );
+        result        = identifier;
     }
     else{
         array  = exec( frame, node->child(0) );
         index  = exec( frame, node->child(1) );
-        result = array->at( index );
+        result = ob_cl_at( array, index );
     }
-
-    H_FREE_GARBAGE(index);
 
     return result;
 }
@@ -705,10 +681,7 @@ Object *Engine::onSubscriptSet( vframe_t *frame, Node *node ){
     index  = exec( frame, node->child(1) );
     object = exec( frame, node->child(2) );
 
-    array->at( index, object );
-
-    H_FREE_GARBAGE(object);
-    H_FREE_GARBAGE(index);
+    ob_cl_set( array, index, object );
 
     return array;
 }
@@ -723,12 +696,9 @@ Object *Engine::onWhile( vframe_t *frame, Node *node ){
     condition = node->child(0);
     body      = node->child(1);
 
-    while( (boolean = exec(  frame, condition ))->lvalue() ){
+    while( ob_lvalue( (boolean = exec(  frame, condition )) ) ){
         result = exec( frame, body );
-        H_FREE_GARBAGE(result);
-        H_FREE_GARBAGE(boolean);
     }
-    H_FREE_GARBAGE(boolean);
 
     return H_UNDEFINED;
 }
@@ -744,13 +714,8 @@ Object *Engine::onDo( vframe_t *frame, Node *node ){
     condition = node->child(1);
     do{
         result = exec( frame, body );
-        H_FREE_GARBAGE(result);
-        H_FREE_GARBAGE(boolean);
     }
-    while( (boolean = exec(  frame, condition ))->lvalue() );
-
-    H_FREE_GARBAGE(result);
-    H_FREE_GARBAGE(boolean);
+    while( ob_lvalue( (boolean = exec(  frame, condition )) ) );
 
     return H_UNDEFINED;
 }
@@ -770,17 +735,10 @@ Object *Engine::onFor( vframe_t *frame, Node *node ){
     increment = node->child(2);
     body      = node->child(3);
     for( init;
-         (boolean = exec(  frame, condition ))->lvalue();
+         ob_lvalue( (boolean = exec(  frame, condition )) );
          (inc     = exec(  frame, increment )) ){
         result = exec( frame, body );
-        H_FREE_GARBAGE(result);
-        H_FREE_GARBAGE(boolean);
-        H_FREE_GARBAGE(inc);
     }
-
-    H_FREE_GARBAGE(boolean);
-    H_FREE_GARBAGE(inc);
-    H_FREE_GARBAGE(init);
 
     return H_UNDEFINED;
 }
@@ -795,15 +753,12 @@ Object *Engine::onForeach( vframe_t *frame, Node *node ){
     identifier = (char *)node->child(0)->value.m_identifier.c_str();
     map        = exec( frame, node->child(1) );
     body       = node->child(2);
-    size       = map->value.m_array.size();
+    size       = MAP_UPCAST(map)->items;
 
     for( i = 0; i < size; ++i ){
-        frame->add( identifier, map->value.m_array[i] );
+        frame->add( identifier, MAP_UPCAST(map)->keys[i] );
         result = exec( frame, body );
-        H_FREE_GARBAGE(result);
     }
-
-    H_FREE_GARBAGE(map);
 
     return H_UNDEFINED;
 }
@@ -820,16 +775,13 @@ Object *Engine::onForeachm( vframe_t *frame, Node *node ){
     value_identifier = (char *)node->child(1)->value.m_identifier.c_str();
     map              = exec( frame, node->child(2) );
     body             = node->child(3);
-    size             = map->value.m_map.size();
+    size             = MAP_UPCAST(map)->items;
 
     for( i = 0; i < size; ++i ){
-        frame->add( key_identifier,   map->value.m_map[i] );
-        frame->add( value_identifier, map->value.m_array[i] );
+        frame->add( key_identifier,   MAP_UPCAST(map)->keys[i] );
+        frame->add( value_identifier, MAP_UPCAST(map)->values[i] );
         result = exec(  frame, body );
-        H_FREE_GARBAGE(result);
     }
-
-    H_FREE_GARBAGE(map);
 
     return H_UNDEFINED;
 }
@@ -840,16 +792,13 @@ Object *Engine::onIf( vframe_t *frame, Node *node ){
 
     boolean = exec(  frame, node->child(0) );
 
-    if( boolean->lvalue() ){
+    if( ob_lvalue(boolean) ){
         result = exec( frame, node->child(1) );
     }
     /* handle else case */
     else if( node->children() > 2 ){
         result = exec( frame, node->child(2) );
     }
-
-    H_FREE_GARBAGE(boolean);
-    H_FREE_GARBAGE(result);
 
     return H_UNDEFINED;
 }
@@ -860,14 +809,12 @@ Object *Engine::onQuestion( vframe_t *frame, Node *node ){
 
     boolean = exec(  frame, node->child(0) );
 
-    if( boolean->lvalue() ){
+    if( ob_lvalue(boolean) ){
         result = exec( frame, node->child(1) );
     }
     else{
         result = exec( frame, node->child(2) );
     }
-
-    H_FREE_GARBAGE(boolean);
 
     return result;
 }
@@ -890,16 +837,11 @@ Object *Engine::onSwitch( vframe_t *frame, Node *node){
 
         if( case_node != H_UNDEFINED && stmt_node != H_UNDEFINED ){
             compare = exec( frame, case_node );
-            if( target->equals(compare) ){
-                H_FREE_GARBAGE(compare);
-                H_FREE_GARBAGE(target);
+            if( ob_cmp( target, compare ) == 0 ){
                 return exec( frame, stmt_node );
             }
-            H_FREE_GARBAGE(compare);
         }
     }
-
-    H_FREE_GARBAGE(target);
 
     // exec default case
     if( node->value.m_default != H_UNDEFINED ){
@@ -916,8 +858,6 @@ Object *Engine::onEostmt( vframe_t *frame, Node *node ){
     res_1 = exec( frame, node->child(0) );
     res_2 = exec( frame, node->child(1) );
 
-    H_FREE_GARBAGE(res_1);
-
     return res_2;
 }
 
@@ -928,10 +868,7 @@ Object *Engine::onDot( vframe_t *frame, Node *node ){
 
     a      = exec( frame, node->child(0) );
     b      = exec( frame, node->child(1) );
-    result = a->dot( b );
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    result = ob_cl_concat( a, b );
 
     return result;
 }
@@ -943,10 +880,7 @@ Object *Engine::onDote( vframe_t *frame, Node *node ){
 
     a      = exec( frame, node->child(0) );
     b      = exec( frame, node->child(1) );
-    result = a->dotequal( b );
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    result = ob_cl_inplace_concat( a, b );
 
     return result;
 }
@@ -965,10 +899,8 @@ Object *Engine::onAssign( vframe_t *frame, Node *node ){
         object = exec( frame, node->child(0) );
         value  = exec( frame, node->child(1) );
 
-        object->assign(value);
+        ob_assign( object, value );
     }
-
-    H_FREE_GARBAGE(value);
 
     return object;
 }
@@ -978,9 +910,7 @@ Object *Engine::onUminus( vframe_t *frame, Node *node ){
            *result = H_UNDEFINED;
 
     o      = exec( frame, node->child(0) );
-    result = -(*o);
-
-    H_FREE_GARBAGE(o);
+    result = ob_uminus(o);
 
     return result;
 }
@@ -992,10 +922,7 @@ Object *Engine::onRegex( vframe_t *frame, Node *node ){
 
     o      = exec(  frame, node->child(0) );
     regexp = exec(  frame, node->child(1) );
-    result = o->regexp(regexp);
-
-    H_FREE_GARBAGE(o);
-    H_FREE_GARBAGE(regexp);
+    result = ob_apply_regexp( o, regexp );
 
     return result;
 }
@@ -1007,10 +934,7 @@ Object *Engine::onPlus( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) + b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_add( a, b );
 
     return c;
 }
@@ -1022,9 +946,7 @@ Object *Engine::onPluse( vframe_t *frame, Node *node ){
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
-    (*a) += b;
-
-    H_FREE_GARBAGE(b);
+    ob_inplace_add( a, b );
 
     return a;
 }
@@ -1036,10 +958,7 @@ Object *Engine::onMinus( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) - b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_sub( a, b );
 
     return c;
 }
@@ -1051,9 +970,7 @@ Object *Engine::onMinuse( vframe_t *frame, Node *node ){
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
-    (*a) -= b;
-
-    H_FREE_GARBAGE(b);
+    ob_inplace_sub( a, b );
 
     return a;
 }
@@ -1065,10 +982,7 @@ Object *Engine::onMul( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) * b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_mul( a, b );
 
     return c;
 }
@@ -1080,9 +994,7 @@ Object *Engine::onMule( vframe_t *frame, Node *node ){
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
-    (*a) *= b;
-
-    H_FREE_GARBAGE(b);
+    ob_inplace_mul( a, b );
 
     return a;
 }
@@ -1094,10 +1006,7 @@ Object *Engine::onDiv( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) / b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_div( a, b );
 
     return c;
 }
@@ -1109,9 +1018,7 @@ Object *Engine::onDive( vframe_t *frame, Node *node ){
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
-    (*a) /= b;
-
-    H_FREE_GARBAGE(b);
+    ob_inplace_div( a, b );
 
     return a;
 }
@@ -1123,10 +1030,7 @@ Object *Engine::onMod( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) % b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_mod( a, b );
 
     return c;
 }
@@ -1138,9 +1042,7 @@ Object *Engine::onMode( vframe_t *frame, Node *node ){
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
-    (*a) %= b;
-
-    H_FREE_GARBAGE(b);
+    ob_inplace_mod( a, b );
 
     return a;
 }
@@ -1149,7 +1051,9 @@ Object *Engine::onInc( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
     o = exec( frame, node->child(0) );
-    ++(*o);
+
+    ob_increment(o);
+
     return o;
 }
 
@@ -1157,7 +1061,9 @@ Object *Engine::onDec( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
     o = exec( frame, node->child(0) );
-    --(*o);
+
+    ob_decrement(o);
+
     return o;
 }
 
@@ -1168,10 +1074,7 @@ Object *Engine::onXor( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) ^ b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_bw_xor( a, b );
 
     return c;
 }
@@ -1183,9 +1086,7 @@ Object *Engine::onXore( vframe_t *frame, Node *node ){
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
-    (*a) ^= b;
-
-    H_FREE_GARBAGE(b);
+    ob_bw_inplace_xor( a, b );
 
     return a;
 }
@@ -1197,10 +1098,7 @@ Object *Engine::onAnd( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) & b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_bw_and( a, b );
 
     return c;
 }
@@ -1212,9 +1110,7 @@ Object *Engine::onAnde( vframe_t *frame, Node *node ){
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
-    (*a) &= b;
-
-    H_FREE_GARBAGE(b);
+    ob_bw_inplace_and( a, b );
 
     return a;
 }
@@ -1226,10 +1122,7 @@ Object *Engine::onOr( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) | b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_bw_or( a, b );
 
     return c;
 }
@@ -1241,9 +1134,7 @@ Object *Engine::onOre( vframe_t *frame, Node *node ){
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
-    (*a) |= b;
-
-    H_FREE_GARBAGE(b);
+    ob_bw_inplace_or( a, b );
 
     return a;
 }
@@ -1255,10 +1146,7 @@ Object *Engine::onShiftl( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) << b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_bw_lshift( a, b );
 
     return c;
 }
@@ -1270,9 +1158,7 @@ Object *Engine::onShiftle( vframe_t *frame, Node *node ){
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
-    (*a) <<= b;
-
-    H_FREE_GARBAGE(b);
+    ob_bw_inplace_lshift( a, b );
 
     return a;
 }
@@ -1284,10 +1170,7 @@ Object *Engine::onShiftr( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) >> b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_bw_rshift( a, b );
 
     return c;
 }
@@ -1299,9 +1182,7 @@ Object *Engine::onShiftre( vframe_t *frame, Node *node ){
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
 
-    (*a) >>= b;
-
-    H_FREE_GARBAGE(b);
+    ob_bw_inplace_rshift( a, b );
 
     return a;
 }
@@ -1311,9 +1192,7 @@ Object *Engine::onFact( vframe_t *frame, Node *node ){
            *r = H_UNDEFINED;
 
     o = exec(  frame, node->child(0) );
-    r = o->factorial();
-
-    H_FREE_GARBAGE(o);
+    r = ob_factorial(o);
 
     return r;
 }
@@ -1323,9 +1202,7 @@ Object *Engine::onNot( vframe_t *frame, Node *node ){
            *r = H_UNDEFINED;
 
     o = exec(  frame, node->child(0) );
-    r = ~(*o);
-
-    H_FREE_GARBAGE(o);
+    r = ob_bw_not(o);
 
     return r;
 }
@@ -1335,9 +1212,7 @@ Object *Engine::onLnot( vframe_t *frame, Node *node ){
            *r = H_UNDEFINED;
 
     o = exec(  frame, node->child(0) );
-    r = o->lnot();
-
-    H_FREE_GARBAGE(o);
+    r = ob_l_not(o);
 
     return r;
 }
@@ -1349,10 +1224,7 @@ Object *Engine::onLess( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) < b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_l_less( a, b );
 
     return c;
 }
@@ -1364,10 +1236,7 @@ Object *Engine::onGreater( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) > b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_l_greater( a, b );
 
     return c;
 }
@@ -1379,10 +1248,7 @@ Object *Engine::onGe( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) >= b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_l_greater_or_same( a, b );
 
     return c;
 }
@@ -1394,10 +1260,7 @@ Object *Engine::onLe( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) <= b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_l_less_or_same( a, b );
 
     return c;
 }
@@ -1409,10 +1272,7 @@ Object *Engine::onNe( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) != b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_l_diff( a, b );
 
     return c;
 }
@@ -1424,10 +1284,7 @@ Object *Engine::onEq( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) == b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_l_same( a, b );
 
     return c;
 }
@@ -1439,10 +1296,7 @@ Object *Engine::onLand( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) && b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_l_and( a, b );
 
     return c;
 }
@@ -1454,10 +1308,7 @@ Object *Engine::onLor( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
     b = exec( frame, node->child(1) );
-    c = (*a) || b;
-
-    H_FREE_GARBAGE(a);
-    H_FREE_GARBAGE(b);
+    c = ob_l_or( a, b );
 
     return c;
 }
