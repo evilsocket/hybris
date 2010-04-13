@@ -25,6 +25,26 @@
 #include <stdio.h>
 
 using std::vector;
+/*
+ * This is the new (and hopefully the last one) garbage
+ * collector implementation.
+ * The algorithm it's easy and to its job, simply tracks
+ * every referencing to an object or deferencing to it,
+ * thant increments or decrements the 'ref' value of the
+ * object_type_t structure.
+ *
+ * When the global memory usage is >= the threshold down 
+ * below, the gc will be triggered and will loop the entire 
+ * allocated objects collection searching for objects with
+ * "ref" <= 0 that are not constants, then the gc dealloc's
+ * them and removes them from its pool.
+ *
+ * NOTE:
+ * To make this work, ALL the new objects should be passed
+ * instantly to the gc_track function.
+ * No manually deletion is necessary.
+ */
+#define GC_DEFAULT_MEMORY_THRESHOLD 100000
 
 /*
  * Better be safe than sorry :P
@@ -33,10 +53,14 @@ using std::vector;
 	typedef unsigned int size_t;
 #endif
 
-#define GC_DEFAULT_MEMORY_THRESHOLD 100000
-
 struct _Object;
-
+/*
+ * This structure represent an item in the gc 
+ * pool.
+ *
+ * pobj : Is a pointer to the object to track.
+ * size : The size of the object itself.
+ */
 typedef struct _gc_item {
     struct _Object *pobj;
     size_t          size;
@@ -46,7 +70,14 @@ typedef struct _gc_item {
 gc_item_t;
 
 typedef vector<gc_item_t *> gc_pool_t;
-
+/*
+ * Main gc structure, kinda of the "head" of the pool.
+ *
+ * pool		 : Tracked objects vector.
+ * items	 : Number of items in the pool.
+ * usage	 : Global memory usage, in bytes.
+ * threshold : If usage >= this, the gc is triggered.
+ */
 typedef struct _gc {
     gc_pool_t pool;
     size_t    items;
@@ -57,8 +88,22 @@ typedef struct _gc {
 }
 gc_t;
 
+/* 
+ * Add an object to the gc pool and start to track
+ * it for reference changes.
+ * Size must be passed explicitly due to the downcasting
+ * possibility.
+ */
 struct _Object *gc_track( struct _Object *o, size_t size );
+/*
+ * Fire the collection routines if the memory usage is
+ * above the threshold.
+ */
 void            gc_collect();
+/*
+ * Release all the pool and its contents, should be
+ * used when the program is exiting, not before.
+ */
 void            gc_release();
 
 #endif
