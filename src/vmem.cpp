@@ -68,7 +68,7 @@ VirtualMemory *VirtualMemory::clone(){
     VirtualMemory *clone = new VirtualMemory;
 
     for( i = 0; i < m_elements; ++i ){
-        clone->insert( (char *)label(i), ob_clone( at(i) ) );
+        clone->add( (char *)label(i), at(i) );
     }
 
     return clone;
