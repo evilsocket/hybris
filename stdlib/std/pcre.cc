@@ -34,10 +34,10 @@ HYBRIS_DEFINE_FUNCTION(hrex_match){
 	if( HYB_ARGC() != 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'rex_match' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
 
-	string rawreg  = HYB_ARGV(0)->value.m_string,
+	string rawreg  = STRING_ARGV(0),
 		   subject = HYB_ARGV(1)->value.m_string,
 		   regex;
 	int    opts;
@@ -54,10 +54,10 @@ HYBRIS_DEFINE_FUNCTION(hrex_matches){
 	if( HYB_ARGC() != 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'rex_matches' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
 
-	string rawreg  = HYB_ARGV(0)->value.m_string,
+	string rawreg  = STRING_ARGV(0),
 		   subject = HYB_ARGV(1)->value.m_string,
 		   regex;
 	int    opts, i = 0;
@@ -84,13 +84,13 @@ HYBRIS_DEFINE_FUNCTION(hrex_replace){
 	if( HYB_ARGC() != 3 ){
 		hyb_throw( H_ET_SYNTAX, "function 'rex_replace' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
-	HYB_TYPES_ASSERT( HYB_ARGV(2), H_OT_STRING, H_OT_CHAR );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
+	HYB_TYPES_ASSERT( HYB_ARGV(2), otString, otChar );
 
 	string rawreg  = (const char *)(*HYB_ARGV(0)),
 		   subject = (const char *)(*HYB_ARGV(1)),
-		   replace = (HYB_ARGV(2)->type == H_OT_STRING ? (const char *)(*HYB_ARGV(2)) : string("") + (char)(*HYB_ARGV(2))),
+		   replace = (HYB_ARGV(2)->type == otString ? (const char *)(*HYB_ARGV(2)) : string("") + (char)(*HYB_ARGV(2))),
 		   regex;
 	int    opts;
 

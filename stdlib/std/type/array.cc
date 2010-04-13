@@ -35,9 +35,9 @@ extern "C" named_function_t hybris_module_functions[] = {
 
 HYBRIS_DEFINE_FUNCTION(harray){
 	unsigned int i;
-	Object *array = MK_COLLECTION_OBJ();
-	for( i = 0; i < data->size(); i++ ){
-		array->push( HYB_ARGV(i) );
+	Object *array = OB_DOWNCAST( MK_VECTOR_OBJ() );
+	for( i = 0; i < data->size(); ++i ){
+		ob_cl_push( array, HYB_ARGV(i) );
 	}
 	return array;
 }
@@ -46,45 +46,45 @@ HYBRIS_DEFINE_FUNCTION(helements){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'elements' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_ARRAY );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otVector );
 
-    return MK_INT_OBJ( HYB_ARGV(0)->value.m_array.size() );
+    return OB_DOWNCAST( MK_INT_OBJ( VECTOR_ARGV(0)->items ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hpop){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'pop' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_ARRAY );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otVector );
 
-	return HYB_ARGV(0)->pop();
+	return ob_cl_pop( HYB_ARGV(0) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hremove){
 	if( HYB_ARGC() != 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'remove' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_ARRAY );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otVector );
 
-	return HYB_ARGV(0)->remove(HYB_ARGV(1));
+	return ob_cl_remove( HYB_ARGV(0), HYB_ARGV(1) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hcontains){
 	if( HYB_ARGC() != 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'contains' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_ARRAY );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otVector );
 
 	Object *array = HYB_ARGV(0),
            *find  = HYB_ARGV(1);
 	unsigned int i;
 
-	for( i = 0; i < array->value.m_array.size(); i++ ){
-		if( array->value.m_array[i]->equals(find) ){
-			return MK_INT_OBJ(i);
+	for( i = 0; i < VECTOR_UPCAST(array)->items; i++ ){
+		if( ob_cmp( VECTOR_UPCAST(array)->value[i], find ) == 0 ){
+			return OB_DOWNCAST( MK_INT_OBJ(i) );
 		}
 	}
 
-	return MK_INT_OBJ(-1);
+	return OB_DOWNCAST( MK_INT_OBJ(-1) );
 }
 

@@ -86,7 +86,7 @@ Object * float_to_int( Object *me ){
 }
 
 Object * float_from_int( Object *me ){
-    return (Object *)MK_FLOAT_OBJ( INT_UPCAST(me)->value );
+    return (Object *)MK_FLOAT_OBJ( (INT_UPCAST(me))->value );
 }
 
 Object * float_from_float( Object *me ){

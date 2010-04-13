@@ -40,9 +40,9 @@ HYBRIS_DEFINE_FUNCTION(hmap){
 		hyb_throw( H_ET_SYNTAX, "function 'map' requires an even number of parameters (called with %d)", HYB_ARGC() );
 	}
 	unsigned int i;
-	Object *map = MK_COLLECTION_OBJ();
+	Object *map = OB_DOWNCAST( MK_MAP_OBJ() );
 	for( i = 0; i < data->size(); i += 2 ){
-		map->map( HYB_ARGV(i), HYB_ARGV(i + 1) );
+		ob_cl_set( map, HYB_ARGV(i), HYB_ARGV(i + 1) );
 	}
 	return map;
 }
@@ -51,62 +51,63 @@ HYBRIS_DEFINE_FUNCTION(hmapelements){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'mapelements' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MAP );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otMap );
 
-    return MK_INT_OBJ( HYB_ARGV(0)->value.m_map.size() );
+    return OB_DOWNCAST( MK_INT_OBJ( MAP_UPCAST(HYB_ARGV(0))->items ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hmappop){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'mappop' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MAP );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otMap );
 
-	return HYB_ARGV(0)->mapPop();
+	return ob_cl_pop( HYB_ARGV(0) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hunmap){
 	if( HYB_ARGC() != 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'unmap' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MAP );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otMap );
 
-	return HYB_ARGV(0)->unmap(HYB_ARGV(1));
+	return ob_cl_remove( HYB_ARGV(0), HYB_ARGV(1) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hismapped){
 	if( HYB_ARGC() != 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'ismapped' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MAP );
-	Object *map   = HYB_ARGV(0),
-           *find  = HYB_ARGV(1);
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otMap );
+
+	Object *map  = HYB_ARGV(0),
+           *find = HYB_ARGV(1);
 	unsigned int i;
 
-	for( i = 0; i < map->value.m_array.size(); i++ ){
-		if( map->value.m_array[i]->equals(find) ){
-			return MK_INT_OBJ(i);
+	for( i = 0; i < MAP_UPCAST(map)->items; ++i ){
+		if( ob_cmp( MAP_UPCAST(map)->values[i], find ) == 0 ){
+			return OB_DOWNCAST( MK_INT_OBJ(i) );
 		}
 	}
 
-	return MK_INT_OBJ(-1);
+	return OB_DOWNCAST( MK_INT_OBJ(-1) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hhaskey){
 	if( HYB_ARGC() != 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'haskey' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MAP );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otMap );
 
 	Object *map = HYB_ARGV(0),
-           *key = HYB_ARGV(1);
+	       *key = HYB_ARGV(1);
 	unsigned int i;
 
-	for( i = 0; i < map->value.m_map.size(); i++ ){
-		if( map->value.m_map[i]->equals(key) ){
-			return MK_INT_OBJ(i);
+	for( i = 0; i < MAP_UPCAST(map)->items; ++i ){
+		if( ob_cmp( MAP_UPCAST(map)->keys[i], key ) == 0 ){
+			return OB_DOWNCAST( MK_INT_OBJ(i) );
 		}
 	}
 
-	return MK_INT_OBJ(-1);
+	return OB_DOWNCAST( MK_INT_OBJ(-1) );
 }

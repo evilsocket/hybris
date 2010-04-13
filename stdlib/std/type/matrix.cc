@@ -33,11 +33,11 @@ HYBRIS_DEFINE_FUNCTION(hmatrix){
     if( HYB_ARGC() < 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'matrix' requires at least 2 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
-    HYB_TYPE_ASSERT( HYB_ARGV(1), Integer_Type );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
+    HYB_TYPE_ASSERT( HYB_ARGV(1), otInteger );
 
-    unsigned int     rows    = (long)(*HYB_ARGV(0)),
-                     columns = (long)(*HYB_ARGV(1)),
+    unsigned int     rows    = INT_ARGV(0),
+                     columns = INT_ARGV(1),
                      nvalues = HYB_ARGC() - 2,
                      i;
     vector<Object *> values;
@@ -46,28 +46,28 @@ HYBRIS_DEFINE_FUNCTION(hmatrix){
         hyb_throw( H_ET_SYNTAX, "unexpected number of values for the matrix, expected %d (%dx%d), given %d", rows*columns, rows, columns, nvalues );
     }
 
-    for( i = 2; i < data->size(); i++ ){
-        values.push_back( MK_CLONE_OBJ( HYB_ARGV(i) ) );
+    for( i = 2; i < data->size(); ++i ){
+        values.push_back( ob_clone( HYB_ARGV(i) ) );
     }
 
-    return new Object( rows, columns, values );
+    return OB_DOWNCAST( MK_MATRIX_OBJ( rows, columns, values ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hcolumns){
     if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'columns' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MATRIX );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otMatrix );
 
-	return MK_INT_OBJ( HYB_ARGV(0)->value.m_columns );
+	return OB_DOWNCAST( MK_INT_OBJ( MATRIX_ARGV(0)->columns ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hrows){
     if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'rows' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_MATRIX );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otMatrix );
 
-	return MK_INT_OBJ( HYB_ARGV(0)->value.m_rows );
+	return OB_DOWNCAST( MK_INT_OBJ( MATRIX_ARGV(0)->rows ) );
 }
 

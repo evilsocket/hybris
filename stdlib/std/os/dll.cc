@@ -66,11 +66,11 @@ static void ctype_convert( Object *o, dll_arg_t *pa ) {
         pa->type    = &ffi_type_pointer;
         pa->value.p = H_UNDEFINED;
 	}
-    else if( o->type == Integer_Type ){
+    else if( o->type == otInteger ){
 		pa->type    = &ffi_type_sint;
 		pa->value.i = o->value.m_integer;
 	}
-	else if( o->type == H_OT_CHAR ){
+	else if( o->type == otChar ){
         pa->type    = &ffi_type_schar;
         pa->value.c = o->value.m_char;
 	}
@@ -78,7 +78,7 @@ static void ctype_convert( Object *o, dll_arg_t *pa ) {
 	    pa->type    = &ffi_type_double;
         pa->value.d = o->value.m_double;
 	}
-    else if( o->type == H_OT_STRING ){
+    else if( o->type == otString ){
 		pa->type    = &ffi_type_pointer;
 		pa->value.p = (void *)o->value.m_string.c_str();
 	}
@@ -96,7 +96,7 @@ HYBRIS_DEFINE_FUNCTION(hdllopen){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'dllopen' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
 
     return PTR_TO_INT_OBJ( dlopen( (const char *)(*HYB_ARGV(0)), RTLD_LAZY ) );
 }
@@ -105,8 +105,8 @@ HYBRIS_DEFINE_FUNCTION(hdlllink){
     if( HYB_ARGC() != 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'dlllink' requires 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type    );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger    );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
 
     void *hdll = reinterpret_cast<void *>( (long)(*HYB_ARGV(0)) );
 
@@ -121,7 +121,7 @@ HYBRIS_DEFINE_FUNCTION(hdllcall){
         hyb_throw( H_ET_SYNTAX, "function 'dllcall' support at max %d parameters (called with %d)", CALL_MAX_ARGS, HYB_ARGC() );
     }
 
-    HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
+    HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
 
     typedef int (* function_t)(void);
     function_t function = (function_t)(long)(*HYB_ARGV(0));
@@ -176,7 +176,7 @@ HYBRIS_DEFINE_FUNCTION(hdllclose){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'dllclose' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
 
 	dlclose( (void *)(long)(*HYB_ARGV(0)) );
 

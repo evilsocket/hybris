@@ -25,12 +25,12 @@ void int_set_references( Object *me, int ref ){
 }
 
 Object *int_clone( Object *me ){
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value );
 }
 
 int int_cmp( Object *me, Object *cmp ){
     long ivalue = ob_ivalue(cmp),
-         mvalue = INT_UPCAST(me)->value;
+         mvalue = (INT_UPCAST(me))->value;
 
     if( mvalue == ivalue ){
         return 0;
@@ -44,19 +44,19 @@ int int_cmp( Object *me, Object *cmp ){
 }
 
 long int_ivalue( Object *me ){
-    return INT_UPCAST(me)->value;
+    return (INT_UPCAST(me))->value;
 }
 
 double int_fvalue( Object *me ){
-    return (double)INT_UPCAST(me)->value;
+    return (double)(INT_UPCAST(me))->value;
 }
 
 bool int_lvalue( Object *me ){
-    return (bool)INT_UPCAST(me)->value;
+    return (bool)(INT_UPCAST(me))->value;
 }
 
 string int_svalue( Object *me ){
-    long ivalue = INT_UPCAST(me)->value;
+    long ivalue = (INT_UPCAST(me))->value;
     char svalue[0xFF] = {0};
 
     sprintf( svalue, "%ld", ivalue );
@@ -68,11 +68,11 @@ void int_print( Object *me, int tabs ){
     for( int i = 0; i < tabs; ++i ){
         printf( "\t" );
     }
-    printf( "%ld", INT_UPCAST(me)->value );
+    printf( "%ld", (INT_UPCAST(me))->value );
 }
 
 void int_scanf( Object *me ){
-    scanf( "%ld", &INT_UPCAST(me)->value );
+    scanf( "%ld", &(INT_UPCAST(me))->value );
 }
 
 Object * int_to_string( Object *me ){
@@ -98,12 +98,12 @@ Object *int_range( Object *a, Object *b ){
 	Object *range = (Object *)MK_VECTOR_OBJ();
 
 	if( ob_cmp( a, b ) == 1 ){
-		start = INT_UPCAST(a)->value;
-		end   = INT_UPCAST(b)->value;
+		start = (INT_UPCAST(a))->value;
+		end   = (INT_UPCAST(b))->value;
 	}
 	else{
-		start = INT_UPCAST(b)->value;
-		end   = INT_UPCAST(a)->value;
+		start = (INT_UPCAST(b))->value;
+		end   = (INT_UPCAST(a))->value;
 	}
 
 	for( i = start; i <= end; ++i ){
@@ -116,7 +116,7 @@ Object *int_range( Object *a, Object *b ){
 /** arithmetic operators **/
 Object *int_assign( Object *me, Object *op ){
     if( IS_INTEGER_TYPE(op) ){
-        INT_UPCAST(me)->value = INT_UPCAST(op)->value;
+        (INT_UPCAST(me))->value = (INT_UPCAST(op))->value;
     }
     else {
         Object *clone = ob_clone(op);
@@ -130,7 +130,7 @@ Object *int_assign( Object *me, Object *op ){
 }
 
 Object *int_factorial( Object *me ){
-    long ivalue = INT_UPCAST(me)->value,
+    long ivalue = (INT_UPCAST(me))->value,
          ifact  = 1,
          i;
 
@@ -142,47 +142,47 @@ Object *int_factorial( Object *me ){
 }
 
 Object *int_increment( Object *me ){
-    INT_UPCAST(me)->value++;
+    (INT_UPCAST(me))->value++;
 
     return me;
 }
 
 Object *int_decrement( Object *me ){
-    INT_UPCAST(me)->value--;
+    (INT_UPCAST(me))->value--;
 
     return me;
 }
 
 Object *int_minus( Object *me ){
-    return (Object *)MK_INT_OBJ( -INT_UPCAST(me)->value );
+    return (Object *)MK_INT_OBJ( -(INT_UPCAST(me))->value );
 }
 
 Object *int_add( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value + ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value + ivalue );
 }
 
 Object *int_sub( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value - ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value - ivalue );
 }
 
 Object *int_mul( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value * ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value * ivalue );
 }
 
 Object *int_div( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value / ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value / ivalue );
 }
 
 Object *int_mod( Object *me, Object *op ){
-    long a = INT_UPCAST(me)->value,
+    long a = (INT_UPCAST(me))->value,
          b = ob_ivalue(op),
          mod;
 
@@ -202,43 +202,43 @@ Object *int_mod( Object *me, Object *op ){
 }
 
 Object *int_inplace_add( Object *me, Object *op ){
-    INT_UPCAST(me)->value += ob_ivalue(op);
+    (INT_UPCAST(me))->value += ob_ivalue(op);
 
     return me;
 }
 
 Object *int_inplace_sub( Object *me, Object *op ){
-    INT_UPCAST(me)->value -= ob_ivalue(op);
+    (INT_UPCAST(me))->value -= ob_ivalue(op);
 
     return me;
 }
 
 Object *int_inplace_mul( Object *me, Object *op ){
-    INT_UPCAST(me)->value *= ob_ivalue(op);
+    (INT_UPCAST(me))->value *= ob_ivalue(op);
 
     return me;
 }
 
 Object *int_inplace_div( Object *me, Object *op ){
-    INT_UPCAST(me)->value /= ob_ivalue(op);
+    (INT_UPCAST(me))->value /= ob_ivalue(op);
 
     return me;
 }
 
 Object *int_inplace_mod( Object *me, Object *op ){
-    long a = INT_UPCAST(me)->value,
+    long a = (INT_UPCAST(me))->value,
          b = ob_ivalue(op);
 
 	/* b is 0 or 1 */
     if( b == 0 || b == 1 ){
-        INT_UPCAST(me)->value = 0;
+        (INT_UPCAST(me))->value = 0;
     }
     /* b is a power of 2 */
     else if( (b & (b - 1)) == 0 ){
-        INT_UPCAST(me)->value = a & (b - 1);
+        (INT_UPCAST(me))->value = a & (b - 1);
     }
     else{
-        INT_UPCAST(me)->value = a % b;
+        (INT_UPCAST(me))->value = a % b;
     }
 
     return me;
@@ -248,118 +248,118 @@ Object *int_inplace_mod( Object *me, Object *op ){
 Object *int_bw_and( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value & ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value & ivalue );
 }
 
 Object *int_bw_or( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value | ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value | ivalue );
 }
 
 Object *int_bw_not( Object *me ){
-    return (Object *)MK_INT_OBJ( ~INT_UPCAST(me)->value );
+    return (Object *)MK_INT_OBJ( ~(INT_UPCAST(me))->value );
 }
 
 Object *int_bw_xor( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value ^ ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value ^ ivalue );
 }
 
 Object *int_bw_lshift( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value << ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value << ivalue );
 }
 
 Object *int_bw_rshift( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value >> ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value >> ivalue );
 }
 
 Object *int_bw_inplace_and( Object *me, Object *op ){
-    INT_UPCAST(me)->value &= ob_ivalue(op);
+    (INT_UPCAST(me))->value &= ob_ivalue(op);
 
     return me;
 }
 
 Object *int_bw_inplace_or( Object *me, Object *op ){
-    INT_UPCAST(me)->value &= ob_ivalue(op);
+    (INT_UPCAST(me))->value &= ob_ivalue(op);
 
     return me;
 }
 
 Object *int_bw_inplace_xor( Object *me, Object *op ){
-    INT_UPCAST(me)->value ^= ob_ivalue(op);
+    (INT_UPCAST(me))->value ^= ob_ivalue(op);
 
     return me;
 }
 
 Object *int_bw_inplace_lshift( Object *me, Object *op ){
-    INT_UPCAST(me)->value <<= ob_ivalue(op);
+    (INT_UPCAST(me))->value <<= ob_ivalue(op);
 
     return me;
 }
 
 Object *int_bw_inplace_rshift( Object *me, Object *op ){
-    INT_UPCAST(me)->value >>= ob_ivalue(op);
+    (INT_UPCAST(me))->value >>= ob_ivalue(op);
 
     return me;
 }
 
 /** logic operators **/
 Object *int_l_not( Object *me ){
-    return (Object *)MK_INT_OBJ( !INT_UPCAST(me)->value );
+    return (Object *)MK_INT_OBJ( !(INT_UPCAST(me))->value );
 }
 
 Object *int_l_same( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value == ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value == ivalue );
 }
 
 Object *int_l_diff( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value != ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value != ivalue );
 }
 
 Object *int_l_less( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value < ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value < ivalue );
 }
 
 Object *int_l_greater( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value > ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value > ivalue );
 }
 
 Object *int_l_less_or_same( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value <= ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value <= ivalue );
 }
 
 Object *int_l_greater_or_same( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value >= ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value >= ivalue );
 }
 
 Object *int_l_or( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value || ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value || ivalue );
 }
 
 Object *int_l_and( Object *me, Object *op ){
     long ivalue = ob_ivalue(op);
 
-    return (Object *)MK_INT_OBJ( INT_UPCAST(me)->value && ivalue );
+    return (Object *)MK_INT_OBJ( (INT_UPCAST(me))->value && ivalue );
 }
 
 /** collection operators **/
@@ -372,7 +372,7 @@ Object *int_cl_concat( Object *me, Object *op ){
 
 Object *int_cl_at( Object *me, Object *op ){
     long ivalue = ob_ivalue(op),
-         x      = INT_UPCAST(me)->value;
+         x      = (INT_UPCAST(me))->value;
 
     while (ivalue --) {
         x /= 10;

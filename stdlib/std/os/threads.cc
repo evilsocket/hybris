@@ -49,10 +49,10 @@ void * hyb_pthread_worker( void *arg ){
 		unsigned int i;
 		for( i = 1; i < data->size(); i++ ){
 			switch( HYB_ARGV(i)->type ){
-				case Integer_Type    : call->addChild( new ConstantNode( (long)(*HYB_ARGV(i)) ) );   break;
+				case otInteger    : call->addChild( new ConstantNode( (long)(*HYB_ARGV(i)) ) );   break;
 				case Float_Type  : call->addChild( new ConstantNode( (double)(*HYB_ARGV(i)) ) ); break;
-				case H_OT_CHAR   : call->addChild( new ConstantNode( (char)(*HYB_ARGV(i)) ) );   break;
-				case H_OT_STRING : call->addChild( new ConstantNode( (char *)(*HYB_ARGV(i)) ) ); break;
+				case otChar   : call->addChild( new ConstantNode( (char)(*HYB_ARGV(i)) ) );   break;
+				case otString : call->addChild( new ConstantNode( (char *)(*HYB_ARGV(i)) ) ); break;
 				default :
                     ctx->depool();
                     hyb_throw( H_ET_GENERIC, "type %d not supported for pthread call", Object::type_name(HYB_ARGV(i)) );
@@ -77,7 +77,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
 	if( HYB_ARGC() < 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'pthread_create' requires at least 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
 
     pthread_t tid;
     thread_args_t *args = new thread_args_t;
@@ -100,7 +100,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_join){
     if( HYB_ARGC() < 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'pthread_join' requires at least 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), Integer_Type );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
 
     pthread_t tid = static_cast<pthread_t>( (long)(*HYB_ARGV(0)) );
     void *status;

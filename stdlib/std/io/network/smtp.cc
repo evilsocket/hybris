@@ -26,9 +26,9 @@
 #include <netdb.h>
 #include <hybris.h>
 
-#define safe_send( sd, b ) if( sd_write(sd, b) <= 0 ){ close(sd); return MK_INT_OBJ(-1); }
+#define safe_send( sd, b ) if( sd_write(sd, b) <= 0 ){ close(sd); return OB_DOWNCAST( MK_INT_OBJ(-1) ); }
 #define safe_read( sd, b ) if( (buffer = sd_read(sd)) == "" ){ \
-                            close(sd); return MK_INT_OBJ(-1); \
+                            close(sd); return OB_DOWNCAST( MK_INT_OBJ(-1) ); \
                            } \
                            else if( buffer.find("220") == string::npos && \
                                     buffer.find("235") == string::npos && \
@@ -141,17 +141,17 @@ HYBRIS_DEFINE_FUNCTION(hsmtp_send){
 	if( HYB_ARGC() < 2 ) {
 		hyb_throw( H_ET_SYNTAX, "function 'smtp_send' requires at least 2 parameters (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_MAP );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), otMap );
 
-	Object *login_map = NULL;
+	MapObject *login_map = NULL;
 	if( HYB_ARGC() == 3 ) {
-		HYB_TYPE_ASSERT( HYB_ARGV(2), H_OT_MAP );
-		login_map = HYB_ARGV(2);
+		HYB_TYPE_ASSERT( HYB_ARGV(2), otMap );
+		login_map = MAP_ARGV(2);
 	}
 
 	int i, j, sd, port = 25;
-	string server_name = (const char *)(*HYB_ARGV(0)),
+	string server_name = STRING_ARGV(0),
            from(""),
            subject(""),
            message(""),
@@ -159,51 +159,52 @@ HYBRIS_DEFINE_FUNCTION(hsmtp_send){
            login_pass(""),
            buffer("");
     vector<string> receivers;
-	Object *headers = HYB_ARGV(1);
+	MapObject *headers = MAP_ARGV(1);
 
-	for( i = 0; i < headers->size ; ++i ){
-		string  name  = headers->value.m_map[i]->value.m_string;
-		Object *value = headers->value.m_array[i];
+	for( i = 0; i < headers->items ; ++i ){
+		string  name  = STRING_VALUE(headers->keys[i]);
+		Object *value = headers->values[i];
 
 		if( name == "to" ){
-			HYB_TYPES_ASSERT( value, H_OT_STRING, H_OT_ARRAY );
-			if( value->type == H_OT_STRING ){
-				receivers.push_back( value->value.m_string );
+			HYB_TYPES_ASSERT( value, otString, otVector );
+			if( value->type->code == otString ){
+				receivers.push_back( STRING_VALUE(value) );
 			}
-			else if( value->type == H_OT_ARRAY ){
-				for( j = 0; j < value->size; ++j ){
-				    HYB_TYPE_ASSERT( value->value.m_array[j], H_OT_STRING );
-					receivers.push_back( value->value.m_array[j]->value.m_string );
+			else if( value->type->code == otVector ){
+				for( j = 0; j < VECTOR_UPCAST(value)->items; ++j ){
+				    HYB_TYPE_ASSERT(  VECTOR_UPCAST(value)->value[j], otString );
+					receivers.push_back( STRING_VALUE( VECTOR_UPCAST(value)->value[j] ) );
 				}
 			}
 		}
 		else if ( name == "from" ){
-			from = value->value.m_string;
+			from = STRING_VALUE(value);
 		}
 		else if ( name == "subject" ){
-			subject = value->value.m_string ;
+			subject = STRING_VALUE(value) ;
 		}
 		else if ( name == "message" ){
-			message = value->value.m_string;
+			message = STRING_VALUE(value);
 		}
 	}
 
 	if ( login_map ){
-		for ( i = 0; i < login_map->size; ++i ){
-			string  name  = login_map->value.m_map[i]->value.m_string;
-			Object *value = login_map->value.m_array[i];
+		for ( i = 0; i < MAP_UPCAST(login_map)->items; ++i ){
+			string  name  = STRING_VALUE( login_map->keys[i] ),
+					value = STRING_VALUE( login_map->values[i] );
+
 			if ( name == "username" ){
-				login_name = value->value.m_string;
+				login_name = value;
 			}
 			else if ( name == "password" ){
-				login_pass = value->value.m_string;
+				login_pass = value;
 			}
 		}
 	}
 
 	sd = sd_create( (char *)server_name.c_str(), port );
 	if ( sd == -1 ){
-		return MK_INT_OBJ(-1);
+		return OB_DOWNCAST( MK_INT_OBJ(-1) );
 	}
 
 	safe_send( sd, "EHLO hybris_mailer\r\n" );
@@ -265,5 +266,5 @@ HYBRIS_DEFINE_FUNCTION(hsmtp_send){
 
 	close(sd);
 
-	return MK_INT_OBJ(0);
+	return OB_DOWNCAST( MK_INT_OBJ(0) );
 }

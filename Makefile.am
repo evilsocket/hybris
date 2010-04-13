@@ -93,7 +93,8 @@ STDOBJ=$(STDSRC:.cc=.so)
 
 all: src/lexer.cpp src/parser.cpp lib hybris stdlib
 
-lib: $(LOBJECTS)
+lib: $(LOBJECTS)	
+	@rm -f hybris.tmp.errors hybris.tmp.log
 	@printf "\x1b[33;01m@ Creating lib$(TARGET).so.1.0 ..."
 	@$(CXX) -shared -Wl,-soname,libhybris.so.1 -o lib$(TARGET).so.1.0 $(LIBOBJ) 2> hybris.tmp.log || touch hybris.tmp.errors
 	@if test -e hybris.tmp.errors; \
@@ -107,6 +108,7 @@ lib: $(LOBJECTS)
 	@ln -sf lib$(TARGET).so.1.0 lib$(TARGET).so.1
 	
 hybris: $(OBJECTS)
+	@rm -f hybris.tmp.errors hybris.tmp.log
 	@printf "\x1b[33;01m@ Creating $(TARGET) ..."
 	@$(CXX) src/*.o -o $(TARGET) $(CFLAGS) $(LFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
 	@if test -e hybris.tmp.errors; \
@@ -120,6 +122,7 @@ hybris: $(OBJECTS)
 stdlib: $(STDOBJ)
 		
 .cpp.o: 
+	@rm -f hybris.tmp.errors hybris.tmp.log
 	@rm -f hybris.tmp.* && printf "@ Compiling $< ..."
 	@$(CXX) -c $< -o $@ $(CFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
 	@if test -e hybris.tmp.errors; \
@@ -131,6 +134,7 @@ stdlib: $(STDOBJ)
 	@rm -f hybris.tmp.errors hybris.tmp.log
 	
 .cpp.lo:
+	@rm -f hybris.tmp.errors hybris.tmp.log
 	@rm -f hybris.tmp.* && printf "@ Compiling $< ..."
 	@$(CXX) -c $< -o $@ $(CFLAGS) -fPIC 2> hybris.tmp.log || touch hybris.tmp.errors
 	@if test -e hybris.tmp.errors; \
@@ -142,6 +146,7 @@ stdlib: $(STDOBJ)
 	@rm -f hybris.tmp.errors hybris.tmp.log
 
 .cc.so: 
+	@rm -f hybris.tmp.errors hybris.tmp.log
 	@rm -f hybris.tmp.* && printf "@ Compiling $< ..."
 	@mkdir -p `dirname $< | sed -e 's/stdlib/stdlib\/build/'`
 	@$(CXX) $< -o `dirname $< | sed -e 's/stdlib/stdlib\/build/'`/`basename $< .cc`.so $(STDLIB_CFLAGS) $(STDLIB_LFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors

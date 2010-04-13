@@ -56,17 +56,17 @@ typedef Object * (*function_t)( Context *, vmem_t * );
 /* macro to easily access hybris functions parameters number */
 #define HYB_ARGC()  (data->size())
 /* typed versions of HYB_ARGV macro */
-#define INT_ARGV(i)    INT_VALUE( HYB_ARGV(i) )
-#define ALIAS_ARGV(i)  ALIAS_VALUE( HYB_ARGV(i) )
-#define EXTERN_ARGV(i) EXTERN_VALUE( HYB_ARGV(i) )
-#define FLOAT_ARGV(i)  FLOAT_VALUE( HYB_ARGV(i) )
-#define CHAR_ARGV(i)   CHAR_VALUE( HYB_ARGV(i) )
-#define STRING_ARGV(i) STRING_VALUE( HYB_ARGV(i) )
-#define BINARY_ARGV(i) BINARY_VALUE( HYB_ARGV(i) )
-#define VECTOR_ARGV(i) VECTOR_VALUE( HYB_ARGV(i) )
-#define MAP_ARGV(i)    MAP_VALUE( HYB_ARGV(i) )
-#define MATRIX_ARGV(i) MATRIX_VALUE( HYB_ARGV(i) )
-#define STRUCT_ARGV(i) STRUCT_VALUE( HYB_ARGV(i) )
+#define INT_ARGV(i)    INT_VALUE( data->at(i) )
+#define ALIAS_ARGV(i)  ALIAS_VALUE( data->at(i) )
+#define EXTERN_ARGV(i) EXTERN_VALUE( data->at(i) )
+#define FLOAT_ARGV(i)  FLOAT_VALUE( data->at(i) )
+#define CHAR_ARGV(i)   CHAR_VALUE( data->at(i) )
+#define STRING_ARGV(i) STRING_VALUE( data->at(i) )
+#define BINARY_ARGV(i) BINARY_VALUE( data->at(i) )
+#define VECTOR_ARGV(i) VECTOR_VALUE( data->at(i) )
+#define MAP_ARGV(i)    MAP_VALUE( data->at(i) )
+#define MATRIX_ARGV(i) MATRIX_VALUE( data->at(i) )
+#define STRUCT_ARGV(i) STRUCT_VALUE( data->at(i) )
 
 /* macros to assert an object type */
 #define HYB_TYPE_ASSERT(o,t)      if( !(o->type->code == t) ){ \

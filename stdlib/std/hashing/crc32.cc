@@ -96,9 +96,9 @@ HYBRIS_DEFINE_FUNCTION(hcrc32){
     if( HYB_ARGC() != 1 ){
         hyb_throw( H_ET_SYNTAX, "function 'crc32' requires 1 parameter (called with %d)", HYB_ARGC() );
     }
-    HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+    HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
 
-	string str = HYB_ARGV(0)->value.m_string;
+	string str = STRING_ARGV(0);
 
     unsigned long crc( 0xFFFFFFFF ), i, size(str.size());
 
@@ -107,5 +107,5 @@ HYBRIS_DEFINE_FUNCTION(hcrc32){
     }
     crc ^= 0xFFFFFFFF;
 
-    return new Object( static_cast<long>(crc) );
+    return OB_DOWNCAST( MK_INT_OBJ(crc) );
 }

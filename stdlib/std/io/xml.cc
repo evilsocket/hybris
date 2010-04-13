@@ -50,49 +50,55 @@ int xml_isinvalid( char *str ){
 }
 
 Object *xml_traverse( xmlNode *node ){
-    Object *h_xmlNode = MK_CLONE_OBJ(__xmlNode_type);
+    Object *h_xmlNode = ob_clone(__xmlNode_type);
 	if( node->type == XML_ELEMENT_NODE ){
 	    /* check for empty names (usually indentation) */
 		if( xml_isinvalid((char *)node->name) == 0 ){
-			Object *h_xmlAttributes = MK_TMP_COLLECTION_OBJ(),
-                   *h_xmlChildren   = MK_TMP_COLLECTION_OBJ();
+			StructureObject *h_xmlAttributes = MK_STRUCT_OBJ();
+            MapObject       *h_xmlChildren   = MK_MAP_OBJ();
 
             /* set node name */
-			h_xmlNode->setAttribute( "name", MK_TMP_STRING_OBJ(node->name) );
+            ob_set_attribute_reference( h_xmlNode, "name", OB_DOWNCAST( MK_STRING_OBJ(node->name) ) );
 
-			/* fill attributes array */
+			/* fill attributes map */
 			for( xmlAttr *a = node->properties; a; a = a->next ){
 				const xmlChar *value = xmlNodeGetContent(a->children);
-				h_xmlAttributes->map( MK_TMP_STRING_OBJ(a->name), MK_TMP_STRING_OBJ(value) );
+
+				ob_cl_set_reference( OB_DOWNCAST(h_xmlAttributes),
+									 OB_DOWNCAST( MK_TMP_STRING_OBJ(a->name) ),
+									 OB_DOWNCAST( MK_STRING_OBJ(value) ) );
+
 				xmlFree((void*)value);
 			}
             /* set attributes */
-            h_xmlNode->setAttribute( "attributes", h_xmlAttributes );
+            ob_set_attribute_reference( h_xmlNode, "attributes", OB_DOWNCAST(h_xmlAttributes) );
 
 			/* start children evaluation */
 			for( xmlNode *child = node->children; child; child = child->next ){
 				/* child element */
 				if( child->type == XML_ELEMENT_NODE ){
                     /* create a map for the child if it doesn't exist yet */
-					Object childname((char *)child->name);
-					if( h_xmlChildren->mapFind(&childname) == -1 ){
-						h_xmlChildren->map( MK_TMP_STRING_OBJ(child->name), MK_TMP_COLLECTION_OBJ() );
+					StringObject *childname = MK_TMP_STRING_OBJ((char *)child->name);
+					if( map_find( OB_DOWNCAST(h_xmlChildren), OB_DOWNCAST(childname) ) == -1 ){
+						ob_cl_set( OB_DOWNCAST(h_xmlChildren),
+								   OB_DOWNCAST(MK_TMP_STRING_OBJ(child->name)),
+								   OB_DOWNCAST( MK_TMP_INT_OBJ(0) ) );
 					}
 					/* push the child into the array */
-					h_xmlChildren->at((char *)child->name)->push_ref( xml_traverse(child) );
+					ob_cl_push_reference( ob_cl_at( OB_DOWNCAST(h_xmlChildren), OB_DOWNCAST(childname) ), xml_traverse(child) );
 				}
 				/* node raw content */
 				else{
 					const xmlChar *content = xmlNodeGetContent(child);
 					if( xml_isinvalid((char *)content) == 0 ){
 						/* add the content */
-						h_xmlNode->setAttribute( "data", MK_TMP_STRING_OBJ(content) );
+						ob_set_attribute_reference( h_xmlNode, "data", OB_DOWNCAST(MK_STRING_OBJ(content)) );
 						xmlFree((void*)content);
 					}
 				}
 			}
 			/* set children */
-			h_xmlNode->setAttribute( "children", h_xmlChildren );
+			ob_set_attribute_reference( h_xmlNode, "children", OB_DOWNCAST(h_xmlChildren) );
 		}
 	}
 
@@ -103,9 +109,9 @@ HYBRIS_DEFINE_FUNCTION(hxml_load){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'xml_load' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
 
-	string   filename = (const char *)(*HYB_ARGV(0));
+	string   filename = STRING_ARGV(0);
 	xmlDoc  *doc  = NULL;
 	xmlNode *root = NULL;
 
@@ -128,9 +134,9 @@ HYBRIS_DEFINE_FUNCTION(hxml_parse){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'xml_parse' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
 
-	string   xml  = (const char *)(*HYB_ARGV(0));
+	string   xml  = STRING_ARGV(0);
 	xmlDoc  *doc  = NULL;
 	xmlNode *root = NULL;
 

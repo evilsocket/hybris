@@ -27,3 +27,7 @@ src/lexer.cpp
 src/parser.cpp
 src/parser.hpp
 
+.cproject
+.project
+.settings
+hybris.tmp.*

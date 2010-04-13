@@ -102,7 +102,7 @@ using std::string;
 /*
  * Macro to downcast any type structure to the base one.
  */
-#define OB_DOWNCAST(o)    ((Object *)(o))
+#define OB_DOWNCAST(o)    (Object *)(o)
 /*
  * Pre declaration to implement basic object type .
  */
@@ -374,12 +374,12 @@ ExternObject;
 #define IS_INTEGER_TYPE(o) OB_TYPE_CHECK(o,Integer)
 #define IS_ALIAS_TYPE(o)   OB_TYPE_CHECK(o,Alias)
 #define IS_EXTERN_TYPE(o)  OB_TYPE_CHECK(o,Extern)
-#define INT_UPCAST(o)     ((IntegerObject *)(o))
-#define ALIAS_UPCAST(o)   ((AliasObject *)(o))
-#define EXTERN_UPCAST(o)  ((ExternObject *)(o))
-#define MK_INT_OBJ(v)     INT_UPCAST( (gc_track( OB_DOWNCAST(new IntegerObject( static_cast<long>(v) )), sizeof(IntegerObject) )) )
-#define MK_ALIAS_OBJ(v)   ALIAS_UPCAST( (gc_track( OB_DOWNCAST(new AliasObject( static_cast<long>(v) )), sizeof(AliasObject) )) )
-#define MK_EXTERN_OBJ(v)  EXTERN_UPCAST( (gc_track( OB_DOWNCAST(new ExternObject( static_cast<long>(v) )), sizeof(ExternObject) )) )
+#define INT_UPCAST(o)     (IntegerObject *)(o)
+#define ALIAS_UPCAST(o)   (AliasObject *)(o)
+#define EXTERN_UPCAST(o)  (ExternObject *)(o)
+#define MK_INT_OBJ(v)     INT_UPCAST( (gc_track( OB_DOWNCAST( new IntegerObject( static_cast<long>(v) ) ), sizeof(IntegerObject) )) )
+#define MK_ALIAS_OBJ(v)   ALIAS_UPCAST( (gc_track( OB_DOWNCAST( new AliasObject( static_cast<long>(v) ) ), sizeof(AliasObject) )) )
+#define MK_EXTERN_OBJ(v)  EXTERN_UPCAST( (gc_track( OB_DOWNCAST( new ExternObject( static_cast<long>(v) ) ), sizeof(ExternObject) )) )
 #define INT_VALUE(o)      (((IntegerObject *)(o))->value)
 /*
  * A macro to cast any pointer into an Integer representing its address.
@@ -426,11 +426,12 @@ CharObject;
 #define CHAR_UPCAST(o)     ((CharObject *)(o))
 #define MK_CHAR_OBJ(v)     CHAR_UPCAST( (gc_track( OB_DOWNCAST(new CharObject( static_cast<char>(v) )), sizeof(CharObject) )) )
 #define MK_TMP_CHAR_OBJ(v) &( CharObject( static_cast<char>(v) )
-#define CHAR_VALUE(o)      ((CharObject *)(o)->value)
+#define CHAR_VALUE(o)      ((CharObject *)(o))->value
 
 DECLARE_TYPE(String);
 
 void string_parse( string& s );
+void string_replace( string &source, const string find, string replace );
 
 typedef struct _StringObject {
     BASE_OBJECT_HEADER;
@@ -448,7 +449,7 @@ StringObject;
 #define STRING_UPCAST(o)     ((StringObject *)(o))
 #define MK_STRING_OBJ(v)     STRING_UPCAST( (gc_track( OB_DOWNCAST(new StringObject( (char *)(v) )), sizeof(StringObject) )) )
 #define MK_TMP_STRING_OBJ(v) &( StringObject( (char *)(v)  ) )
-#define STRING_VALUE(o)      ((StringObject *)(o)->value)
+#define STRING_VALUE(o)      ((StringObject *)(o))->value
 #define CHARP_VALUE(o)       ((char *)STRING_VALUE(o).c_str())
 
 DECLARE_TYPE(Binary);
@@ -507,7 +508,7 @@ typedef vector<Object *>::iterator VectorObjectIterator;
 #define VECTOR_UPCAST(o)    ((VectorObject *)(o))
 #define MK_VECTOR_OBJ()     VECTOR_UPCAST( (gc_track( OB_DOWNCAST(new VectorObject()), sizeof(VectorObject) )) )
 #define MK_TMP_VECTOR_OBJ() &( VectorObject() )
-
+#define VECTOR_VALUE(o)     (((VectorObject *)(o)))
 DECLARE_TYPE(Map);
 
 int map_find( Object *m, Object *key );
@@ -532,6 +533,7 @@ typedef vector<Object *>::iterator MapObjectIterator;
 
 #define IS_MAP_TYPE(o)   OB_TYPE_CHECK(o,Map)
 #define MAP_UPCAST(o)    ((MapObject *)(o))
+#define MAP_VALUE(o)	 (MapObject *)(o)
 #define MK_MAP_OBJ()     MAP_UPCAST( (gc_track( OB_DOWNCAST(new MapObject()), sizeof(MapObject) )) )
 #define MK_TMP_MAP_OBJ() &( MapObject() )
 
@@ -599,10 +601,12 @@ typedef struct _MatrixObject {
 }
 MatrixObject;
 
-#define IS_MATRIX_TYPE(o)   OB_TYPE_CHECK(o,Matrix)
-#define MATRIX_UPCAST(o)    ((MatrixObject *)(o))
-#define MK_MATRIX_OBJ()     MATRIX_UPCAST( (gc_track( OB_DOWNCAST(new MatrixObject()), sizeof(MatrixObject) )) )
-#define MK_TMP_MATRIX_OBJ() &( MatrixObject() )
+#define IS_MATRIX_TYPE(o)    OB_TYPE_CHECK(o,Matrix)
+#define MATRIX_UPCAST(o)     ((MatrixObject *)(o))
+#define MATRIX_VALUE(o)      ((MatrixObject *)o)
+#define MK_MATRIX_OBJ()      MATRIX_UPCAST( (gc_track( OB_DOWNCAST(new MatrixObject()), sizeof(MatrixObject) )) )
+#define MK_MATRIX_OBJ(r,c,v) MATRIX_UPCAST( (gc_track( OB_DOWNCAST(new MatrixObject(r,c,v)), sizeof(MatrixObject) )) )
+#define MK_TMP_MATRIX_OBJ()  &( MatrixObject() )
 
 DECLARE_TYPE(Structure);
 

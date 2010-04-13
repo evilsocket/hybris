@@ -29,8 +29,8 @@ extern "C" named_function_t hybris_module_functions[] = {
 #define SHA224 1
 
 extern "C" void hybris_module_init( Context * ctx ){
-    HYBRIS_DEFINE_CONSTANT( ctx, "SHA256", static_cast<long>(SHA256) );
-    HYBRIS_DEFINE_CONSTANT( ctx, "SHA224", static_cast<long>(SHA224) );
+    HYBRIS_DEFINE_CONSTANT( ctx, "SHA256", MK_TMP_INT_OBJ(SHA256) );
+    HYBRIS_DEFINE_CONSTANT( ctx, "SHA224", MK_TMP_INT_OBJ(SHA224) );
 }
 
 typedef struct
@@ -309,18 +309,18 @@ HYBRIS_DEFINE_FUNCTION(hsha2){
     if( HYB_ARGC() < 1 ){
         hyb_throw( H_ET_SYNTAX, "function 'sha2' requires at least 1 parameter (called with %d)", HYB_ARGC() );
     }
-    HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+    HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
 
     int is224 = SHA256;
     if( HYB_ARGC() == 2 ){
-		HYB_TYPE_ASSERT( HYB_ARGV(1), Integer_Type );
-		is224 = HYB_ARGV(1)->value.m_integer;
+		HYB_TYPE_ASSERT( HYB_ARGV(1), otInteger );
+		is224 = INT_ARGV(1);
 		if( is224 != SHA256 && is224 != SHA224 ){
 			 hyb_throw( H_ET_SYNTAX, "function 'sha2' admits as second parameter only SHA256 or SHA224 constants" );
 		}
 	}
 
-	string        str 	   = HYB_ARGV(0)->value.m_string,
+	string        str 	   = STRING_ARGV(0),
 				  str_hash("");
 	unsigned char hash[32] = {0};
 	char		  hex[3]   = {0};
@@ -336,5 +336,5 @@ HYBRIS_DEFINE_FUNCTION(hsha2){
 		str_hash += hex;
 	}
 
-	return new Object( (char *)str_hash.c_str() );
+    return OB_DOWNCAST( MK_STRING_OBJ( str_hash.c_str() ) );
 }

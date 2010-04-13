@@ -35,7 +35,8 @@ void matrix_set_references( Object *me, int ref ){
 
 Object *matrix_clone( Object *me ){
     size_t x, y;
-    MatrixObject *mclone = MK_MATRIX_OBJ(),
+    vector<Object *> dummy;
+    MatrixObject *mclone = MK_MATRIX_OBJ(0,0,dummy),
                  *mme    = MATRIX_UPCAST(me);
     Object       *clone;
 

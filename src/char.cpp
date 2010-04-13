@@ -87,7 +87,7 @@ Object * char_to_int( Object *me ){
 }
 
 Object * char_from_int( Object *i ){
-    return (Object *)MK_CHAR_OBJ( INT_UPCAST(i)->value );
+    return (Object *)MK_CHAR_OBJ( (INT_UPCAST(i))->value );
 }
 
 Object * char_from_float( Object *f ){

@@ -299,9 +299,9 @@ HYBRIS_DEFINE_FUNCTION(hsha1){
     if( HYB_ARGC() != 1 ){
         hyb_throw( H_ET_SYNTAX, "function 'sha1' requires 1 parameter (called with %d)", HYB_ARGC() );
     }
-    HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+    HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
 
-	string        str 	   = HYB_ARGV(0)->value.m_string,
+	string        str 	   = STRING_ARGV(0),
 				  str_hash("");
 	unsigned char hash[20] = {0};
 	char		  hex[3]   = {0};
@@ -317,5 +317,5 @@ HYBRIS_DEFINE_FUNCTION(hsha1){
 		str_hash += hex;
 	}
 
-	return new Object( (char *)str_hash.c_str() );
+    return OB_DOWNCAST( MK_STRING_OBJ( str_hash.c_str() ) );
 }

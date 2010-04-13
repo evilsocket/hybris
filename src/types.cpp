@@ -79,7 +79,7 @@ int ob_cmp( Object *o, Object * cmp ){
 
 long ob_ivalue( Object * o ){
     if( IS_INTEGER_TYPE(o) ){
-        return INT_UPCAST(o)->value;
+        return (INT_UPCAST(o))->value;
     }
     else if( o->type->ivalue != HYB_UNIMPLEMENTED_FUNCTION ){
         return o->type->ivalue(o);

@@ -37,63 +37,63 @@ HYBRIS_DEFINE_FUNCTION(hstrlen){
 	if( HYB_ARGC() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'strlen' requires 1 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
 
-	return MK_INT_OBJ( HYB_ARGV(0)->value.m_string.size() );
+	return OB_DOWNCAST( MK_INT_OBJ( STRING_ARGV(0).size() ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hstrfind){
 	if( HYB_ARGC() != 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'strfind' requires 2 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
 
-	int found = HYB_ARGV(0)->value.m_string.find( HYB_ARGV(1)->value.m_string );
+	int found = STRING_ARGV(0).find( STRING_ARGV(1) );
 
-	return MK_INT_OBJ( found == string::npos ? -1 : found );
+	return OB_DOWNCAST( MK_INT_OBJ( found == string::npos ? -1 : found ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsubstr){
 	if( HYB_ARGC() != 3 ){
 		hyb_throw( H_ET_SYNTAX, "function 'substr' requires 3 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
 
-	string sub = HYB_ARGV(0)->value.m_string.substr( HYB_ARGV(1)->lvalue(), HYB_ARGV(2)->lvalue() );
+	string sub = STRING_ARGV(0).substr( ob_ivalue( HYB_ARGV(1) ), ob_ivalue( HYB_ARGV(2) ) );
 
-	return MK_STRING_OBJ( sub.c_str() );
+	return OB_DOWNCAST( MK_STRING_OBJ( sub.c_str() ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hstrreplace){
 	if( HYB_ARGC() != 3 ){
 		hyb_throw( H_ET_SYNTAX, "function 'strreplace' requires 3 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), H_OT_STRING );
-	HYB_TYPE_ASSERT( HYB_ARGV(2), H_OT_STRING );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
+	HYB_TYPE_ASSERT( HYB_ARGV(2), otString );
 
-	string str  = HYB_ARGV(0)->value.m_string,
-		   find = HYB_ARGV(1)->value.m_string,
-		   repl = HYB_ARGV(2)->value.m_string;
+	string str  = STRING_ARGV(0),
+		   find = STRING_ARGV(1),
+		   repl = STRING_ARGV(2);
 
 	unsigned int i;
 	for( ; (i = str.find( find )) != string::npos ; ){
 		str.replace( i, find.length(), repl );
 	}
 
-	return MK_STRING_OBJ( str.c_str() );
+	return OB_DOWNCAST( MK_STRING_OBJ( str.c_str() ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hstrsplit){
 	if( HYB_ARGC() != 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'strsplit' requires 2 parameter (called with %d)", HYB_ARGC() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), H_OT_STRING );
-	HYB_TYPES_ASSERT( HYB_ARGV(1), H_OT_STRING, H_OT_CHAR );
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	HYB_TYPES_ASSERT( HYB_ARGV(1), otString, otChar );
 
-	string str = HYB_ARGV(0)->value.m_string,
-		   tok = (HYB_ARGV(1)->type == H_OT_STRING ? HYB_ARGV(1)->value.m_string : string("") + HYB_ARGV(1)->value.m_char);
+	string str = STRING_ARGV(0),
+		   tok = ob_svalue( HYB_ARGV(1) );
 	vector<string> parts;
     int start = 0, end = 0, i;
 
@@ -103,10 +103,10 @@ HYBRIS_DEFINE_FUNCTION(hstrsplit){
 	}
 	parts.push_back( str.substr(start) );
 
-   	Object *array = MK_COLLECTION_OBJ();
-	for( i = 0; i < parts.size(); i++ ){
-		array->push_ref( MK_STRING_OBJ( parts[i].c_str() ) );
+   	Object *array = OB_DOWNCAST( MK_VECTOR_OBJ() );
+	for( i = 0; i < parts.size(); ++i ){
+		ob_cl_push_reference( array, OB_DOWNCAST( MK_STRING_OBJ( parts[i].c_str() ) ) );
 	}
 
-	return array;
+	return OB_DOWNCAST( array );
 }

@@ -72,7 +72,7 @@ Node *Node::clone(){
         case H_NT_CONSTANT   :
 
             if( IS_INTEGER_TYPE(value.m_constant) ){
-                clone = new ConstantNode( INT_UPCAST(value.m_constant)->value );
+                clone = new ConstantNode( (INT_UPCAST(value.m_constant))->value );
             }
             else if( IS_FLOAT_TYPE(value.m_constant) ){
                 clone = new ConstantNode( FLOAT_UPCAST(value.m_constant)->value );
