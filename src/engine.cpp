@@ -278,25 +278,37 @@ Object *Engine::onIdentifier( vframe_t *frame, Node *node ){
     int     idx;
     char   *identifier = (char *)node->value.m_identifier.c_str();
 
-    // search for the identifier on the function frame
-    o = frame->get( identifier );
-    if( o == H_UNDEFINED && H_ADDRESS_OF(frame) != H_ADDRESS_OF(vm) ){
-        // search it on the global frame if it's different from local frame
-        o = vm->get( identifier );
-    }
-    // search for it as a function name
-    if( o == H_UNDEFINED ){
-        idx = vc->index( identifier );
-        if( idx != -1 ){
-            o = (Object *)MK_ALIAS_OBJ(idx);
-        }
-        // identifier not found
-        else{
-            hyb_throw( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
-        }
-    }
-
-    return o;
+	/*
+	 * First thing first, search for the identifier definition on
+	 * the function local stack frame. 
+	 */
+	if( (o = frame->get(identifier)) != H_UNDEFINED ){
+		return o;
+	}
+	/*
+	 * Let's check if the address of this frame si different from
+	 * global frame one, in that case try to search the definition 
+	 * on the global frame too.
+	 */
+	else if( H_ADDRESS_OF(frame) != H_ADDRESS_OF(vm) && (o = vm->get( identifier )) != H_UNDEFINED ){
+		return o;
+	}
+	/*
+	 * So, it's neither defined on local frame nor in the global one,
+	 * let's search for it in the code frame.
+	 */
+	else if( (idx = vc->index( identifier )) != -1 ){
+		/*
+		 * Create an alias to that code region (basically its index).
+		 */
+		return OB_DOWNCAST( MK_ALIAS_OBJ(idx) );
+	}
+	/*
+	 * Ok ok, got it! It's undefined, raise an error.
+	 */
+	else{
+		hyb_throw( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
+	}
 }
 
 Object *Engine::onAttribute( vframe_t *frame, Node *node ){
