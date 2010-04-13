@@ -228,9 +228,7 @@ Object *map_cl_set_reference( Object *me, Object *k, Object *v ){
     int idx = map_find( me, k );
     if( idx != -1 ){
         Object *item = ((MapObject *)me)->values[idx];
-
         ob_free(item);
-        delete item;
 
         ((MapObject *)me)->values[idx] = v;
     }
