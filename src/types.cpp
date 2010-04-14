@@ -92,6 +92,20 @@ Object *ob_deserialize( Object *o, byte *buffer, size_t size ){
 	hyb_throw( H_ET_SYNTAX, "couldn't deserialize '%s'", o->type->name );
 }
 
+Object *ob_to_fd( Object *o, int fd, size_t size ){
+	if( o->type->to_fd != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->to_fd(o,fd,size);
+	}
+	hyb_throw( H_ET_SYNTAX, "couldn't write object '%s' to file descriptor", o->type->name );
+}
+
+Object *ob_from_fd( Object *o, int fd, size_t size ){
+	if( o->type->from_fd != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->from_fd(o,fd,size);
+	}
+	hyb_throw( H_ET_SYNTAX, "couldn't read object '%s' from file descriptor", o->type->name );
+}
+
 int ob_cmp( Object *o, Object * cmp ){
     if( o->type->cmp != HYB_UNIMPLEMENTED_FUNCTION ){
         return o->type->cmp(o,cmp);

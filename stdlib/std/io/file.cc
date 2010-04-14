@@ -122,121 +122,41 @@ HYBRIS_DEFINE_FUNCTION(hfsize){
 }
 
 HYBRIS_DEFINE_FUNCTION(hfread){
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
-
-    Object *_return = NULL;
-    if( HYB_ARGC() >= 2 ){
-		FILE *fp = (FILE *)INT_ARGV(0);
-		if( !fp ){
-			hyb_throw( H_ET_GENERIC, "invalid file descriptor" );
-		}
-		Object *object   = HYB_ARGV(1);
-		unsigned int size, read = 0, i;
-		char c;
-		/* explicit size declaration */
-		if( HYB_ARGC() == 3 ){
-			size = INT_ARGV(2);
-			switch( object->type->code ){
-				case otInteger : read = fread( &(INT_VALUE(object)), 1, size, fp ); break;
-				case otFloat   : read = fread( &(FLOAT_VALUE(object)), 1, size, fp );  break;
-				case otChar    : read = fread( &(CHAR_VALUE(object)), 1, size, fp );    break;
-				case otString :
-					for( i = 0; i < size; ++i ){
-						read += fread( &c, 1, sizeof(char), fp );
-						STRING_VALUE(object) += c;
-						STRING_UPCAST(object)->items++;
-					}
-				break;
-
-				default :
-                    hyb_throw( H_ET_GENERIC, "can not directly deserialize type %s", object->type->name );
-			}
-			object->type->size = size;
-		}
-		/* handle size by type */
-		else{
-			switch( object->type->code ){
-				case otInteger : object->type->size = fread( &(INT_VALUE(object)), 1, sizeof(long), fp ); break;
-				case otFloat   : object->type->size = fread( &(FLOAT_VALUE(object)), 1, sizeof(double), fp );  break;
-				case otChar    : object->type->size = fread( &(CHAR_VALUE(object)), 1, sizeof(char), fp );    break;
-				case otString  :
-					STRING_VALUE(object) = "";
-					while( (c = fgetc(fp)) != '\n' && c != '\r' && c != 0x00 ){
-						STRING_VALUE(object) += c;
-						STRING_UPCAST(object)->items++;
-						read++;
-					}
-					object->type->size = read;
-				break;
-
-				default :
-                    hyb_throw( H_ET_GENERIC, "can not directly deserialize type %s", object->type->name );
-			}
-		}
-        _return = OB_DOWNCAST( MK_INT_OBJ(read) );
-    }
-	else{
+	if( HYB_ARGC() < 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'fread' requires 2 or 3 parameters (called with %d)", HYB_ARGC() );
 	}
-    return _return;
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
+
+	FILE *fp = (FILE *)INT_ARGV(0);
+	int fd = fileno(fp);
+	size_t size = 0;
+	Object *object   = HYB_ARGV(1);
+
+	/* explicit size declaration */
+	if( HYB_ARGC() == 3 ){
+		size = INT_ARGV(2);
+	}
+
+	return ob_from_fd( object, fd, size );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfwrite){
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
-
-    Object *_return = NULL;
-    if( HYB_ARGC() >= 2 ){
-		FILE *fp = (FILE *)INT_ARGV(0);
-		if( !fp ){
-			hyb_throw( H_ET_GENERIC, "invalid file descriptor" );
-		}
-		Object *object   = HYB_ARGV(1);
-		unsigned int size, written = 0, i;
-		char c;
-		if( HYB_ARGC() == 3 ){
-			size = INT_ARGV(2);
-			switch( object->type->code ){
-				case otInteger : written = fwrite( &(INT_VALUE(object)), 1, size, fp ); break;
-				case otFloat   : written = fwrite( &(FLOAT_VALUE(object)), 1, size, fp );  break;
-				case otChar    : written = fwrite( &(CHAR_VALUE(object)), 1, size, fp );    break;
-				case otString  : written = fwrite( STRING_VALUE(object).c_str(), 1, size, fp ); break;
-
-				default :
-                    hyb_throw( H_ET_GENERIC, "can not directly serialize type %s", object->type->name );
-			}
-		}
-		else{
-			switch( object->type->code ){
-				case otInteger : written = fwrite( &(INT_VALUE(object)), 1, sizeof(long), fp ); break;
-				case otFloat   : written = fwrite( &(FLOAT_VALUE(object)), 1, sizeof(double), fp );  break;
-				case otChar    : written = fwrite( &(CHAR_VALUE(object)), 1, sizeof(char), fp );    break;
-				case otString  : written = fwrite( STRING_VALUE(object).c_str(), 1, STRING_UPCAST(object)->items, fp ); break;
-				case otVector  :
-					for( i = 0; i < VECTOR_UPCAST(object)->items; ++i ){
-						Object *element = VECTOR_UPCAST(object)->value[i];
-						switch( element->type->code ){
-							case otInteger : written = fwrite( &(INT_VALUE(element)), 1, sizeof(long), fp ); break;
-							case otFloat   : written = fwrite( &(FLOAT_VALUE(element)), 1, sizeof(double), fp );  break;
-							case otChar    : written = fwrite( &(CHAR_VALUE(element)), 1, sizeof(char), fp );    break;
-							case otString  : written = fwrite( STRING_VALUE(element).c_str(), 1, STRING_UPCAST(element)->items, fp ); break;
-
-							default :
-                                hyb_throw( H_ET_GENERIC, "can not directly serialize nested type %s", element->type->name );
-						}
-					}
-				break;
-
-				default :
-                    hyb_throw( H_ET_GENERIC, "can not directly serialize type %s", object->type->name );
-			}
-		}
-        _return = OB_DOWNCAST( MK_INT_OBJ(written) );
-    }
-	else{
+	if( HYB_ARGC() < 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'fwrite' requires 2 or 3 parameters (called with %d)", HYB_ARGC() );
 	}
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
 
-    return _return;
+	FILE *fp = (FILE *)INT_ARGV(0);
+	int fd = fileno(fp);
+	size_t size = 0;
+	Object *object   = HYB_ARGV(1);
+
+	/* explicit size declaration */
+	if( HYB_ARGC() == 3 ){
+		size = INT_ARGV(2);
+	}
+
+	return ob_to_fd( object, fd, size );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfgets){

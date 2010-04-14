@@ -142,7 +142,7 @@ size_t string_get_size( Object *me ){
 }
 
 byte *string_serialize( Object *o, size_t size ){
-	size_t s   	  = (size > ob_get_size(o) ? ob_get_size(o) : size);
+	size_t s = (size > ob_get_size(o) ? ob_get_size(o) : size != 0 ? size : ob_get_size(o) );
 	byte  *buffer = new byte[s];
 
 	memcpy( buffer, STRING_UPCAST(o)->value.c_str(), s );
@@ -161,7 +161,71 @@ Object *string_deserialize( Object *o, byte *buffer, size_t size ){
 
 		delete[] tmp;
 	}
+	else{
+		bool isEOF = false,
+			 isEOL = false;
+		byte c;
+		size_t i = 0;
+
+		STRING_UPCAST(o)->value = "";
+
+		while( !isEOL && !isEOF ){
+			c = buffer[i++];
+
+			if( c == '\r' || c == '\n' ){
+				isEOL = true;
+			}
+			else {
+				STRING_VALUE(o) += c;
+				STRING_UPCAST(o)->items++;
+			}
+		}
+	}
 	return o;
+}
+
+Object *string_to_fd( Object *o, int fd, size_t size ){
+	size_t s = (size > ob_get_size(o) ? ob_get_size(o) : size != 0 ? size : ob_get_size(o));
+	int    written;
+
+	written = write( fd, STRING_UPCAST(o)->value.c_str(), s );
+
+	return OB_DOWNCAST( MK_INT_OBJ(written) );
+}
+
+Object *string_from_fd( Object *o, int fd, size_t size ){
+	int rd = 0, n;
+	if( size ){
+		char *tmp = new char[size + 1];
+		memset( &tmp, 0x00, size + 1 );
+		rd = read( fd, &tmp, size );
+
+		STRING_UPCAST(o)->value = tmp;
+
+		delete[] tmp;
+	}
+	else{
+		bool isEOF = false,
+			 isEOL = false;
+		byte c;
+
+		STRING_UPCAST(o)->value = "";
+
+		while( !isEOL && !isEOF ){
+			rd += n = read( fd, &c, sizeof(byte) );
+			if( n < 1 ){
+				isEOF = true;
+			}
+			else if( c == '\r' || c == '\n' ){
+				isEOL = true;
+			}
+			else {
+				STRING_VALUE(o) += c;
+				STRING_UPCAST(o)->items++;
+			}
+		}
+	}
+	return OB_DOWNCAST( MK_INT_OBJ(rd) );
 }
 
 int string_cmp( Object *me, Object *cmp ){
@@ -352,6 +416,8 @@ IMPLEMENT_TYPE(String) {
 	string_get_size, // get_size
 	string_serialize, // serialize
 	string_deserialize, // deserialize
+	string_to_fd, // to_fd
+	string_from_fd, // from_fd
 	string_cmp, // cmp
 	string_ivalue, // ivalue
 	string_fvalue, // fvalue

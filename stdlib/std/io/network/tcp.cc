@@ -161,135 +161,39 @@ HYBRIS_DEFINE_FUNCTION(haccept){
 }
 
 HYBRIS_DEFINE_FUNCTION(hrecv){
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
-
-	bool isEOF	    = false,
-		 isEOL 		= false;
-    Object *_return = NULL;
-    if( HYB_ARGC() >= 2 ){
-		int sd           = INT_ARGV(0);
-		Object *object   = HYB_ARGV(1);
-		unsigned int size, read = 0, i, n;
-		char c;
-		/* explicit size declaration */
-		if( HYB_ARGC() == 3 ){
-			size = INT_ARGV(2);
-			switch( object->type->code ){
-				case otInteger : read = recv( sd, &(INT_VALUE(object)), size, 0 ); break;
-				case otFloat   : read = recv( sd, &(FLOAT_VALUE(object)), size, 0 );  break;
-				case otChar    : read = recv( sd, &(CHAR_VALUE(object)), size, 0 );    break;
-				case otString  :
-					for( i = 0; i < size; i++ ){
-						if( recv( sd, &c, sizeof(char), 0 ) > 0 ){
-							read++ ;
-							STRING_VALUE(object) += c;
-							STRING_UPCAST(object)->items++;
-						}
-						else{
-							read = 0;
-							break;
-						}
-					}
-				break;
-
-				default :
-                     hyb_throw( H_ET_GENERIC, "can not directly deserialize type %s", object->type->name );
-			}
-			object->type->size = size;
-		}
-		/* handle size by type */
-		else{
-			switch( object->type->code ){
-				case otInteger : read = recv( sd, &(INT_VALUE(object)), sizeof(long), 0 ); break;
-				case otFloat   : read = recv( sd, &(FLOAT_VALUE(object)), sizeof(double), 0 );  break;
-				case otChar    : read = recv( sd, &(CHAR_VALUE(object)), sizeof(char), 0 );    break;
-				case otString  :
-					STRING_VALUE(object) = "";
-					while( !isEOL && !isEOF ){
-						n = recv( sd, &c, sizeof(char), 0 );
-				 		if( n < 1 ){
-							isEOF = true;
-						}
-						else if( c == '\n' ){
-							isEOL = true;
-						}
-						else {
-							if( c != '\r' ){
-								STRING_VALUE(object) += c;
-								STRING_UPCAST(object)->items++;
-							}
-						}
-					}
-					object->type->size = read;
-				break;
-
-				default :
-                     hyb_throw( H_ET_GENERIC, "can not directly deserialize type %s", object->type->name );
-			}
-		}
-        _return = OB_DOWNCAST( MK_INT_OBJ(read) );
-    }
-	else{
+	if( HYB_ARGC() < 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'recv' requires 2 or 3 parameters (called with %d)", HYB_ARGC() );
 	}
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
 
-    return _return;
+	int sd = INT_ARGV(0);
+	size_t size = 0;
+	Object *object   = HYB_ARGV(1);
+
+	/* explicit size declaration */
+	if( HYB_ARGC() == 3 ){
+		size = INT_ARGV(2);
+	}
+
+	return ob_from_fd( object, sd, size );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsend){
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
-
-    Object *_return = NULL;
-    if( HYB_ARGC() >= 2 ){
-		int sd           = INT_ARGV(0);
-		Object *object   = HYB_ARGV(1);
-		unsigned int size, written = 0, i;
-		char c;
-		if( HYB_ARGC() == 3 ){
-			size = INT_ARGV(2);
-			switch( object->type->code ){
-				case otInteger : written = send( sd, &(INT_VALUE(object)), size, 0 ); break;
-				case otFloat   : written = send( sd, &(FLOAT_VALUE(object)), size, 0 );  break;
-				case otChar    : written = send( sd, &(CHAR_VALUE(object)), size, 0 );    break;
-				case otString  : written = send( sd, STRING_VALUE(object).c_str(), size, 0 ); break;
-
-				default :
-                     hyb_throw( H_ET_GENERIC, "can not directly serialize type %s", object->type->name );
-			}
-		}
-		else{
-			switch( object->type->code ){
-				case otInteger : written = send( sd, &(INT_VALUE(object)), sizeof(long), 0 ); break;
-				case otFloat   : written = send( sd, &(FLOAT_VALUE(object)), sizeof(double), 0 );  break;
-				case otChar    : written = send( sd, &(CHAR_VALUE(object)), sizeof(char), 0 );    break;
-				case otString  : written = send( sd, STRING_VALUE(object).c_str(), STRING_UPCAST(object)->items, 0 ); break;
-
-				case otVector   :
-					for( i = 0; i < VECTOR_UPCAST(object)->items; i++ ){
-						Object *element = VECTOR_UPCAST(object)->value[i];
-						switch( element->type->code ){
-							case otInteger : written += send( sd, &(INT_VALUE(element)), sizeof(long), 0 ); break;
-							case otFloat   : written += send( sd, &(FLOAT_VALUE(element)), sizeof(double), 0 );  break;
-							case otChar    : written += send( sd, &(CHAR_VALUE(element)), sizeof(char), 0 );    break;
-							case otString  : written += send( sd, STRING_VALUE(element).c_str(), STRING_UPCAST(element)->items, 0 ); break;
-
-							default :
-                                hyb_throw( H_ET_GENERIC, "can not directly serialize nested type %s", element->type->name );
-						}
-					}
-				break;
-
-				default :
-                     hyb_throw( H_ET_GENERIC, "can not directly serialize type %s", object->type->name );
-			}
-		}
-        _return = OB_DOWNCAST( MK_INT_OBJ(written) );
-    }
-	else{
+	if( HYB_ARGC() < 2 ){
 		hyb_throw( H_ET_SYNTAX, "function 'send' requires 2 or 3 parameters (called with %d)", HYB_ARGC() );
 	}
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
 
-    return _return;
+	int sd = INT_ARGV(0);
+	size_t size = 0;
+	Object *object   = HYB_ARGV(1);
+
+	/* explicit size declaration */
+	if( HYB_ARGC() == 3 ){
+		size = INT_ARGV(2);
+	}
+
+	return ob_to_fd( object, sd, size );
 }
 
 HYBRIS_DEFINE_FUNCTION(hclose){

@@ -41,7 +41,7 @@ size_t int_get_size( Object *me ){
 }
 
 byte *int_serialize( Object *o, size_t size ){
-	size_t s   	  = (size > ob_get_size(o) ? ob_get_size(o) : size);
+	size_t s = (size > ob_get_size(o) ? ob_get_size(o) : size != 0 ? size : ob_get_size(o) );
 	byte  *buffer = new byte[s];
 
 	memcpy( buffer, &((INT_UPCAST(o))->value), s );
@@ -55,6 +55,26 @@ Object *int_deserialize( Object *o, byte *buffer, size_t size ){
 		memcpy( &((INT_UPCAST(o))->value), buffer, size );
 	}
 	return o;
+}
+
+Object *int_to_fd( Object *o, int fd, size_t size ){
+	size_t s = (size > ob_get_size(o) ? ob_get_size(o) : size != 0 ? size : ob_get_size(o));
+	int    written;
+
+	written = write( fd, &((INT_UPCAST(o))->value), s );
+
+	return OB_DOWNCAST( MK_INT_OBJ(written) );
+}
+
+Object *int_from_fd( Object *o, int fd, size_t size ){
+	int rd = 0;
+	if( size ){
+		rd = read( fd, &((INT_UPCAST(o))->value), size );
+	}
+	else{
+		return ob_from_fd( o, fd, sizeof(long) );
+	}
+	return OB_DOWNCAST( MK_INT_OBJ(rd) );
 }
 
 int int_cmp( Object *me, Object *cmp ){
@@ -425,6 +445,8 @@ IMPLEMENT_TYPE(Integer) {
 	int_get_size, // get_size
 	int_serialize, // serialize
 	int_deserialize, // deserialize
+	int_to_fd, // to_fd
+	int_from_fd, // from_fd
 	int_cmp, // cmp
 	int_ivalue, // ivalue
 	int_fvalue, // fvalue
@@ -511,6 +533,8 @@ IMPLEMENT_TYPE(Alias) {
 	int_get_size, // get_size
 	int_serialize, // serialize
 	int_deserialize, // deserialize
+	0, // to_fd
+	0, // from_fd
 	int_cmp, // cmp
 	int_ivalue, // ivalue
 	int_fvalue, // fvalue
@@ -597,6 +621,8 @@ IMPLEMENT_TYPE(Extern) {
 	int_get_size, // get_size
 	int_serialize, // serialize
 	int_deserialize, // deserialize
+	0, // to_fd
+	0, // from_fd
 	int_cmp, // cmp
 	int_ivalue, // ivalue
 	int_fvalue, // fvalue

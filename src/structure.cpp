@@ -206,6 +206,8 @@ IMPLEMENT_TYPE(Structure) {
 	struct_get_size, // get_size
 	0, // serialize
 	0, // deserialize
+	0, // to_fd
+	0, // from_fd
 	struct_cmp, // cmp
 	struct_ivalue, // ivalue
 	struct_fvalue, // fvalue

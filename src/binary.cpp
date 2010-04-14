@@ -64,7 +64,7 @@ size_t binary_get_size( Object *me ){
 }
 
 byte *binary_serialize( Object *o, size_t size ){
-	size_t i, s   = (size > ob_get_size(o) ? ob_get_size(o) : size);
+	size_t i, s   = (size > ob_get_size(o) ? ob_get_size(o) : size != 0 ? size : ob_get_size(o) );
 	byte  *buffer = new byte[s];
 	BinaryObject *bme = (BinaryObject *)o;
 
@@ -245,6 +245,8 @@ IMPLEMENT_TYPE(Binary) {
 	binary_get_size, // get_size
 	binary_serialize, // serialize
 	binary_deserialize, // deserialize
+	0, // to_fd
+	0, // from_fd
 	binary_cmp, // cmp
 	binary_ivalue, // ivalue
 	binary_fvalue, // fvalue

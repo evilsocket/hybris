@@ -268,6 +268,8 @@ IMPLEMENT_TYPE(Map) {
 	map_get_size, // get_size
 	0, // serialize
 	0, // deserialize
+	0, // to_fd
+	0, // from_fd
 	map_cmp, // cmp
 	map_ivalue, // ivalue
 	map_fvalue, // fvalue

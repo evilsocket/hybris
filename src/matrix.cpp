@@ -399,6 +399,8 @@ IMPLEMENT_TYPE(Matrix) {
 	matrix_get_size, // get_size
 	0, // serialize
 	0, // deserialize
+	0, // to_fd
+	0, // from_fd
 	matrix_cmp, // cmp
 	matrix_ivalue, // ivalue
 	matrix_fvalue, // fvalue

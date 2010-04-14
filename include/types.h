@@ -131,6 +131,10 @@ typedef size_t   (*ob_size_function_t)          ( Object * );
 typedef byte *   (*ob_serialize_function_t)     ( Object *, size_t );
 // deserialize the object from a buffer
 typedef Object * (*ob_deserialize_function_t)   ( Object *, byte *, size_t );
+// write an object to a file descriptor
+typedef Object * (*ob_to_fd_t)					( Object *, int, size_t );
+// read an object from a file descriptor
+typedef Object * (*ob_from_fd_t)				( Object *, int, size_t );
 // {a} == {b} ?
 typedef int      (*ob_cmp_function_t)           ( Object *, Object * );
 // get the integer value rapresentation of the object
@@ -196,6 +200,8 @@ typedef struct _object_type_t {
     ob_size_function_t			get_size;
     ob_serialize_function_t     serialize;
     ob_deserialize_function_t   deserialize;
+    ob_to_fd_t					to_fd;
+    ob_from_fd_t				from_fd;
     ob_cmp_function_t           cmp;
     ob_ivalue_function_t        ivalue;
     ob_fvalue_function_t        fvalue;
@@ -283,6 +289,8 @@ bool    ob_free( Object *o );
 size_t  ob_get_size( Object *o );
 byte *  ob_serialize( Object *, size_t );
 Object *ob_deserialize( Object *, byte *, size_t );
+Object *ob_to_fd( Object *, int, size_t );
+Object *ob_from_fd( Object *, int, size_t );
 int     ob_cmp( Object *o, Object * cmp );
 long    ob_ivalue( Object *o );
 double  ob_fvalue( Object *o );

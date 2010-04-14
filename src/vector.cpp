@@ -233,6 +233,8 @@ IMPLEMENT_TYPE(Vector) {
 	vector_get_size, // get_size
 	0, // serialize
 	0, // deserialize
+	0, // to_fd
+	0, // from_fd
 	vector_cmp, // cmp
 	vector_ivalue, // ivalue
 	vector_fvalue, // fvalue
