@@ -47,13 +47,6 @@
  */
 #define GC_DEFAULT_MEMORY_THRESHOLD 2048000
 
-/*
- * Better be safe than sorry :P
- */
-#ifndef size_t
-	typedef unsigned int size_t;
-#endif
-
 struct _Object;
 /*
  * This structure represent an item in the gc 

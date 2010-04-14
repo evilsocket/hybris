@@ -170,7 +170,7 @@ clean:
 	rm -f lib$(TARGET).so.1.0
 	rm -f lib$(TARGET).so
 	rm -f lib$(TARGET).so.1
-	rm -rf stdlib/build
+	rm -rf build
 	rm -f hybris.tmp.*
 	
 install:
@@ -185,7 +185,7 @@ install:
 	ln -sf $(PREFIX)/lib/lib$(TARGET).so.1.0 $(PREFIX)/lib/lib$(TARGET).so
 	ln -sf $(PREFIX)/lib/lib$(TARGET).so.1.0 $(PREFIX)/lib/lib$(TARGET).so.1
 	ldconfig
-	cp -rf stdlib/build/* /usr/lib/hybris/library/
+	cp -rf build/* /usr/lib/hybris/library/
 
 uninstall:
 	rm -rf $(PREFIX)/bin/$(TARGET) 
