@@ -17,6 +17,7 @@
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <hybris.h>
+#include <errno.h>
 
 HYBRIS_DEFINE_FUNCTION(hpthread_create);
 HYBRIS_DEFINE_FUNCTION(hpthread_exit);
@@ -79,13 +80,36 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
 	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
 
     pthread_t tid;
+    int       code;
     thread_args_t *args = new thread_args_t;
 
     args->data = data->clone();
     args->ctx  = ctx;
-    pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args );
 
-    return OB_DOWNCAST( MK_INT_OBJ(tid) );
+    if( (code = pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args )) == 0 ){
+    	return OB_DOWNCAST( MK_INT_OBJ(tid) );
+    }
+    else{
+    	switch( code ){
+			case EAGAIN :
+				hyb_throw( H_ET_WARNING, "The system lacked the necessary resources to create another thread, or the system-imposed "
+										 "limit on the total number of threads in a process PTHREAD_THREADS_MAX would be exceeded" );
+			break;
+
+			case EINVAL :
+				hyb_throw( H_ET_WARNING, "Invalid attribute value for pthread_create" );
+			break;
+
+			case EPERM  :
+				hyb_throw( H_ET_WARNING, "The caller does not have appropriate permission to set the required scheduling parameters or scheduling policy" );
+			break;
+
+			default :
+				hyb_throw( H_ET_WARNING, "Unknown system error while creating the thread" );
+    	}
+
+    	return OB_DOWNCAST( MK_INT_OBJ(-1) );
+    }
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_exit){
@@ -104,10 +128,14 @@ HYBRIS_DEFINE_FUNCTION(hpthread_join){
     pthread_t tid = static_cast<pthread_t>( INT_ARGV(0) );
     void *status;
 
-    pthread_join( tid, &status );
-
-    ctx->depool();
-
-    return OB_DOWNCAST( MK_INT_OBJ(0) );
+    // fix issue #0000014
+    if( tid != -1 ){
+    	pthread_join( tid, &status );
+		ctx->depool();
+		return OB_DOWNCAST( MK_INT_OBJ(0) );
+    }
+    else{
+    	return OB_DOWNCAST( MK_INT_OBJ(-1) );
+    }
 }
 

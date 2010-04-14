@@ -1,6 +1,6 @@
 CXX=g++
 WFLAGS= -w
-OPTIMIZATION= -O2 -funroll-loops -fno-rtti -fomit-frame-pointer -ffast-math -fno-stack-protector -ffunction-sections
+OPTIMIZATION= -O3 -pipe -fomit-frame-pointer -ffast-math
 CFLAGS= -Iinclude/ $(WFLAGS) $(OPTIMIZATION) 
 LFLAGS= -ldl -lpcrecpp -lpthread
 LIBXML_CFLAGS= `xml2-config --cflags`

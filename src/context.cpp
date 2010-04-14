@@ -281,9 +281,13 @@ function_t Context::getFunction( char *identifier ){
         nfuncs = modules[i]->functions.size();
         for( j = 0; j < nfuncs; ++j ){
             if( modules[i]->functions[j]->identifier == identifier ){
+            	// fix issue #0000014
+            	lock();
                 /* found it, add to the cache and return */
                 cached_function = modules[i]->functions[j];
                 modules_cache.insert( identifier, cached_function );
+                unlock();
+
                 return cached_function->function;
             }
         }

@@ -61,6 +61,17 @@ size_t vector_get_size( Object *me ){
 	return VECTOR_UPCAST(me)->items;
 }
 
+Object *vector_to_fd( Object *o, int fd, size_t size ){
+	size_t i, s = (size > ob_get_size(o) ? ob_get_size(o) : size != 0 ? size : ob_get_size(o));
+	int    written(0);
+
+	for( i = 0; i < s; ++i ){
+		written += INT_VALUE( ob_to_fd( VECTOR_UPCAST(o)->value[i], fd, 0 ) );
+	}
+
+	return OB_DOWNCAST( MK_INT_OBJ(written) );
+}
+
 int vector_cmp( Object *me, Object *cmp ){
     if( !IS_VECTOR_TYPE(cmp) ){
         return 1;
@@ -233,7 +244,7 @@ IMPLEMENT_TYPE(Vector) {
 	vector_get_size, // get_size
 	0, // serialize
 	0, // deserialize
-	0, // to_fd
+	vector_to_fd, // to_fd
 	0, // from_fd
 	vector_cmp, // cmp
 	vector_ivalue, // ivalue

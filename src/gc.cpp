@@ -110,6 +110,9 @@ void gc_collect(){
      * threshold.
      */
     if( __gc.usage >= __gc.threshold ){
+		#ifdef MEM_DEBUG
+			printf( "[MEM DEBUG] GC quota (%d bytes) reached with %d bytes, collecting ...\n", __gc.threshold, __gc.usage );
+		#endif
         gc_item_t *item;
         for( item = __gc.pool_head; item; item = item->next ){
 			/*

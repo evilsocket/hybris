@@ -39,6 +39,14 @@ extern "C" named_function_t hybris_module_functions[] = {
 	{ "", NULL }
 };
 
+static Object *__dateTime_type = H_UNDEFINED;
+
+extern "C" void hybris_module_init( Context * ctx ){
+    char *dateTime_attributes[] = { "sec", "min", "hour", "mday", "month", "year", "wday", "yday" };
+
+    __dateTime_type = HYBRIS_DEFINE_STRUCTURE( ctx, "DateTime", 8, dateTime_attributes );
+}
+
 HYBRIS_DEFINE_FUNCTION(hticks){
     timeval ts;
     gettimeofday(&ts,0);
@@ -77,23 +85,23 @@ HYBRIS_DEFINE_FUNCTION(hsleep){
 }
 
 HYBRIS_DEFINE_FUNCTION(htime){
-	Object *map = OB_DOWNCAST( MK_MAP_OBJ() );
+	Object *dtime = ob_clone(__dateTime_type);
 	time_t raw;
 	struct tm * ti;
 
 	time(&raw);
 	ti = localtime(&raw);
 
-	ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ("sec") ),   OB_DOWNCAST( MK_INT_OBJ(ti->tm_sec) ) );
-	ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ("min") ),   OB_DOWNCAST( MK_INT_OBJ(ti->tm_min) ) );
-	ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ("hour") ),  OB_DOWNCAST( MK_INT_OBJ(ti->tm_hour) ) );
-	ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ("mday") ),  OB_DOWNCAST( MK_INT_OBJ(ti->tm_mday) ) );
-	ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ("month") ), OB_DOWNCAST( MK_INT_OBJ(ti->tm_mon + 1) ) );
-	ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ("year") ),  OB_DOWNCAST( MK_INT_OBJ(ti->tm_year + 1900) ) );
-	ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ("wday") ),  OB_DOWNCAST( MK_INT_OBJ(ti->tm_wday + 1) ) );
-	ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ("yday") ),  OB_DOWNCAST( MK_INT_OBJ(ti->tm_yday + 1) ) );
+	ob_set_attribute_reference( dtime, "sec",   OB_DOWNCAST( MK_INT_OBJ(ti->tm_sec) ) );
+	ob_set_attribute_reference( dtime, "min",   OB_DOWNCAST( MK_INT_OBJ(ti->tm_min) ) );
+	ob_set_attribute_reference( dtime, "hour",  OB_DOWNCAST( MK_INT_OBJ(ti->tm_hour) ) );
+	ob_set_attribute_reference( dtime, "mday",  OB_DOWNCAST( MK_INT_OBJ(ti->tm_mday) ) );
+	ob_set_attribute_reference( dtime, "month", OB_DOWNCAST( MK_INT_OBJ(ti->tm_mon + 1) ) );
+	ob_set_attribute_reference( dtime, "year",  OB_DOWNCAST( MK_INT_OBJ(ti->tm_year + 1900) ) );
+	ob_set_attribute_reference( dtime, "wday",  OB_DOWNCAST( MK_INT_OBJ(ti->tm_wday + 1) ) );
+	ob_set_attribute_reference( dtime, "yday",  OB_DOWNCAST( MK_INT_OBJ(ti->tm_yday + 1) ) );
 
-	return map;
+	return dtime;
 }
 
 HYBRIS_DEFINE_FUNCTION(hstrtime){

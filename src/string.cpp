@@ -162,24 +162,16 @@ Object *string_deserialize( Object *o, byte *buffer, size_t size ){
 		delete[] tmp;
 	}
 	else{
-		bool isEOF = false,
-			 isEOL = false;
-		byte c;
 		size_t i = 0;
+		byte   c;
 
 		STRING_UPCAST(o)->value = "";
-
-		while( !isEOL && !isEOF ){
-			c = buffer[i++];
-
-			if( c == '\r' || c == '\n' ){
-				isEOL = true;
-			}
-			else {
-				STRING_VALUE(o) += c;
-				STRING_UPCAST(o)->items++;
-			}
+		do{
+			STRING_VALUE(o) += c = buffer[i++];
 		}
+		while( c != '\n' );
+
+		STRING_UPCAST(o)->items = i;
 	}
 	return o;
 }
@@ -205,25 +197,17 @@ Object *string_from_fd( Object *o, int fd, size_t size ){
 		delete[] tmp;
 	}
 	else{
-		bool isEOF = false,
-			 isEOL = false;
-		byte c;
+		byte c, n;
 
 		STRING_UPCAST(o)->value = "";
-
-		while( !isEOL && !isEOF ){
-			rd += n = read( fd, &c, sizeof(byte) );
-			if( n < 1 ){
-				isEOF = true;
-			}
-			else if( c == '\r' || c == '\n' ){
-				isEOL = true;
-			}
-			else {
+		do{
+			if( (n = read( fd, &c, sizeof(byte) )) > 0 ){
+				rd++;
 				STRING_VALUE(o) += c;
 				STRING_UPCAST(o)->items++;
 			}
 		}
+		while( c != '\n' && n && c);
 	}
 	return OB_DOWNCAST( MK_INT_OBJ(rd) );
 }
