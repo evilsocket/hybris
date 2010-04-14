@@ -89,7 +89,7 @@ STDSRC=stdlib/std/hashing/md5.cc \
 		
 OBJECTS=$(SOURCES:.cpp=.o)
 LOBJECTS=$(SOURCES:.cpp=.lo)
-STDOBJ=$(STDSRC:.cc=.so)
+STDOBJ=$(patsubst stdlib%.cc,build%.so, $(STDSRC))
 
 all: src/lexer.cpp src/parser.cpp lib hybris stdlib
 
@@ -122,7 +122,6 @@ hybris: $(OBJECTS)
 stdlib: $(STDOBJ)
 		
 .cpp.o: 
-	@rm -f hybris.tmp.errors hybris.tmp.log
 	@rm -f hybris.tmp.* && printf "@ Compiling $< ..."
 	@$(CXX) -c $< -o $@ $(CFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
 	@if test -e hybris.tmp.errors; \
@@ -134,7 +133,6 @@ stdlib: $(STDOBJ)
 	@rm -f hybris.tmp.errors hybris.tmp.log
 	
 .cpp.lo:
-	@rm -f hybris.tmp.errors hybris.tmp.log
 	@rm -f hybris.tmp.* && printf "@ Compiling $< ..."
 	@$(CXX) -c $< -o $@ $(CFLAGS) -fPIC 2> hybris.tmp.log || touch hybris.tmp.errors
 	@if test -e hybris.tmp.errors; \
@@ -145,11 +143,10 @@ stdlib: $(STDOBJ)
 	fi
 	@rm -f hybris.tmp.errors hybris.tmp.log
 
-.cc.so: 
-	@rm -f hybris.tmp.errors hybris.tmp.log
+build/%.so: stdlib/%.cc
 	@rm -f hybris.tmp.* && printf "@ Compiling $< ..."
-	@mkdir -p `dirname $< | sed -e 's/stdlib/stdlib\/build/'`
-	@$(CXX) $< -o `dirname $< | sed -e 's/stdlib/stdlib\/build/'`/`basename $< .cc`.so $(STDLIB_CFLAGS) $(STDLIB_LFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
+	@mkdir -p $(dir $@)
+	@$(CXX) $< -o $@ $(STDLIB_CFLAGS) $(STDLIB_LFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
 	@if test -e hybris.tmp.errors; \
 		then printf "$(ERROR_STRING)" && cat hybris.tmp.log && exit 1; \
 	elif test -s hybris.tmp.log; \
