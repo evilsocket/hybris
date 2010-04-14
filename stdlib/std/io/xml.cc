@@ -65,7 +65,7 @@ Object *xml_traverse( xmlNode *node ){
 				const xmlChar *value = xmlNodeGetContent(a->children);
 
 				ob_cl_set_reference( OB_DOWNCAST(h_xmlAttributes),
-									 OB_DOWNCAST( MK_TMP_STRING_OBJ(a->name) ),
+									 OB_DOWNCAST( MK_STRING_OBJ(a->name) ),
 									 OB_DOWNCAST( MK_STRING_OBJ(value) ) );
 
 				xmlFree((void*)value);
@@ -78,20 +78,20 @@ Object *xml_traverse( xmlNode *node ){
 				/* child element */
 				if( child->type == XML_ELEMENT_NODE ){
                     /* create a map for the child if it doesn't exist yet */
-					StringObject childname((char *)child->name);
+					Object *childname = OB_DOWNCAST( MK_STRING_OBJ( (char *)child->name ) ),
+						   *vchildren = H_UNDEFINED;
 
-					if( map_find( OB_DOWNCAST(h_xmlChildren), OB_DOWNCAST(&childname) ) == -1 ){
+					if( map_find( OB_DOWNCAST(h_xmlChildren), childname ) == -1 ){
+						vchildren = OB_DOWNCAST(MK_VECTOR_OBJ());
 						ob_cl_set_reference( OB_DOWNCAST(h_xmlChildren),
-											 OB_DOWNCAST(&childname),
-											 OB_DOWNCAST(MK_VECTOR_OBJ()) );
+											 childname,
+											 vchildren );
 					}
-
+					else{
+						vchildren = ob_cl_at( OB_DOWNCAST(h_xmlChildren), childname );
+					}
 					/* push the child into the array */
-					ob_cl_set_reference(
-							ob_cl_at( OB_DOWNCAST(h_xmlChildren), OB_DOWNCAST(&childname) ),
-							OB_DOWNCAST(&childname),
-							xml_traverse(child) );
-
+					ob_cl_push_reference( vchildren, xml_traverse(child) );
 				}
 				/* node raw content */
 				else{
