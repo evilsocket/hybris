@@ -61,12 +61,12 @@ char grgKeyTruncMask[sizeof(ulong)][sizeof(ulong)];
       (keyTo) = (keyFrom);                     /* just copy pointer or info */\
    else if ( (ht)->cchKey == NULL_TERMINATED )        /* copy 0-term.ed str */\
    {                                                                          \
-      (keyTo) = (ulong)ht_safe_malloc( WORD_ROUND(strlen((char *)(keyFrom))+1) );  \
+      (keyTo) = (ulong)malloc( WORD_ROUND(strlen((char *)(keyFrom))+1) );  \
       strcpy((char *)(keyTo), (char *)(keyFrom));                             \
    }                                                                          \
    else                                                                       \
    {                                                                          \
-      (keyTo) = (ulong) ht_safe_malloc( WORD_ROUND((ht)->cchKey) );                \
+      (keyTo) = (ulong) malloc( WORD_ROUND((ht)->cchKey) );                \
       memcpy( (char *)(keyTo), (char *)(keyFrom), (ht)->cchKey);              \
    }                                                                          \
    while ( 0 )
@@ -96,97 +96,6 @@ typedef ulong          HTOffset; /* something big enough to hold offsets */
 #define SET_BITMAP(bm, i)    (bm)[DIV_NUM_ENTRIES(i)] |= MODBIT(i)
 #define CLEAR_BITMAP(bm, i)  (bm)[DIV_NUM_ENTRIES(i)] &= ~MODBIT(i)
 
-   /* the following are useful for reading and writing hashtables */
-#define READ_UL(fp, data)                  \
-   do {                                    \
-      long _ul;                            \
-      fread(&_ul, sizeof(_ul), 1, (fp));   \
-      data = ntohl(_ul);                   \
-   } while (0)
-
-#define WRITE_UL(fp, data)                 \
-   do {                                    \
-      long _ul = htonl((long)(data));      \
-      fwrite(&_ul, sizeof(_ul), 1, (fp));  \
-   } while (0)
-
-   /* Moves data from disk to memory if necessary.  Note dataRead cannot be  *
-    * NULL, because then we might as well (and do) load the data into memory */
-#define LOAD_AND_RETURN(ht, loadCommand)     /* lC returns an hash_item_t * */     \
-   if ( !(ht)->fpData )          /* data is stored in memory */               \
-      return (loadCommand);                                                   \
-   else                          /* must read data off of disk */             \
-   {                                                                          \
-      int cchData;                                                            \
-      hash_item_t *bck;                                                            \
-      if ( (ht)->bckData.data )  free((char *)(ht)->bckData.data);            \
-      ht->bckData.data = (ulong)NULL;   /* needed if loadCommand fails */     \
-      bck = (loadCommand);                                                    \
-      if ( bck == NULL )          /* loadCommand failed: key not found */     \
-         return NULL;                                                         \
-      else                                                                    \
-         (ht)->bckData = *bck;                                                \
-      fseek(ht->fpData, (ht)->bckData.data, SEEK_SET);                        \
-      READ_UL((ht)->fpData, cchData);                                         \
-      (ht)->bckData.data = (ulong)(ht)->dataRead((ht)->fpData, cchData);      \
-      return &((ht)->bckData);                                                \
-   }
-
-/* ht_safe_malloc() -- safe malloc
- *    allocates memory, or crashes if the allocation fails.
- */
-inline static void *ht_safe_malloc(ulong size)
-{
-   void *retval;
-
-   if ( size == 0 )
-      return NULL;
-   retval = (void *)malloc(size);
-   if ( !retval )
-   {
-      fprintf(stderr, "ht_safe_malloc: Unable to allocate %lu bytes of memory\n",
-	      size);
-      exit(1);
-   }
-   return retval;
-}
-
-/* ht_safe_calloc() -- safe calloc
- *    allocates memory and initializes it to 0, or crashes if
- *    the allocation fails.
- */
-inline static void *ht_safe_calloc(ulong size)
-{
-   void *retval;
-
-   retval = (void *)calloc(size, 1);
-   if ( !retval && size > 0 )
-   {
-      fprintf(stderr, "ht_safe_calloc: Unable to allocate %lu bytes of memory\n",
-	      size);
-      exit(1);
-   }
-   return retval;
-}
-
-/* ht_safe_realloc() -- safe calloc
- *    grows the amount of memory from a source, or crashes if
- *    the allocation fails.
- */
-inline static void *ht_safe_realloc(void *ptr, ulong new_size, long delta)
-{
-   if ( ptr == NULL )
-      return ht_safe_malloc(new_size);
-   ptr = realloc(ptr, new_size);
-   if ( !ptr && new_size > 0 )
-   {
-      fprintf(stderr, "ht_safe_realloc: Unable to reallocate %lu bytes of memory\n",
-	      new_size);
-      exit(1);
-   }
-   return ptr;
-}
-
 /* ht_free() -- keep track of memory use
  *    frees memory using free, but updates count of how much memory
  *    is being used.
@@ -195,20 +104,6 @@ inline static void ht_free(void *ptr, ulong size)
 {
    if ( size > 0 )         /* some systems seem to not like freeing NULL */
       free(ptr);
-}
-
-/*************************************************************************\
-| ht_copy()                                                                |
-|     Sometimes we interpret data as a ulong.  But ulongs must be         |
-|     aligned on some machines, so instead of casting we copy.            |
-\*************************************************************************/
-
-ulong ht_copy(char *ul)
-{
-   ulong retval;
-
-   memcpy(&retval, ul, sizeof(retval));
-   return retval;
 }
 
 /*************************************************************************\
@@ -285,8 +180,8 @@ inline static void DenseTableClear(dense_bin_t *bin, ulong cBuckets)
 
 inline static ulong DenseTableAllocate(dense_bin_t **pbin, ulong cBuckets)
 {
-   *pbin = (dense_bin_t *) ht_safe_malloc(sizeof(*pbin));
-   (*pbin)->rgBuckets = (hash_item_t *) ht_safe_malloc(sizeof(*(*pbin)->rgBuckets)
+   *pbin = (dense_bin_t *) malloc(sizeof(*pbin));
+   (*pbin)->rgBuckets = (hash_item_t *) malloc(sizeof(*(*pbin)->rgBuckets)
 						  * cBuckets);
    DenseTableClear(*pbin, cBuckets);
    return cBuckets;
@@ -573,34 +468,34 @@ inline static hash_item_t *Find(hash_table_t *ht, ulong key, ulong *piEmpty)
    int fFoundEmpty = 0;           /* set when we pass over an empty bucket */
 
    ht->posLastFind = NULL;        /* set up for failure: a new find starts */
-   if ( ht->table == NULL )       /* empty hash table: find is bound to fail */
-      return NULL;
 
    iBucketFirst = Hash(ht, KEY_PTR(ht, key), ht->cBuckets);
-   while ( 1 )                    /* now try all i > 0 */
-   {
-      item = DenseTableFind(ht->table, iBucketFirst);
-      if ( item == NULL )         /* it's not in the table */
-      {
-	 if ( piEmpty && !fFoundEmpty ) *piEmpty = iBucketFirst;
-	 return NULL;
+
+   /* now try all i > 0 */
+   while( 1 ) {
+      item = DenseTableFind( ht->table, iBucketFirst );
+      /* it's not in the table */
+      if( item == NULL ) {
+		 if( piEmpty && !fFoundEmpty ) *piEmpty = iBucketFirst;
+		 return NULL;
       }
-      else
-      {
-	 if ( IS_BCK_DELETED(item) )      /* always 0 ifdef INSERT_ONLY */
-	 {
-	    if ( piEmpty && !fFoundEmpty )
-	    {
-	       *piEmpty = iBucketFirst;
-	       fFoundEmpty = 1;
-	    }
-	 } else
-	    if ( !KEY_CMP(ht, key, item->key) )     /* must be occupied */
-	    {
-	       ht->posLastFind = item;
-	       return item;               /* we found it! */
-	    }
-      }
+      /* always 0 ifdef INSERT_ONLY */
+      else if ( IS_BCK_DELETED(item) ) {
+		if( piEmpty && !fFoundEmpty ) {
+		   *piEmpty = iBucketFirst;
+		   fFoundEmpty = 1;
+		}
+	  }
+      /* item found */
+	  else {
+		/* must be occupied */
+		/** TODO: is this check really needed ? **/
+		//if( !KEY_CMP(ht, key, item->key) ) {
+		   ht->posLastFind = item;
+		   return item;               /* we found it! */
+		//}
+	  }
+
       iBucketFirst = ((iBucketFirst + JUMP(KEY_PTR(ht, key), offset)) & (ht->cBuckets-1));
    }
 }
@@ -625,21 +520,21 @@ inline static ulong NextPow2(ulong x)    /* returns next power of 2 > x, or 2^31
    return x << 1;                 /* makes it the *next* power of 2 */
 }
 
-inline static hash_item_t *Insert(hash_table_t *ht, ulong key, ulong data, int fOverwrite)
+inline static hash_item_t *Insert(hash_table_t *ht, ulong key, ulong data, int fOverwrite, int skip_search = 0 )
 {
    hash_item_t *item, bckInsert;
    ulong iEmpty;                  /* first empty bucket key probes */
 
-   if ( ht->table == NULL )       /* empty hash table: find is bound to fail */
-      return NULL;
-   item = Find(ht, key, &iEmpty);
-   ht->posLastFind = NULL;        /* last operation is insert, not find */
-   if ( item )
-   {
-      if ( fOverwrite )
-	 item->data = data;       /* key already matches */
-      return item;
+
+   if( skip_search == 0 ){
+	   item = Find(ht, key, &iEmpty);
+	   if ( item && fOverwrite ) {
+		  item->data = data;       /* key already matches */
+		  return item;
+	   }
    }
+
+   ht->posLastFind = NULL;        /* last operation is insert, not find */
 
    COPY_KEY(ht, bckInsert.key, key);    /* make our own copy of the key */
    bckInsert.data = data;               /* oh, and the data too */
@@ -657,38 +552,6 @@ inline static hash_item_t *Insert(hash_table_t *ht, ulong key, ulong data, int f
 		    item);
    return item;
 }
-
-/*************************************************************************\
-| Delete()                                                                |
-|     Removes the item from the hashtable, and if fShrink is 1, will      |
-|     shrink the hashtable if it's too small (ie even after halving,      |
-|     the ht would be less than half full, though in order to avoid       |
-|     oscillating table size, we insist that after halving the ht would   |
-|     be less than 40% full).  RETURNS 1 if the item was found, 0 else.   |
-|        If fLastFindSet is true, then this function is basically         |
-|     DeleteLastFind.                                                     |
-\*************************************************************************/
-
-inline static int Delete(hash_table_t *ht, ulong key, int fShrink, int fLastFindSet)
-{
-   if ( !fLastFindSet && !Find(ht, key, NULL) )
-      return 0;
-   SET_BCK_DELETED(ht, ht->posLastFind);       /* find set this, how nice */
-   --ht->cItems;
-   ++ht->cDeletedItems;
-   if ( ht->cDeltaGoalSize < 0 )  /* heading towards our goal of deletion */
-      ++ht->cDeltaGoalSize;
-
-   if ( fShrink && ht->cItems < ht->cBuckets * OCCUPANCY_PCT*0.4
-        && ht->cDeltaGoalSize >= 0       /* wait until we're done deleting */
-        && (ht->cBuckets >> 1) >= MIN_HASH_SIZE )                /* shrink */
-      Rehash(ht,
-	     NextPow2((ulong)((ht->cItems+ht->cDeltaGoalSize)/OCCUPANCY_PCT)),
-	     NULL);
-   ht->posLastFind = NULL;           /* last operation is delete, not find */
-   return 1;
-}
-
 
 /* ======================================================================== */
 /*                          USER-VISIBLE API                                */
@@ -715,17 +578,15 @@ hash_table_t *ht_alloc(int cchKey, int fSaveKeys)
 {
    hash_table_t *ht;
 
-   ht = (hash_table_t *) ht_safe_malloc(sizeof(hash_table_t));   /* set everything to 0 */
+   ht = (hash_table_t *) malloc(sizeof(hash_table_t));   /* set everything to 0 */
    ht->cBuckets = DenseTableAllocate(&ht->table, MIN_HASH_SIZE);
    ht->cchKey = cchKey <= 0 ? NULL_TERMINATED : cchKey;
    ht->cItems = 0;
    ht->cDeletedItems = 0;
    ht->fSaveKeys = fSaveKeys;
    ht->cDeltaGoalSize = 0;
-   ht->iter = (dense_iterator_t *)ht_safe_malloc( sizeof(dense_iterator_t) );
+   ht->iter = (dense_iterator_t *)malloc( sizeof(dense_iterator_t) );
 
-   ht->fpData = NULL;                           /* set by HashLoad, maybe */
-   ht->bckData.data = (ulong) NULL;             /* this must be done */
    HTSetupKeyTrunc();                           /* in util.c */
    return ht;
 }
@@ -748,9 +609,6 @@ void ht_clear(hash_table_t *ht)
    ht->cDeletedItems = 0;
    ht->cDeltaGoalSize = 0;
    ht->posLastFind = NULL;
-   ht->fpData = NULL;               /* no longer HashLoading */
-   if ( ht->bckData.data )  free( (char *)(ht)->bckData.data);
-   ht->bckData.data = (ulong) NULL;
 }
 
 void ht_free(hash_table_t *ht)
@@ -775,12 +633,12 @@ void ht_free(hash_table_t *ht)
 
 hash_item_t *ht_find(hash_table_t *ht, ulong key)
 {
-   LOAD_AND_RETURN(ht, Find(ht, KEY_TRUNC(ht, key), NULL));
+   return Find( ht, KEY_TRUNC(ht, key), NULL );
 }
 
 hash_item_t *ht_find_last(hash_table_t *ht)
 {
-   LOAD_AND_RETURN(ht, ht->posLastFind);
+   return ht->posLastFind;
 }
 
 /*************************************************************************\
@@ -806,9 +664,9 @@ hash_item_t *ht_find_or_insert_item(hash_table_t *ht, hash_item_t *pItem)
    return ht_find_or_insert(ht, pItem->key, pItem->data);
 }
 
-hash_item_t *ht_insert(hash_table_t *ht, ulong key, ulong data)
+hash_item_t *ht_insert(hash_table_t *ht, ulong key, ulong data, int skip_search /*= 0*/ )
 {
-   return Insert(ht, KEY_TRUNC(ht, key), data, SAMEKEY_OVERWRITE);
+   return Insert(ht, KEY_TRUNC(ht, key), data, SAMEKEY_OVERWRITE, skip_search );
 }
 
 hash_item_t *ht_insert_item(hash_table_t *ht, hash_item_t *pItem)
@@ -818,14 +676,44 @@ hash_item_t *ht_insert_item(hash_table_t *ht, hash_item_t *pItem)
 
 int ht_delete(hash_table_t *ht, ulong key)
 {
-   return Delete(ht, KEY_TRUNC(ht, key), !FAST_DELETE, 0);
+	key = KEY_TRUNC(ht, key);
+
+	SET_BCK_DELETED(ht, ht->posLastFind);       /* find set this, how nice */
+   --ht->cItems;
+   ++ht->cDeletedItems;
+   if ( ht->cDeltaGoalSize < 0 )  /* heading towards our goal of deletion */
+	  ++ht->cDeltaGoalSize;
+
+   if ( !FAST_DELETE && ht->cItems < ht->cBuckets * OCCUPANCY_PCT*0.4
+		&& ht->cDeltaGoalSize >= 0       /* wait until we're done deleting */
+		&& (ht->cBuckets >> 1) >= MIN_HASH_SIZE )                /* shrink */
+	  Rehash(ht,
+		 NextPow2((ulong)((ht->cItems+ht->cDeltaGoalSize)/OCCUPANCY_PCT)),
+		 NULL);
+   ht->posLastFind = NULL;           /* last operation is delete, not find */
+   return 1;
 }
 
 int ht_delete_last(hash_table_t *ht)
 {
    if ( !ht->posLastFind  )                /* last find failed */
       return 0;
-   return Delete(ht, 0, !FAST_DELETE, 1);  /* no need to specify a key */
+
+   ulong key = KEY_TRUNC(ht, key);
+
+   	SET_BCK_DELETED(ht, ht->posLastFind);       /* find set this, how nice */
+	--ht->cItems;
+	++ht->cDeletedItems;
+	if ( ht->cDeltaGoalSize < 0 )  /* heading towards our goal of deletion */
+	++ht->cDeltaGoalSize;
+
+	if ( !FAST_DELETE && ht->cItems < ht->cBuckets * OCCUPANCY_PCT*0.4
+	&& ht->cDeltaGoalSize >= 0       /* wait until we're done deleting */
+	&& (ht->cBuckets >> 1) >= MIN_HASH_SIZE )                /* shrink */
+		Rehash( ht,
+				NextPow2((ulong)((ht->cItems+ht->cDeltaGoalSize)/OCCUPANCY_PCT)),
+				NULL);
+	ht->posLastFind = NULL;           /* last operation is delete, not find */
 }
 
 /*************************************************************************\
@@ -844,7 +732,7 @@ hash_item_t *ht_first_bucket(hash_table_t *ht)
    for ( retval = DenseTableFirstBucket(ht->iter, ht->table, ht->cBuckets);
 	 retval;  retval = DenseTableNextBucket(ht->iter) )
       if ( !IS_BCK_DELETED(retval) )
-	 LOAD_AND_RETURN(ht, retval);
+	 	return retval;
    return NULL;
 }
 
@@ -854,7 +742,7 @@ hash_item_t *ht_next_bucket(hash_table_t *ht)
 
    while ( (retval=DenseTableNextBucket(ht->iter)) )
       if ( !IS_BCK_DELETED(retval) )
-	 LOAD_AND_RETURN(ht, retval);
+    	  return retval;
    return NULL;
 }
 

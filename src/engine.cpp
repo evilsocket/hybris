@@ -246,27 +246,24 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
     return H_UNDEFINED;
 }
 
-Node * Engine::findEntryPoint( vframe_t *frame, Node *call, char *name ){
+Node * Engine::findEntryPoint( vframe_t *frame, Node *call ){
     char *callname = (char *)call->value.m_call.c_str();
 
     /* search first in the code segment */
 	Node *function = H_UNDEFINED;
 	if( (function = vc->get(callname)) != H_UNDEFINED ){
-	    strcpy( name, callname );
 		return function;
 	}
 	/* then search for a function alias */
 	AliasObject *alias = ALIAS_UPCAST( frame->get( callname ) );
 	if( alias != H_UNDEFINED && IS_ALIAS_TYPE(alias) ){
-	    strcpy( name, vc->label( alias->value ) );
-		return vc->at( alias->value );
+		return (Node *)alias->value;
 	}
 	/* try to evaluate the call as an alias itself */
 	if( call->value.m_alias_call != NULL ){
 		alias = (AliasObject *)exec( frame, call->value.m_alias_call );
 		if( IS_ALIAS_TYPE(alias) ){
-		    strcpy( name, vc->label( alias->value ) );
-			return vc->find( name );
+			return (Node *)alias->value;
 		}
 	}
 	/* function is not defined */
@@ -276,6 +273,7 @@ Node * Engine::findEntryPoint( vframe_t *frame, Node *call, char *name ){
 Object *Engine::onIdentifier( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
     int     idx;
+    Node   *function   = H_UNDEFINED;
     char   *identifier = (char *)node->value.m_identifier.c_str();
 
 	/*
@@ -297,11 +295,11 @@ Object *Engine::onIdentifier( vframe_t *frame, Node *node ){
 	 * So, it's neither defined on local frame nor in the global one,
 	 * let's search for it in the code frame.
 	 */
-	else if( (idx = vc->index( identifier )) != -1 ){
+	else if( (function = vc->find( identifier )) != H_UNDEFINED ){
 		/*
 		 * Create an alias to that code region (basically its index).
 		 */
-		return OB_DOWNCAST( MK_ALIAS_OBJ(idx) );
+		return OB_DOWNCAST( MK_ALIAS_OBJ( H_ADDRESS_OF(function) ) );
 	}
 	/*
 	 * Ok ok, got it! It's undefined, raise an error.
@@ -466,35 +464,30 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
 }
 
 Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
-    char    *callname             = (char *)call->value.m_call.c_str(),
-             function_name[0xFF]  = {0};
+    char    *callname             = (char *)call->value.m_call.c_str();
     Node    *function             = H_UNDEFINED,
             *identifier           = H_UNDEFINED;
     vframe_t stack;
     Object  *value                = H_UNDEFINED,
             *result               = H_UNDEFINED;
+    Node    *body                 = H_UNDEFINED;
 
     vector<string> identifiers;
-    unsigned int i, body = 0, children;
-    H_NODE_TYPE type;
+    unsigned int i(0), children;
 
-    if( (function = findEntryPoint( frame, call, function_name )) == H_UNDEFINED ){
+    if( (function = findEntryPoint( frame, call )) == H_UNDEFINED ){
         return H_UNDEFINED;
     }
 
+    body = function->child(0);
     /* a function could be without arguments */
-    if( function->child(0)->type() == H_NT_IDENTIFIER ){
-        identifier = function->child(0);
-        children   = function->children();
-        type       = identifier->type();
-
-        for( i = 0; type == H_NT_IDENTIFIER && i < children; ++i ){
-            identifier = function->child(i);
-            identifiers.push_back( identifier->value.m_identifier );
-        }
-
-        body = i - 1;
-        identifiers.pop_back();
+    if( body->type() == H_NT_IDENTIFIER ){
+        children = function->children();
+        do{
+        	identifier = body;
+        	identifiers.push_back( identifier->value.m_identifier );
+        	body = function->child(++i);
+        }while( body->type() == H_NT_IDENTIFIER && i < children );
     }
 
     if( identifiers.size() != call->children() ){
@@ -521,7 +514,7 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
     ctx->trace( callname, &stack );
 
     /* call the function */
-    result = exec( &stack, function->child(body) );
+    result = exec( &stack, body );
 
     ctx->detrace();
 
@@ -951,12 +944,23 @@ Object *Engine::onAssign( vframe_t *frame, Node *node ){
     Object *object     = H_UNDEFINED,
            *value      = H_UNDEFINED;
 
+	/*
+	 * If the first child node is not an attribute (therefore it's an identifier),
+	 * define it (or replace its value) onto the vm frame we are in.
+	 * If it's already defined, the ::add method will decrement the old value's
+	 * reference counter by 1.
+	 */
     if( node->child(0)->type() != H_NT_ATTRIBUTE ){
         char   *identifier = (char *)node->child(0)->value.m_identifier.c_str();
 
         value  = exec( frame, node->child(1) );
         object = frame->add( identifier, value );
     }
+    /*
+	 * Structured types attributes are defined inside their owner space address.
+	 * In such cases, there's no need to define them onto the main vm frame,
+	 * but we assign them to the pseudo frame of the type.
+	 */
     else{
         object = exec( frame, node->child(0) );
         value  = exec( frame, node->child(1) );

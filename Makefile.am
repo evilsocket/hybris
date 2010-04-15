@@ -12,14 +12,13 @@ STDLIB_CFLAGS= $(WFLAGS) -L. -I./include/ $(OPTIMIZATION) -fPIC $(LIBXML_CFLAGS)
 PREFIX=/usr
 TARGET=hybris
 
-NO_COLOR=\x1b[0m
-OK_COLOR=\x1b[32;01m
-ERROR_COLOR=\x1b[31;01m
-WARN_COLOR=\x1b[33;01m
-OK_STRING=$(OK_COLOR) OK\n$(NO_COLOR)
-ERROR_STRING=$(ERROR_COLOR)[ERRORS]\n$(NO_COLOR)
-WARN_STRING=$(WARN_COLOR)[WARNINGS]\n$(NO_COLOR)
-
+CHECK_FOR_ERRORS=if test -e hybris.tmp.errors; \
+					then printf "\x1b[31;01m[ERRORS]\n\x1b[0m" && cat hybris.tmp.log && rm -f hybris.tmp.errors hybris.tmp.log && exit 1; \
+				 elif test -s hybris.tmp.log; \
+					then printf "\x1b[33;01m[WARNINGS]\n\x1b[0m" && cat hybris.tmp.log; \
+				 else printf "\x1b[32;01m OK\n\x1b[0m"; \
+				 fi && rm -f hybris.tmp.errors hybris.tmp.log
+				 
 LIBOBJ=src/context.lo \
        src/gc.lo \
 	   src/common.lo \
@@ -94,76 +93,44 @@ STDOBJ=$(patsubst stdlib%.cc,build%.so, $(STDSRC))
 all: src/lexer.cpp src/parser.cpp lib hybris stdlib
 
 lib: $(LOBJECTS)	
-	@rm -f hybris.tmp.errors hybris.tmp.log
 	@printf "\x1b[33;01m@ Creating lib$(TARGET).so.1.0 ..."
 	@$(CXX) -shared -Wl,-soname,libhybris.so.1 -o lib$(TARGET).so.1.0 $(LIBOBJ) 2> hybris.tmp.log || touch hybris.tmp.errors
-	@if test -e hybris.tmp.errors; \
-		then printf "$(ERROR_STRING)" && cat hybris.tmp.log && exit 1; \
-	elif test -s hybris.tmp.log; \
-		then printf "$(WARN_STRING)" && cat hybris.tmp.log; \
-	else printf "$(OK_STRING)"; \
-	fi
-	@rm -f hybris.tmp.errors hybris.tmp.log
+	@$(CHECK_FOR_ERRORS)
 	@ln -sf lib$(TARGET).so.1.0 lib$(TARGET).so
 	@ln -sf lib$(TARGET).so.1.0 lib$(TARGET).so.1
 	
 hybris: $(OBJECTS)
-	@rm -f hybris.tmp.errors hybris.tmp.log
 	@printf "\x1b[33;01m@ Creating $(TARGET) ..."
 	@$(CXX) src/*.o -o $(TARGET) $(CFLAGS) $(LFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
-	@if test -e hybris.tmp.errors; \
-		then printf "$(ERROR_STRING)" && cat hybris.tmp.log && exit 1; \
-	elif test -s hybris.tmp.log; \
-		then printf "$(WARN_STRING)" && cat hybris.tmp.log; \
-	else printf "$(OK_STRING)"; \
-	fi
-	@rm -f hybris.tmp.errors hybris.tmp.log
+	@$(CHECK_FOR_ERRORS)
 
 stdlib: $(STDOBJ)
 		
 .cpp.o: 
-	@rm -f hybris.tmp.* && printf "@ Compiling $< ..."
+	@printf "@ Compiling $< ..."
 	@$(CXX) -c $< -o $@ $(CFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
-	@if test -e hybris.tmp.errors; \
-		then printf "$(ERROR_STRING)" && cat hybris.tmp.log && exit 1; \
-	elif test -s hybris.tmp.log; \
-		then printf "$(WARN_STRING)" && cat hybris.tmp.log; \
-	else printf "$(OK_STRING)"; \
-	fi
-	@rm -f hybris.tmp.errors hybris.tmp.log
+	@$(CHECK_FOR_ERRORS)
 	
 .cpp.lo:
-	@rm -f hybris.tmp.* && printf "@ Compiling $< ..."
+	@printf "@ Compiling $< ..."
 	@$(CXX) -c $< -o $@ $(CFLAGS) -fPIC 2> hybris.tmp.log || touch hybris.tmp.errors
-	@if test -e hybris.tmp.errors; \
-		then printf "$(ERROR_STRING)" && cat hybris.tmp.log && exit 1; \
-	elif test -s hybris.tmp.log; \
-		then printf "$(WARN_STRING)" && cat hybris.tmp.log; \
-	else printf "$(OK_STRING)"; \
-	fi
-	@rm -f hybris.tmp.errors hybris.tmp.log
+	@$(CHECK_FOR_ERRORS)
 
 build/%.so: stdlib/%.cc
-	@rm -f hybris.tmp.* && printf "@ Compiling $< ..."
+	@printf "@ Compiling $< ..."
 	@mkdir -p $(dir $@)
 	@$(CXX) $< -o $@ $(STDLIB_CFLAGS) $(STDLIB_LFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
-	@if test -e hybris.tmp.errors; \
-		then printf "$(ERROR_STRING)" && cat hybris.tmp.log && exit 1; \
-	elif test -s hybris.tmp.log; \
-		then printf "$(WARN_STRING)" && cat hybris.tmp.log; \
-	else printf "$(OK_STRING)"; \
-	fi
-	@rm -f hybris.tmp.errors hybris.tmp.log
+	@$(CHECK_FOR_ERRORS)
 	
 src/parser.cpp: src/parser.y.cpp
 	@printf "\x1b[33;01m@ Creating $@ ... "
 	@bison -y -d -o $@ $? 2> /dev/null
-	@printf "$(OK_STRING)";
+	@$(CHECK_FOR_ERRORS)
 
 src/lexer.cpp: src/lexer.l.cpp
 	@printf "\x1b[33;01m@ Creating $@ ... "
 	@flex -o $@ $? 2> /dev/null
-	@printf "$(OK_STRING)";
+	@$(CHECK_FOR_ERRORS)
 
 clean:
 	rm -f src/lexer.cpp include/lexer.h include/parser.h src/parser.hpp src/parser.cpp src/*.o src/*.lo $(TARGET)

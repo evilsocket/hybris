@@ -43,7 +43,7 @@ using std::string;
 H_TEMPLATE_T class Map {
 protected :
 
-    struct map_pair {
+    typedef struct map_pair {
         string        label;
         value_t      *value;
 
@@ -52,11 +52,12 @@ protected :
             value(v) {
 
         }
-    };
+    }
+    pair_t;
 
-    unsigned int       m_elements;
-    vector<map_pair *> m_map;
-    hash_table_t      *m_table;
+    unsigned int     m_elements;
+    vector<pair_t *> m_map;
+    hash_table_t    *m_table;
 
     inline int search_index( char *label ){
 		int i, j,
@@ -146,18 +147,30 @@ public  :
 	}
 
 	inline value_t *replace( char *label, value_t *old_value, value_t *new_value ){
+		hash_item_t *item;
+
+		if( (item = ht_find( m_table, PTR_KEY( m_table, label ) )) != NULL ){
+			((pair_t *)item->data)->value = new_value;
+		}
+		else{
+			ht_insert( m_table, PTR_KEY( m_table, label ), (u_long)new_value, 1 );
+		}
+
+		return old_value;
+
+		/*
         int idx = search_index( (value_t *)old_value );
 
         m_map[idx]->value = new_value;
         ht_insert( m_table, PTR_KEY( m_table, label ), (u_long)new_value );
 
         return old_value;
+		*/
 	}
 
     value_t *insert( char *label, value_t *value );
     value_t *set( char *label, value_t *value );
     value_t *find( char *label );
-    int      index( char *label );
 
     void     pop();
     void     clear();
@@ -173,34 +186,19 @@ H_TEMPLATE_T Map<value_t>::~Map(){
 }
 
 H_TEMPLATE_T value_t * Map<value_t>::insert( char *label, value_t *value ){
-    m_map.push_back( new map_pair(label, value) );
-    ht_insert( m_table, PTR_KEY( m_table, label ), (u_long)value );
+	pair_t *pair = new pair_t( label, value);
+	m_map.push_back( pair );
+    ht_insert( m_table, PTR_KEY( m_table, label ), (u_long)pair );
     m_elements++;
     return value;
-}
-
-H_TEMPLATE_T value_t * Map<value_t>::set( char *label, value_t *value ){
-    int i = search_index(label);
-	if( i != -1 ){
-	    ht_insert( m_table, PTR_KEY( m_table, label ), (u_long)value );
-		m_map[i]->label = label;
-		m_map[i]->value = value;
-		return value;
-	}
-
-    return H_UNDEFINED;
 }
 
 H_TEMPLATE_T value_t * Map<value_t>::find( char *label ){
     hash_item_t *item = ht_find( m_table, PTR_KEY( m_table, label ) );
     if( item ){
-        return (value_t *)item->data;
+        return ((pair_t *)item->data)->value;
     }
     return H_UNDEFINED;
-}
-
-H_TEMPLATE_T int Map<value_t>::index( char *label ){
-	return search_index(label);
 }
 
 H_TEMPLATE_T void Map<value_t>::pop(){

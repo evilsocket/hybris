@@ -62,17 +62,24 @@ bool ob_free( Object *o ){
     ob_set_references( o, -1 );
 
     if( o->type->free != HYB_UNIMPLEMENTED_FUNCTION ){
+    	/*
+    	 * The free function is defined only for collection types or
+    	 * types that handles pointers anyway.
+    	 * Basically, instead of licterally freeing its items, the object
+    	 * will just decrement their reference counters.
+    	 */
         o->type->free(o);
         return true;
     }
     return false;
 }
 
-size_t  ob_get_size( Object *o ){
+size_t ob_get_size( Object *o ){
 	if( o->type->get_size != HYB_UNIMPLEMENTED_FUNCTION ){
 		return o->type->get_size(o);
 	}
 	/*
+	 * Every type should define a get_size function.
 	 * Should we trig an error?
 	 */
 	return 0;
@@ -260,17 +267,8 @@ Object *ob_apply_regexp( Object *a, Object *b ){
 Object *ob_assign( Object *a, Object *b ){
 	if( a->type->assign != HYB_UNIMPLEMENTED_FUNCTION ){
 	    /**
-	     * NOTE: If a and b are of the same type, instead of cloning b inside a,
-	     * there's only value assignation.
-	     * This is a special case because if 'b' is a collection type (and we
-	     * do not know in this function yet), we should increment the reference
-	     * counters of its inner items, so let the assign function pointer
-	     * handle this.
-	     *
-	     * TODO: Write iteration function pointers to handle such cases inside
-	     * this functions and to let specialized functions not be aware of
-	     * garbage collection details OR implement a function pointer to set
-	     * references only for a collection items.
+	     * NOTE: If 'a' is already defined, the assign method will just replace
+		 * its value, then the VM will decrement old value reference counter.
 	     */
 		return a->type->assign(a,b);
 	}

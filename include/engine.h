@@ -31,7 +31,7 @@ class Engine {
         vcode_t *vc;
         vmem_t  *vt;
 
-        Node * findEntryPoint( vframe_t *frame, Node *call, char *name );
+        Node   *findEntryPoint( vframe_t *frame, Node *call );
 
         Object *onBuiltinFunctionCall( vframe_t *, Node * );
         Object *onUserFunctionCall( vframe_t *, Node *, int threaded = 0 );

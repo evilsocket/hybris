@@ -72,17 +72,12 @@
     * may fail); instead we set the data field to DELETED.  Thus you *
     * should set DELETED to a data value you never use.  Better yet, *
     * if you don't need to delete, define INSERT_ONLY.               */
-#ifndef INSERT_ONLY
-#	define DELETED                   -2UL
-#	define IS_BCK_DELETED(bck)       ( (bck) && (bck)->data == DELETED )
-#	define SET_BCK_DELETED(ht, bck)  do { (bck)->data = DELETED;                \
-                                       FREE_KEY(ht, (bck)->key); } while ( 0 )
-#else
-#	define IS_BCK_DELETED(bck)       0
-#	define SET_BCK_DELETED(ht, bck)  \
-									 do { fprintf(stderr, "Deletion not supported for insert-only hashtable\n");\
-									 exit(2); } while ( 0 )
-#endif
+
+#define DELETED                   -2UL
+#define IS_BCK_DELETED(bck)       ( (bck) && (bck)->data == DELETED )
+#define SET_BCK_DELETED(ht, bck)  do { (bck)->data = DELETED;                \
+                                  FREE_KEY(ht, (bck)->key); } while ( 0 )
+
 
    /* We need the following only for dense buckets (Dense##x above).  *
     * If you need to, set this to a value you'll never use for data.  */
@@ -111,10 +106,6 @@ typedef struct hash_table {
    int cDeltaGoalSize;  /* # of coming inserts (or deletes, if <0) we expect */
    hash_item_t *posLastFind; /* position of last Find() command */
    dense_iterator_t *iter; /* used in First/NextBucket */
-
-   FILE *fpData;        /* if non-NULL, what item->data points into */
-   char * (*dataRead)(FILE *, int);   /* how to load data from disk */
-   hash_item_t bckData;      /* holds data after being loaded from disk */
 } hash_table_t;
 
    /* Small keys are stored and passed directly, but large keys are
@@ -132,12 +123,7 @@ typedef struct hash_table {
 #define STORES_PTR(ht)    ( HashKeySize(ht) == 0 || \
 			    HashKeySize(ht) > sizeof(ulong) )
 #define KEY_PTR(ht, key)  ( STORES_PTR(ht) ? (char *)(key) : (char *)&(key) )
-
-#ifdef DONT_HAVE_TO_WORRY_ABOUT_BUS_ERRORS
-#	define PTR_KEY( ht, ptr )  ( STORES_PTR(ht) ? (ulong)(ptr) : *(ulong *)(ptr) )
-#else
-#	define PTR_KEY( ht, ptr )  ( STORES_PTR(ht) ? (ulong)(ptr) : ht_copy((char *)ptr))
-#endif
+#define PTR_KEY( ht, ptr )  ( STORES_PTR(ht) ? (ulong)(ptr) : *(ulong *)(ptr) )
 
 /* for PTR_KEY, not for users */
 unsigned long ht_copy				 ( char *pul );
@@ -150,7 +136,7 @@ hash_item_t  *ht_find_last			 ( hash_table_t *ht );
 hash_item_t  *ht_find_or_insert      ( hash_table_t *ht, ulong key, ulong dataInsert );
 hash_item_t  *ht_find_or_insert_item ( hash_table_t *ht, hash_item_t *pItem );
 /* insert functions */
-hash_item_t  *ht_insert				 ( hash_table_t *ht, ulong key, ulong data );
+hash_item_t  *ht_insert				 ( hash_table_t *ht, ulong key, ulong data, int skip_search = 0 );
 hash_item_t  *ht_insert_item		 ( hash_table_t *ht, hash_item_t *pItem );
 /* delete functions */
 int 		  ht_delete				 ( hash_table_t *ht, ulong key );

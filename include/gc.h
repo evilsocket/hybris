@@ -69,7 +69,7 @@ typedef struct _gc_item {
 gc_item_t;
 
 /*
- * Main gc structure, kinda of the "head" of the pool.
+ * Main gc structure, kind of the "head" of the pool.
  *
  * pool_*    : Tracked objects list head and tail pointers .
  * items	 : Number of items in the pool.
