@@ -62,11 +62,11 @@ typedef Object * (*function_t)( Context *, vmem_t * );
 #define float_argv(i)  ob_float_val( data->at(i) )
 #define char_argv(i)   ob_char_val( data->at(i) )
 #define string_argv(i) ob_string_val( data->at(i) )
-#define binary_argv(i) BINARY_VALUE( data->at(i) )
+#define binary_argv(i) ob_binary_val( data->at(i) )
 #define vector_argv(i) ob_vector_val( data->at(i) )
 #define map_argv(i)    ob_map_val( data->at(i) )
 #define matrix_argv(i) ob_matrix_val( data->at(i) )
-#define struct_argv(i) STRUCT_VALUE( data->at(i) )
+#define struct_argv(i) ob_struct_val( data->at(i) )
 
 /* macros to assert an object type */
 #define ob_type_assert(o,t)      if( !(o->type->code == t) ){ \
