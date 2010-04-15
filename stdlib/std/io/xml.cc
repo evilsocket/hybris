@@ -54,41 +54,41 @@ Object *xml_traverse( xmlNode *node ){
 	if( node->type == XML_ELEMENT_NODE ){
 	    /* check for empty names (usually indentation) */
 		if( xml_isinvalid((char *)node->name) == 0 ){
-			MapObject *h_xmlAttributes = MK_MAP_OBJ(),
-					  *h_xmlChildren   = MK_MAP_OBJ();
+			MapObject *h_xmlAttributes = gc_new_map(),
+					  *h_xmlChildren   = gc_new_map();
 
             /* set node name */
-            ob_set_attribute_reference( h_xmlNode, "name", OB_DOWNCAST( MK_STRING_OBJ(node->name) ) );
+            ob_set_attribute_reference( h_xmlNode, "name", ob_dcast( gc_new_string(node->name) ) );
 
 			/* fill attributes map */
 			for( xmlAttr *a = node->properties; a; a = a->next ){
 				const xmlChar *value = xmlNodeGetContent(a->children);
 
-				ob_cl_set_reference( OB_DOWNCAST(h_xmlAttributes),
-									 OB_DOWNCAST( MK_STRING_OBJ(a->name) ),
-									 OB_DOWNCAST( MK_STRING_OBJ(value) ) );
+				ob_cl_set_reference( ob_dcast(h_xmlAttributes),
+									 ob_dcast( gc_new_string(a->name) ),
+									 ob_dcast( gc_new_string(value) ) );
 
 				xmlFree((void*)value);
 			}
             /* set attributes */
-            ob_set_attribute_reference( h_xmlNode, "attributes", OB_DOWNCAST(h_xmlAttributes) );
+            ob_set_attribute_reference( h_xmlNode, "attributes", ob_dcast(h_xmlAttributes) );
 
 			/* start children evaluation */
 			for( xmlNode *child = node->children; child; child = child->next ){
 				/* child element */
 				if( child->type == XML_ELEMENT_NODE ){
                     /* create a map for the child if it doesn't exist yet */
-					Object *childname = OB_DOWNCAST( MK_STRING_OBJ( (char *)child->name ) ),
+					Object *childname = ob_dcast( gc_new_string( (char *)child->name ) ),
 						   *vchildren = H_UNDEFINED;
 
-					if( map_find( OB_DOWNCAST(h_xmlChildren), childname ) == -1 ){
-						vchildren = OB_DOWNCAST(MK_VECTOR_OBJ());
-						ob_cl_set_reference( OB_DOWNCAST(h_xmlChildren),
+					if( map_find( ob_dcast(h_xmlChildren), childname ) == -1 ){
+						vchildren = ob_dcast(gc_new_vector());
+						ob_cl_set_reference( ob_dcast(h_xmlChildren),
 											 childname,
 											 vchildren );
 					}
 					else{
-						vchildren = ob_cl_at( OB_DOWNCAST(h_xmlChildren), childname );
+						vchildren = ob_cl_at( ob_dcast(h_xmlChildren), childname );
 					}
 					/* push the child into the array */
 					ob_cl_push_reference( vchildren, xml_traverse(child) );
@@ -98,13 +98,13 @@ Object *xml_traverse( xmlNode *node ){
 					const xmlChar *content = xmlNodeGetContent(child);
 					if( xml_isinvalid((char *)content) == 0 ){
 						/* add the content */
-						ob_set_attribute_reference( h_xmlNode, "data", OB_DOWNCAST(MK_STRING_OBJ(content)) );
+						ob_set_attribute_reference( h_xmlNode, "data", ob_dcast(gc_new_string(content)) );
 						xmlFree((void*)content);
 					}
 				}
 			}
 			/* set children */
-			ob_set_attribute_reference( h_xmlNode, "children", OB_DOWNCAST(h_xmlChildren) );
+			ob_set_attribute_reference( h_xmlNode, "children", ob_dcast(h_xmlChildren) );
 		}
 	}
 
@@ -112,12 +112,12 @@ Object *xml_traverse( xmlNode *node ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hxml_load){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'xml_load' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'xml_load' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	ob_type_assert( ob_argv(0), otString );
 
-	string   filename = STRING_ARGV(0);
+	string   filename = string_argv(0);
 	xmlDoc  *doc  = NULL;
 	xmlNode *root = NULL;
 
@@ -137,12 +137,12 @@ HYBRIS_DEFINE_FUNCTION(hxml_load){
 }
 
 HYBRIS_DEFINE_FUNCTION(hxml_parse){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'xml_parse' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'xml_parse' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	ob_type_assert( ob_argv(0), otString );
 
-	string   xml  = STRING_ARGV(0);
+	string   xml  = string_argv(0);
 	xmlDoc  *doc  = NULL;
 	xmlNode *root = NULL;
 

@@ -63,299 +63,299 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hacos){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'acos' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'acos' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        return (Object *)MK_FLOAT_OBJ( acos(INT_ARGV(0) ));
+    if( ob_is_int( ob_argv(0) ) ){
+        return (Object *)gc_new_float( acos(int_argv(0) ));
     }
     else{
-        return (Object *)MK_FLOAT_OBJ( acos(FLOAT_ARGV(0) ));
+        return (Object *)gc_new_float( acos(float_argv(0) ));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hasin){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'asin' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'asin' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        return (Object *)MK_FLOAT_OBJ( asin(INT_ARGV(0) ));
+    if( ob_is_int( ob_argv(0) ) ){
+        return (Object *)gc_new_float( asin(int_argv(0) ));
     }
     else{
-        return (Object *)MK_FLOAT_OBJ( asin(FLOAT_ARGV(0) ));
+        return (Object *)gc_new_float( asin(float_argv(0) ));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hatan){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'atan' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'atan' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        return (Object *)MK_FLOAT_OBJ( atan(INT_ARGV(0) ));
+    if( ob_is_int( ob_argv(0) ) ){
+        return (Object *)gc_new_float( atan(int_argv(0) ));
     }
     else{
-        return (Object *)MK_FLOAT_OBJ( atan(FLOAT_ARGV(0) ));
+        return (Object *)gc_new_float( atan(float_argv(0) ));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hatan2){
-    if( HYB_ARGC() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'atan2' requires 2 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'atan2' requires 2 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
-    HYB_TYPES_ASSERT( HYB_ARGV(1), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
+    ob_types_assert( ob_argv(1), otInteger, otFloat );
 
     double a, b;
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        a = (double)INT_VALUE( HYB_ARGV(0) );
+    if( ob_is_int( ob_argv(0) ) ){
+        a = (double)ob_int_val( ob_argv(0) );
     }
     else{
-        a = FLOAT_VALUE( HYB_ARGV(0) );
+        a = ob_float_val( ob_argv(0) );
     }
-    if( IS_INTEGER_TYPE( HYB_ARGV(1) ) ){
-        b = (double)INT_VALUE( HYB_ARGV(0) );
+    if( ob_is_int( ob_argv(1) ) ){
+        b = (double)ob_int_val( ob_argv(0) );
     }
     else{
-        b = FLOAT_VALUE( HYB_ARGV(1) );
+        b = ob_float_val( ob_argv(1) );
     }
-    return (Object *)MK_FLOAT_OBJ( atan2(a,b));
+    return (Object *)gc_new_float( atan2(a,b));
 }
 
 HYBRIS_DEFINE_FUNCTION(hceil){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'ceil' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'ceil' requires 1 parameter (called with %d)", ob_argc() );
 	}
 
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        return (Object *)MK_INT_OBJ( ceil(INT_ARGV(0) ) );
+    if( ob_is_int( ob_argv(0) ) ){
+        return (Object *)gc_new_integer( ceil(int_argv(0) ) );
     }
     else{
-        return (Object *)MK_INT_OBJ( ceil(FLOAT_ARGV(0) ) );
+        return (Object *)gc_new_integer( ceil(float_argv(0) ) );
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hcos){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'cos' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'cos' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        return (Object *)MK_FLOAT_OBJ( cos(INT_ARGV(0) ));
+    if( ob_is_int( ob_argv(0) ) ){
+        return (Object *)gc_new_float( cos(int_argv(0) ));
     }
     else{
-        return (Object *)MK_FLOAT_OBJ( cos(FLOAT_ARGV(0) ));
+        return (Object *)gc_new_float( cos(float_argv(0) ));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hcosh){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'cosh' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'cosh' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        return (Object *)MK_FLOAT_OBJ( cosh(INT_ARGV(0) ));
+    if( ob_is_int( ob_argv(0) ) ){
+        return (Object *)gc_new_float( cosh(int_argv(0) ));
     }
     else{
-        return (Object *)MK_FLOAT_OBJ( cosh(FLOAT_ARGV(0) ));
+        return (Object *)gc_new_float( cosh(float_argv(0) ));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hexp){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'exp' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'exp' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        return (Object *)MK_FLOAT_OBJ( exp(INT_ARGV(0) ));
+    if( ob_is_int( ob_argv(0) ) ){
+        return (Object *)gc_new_float( exp(int_argv(0) ));
     }
     else{
-        return (Object *)MK_FLOAT_OBJ( exp(FLOAT_ARGV(0) ));
+        return (Object *)gc_new_float( exp(float_argv(0) ));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hfabs){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'fabs' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'fabs' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        return (Object *)MK_FLOAT_OBJ( fabs(INT_ARGV(0) ));
+    if( ob_is_int( ob_argv(0) ) ){
+        return (Object *)gc_new_float( fabs(int_argv(0) ));
     }
     else{
-        return (Object *)MK_FLOAT_OBJ( fabs(FLOAT_ARGV(0) ));
+        return (Object *)gc_new_float( fabs(float_argv(0) ));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hfloor){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'floor' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'floor' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        return (Object *)MK_INT_OBJ( floor(INT_ARGV(0) ) );
+    if( ob_is_int( ob_argv(0) ) ){
+        return (Object *)gc_new_integer( floor(int_argv(0) ) );
     }
     else{
-        return (Object *)MK_INT_OBJ( floor(FLOAT_ARGV(0) ) );
+        return (Object *)gc_new_integer( floor(float_argv(0) ) );
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hfmod){
-    if( HYB_ARGC() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'fmod' requires 2 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'fmod' requires 2 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
-    HYB_TYPES_ASSERT( HYB_ARGV(1), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
+    ob_types_assert( ob_argv(1), otInteger, otFloat );
 
     double a, b;
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        a = (double)INT_VALUE( HYB_ARGV(0) );
+    if( ob_is_int( ob_argv(0) ) ){
+        a = (double)ob_int_val( ob_argv(0) );
     }
     else{
-        a = FLOAT_VALUE( HYB_ARGV(0) );
+        a = ob_float_val( ob_argv(0) );
     }
-    if( IS_INTEGER_TYPE( HYB_ARGV(1) ) ){
-        b = (double)INT_VALUE( HYB_ARGV(0) );
+    if( ob_is_int( ob_argv(1) ) ){
+        b = (double)ob_int_val( ob_argv(0) );
     }
     else{
-        b = FLOAT_VALUE( HYB_ARGV(1) );
+        b = ob_float_val( ob_argv(1) );
     }
-    return (Object *)MK_FLOAT_OBJ( fmod(a,b));
+    return (Object *)gc_new_float( fmod(a,b));
 }
 
 HYBRIS_DEFINE_FUNCTION(hlog){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'hlog' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'hlog' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        return (Object *)MK_FLOAT_OBJ( log(INT_ARGV(0) ));
+    if( ob_is_int( ob_argv(0) ) ){
+        return (Object *)gc_new_float( log(int_argv(0) ));
     }
     else{
-        return (Object *)MK_FLOAT_OBJ( log(FLOAT_ARGV(0) ));
+        return (Object *)gc_new_float( log(float_argv(0) ));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hlog10){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'log10' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'log10' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        return (Object *)MK_FLOAT_OBJ( log10(INT_ARGV(0) ));
+    if( ob_is_int( ob_argv(0) ) ){
+        return (Object *)gc_new_float( log10(int_argv(0) ));
     }
     else{
-        return (Object *)MK_FLOAT_OBJ( log10(FLOAT_ARGV(0) ));
+        return (Object *)gc_new_float( log10(float_argv(0) ));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hpow){
-    if( HYB_ARGC() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'pow' requires 2 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'pow' requires 2 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
-    HYB_TYPES_ASSERT( HYB_ARGV(1), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
+    ob_types_assert( ob_argv(1), otInteger, otFloat );
 
     double a, b;
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        a = (double)INT_VALUE( HYB_ARGV(0) );
+    if( ob_is_int( ob_argv(0) ) ){
+        a = (double)ob_int_val( ob_argv(0) );
     }
     else{
-        a = FLOAT_VALUE( HYB_ARGV(0) );
+        a = ob_float_val( ob_argv(0) );
     }
-    if( IS_INTEGER_TYPE( HYB_ARGV(1) ) ){
-        b = (double)INT_VALUE( HYB_ARGV(0) );
+    if( ob_is_int( ob_argv(1) ) ){
+        b = (double)ob_int_val( ob_argv(0) );
     }
     else{
-        b = FLOAT_VALUE( HYB_ARGV(1) );
+        b = ob_float_val( ob_argv(1) );
     }
-    return (Object *)MK_FLOAT_OBJ( pow(a,b));
+    return (Object *)gc_new_float( pow(a,b));
 }
 
 HYBRIS_DEFINE_FUNCTION(hsin){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'sin' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'sin' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        return (Object *)MK_FLOAT_OBJ( sin(INT_ARGV(0) ));
+    if( ob_is_int( ob_argv(0) ) ){
+        return (Object *)gc_new_float( sin(int_argv(0) ));
     }
     else{
-        return (Object *)MK_FLOAT_OBJ( sin(FLOAT_ARGV(0) ));
+        return (Object *)gc_new_float( sin(float_argv(0) ));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hsinh){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'sinh' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'sinh' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        return (Object *)MK_FLOAT_OBJ( sinh(INT_ARGV(0) ));
+    if( ob_is_int( ob_argv(0) ) ){
+        return (Object *)gc_new_float( sinh(int_argv(0) ));
     }
     else{
-        return (Object *)MK_FLOAT_OBJ( sinh(FLOAT_ARGV(0) ));
+        return (Object *)gc_new_float( sinh(float_argv(0) ));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(hsqrt){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'sqrt' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'sqrt' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        return (Object *)MK_FLOAT_OBJ( sqrt(INT_ARGV(0) ));
+    if( ob_is_int( ob_argv(0) ) ){
+        return (Object *)gc_new_float( sqrt(int_argv(0) ));
     }
     else{
-        return (Object *)MK_FLOAT_OBJ( sqrt(FLOAT_ARGV(0) ));
+        return (Object *)gc_new_float( sqrt(float_argv(0) ));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(htan){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'tan' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'tan' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        return (Object *)MK_FLOAT_OBJ( tan(INT_ARGV(0) ));
+    if( ob_is_int( ob_argv(0) ) ){
+        return (Object *)gc_new_float( tan(int_argv(0) ));
     }
     else{
-        return (Object *)MK_FLOAT_OBJ( tan(FLOAT_ARGV(0) ));
+        return (Object *)gc_new_float( tan(float_argv(0) ));
     }
 }
 
 HYBRIS_DEFINE_FUNCTION(htanh){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'tanh' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'tanh' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otFloat );
+	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
-    if( IS_INTEGER_TYPE( HYB_ARGV(0) ) ){
-        return (Object *)MK_FLOAT_OBJ( tanh(INT_VALUE( HYB_ARGV(0) )));
+    if( ob_is_int( ob_argv(0) ) ){
+        return (Object *)gc_new_float( tanh(ob_int_val( ob_argv(0) )));
     }
     else{
-        return (Object *)MK_FLOAT_OBJ( tanh(FLOAT_ARGV(0) ));
+        return (Object *)gc_new_float( tanh(float_argv(0) ));
     }
 }
 

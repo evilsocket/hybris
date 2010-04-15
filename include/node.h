@@ -46,7 +46,7 @@ class  Node;
 
 class NodeList : public list<Node *> {
     public :
-        inline void head( Node *a, Node *b ){
+        __force_inline void head( Node *a, Node *b ){
             NodeList::iterator i;
 
             push_front(a);
@@ -55,16 +55,16 @@ class NodeList : public list<Node *> {
             insert( i, b );
         }
 
-        inline void head( Node *a ){
+        __force_inline void head( Node *a ){
             push_front(a);
         }
 
-        inline void tail( Node *a, Node *b ){
+        __force_inline void tail( Node *a, Node *b ){
             push_back(a);
             push_back(b);
         }
 
-        inline void tail( Node *a ){
+        __force_inline void tail( Node *a ){
             push_back(a);
         }
 };
@@ -102,15 +102,15 @@ public  :
 
     NodeValue value;
 
-    inline H_NODE_TYPE type(){
+    __force_inline H_NODE_TYPE type(){
         return m_type;
     }
 
-    inline unsigned int children(){
+    __force_inline unsigned int children(){
         return size();
     }
 
-    inline Node *child( unsigned int i ){
+    __force_inline Node *child( unsigned int i ){
         return at(i);
     }
 

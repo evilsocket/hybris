@@ -50,8 +50,6 @@
 #define MK_RETURN_NODE(a)         new ExpressionNode( T_RETURN, 1, a )
 #define MK_EOSTMT_NODE(a, b)      new ExpressionNode( T_EOSTMT, 2, a, b )
 #define MK_DOLLAR_NODE(a)		  new ExpressionNode( T_DOLLAR, 1, a )
-#define MK_PTR_NODE(a)			  new ExpressionNode( T_PTR, 1, a )
-#define MK_OBJ_NODE(a)			  new ExpressionNode( T_OBJ, 1, a )
 #define MK_ASSIGN_NODE(a, b)      new ExpressionNode( T_ASSIGN, 2, a, b )
 #define MK_SB_NODE(a, b)	      new ExpressionNode( T_SUBSCRIPTGET, 2, a, b )
 #define MK_SB_PUSH_NODE(a, b)     new ExpressionNode( T_SUBSCRIPTADD, 2, a, b )
@@ -272,9 +270,6 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            | T_IDENT_LIST                                     { $$ = MK_IDLST_NODE($1);  }
            /* expression evaluation returns an identifier */
            | T_DOLLAR expression                              { $$ = MK_DOLLAR_NODE($2); }
-           /* ptr/alias evaluation */
-           | T_AND expression                                 { $$ = MK_PTR_NODE($2); }
-           | T_MUL expression                                 { $$ = MK_OBJ_NODE($2); }
            /* attribute declaration/assignation */
            | T_IDENT_LIST T_ASSIGN expression                 { $$ = MK_ASSIGN_NODE( MK_IDLST_NODE($1), $3 ); }
 		   /* identifier declaration/assignation */

@@ -51,37 +51,37 @@ HYBRIS_DEFINE_FUNCTION(hticks){
     timeval ts;
     gettimeofday(&ts,0);
 
-    return OB_DOWNCAST( MK_INT_OBJ( ts.tv_sec * 1000 + (ts.tv_usec / 1000) ) );
+    return ob_dcast( gc_new_integer( ts.tv_sec * 1000 + (ts.tv_usec / 1000) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(husleep){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'usleep' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'usleep' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
+	ob_type_assert( ob_argv(0), otInteger );
 
 	struct timespec ts;
 
-    ts.tv_sec  = INT_ARGV(0) / 1000000;
+    ts.tv_sec  = int_argv(0) / 1000000;
     ts.tv_nsec = ts.tv_sec * 1000;
     nanosleep(&ts,&ts);
 
-	return OB_DOWNCAST( MK_INT_OBJ(0) );
+	return ob_dcast( gc_new_integer(0) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsleep){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'sleep' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'sleep' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
+	ob_type_assert( ob_argv(0), otInteger );
 
 	struct timespec ts;
 
-    ts.tv_sec  = INT_ARGV(0) / 1000;
+    ts.tv_sec  = int_argv(0) / 1000;
     ts.tv_nsec = ts.tv_sec * 1000;
     nanosleep(&ts,&ts);
 
-	return OB_DOWNCAST( MK_INT_OBJ(0) );
+	return ob_dcast( gc_new_integer(0) );
 }
 
 HYBRIS_DEFINE_FUNCTION(htime){
@@ -92,14 +92,14 @@ HYBRIS_DEFINE_FUNCTION(htime){
 	time(&raw);
 	ti = localtime(&raw);
 
-	ob_set_attribute_reference( dtime, "sec",   OB_DOWNCAST( MK_INT_OBJ(ti->tm_sec) ) );
-	ob_set_attribute_reference( dtime, "min",   OB_DOWNCAST( MK_INT_OBJ(ti->tm_min) ) );
-	ob_set_attribute_reference( dtime, "hour",  OB_DOWNCAST( MK_INT_OBJ(ti->tm_hour) ) );
-	ob_set_attribute_reference( dtime, "mday",  OB_DOWNCAST( MK_INT_OBJ(ti->tm_mday) ) );
-	ob_set_attribute_reference( dtime, "month", OB_DOWNCAST( MK_INT_OBJ(ti->tm_mon + 1) ) );
-	ob_set_attribute_reference( dtime, "year",  OB_DOWNCAST( MK_INT_OBJ(ti->tm_year + 1900) ) );
-	ob_set_attribute_reference( dtime, "wday",  OB_DOWNCAST( MK_INT_OBJ(ti->tm_wday + 1) ) );
-	ob_set_attribute_reference( dtime, "yday",  OB_DOWNCAST( MK_INT_OBJ(ti->tm_yday + 1) ) );
+	ob_set_attribute_reference( dtime, "sec",   ob_dcast( gc_new_integer(ti->tm_sec) ) );
+	ob_set_attribute_reference( dtime, "min",   ob_dcast( gc_new_integer(ti->tm_min) ) );
+	ob_set_attribute_reference( dtime, "hour",  ob_dcast( gc_new_integer(ti->tm_hour) ) );
+	ob_set_attribute_reference( dtime, "mday",  ob_dcast( gc_new_integer(ti->tm_mday) ) );
+	ob_set_attribute_reference( dtime, "month", ob_dcast( gc_new_integer(ti->tm_mon + 1) ) );
+	ob_set_attribute_reference( dtime, "year",  ob_dcast( gc_new_integer(ti->tm_year + 1900) ) );
+	ob_set_attribute_reference( dtime, "wday",  ob_dcast( gc_new_integer(ti->tm_wday + 1) ) );
+	ob_set_attribute_reference( dtime, "yday",  ob_dcast( gc_new_integer(ti->tm_yday + 1) ) );
 
 	return dtime;
 }
@@ -114,7 +114,7 @@ HYBRIS_DEFINE_FUNCTION(hstrtime){
 
 	sprintf( stime, "%d:%d:%d", ti->tm_hour, ti->tm_min, ti->tm_sec );
 
-	return OB_DOWNCAST( MK_STRING_OBJ(stime) );
+	return ob_dcast( gc_new_string(stime) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hstrdate){
@@ -127,5 +127,5 @@ HYBRIS_DEFINE_FUNCTION(hstrdate){
 
 	sprintf( sdate, "%d/%d/%d", ti->tm_mon + 1, ti->tm_mday, ti->tm_year + 1900 );
 
-	return OB_DOWNCAST( MK_STRING_OBJ(sdate) );
+	return ob_dcast( gc_new_string(sdate) );
 }

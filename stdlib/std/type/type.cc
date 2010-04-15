@@ -55,80 +55,80 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hisint){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'isint' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'isint' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	return OB_DOWNCAST( MK_INT_OBJ( HYB_ARGV(0)->type->code == otInteger ) );
+	return ob_dcast( gc_new_integer( ob_argv(0)->type->code == otInteger ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisfloat){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'isfloat' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'isfloat' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	return OB_DOWNCAST( MK_INT_OBJ( HYB_ARGV(0)->type->code == otFloat ) );
+	return ob_dcast( gc_new_integer( ob_argv(0)->type->code == otFloat ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hischar){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'ischar' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'ischar' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	return OB_DOWNCAST( MK_INT_OBJ( HYB_ARGV(0)->type->code == otChar ) );
+	return ob_dcast( gc_new_integer( ob_argv(0)->type->code == otChar ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisstring){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'isstring' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'isstring' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	return OB_DOWNCAST( MK_INT_OBJ( HYB_ARGV(0)->type->code == otString ) );
+	return ob_dcast( gc_new_integer( ob_argv(0)->type->code == otString ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisarray){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'isarray' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'isarray' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	return OB_DOWNCAST( MK_INT_OBJ( HYB_ARGV(0)->type->code == otVector ) );
+	return ob_dcast( gc_new_integer( ob_argv(0)->type->code == otVector ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hismap){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'ismap' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'ismap' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	return OB_DOWNCAST( MK_INT_OBJ( HYB_ARGV(0)->type->code == otMap ) );
+	return ob_dcast( gc_new_integer( ob_argv(0)->type->code == otMap ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisalias){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'isalias' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'isalias' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	return OB_DOWNCAST( MK_INT_OBJ( HYB_ARGV(0)->type->code == otAlias ) );
+	return ob_dcast( gc_new_integer( ob_argv(0)->type->code == otAlias ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(htypeof){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'typeof' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'typeof' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	return OB_DOWNCAST( MK_STRING_OBJ( HYB_ARGV(0)->type->name ) );
+	return ob_dcast( gc_new_string( ob_argv(0)->type->name ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsizeof){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'sizeof' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'sizeof' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	return OB_DOWNCAST( MK_INT_OBJ( ob_get_size(HYB_ARGV(0)) ) );
+	return ob_dcast( gc_new_integer( ob_get_size(ob_argv(0)) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(htoint){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'toint' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'toint' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	return ob_to_int( HYB_ARGV(0) );
+	return ob_to_int( ob_argv(0) );
 }
 
 HYBRIS_DEFINE_FUNCTION(htostring){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'tostring' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'tostring' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	return ob_to_string( HYB_ARGV(0) );
+	return ob_to_string( ob_argv(0) );
 }
 
 /* xml conversion routines */
@@ -154,19 +154,19 @@ Object *xmlNode2Object( xmlNode *node ){
 	char *data = (char *)(node->children ? node->children->content : NULL);
 
 	if( strcmp( (char *)node->name, "integer" ) == 0 ){
-		return OB_DOWNCAST( MK_INT_OBJ( atoi(data) ) );
+		return ob_dcast( gc_new_integer( atoi(data) ) );
 	}
 	else if( strcmp( (char *)node->name, "alias" ) == 0 ){
-		return OB_DOWNCAST( MK_ALIAS_OBJ( atoi(data) ) );
+		return ob_dcast( gc_new_alias( atoi(data) ) );
 	}
 	else if( strcmp( (char *)node->name, "char" ) == 0 ){
-		return OB_DOWNCAST( MK_CHAR_OBJ( data[0] ) );
+		return ob_dcast( gc_new_char( data[0] ) );
 	}
 	else if( strcmp( (char *)node->name, "float" ) == 0 ){
-		return OB_DOWNCAST( MK_FLOAT_OBJ( strtod(data,NULL) ) );
+		return ob_dcast( gc_new_float( strtod(data,NULL) ) );
 	}
 	else if( strcmp( (char *)node->name, "string" ) == 0 ){
-		return OB_DOWNCAST( MK_STRING_OBJ( data ) );
+		return ob_dcast( gc_new_string( data ) );
 	}
 	else if( strcmp( (char *)node->name, "binary" ) == 0 ){
 		vector<unsigned char> stream;
@@ -177,20 +177,20 @@ Object *xmlNode2Object( xmlNode *node ){
 			memcpy( &byte, &bytes[i], 2 );
 			stream.push_back( htoi(byte) );
 		}
-		return OB_DOWNCAST( MK_BINARY_OBJ(stream) );
+		return ob_dcast( gc_new_binary(stream) );
 	}
 	else if( strcmp( (char *)node->name, "array" ) == 0 ){
-		Object *array  = OB_DOWNCAST( MK_VECTOR_OBJ() );
+		Object *array  = ob_dcast( gc_new_vector() );
 		xmlNode *child = NULL;
 		for( child = node->children; child; child = child->next ){
 			if( child->type == XML_ELEMENT_NODE) {
 				ob_cl_push_reference( array, xmlNode2Object(child) );
 			}
 		}
-		return OB_DOWNCAST( array );
+		return ob_dcast( array );
 	}
 	else if( strcmp( (char *)node->name, "map" ) == 0 ){
-		Object *map      = OB_DOWNCAST( MK_MAP_OBJ() );
+		Object *map      = ob_dcast( gc_new_map() );
 		xmlNode *child   = NULL,
 				*mapping = NULL,
 				*object  = NULL;
@@ -204,11 +204,11 @@ Object *xmlNode2Object( xmlNode *node ){
 				child = child->next;
 			}
 		}
-		return OB_DOWNCAST( map );
+		return ob_dcast( map );
 	}
 	else if( strcmp( (char *)node->name, "matrix" ) == 0 ){
 		vector<Object *> dummy;
-		MatrixObject *matrix = MK_MATRIX_OBJ(0,0,dummy);
+		MatrixObject *matrix = gc_new_matrix(0,0,dummy);
 		xmlNode *child = NULL,
 				*row   = NULL,
 				*item  = NULL;
@@ -243,10 +243,10 @@ Object *xmlNode2Object( xmlNode *node ){
 			}
 		}
 
-		return OB_DOWNCAST( matrix );
+		return ob_dcast( matrix );
 	}
 	else if( strcmp( (char *)node->name, "struct" ) == 0 ){
-		Object  *structure = OB_DOWNCAST( MK_STRUCT_OBJ() );
+		Object  *structure = ob_dcast( gc_new_struct() );
 		xmlNode *child     = NULL;
 		string   last_attr;
 
@@ -261,7 +261,7 @@ Object *xmlNode2Object( xmlNode *node ){
 			}
 		}
 
-		return OB_DOWNCAST( structure );
+		return ob_dcast( structure );
 	}
 	else{
 		hyb_throw( H_ET_GENERIC, "'%s' invalid xml object type", node->name );
@@ -287,8 +287,8 @@ string Object2Xml( Object *o, unsigned int tabs = 0 ){
 		case otBinary :
             xml << xtabs << "<binary>\n";
             xml << xtabs << "\t";
-            for( i = 0; i < BINARY_UPCAST(o)->items; ++i ){
-                sprintf( byte, "%.2X", CHAR_UPCAST( BINARY_UPCAST(o)->value[i] )->value );
+            for( i = 0; i < ob_binary_ucast(o)->items; ++i ){
+                sprintf( byte, "%.2X", ob_char_ucast( ob_binary_ucast(o)->value[i] )->value );
 				xml << byte;
 			}
 			xml << "\n";
@@ -297,28 +297,28 @@ string Object2Xml( Object *o, unsigned int tabs = 0 ){
 
 		case otVector  :
 			xml << xtabs << "<array>\n";
-			for( i = 0; i < VECTOR_UPCAST(o)->items; ++i ){
-				xml << Object2Xml( VECTOR_UPCAST(o)->value[i], tabs + 1 );
+			for( i = 0; i < ob_vector_ucast(o)->items; ++i ){
+				xml << Object2Xml( ob_vector_ucast(o)->value[i], tabs + 1 );
 			}
 			xml << xtabs << "</array>\n";
 		break;
 		case otMap  :
 			xml << xtabs << "<map>\n";
-			for( i = 0; i < MAP_UPCAST(o)->items; ++i ){
-				xml << Object2Xml( MAP_UPCAST(o)->keys[i],   tabs + 1 );
-				xml << Object2Xml( MAP_UPCAST(o)->values[i], tabs + 1 );
+			for( i = 0; i < ob_map_ucast(o)->items; ++i ){
+				xml << Object2Xml( ob_map_ucast(o)->keys[i],   tabs + 1 );
+				xml << Object2Xml( ob_map_ucast(o)->values[i], tabs + 1 );
 			}
 			xml << xtabs << "</map>\n";
 		break;
 		case otMatrix :
             xml << xtabs << "<matrix>\n";
-            xml << xtabs << "\t" << "<rows>" << MATRIX_UPCAST(o)->rows    << "</rows>\n";
-            xml << xtabs << "\t" << "<cols>" <<MATRIX_UPCAST(o)->columns << "</cols>\n";
+            xml << xtabs << "\t" << "<rows>" << ob_matrix_ucast(o)->rows    << "</rows>\n";
+            xml << xtabs << "\t" << "<cols>" <<ob_matrix_ucast(o)->columns << "</cols>\n";
 
-            for( i = 0; i < MATRIX_UPCAST(o)->rows; ++i ){
+            for( i = 0; i < ob_matrix_ucast(o)->rows; ++i ){
                 xml << xtabs << "\t" << "<row>\n";
-                for( j = 0; j < MATRIX_UPCAST(o)->columns; ++j ){
-                    xml << Object2Xml( MATRIX_UPCAST(o)->matrix[i][j], tabs + 2 );
+                for( j = 0; j < ob_matrix_ucast(o)->columns; ++j ){
+                    xml << Object2Xml( ob_matrix_ucast(o)->matrix[i][j], tabs + 2 );
                 }
                 xml << xtabs << "\t" << "</row>\n";
             }
@@ -327,9 +327,9 @@ string Object2Xml( Object *o, unsigned int tabs = 0 ){
 
 		case otStructure :
             xml << xtabs << "<struct>\n";
-            for( i = 0; i < STRUCT_UPCAST(o)->items; ++i ){
-				xml << xtabs << "\t" << "<attribute>" << STRUCT_UPCAST(o)->names[i] << "</attribute>\n";
-				xml << Object2Xml( STRUCT_UPCAST(o)->values[i], tabs + 1 );
+            for( i = 0; i < ob_struct_ucast(o)->items; ++i ){
+				xml << xtabs << "\t" << "<attribute>" << ob_struct_ucast(o)->names[i] << "</attribute>\n";
+				xml << Object2Xml( ob_struct_ucast(o)->values[i], tabs + 1 );
 			}
             xml << xtabs << "</struct>\n";
 		break;
@@ -343,17 +343,17 @@ string Object2Xml( Object *o, unsigned int tabs = 0 ){
 
 
 HYBRIS_DEFINE_FUNCTION(hfromxml){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'fromxml' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'fromxml' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	ob_type_assert( ob_argv(0), otString );
 
 	xmlDoc  *doc  = NULL;
 	xmlNode *root = NULL;
 
 	LIBXML_TEST_VERSION
 
-	string normalized = STRING_ARGV(0);
+	string normalized = string_argv(0);
 
 	string_replace( normalized, "\n", "" );
 	string_replace( normalized, "\t", "" );
@@ -374,11 +374,11 @@ HYBRIS_DEFINE_FUNCTION(hfromxml){
 
 
 HYBRIS_DEFINE_FUNCTION(htoxml){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'toxml' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'toxml' requires 1 parameter (called with %d)", ob_argc() );
 	}
 
-	string xml = Object2Xml( HYB_ARGV(0) );
+	string xml = Object2Xml( ob_argv(0) );
 
-	return OB_DOWNCAST( MK_STRING_OBJ( xml.c_str() ) );
+	return ob_dcast( gc_new_string( xml.c_str() ) );
 }

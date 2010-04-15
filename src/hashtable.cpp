@@ -66,7 +66,7 @@ typedef ulong          HTOffset; /* something big enough to hold offsets */
  *    frees memory using free, but updates count of how much memory
  *    is being used.
  */
-inline static void ht_free(void *ptr, ulong size)
+__force_inline static void ht_free(void *ptr, ulong size)
 {
    if ( size > 0 )         /* some systems seem to not like freeing NULL */
       free(ptr);
@@ -122,13 +122,13 @@ dense_iterator_t;
 #define DENSE_SET_EMPTY(bin, i)    (bin)[i].data = EMPTY      /* fks-hash.h */
 #define DENSE_SET_OCCUPIED(bin, i) (bin)[i].data = 1          /* not EMPTY */
 
-inline static void DenseTableClear(dense_bin_t *bin, ulong cBuckets)
+__force_inline static void DenseTableClear(dense_bin_t *bin, ulong cBuckets)
 {
    while ( cBuckets-- )
       DENSE_SET_EMPTY(bin->rgBuckets, cBuckets);
 }
 
-inline static ulong DenseTableAllocate(dense_bin_t **pbin, ulong cBuckets)
+__force_inline static ulong DenseTableAllocate(dense_bin_t **pbin, ulong cBuckets)
 {
    *pbin = (dense_bin_t *) malloc(sizeof(*pbin));
    (*pbin)->rgBuckets = (hash_item_t *) malloc(sizeof(*(*pbin)->rgBuckets)
@@ -137,26 +137,26 @@ inline static ulong DenseTableAllocate(dense_bin_t **pbin, ulong cBuckets)
    return cBuckets;
 }
 
-inline static dense_bin_t *DenseTableFree(dense_bin_t *bin, ulong cBuckets)
+__force_inline static dense_bin_t *DenseTableFree(dense_bin_t *bin, ulong cBuckets)
 {
    ht_free(bin->rgBuckets, sizeof(*bin->rgBuckets) * cBuckets);
    ht_free(bin, sizeof(*bin));
    return NULL;
 }
 
-inline static int DenseTableIsEmpty(dense_bin_t *bin, ulong location)
+__force_inline static int DenseTableIsEmpty(dense_bin_t *bin, ulong location)
 {
    return DENSE_IS_EMPTY(bin->rgBuckets, location);
 }
 
-inline static hash_item_t *DenseTableFind(dense_bin_t *bin, ulong location)
+__force_inline static hash_item_t *DenseTableFind(dense_bin_t *bin, ulong location)
 {
    if ( DenseTableIsEmpty(bin, location) )
       return NULL;
    return bin->rgBuckets + location;
 }
 
-inline static hash_item_t *DenseTableInsert(dense_bin_t *bin, hash_item_t *bckInsert, ulong location, int *pfOverwrite)
+__force_inline static hash_item_t *DenseTableInsert(dense_bin_t *bin, hash_item_t *bckInsert, ulong location, int *pfOverwrite)
 {
    hash_item_t *bckPlace;
 
@@ -176,7 +176,7 @@ inline static hash_item_t *DenseTableInsert(dense_bin_t *bin, hash_item_t *bckIn
    }
 }
 
-inline static hash_item_t *DenseTableNextBucket(dense_iterator_t *iter)
+__force_inline static hash_item_t *DenseTableNextBucket(dense_iterator_t *iter)
 {
 	hash_item_t *buckets = iter->bin->rgBuckets;
    for ( ++iter->pos; iter->pos < iter->cBuckets; ++iter->pos )
@@ -185,7 +185,7 @@ inline static hash_item_t *DenseTableNextBucket(dense_iterator_t *iter)
    return NULL;                        /* all remaining groups were empty */
 }
 
-inline static hash_item_t *DenseTableFirstBucket(dense_iterator_t *iter, dense_bin_t *bin, ulong cBuckets)
+__force_inline static hash_item_t *DenseTableFirstBucket(dense_iterator_t *iter, dense_bin_t *bin, ulong cBuckets)
 {
    iter->bin = bin;                    /* set it up for NextBucket() */
    iter->cBuckets = cBuckets;
@@ -193,7 +193,7 @@ inline static hash_item_t *DenseTableFirstBucket(dense_iterator_t *iter, dense_b
    return DenseTableNextBucket(iter);
 }
 
-inline static ulong DenseTableMemory(ulong cBuckets, ulong cOccupied)
+__force_inline static ulong DenseTableMemory(ulong cBuckets, ulong cOccupied)
 {
    return cBuckets * sizeof(hash_item_t);
 }
@@ -288,7 +288,7 @@ inline static ulong DenseTableMemory(ulong cBuckets, ulong cOccupied)
 #error This hash function can only hash 32 or 64 bit words.  Sorry.
 #endif
 
-inline static ulong Hash(hash_table_t *ht, char *key, ulong cBuckets)
+__force_inline static ulong Hash(hash_table_t *ht, char *key, ulong cBuckets)
 {
    ulong a, b, c, cchKey, cchKeyOrig;
 
@@ -362,7 +362,7 @@ inline static ulong Hash(hash_table_t *ht, char *key, ulong cBuckets)
 |     (If you pass in NULL, I return an arbitrary pointer.)               |
 \*************************************************************************/
 
-inline static hash_item_t *Rehash(hash_table_t *ht, ulong cNewBuckets, hash_item_t *bckWatch)
+__force_inline static hash_item_t *Rehash(hash_table_t *ht, ulong cNewBuckets, hash_item_t *bckWatch)
 {
    dense_bin_t *tableNew;
    ulong iBucketFirst;
@@ -411,7 +411,7 @@ inline static hash_item_t *Rehash(hash_table_t *ht, ulong cNewBuckets, hash_item
 |     doing a later insert if the search fails, for instance.             |
 \*************************************************************************/
 
-inline static hash_item_t *Find(hash_table_t *ht, ulong key, ulong *piEmpty)
+__force_inline static hash_item_t *Find(hash_table_t *ht, ulong key, ulong *piEmpty)
 {
    ulong iBucketFirst;
    hash_item_t *item;
@@ -455,7 +455,7 @@ inline static hash_item_t *Find(hash_table_t *ht, ulong key, ulong *piEmpty)
 |     fullness, because they slow down searching.                         |
 \*************************************************************************/
 
-inline static ulong NextPow2(ulong x)    /* returns next power of 2 > x, or 2^31 */
+__force_inline static ulong NextPow2(ulong x)    /* returns next power of 2 > x, or 2^31 */
 {
    if ( ((x << 1) >> 1) != x )    /* next power of 2 overflows */
       x >>= 1;                    /* so we return highest power of 2 we can */
@@ -464,7 +464,7 @@ inline static ulong NextPow2(ulong x)    /* returns next power of 2 > x, or 2^31
    return x << 1;                 /* makes it the *next* power of 2 */
 }
 
-inline static hash_item_t *Insert(hash_table_t *ht, ulong key, ulong data, int fOverwrite, int skip_search = 0 )
+__force_inline static hash_item_t *Insert(hash_table_t *ht, ulong key, ulong data, int fOverwrite, int skip_search = 0 )
 {
    hash_item_t *item, bckInsert;
    ulong iEmpty;                  /* first empty bucket key probes */

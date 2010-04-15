@@ -29,7 +29,7 @@ class VirtualCode : public HashMap<Node> {
         VirtualCode();
         ~VirtualCode();
 
-        inline Node *get( char *identifier ){
+        __force_inline Node *get( char *identifier ){
         	return find(identifier);
         }
 

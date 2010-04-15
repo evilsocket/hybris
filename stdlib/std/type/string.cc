@@ -34,66 +34,66 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hstrlen){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'strlen' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'strlen' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	ob_type_assert( ob_argv(0), otString );
 
-	return OB_DOWNCAST( MK_INT_OBJ( STRING_ARGV(0).size() ) );
+	return ob_dcast( gc_new_integer( string_argv(0).size() ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hstrfind){
-	if( HYB_ARGC() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'strfind' requires 2 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'strfind' requires 2 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
+	ob_type_assert( ob_argv(0), otString );
+	ob_type_assert( ob_argv(1), otString );
 
-	int found = STRING_ARGV(0).find( STRING_ARGV(1) );
+	int found = string_argv(0).find( string_argv(1) );
 
-	return OB_DOWNCAST( MK_INT_OBJ( found == string::npos ? -1 : found ) );
+	return ob_dcast( gc_new_integer( found == string::npos ? -1 : found ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsubstr){
-	if( HYB_ARGC() != 3 ){
-		hyb_throw( H_ET_SYNTAX, "function 'substr' requires 3 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 3 ){
+		hyb_throw( H_ET_SYNTAX, "function 'substr' requires 3 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	ob_type_assert( ob_argv(0), otString );
 
-	string sub = STRING_ARGV(0).substr( ob_ivalue( HYB_ARGV(1) ), ob_ivalue( HYB_ARGV(2) ) );
+	string sub = string_argv(0).substr( ob_ivalue( ob_argv(1) ), ob_ivalue( ob_argv(2) ) );
 
-	return OB_DOWNCAST( MK_STRING_OBJ( sub.c_str() ) );
+	return ob_dcast( gc_new_string( sub.c_str() ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hstrreplace){
-	if( HYB_ARGC() != 3 ){
-		hyb_throw( H_ET_SYNTAX, "function 'strreplace' requires 3 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 3 ){
+		hyb_throw( H_ET_SYNTAX, "function 'strreplace' requires 3 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
-	HYB_TYPE_ASSERT( HYB_ARGV(2), otString );
+	ob_type_assert( ob_argv(0), otString );
+	ob_type_assert( ob_argv(1), otString );
+	ob_type_assert( ob_argv(2), otString );
 
-	string str  = STRING_ARGV(0),
-		   find = STRING_ARGV(1),
-		   repl = STRING_ARGV(2);
+	string str  = string_argv(0),
+		   find = string_argv(1),
+		   repl = string_argv(2);
 
 	unsigned int i;
 	for( ; (i = str.find( find )) != string::npos ; ){
 		str.replace( i, find.length(), repl );
 	}
 
-	return OB_DOWNCAST( MK_STRING_OBJ( str.c_str() ) );
+	return ob_dcast( gc_new_string( str.c_str() ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hstrsplit){
-	if( HYB_ARGC() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'strsplit' requires 2 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'strsplit' requires 2 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
-	HYB_TYPES_ASSERT( HYB_ARGV(1), otString, otChar );
+	ob_type_assert( ob_argv(0), otString );
+	ob_types_assert( ob_argv(1), otString, otChar );
 
-	string str = STRING_ARGV(0),
-		   tok = ob_svalue( HYB_ARGV(1) );
+	string str = string_argv(0),
+		   tok = ob_svalue( ob_argv(1) );
 	vector<string> parts;
     int start = 0, end = 0, i;
 
@@ -103,10 +103,10 @@ HYBRIS_DEFINE_FUNCTION(hstrsplit){
 	}
 	parts.push_back( str.substr(start) );
 
-   	Object *array = OB_DOWNCAST( MK_VECTOR_OBJ() );
+   	Object *array = ob_dcast( gc_new_vector() );
 	for( i = 0; i < parts.size(); ++i ){
-		ob_cl_push_reference( array, OB_DOWNCAST( MK_STRING_OBJ( parts[i].c_str() ) ) );
+		ob_cl_push_reference( array, ob_dcast( gc_new_string( parts[i].c_str() ) ) );
 	}
 
-	return OB_DOWNCAST( array );
+	return ob_dcast( array );
 }

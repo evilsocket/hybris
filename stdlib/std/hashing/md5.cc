@@ -261,12 +261,12 @@ void md5_finish( md5_context *ctx, unsigned char output[16] )
 }
 
 HYBRIS_DEFINE_FUNCTION(hmd5){
-    if( HYB_ARGC() != 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'md5' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+        hyb_throw( H_ET_SYNTAX, "function 'md5' requires 1 parameter (called with %d)", ob_argc() );
     }
-    HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+    ob_type_assert( ob_argv(0), otString );
 
-	string        str 	   = STRING_ARGV(0),
+	string        str 	   = string_argv(0),
 				  str_hash("");
 	unsigned char hash[16] = {0};
 	char          hex[3]   = {0};
@@ -282,5 +282,5 @@ HYBRIS_DEFINE_FUNCTION(hmd5){
 		str_hash += hex;
 	}
 
-	return OB_DOWNCAST( MK_STRING_OBJ( str_hash.c_str() ) );
+	return ob_dcast( gc_new_string( str_hash.c_str() ) );
 }

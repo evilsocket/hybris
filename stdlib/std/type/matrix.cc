@@ -30,15 +30,15 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hmatrix){
-    if( HYB_ARGC() < 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'matrix' requires at least 2 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() < 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'matrix' requires at least 2 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
-    HYB_TYPE_ASSERT( HYB_ARGV(1), otInteger );
+	ob_type_assert( ob_argv(0), otInteger );
+    ob_type_assert( ob_argv(1), otInteger );
 
-    unsigned int     rows    = INT_ARGV(0),
-                     columns = INT_ARGV(1),
-                     nvalues = HYB_ARGC() - 2,
+    unsigned int     rows    = int_argv(0),
+                     columns = int_argv(1),
+                     nvalues = ob_argc() - 2,
                      i;
     vector<Object *> values;
 
@@ -47,27 +47,27 @@ HYBRIS_DEFINE_FUNCTION(hmatrix){
     }
 
     for( i = 2; i < data->size(); ++i ){
-        values.push_back( ob_clone( HYB_ARGV(i) ) );
+        values.push_back( ob_clone( ob_argv(i) ) );
     }
 
-    return OB_DOWNCAST( MK_MATRIX_OBJ( rows, columns, values ) );
+    return ob_dcast( gc_new_matrix( rows, columns, values ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hcolumns){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'columns' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'columns' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otMatrix );
+	ob_type_assert( ob_argv(0), otMatrix );
 
-	return OB_DOWNCAST( MK_INT_OBJ( MATRIX_ARGV(0)->columns ) );
+	return ob_dcast( gc_new_integer( matrix_argv(0)->columns ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hrows){
-    if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'rows' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'rows' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otMatrix );
+	ob_type_assert( ob_argv(0), otMatrix );
 
-	return OB_DOWNCAST( MK_INT_OBJ( MATRIX_ARGV(0)->rows ) );
+	return ob_dcast( gc_new_integer( matrix_argv(0)->rows ) );
 }
 

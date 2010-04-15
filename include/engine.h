@@ -50,8 +50,6 @@ class Engine {
         Object *onStructureDeclaration( vframe_t *, Node * );
         Object *onFunctionCall( vframe_t *, Node *, int threaded = 0 );
         Object *onDollar( vframe_t *, Node * );
-        Object *onPointer( vframe_t *, Node * );
-    /** Object *onObject( vframe_t *, Node * ); **/
         Object *onReturn( vframe_t *, Node * );
         Object *onRange( vframe_t *, Node * );
         Object *onSubscriptAdd( vframe_t *, Node * );

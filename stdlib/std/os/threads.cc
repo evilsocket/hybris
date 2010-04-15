@@ -44,19 +44,19 @@ void * hyb_pthread_worker( void *arg ){
     ctx->pool();
 
     Node *call         = new Node(H_NT_CALL);
-    call->value.m_call = STRING_ARGV(0).c_str();
+    call->value.m_call = string_argv(0).c_str();
 
-	if( HYB_ARGC() > 1 ){
+	if( ob_argc() > 1 ){
 		unsigned int i;
-		for( i = 1; i < HYB_ARGC(); ++i ){
-			switch( HYB_ARGV(i)->type->code ){
-				case otInteger : call->addChild( new ConstantNode( INT_ARGV(i) ) );   break;
-				case otFloat   : call->addChild( new ConstantNode( FLOAT_ARGV(i) ) ); break;
-				case otChar    : call->addChild( new ConstantNode( CHAR_ARGV(i) ) );   break;
-				case otString  : call->addChild( new ConstantNode( (char *)STRING_ARGV(i).c_str() ) ); break;
+		for( i = 1; i < ob_argc(); ++i ){
+			switch( ob_argv(i)->type->code ){
+				case otInteger : call->addChild( new ConstantNode( int_argv(i) ) );   break;
+				case otFloat   : call->addChild( new ConstantNode( float_argv(i) ) ); break;
+				case otChar    : call->addChild( new ConstantNode( char_argv(i) ) );   break;
+				case otString  : call->addChild( new ConstantNode( (char *)string_argv(i).c_str() ) ); break;
 				default :
                     ctx->depool();
-                    hyb_throw( H_ET_GENERIC, "type %d not supported for pthread call", HYB_ARGV(i)->type->name );
+                    hyb_throw( H_ET_GENERIC, "type %d not supported for pthread call", ob_argv(i)->type->name );
 			}
 		}
 	}
@@ -74,10 +74,10 @@ void * hyb_pthread_worker( void *arg ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_create){
-	if( HYB_ARGC() < 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'pthread_create' requires at least 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() < 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'pthread_create' requires at least 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	ob_type_assert( ob_argv(0), otString );
 
     pthread_t tid;
     int       code;
@@ -87,7 +87,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
     args->ctx  = ctx;
 
     if( (code = pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args )) == 0 ){
-    	return OB_DOWNCAST( MK_INT_OBJ(tid) );
+    	return ob_dcast( gc_new_integer(tid) );
     }
     else{
     	switch( code ){
@@ -108,7 +108,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
 				hyb_throw( H_ET_WARNING, "Unknown system error while creating the thread" );
     	}
 
-    	return OB_DOWNCAST( MK_INT_OBJ(-1) );
+    	return ob_dcast( gc_new_integer(-1) );
     }
 }
 
@@ -116,26 +116,26 @@ HYBRIS_DEFINE_FUNCTION(hpthread_exit){
     ctx->depool();
 
 	pthread_exit(NULL);
-    return OB_DOWNCAST( MK_INT_OBJ(0) );
+    return ob_dcast( gc_new_integer(0) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_join){
-    if( HYB_ARGC() < 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'pthread_join' requires at least 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() < 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'pthread_join' requires at least 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
+	ob_type_assert( ob_argv(0), otInteger );
 
-    pthread_t tid = static_cast<pthread_t>( INT_ARGV(0) );
+    pthread_t tid = static_cast<pthread_t>( int_argv(0) );
     void *status;
 
     // fix issue #0000014
     if( tid != -1 ){
     	pthread_join( tid, &status );
 		ctx->depool();
-		return OB_DOWNCAST( MK_INT_OBJ(0) );
+		return ob_dcast( gc_new_integer(0) );
     }
     else{
-    	return OB_DOWNCAST( MK_INT_OBJ(-1) );
+    	return ob_dcast( gc_new_integer(-1) );
     }
 }
 

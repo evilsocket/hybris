@@ -35,56 +35,56 @@ extern "C" named_function_t hybris_module_functions[] = {
 
 HYBRIS_DEFINE_FUNCTION(harray){
 	unsigned int i;
-	Object *array = OB_DOWNCAST( MK_VECTOR_OBJ() );
+	Object *array = ob_dcast( gc_new_vector() );
 	for( i = 0; i < data->size(); ++i ){
-		ob_cl_push( array, HYB_ARGV(i) );
+		ob_cl_push( array, ob_argv(i) );
 	}
 	return array;
 }
 
 HYBRIS_DEFINE_FUNCTION(helements){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'elements' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'elements' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otVector );
+	ob_type_assert( ob_argv(0), otVector );
 
-    return OB_DOWNCAST( MK_INT_OBJ( VECTOR_ARGV(0)->items ) );
+    return ob_dcast( gc_new_integer( vector_argv(0)->items ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hpop){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'pop' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'pop' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otVector );
+	ob_type_assert( ob_argv(0), otVector );
 
-	return ob_cl_pop( HYB_ARGV(0) );
+	return ob_cl_pop( ob_argv(0) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hremove){
-	if( HYB_ARGC() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'remove' requires 2 parameters (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'remove' requires 2 parameters (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otVector );
+	ob_type_assert( ob_argv(0), otVector );
 
-	return ob_cl_remove( HYB_ARGV(0), HYB_ARGV(1) );
+	return ob_cl_remove( ob_argv(0), ob_argv(1) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hcontains){
-	if( HYB_ARGC() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'contains' requires 2 parameters (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'contains' requires 2 parameters (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otVector );
+	ob_type_assert( ob_argv(0), otVector );
 
-	Object *array = HYB_ARGV(0),
-           *find  = HYB_ARGV(1);
+	Object *array = ob_argv(0),
+           *find  = ob_argv(1);
 	unsigned int i;
 
-	for( i = 0; i < VECTOR_UPCAST(array)->items; i++ ){
-		if( ob_cmp( VECTOR_UPCAST(array)->value[i], find ) == 0 ){
-			return OB_DOWNCAST( MK_INT_OBJ(i) );
+	for( i = 0; i < ob_vector_ucast(array)->items; i++ ){
+		if( ob_cmp( ob_vector_ucast(array)->value[i], find ) == 0 ){
+			return ob_dcast( gc_new_integer(i) );
 		}
 	}
 
-	return OB_DOWNCAST( MK_INT_OBJ(-1) );
+	return ob_dcast( gc_new_integer(-1) );
 }
 

@@ -29,6 +29,10 @@
 #   define H_UNDEFINED          NULL
 #endif
 
+#ifndef __force_inline
+#	define __force_inline __inline__ __attribute__((always_inline))
+#endif
+
 #include <vector>
 #include <string>
 
@@ -77,35 +81,35 @@ public  :
     typedef typename vector<map_pair *>::reverse_iterator       reverse_iterator;
     typedef typename vector<map_pair *>::const_reverse_iterator const_reverse_iterator;
 
-    inline iterator begin(){
+    __force_inline iterator begin(){
         return m_map.begin();
     }
 
-    inline const_iterator begin() const {
+    __force_inline const_iterator begin() const {
         return m_map.begin();
     }
 
-    inline iterator end() {
+    __force_inline iterator end() {
         return m_map.end();
     }
 
-    inline const_iterator end() const {
+    __force_inline const_iterator end() const {
         return m_map.end();
     }
 
-    inline reverse_iterator rbegin(){
+    __force_inline reverse_iterator rbegin(){
         return m_map.rbegin();
     }
 
-    inline const_reverse_iterator rbegin() const {
+    __force_inline const_reverse_iterator rbegin() const {
         return m_map.rbegin();
     }
 
-    inline reverse_iterator rend() {
+    __force_inline reverse_iterator rend() {
         return m_map.rend();
     }
 
-    inline const_reverse_iterator rend() const {
+    __force_inline const_reverse_iterator rend() const {
         return m_map.rend();
     }
 
@@ -113,15 +117,15 @@ public  :
     ~HashMap();
 
     /* Get the number of items mapped here. f*/
-    inline unsigned int size(){
+    __force_inline unsigned int size(){
 		return m_elements;
 	}
     /* Get the value of the item at 'index' position */
-    inline value_t *at( unsigned int index ){
+    __force_inline value_t *at( unsigned int index ){
         return m_map[index]->value;
 	}
     /* Get the label of the item at 'index' position */
-	inline const char * label( unsigned int index ){
+    __force_inline const char * label( unsigned int index ){
 		return m_map[index]->label.c_str();
 	}
 	/* Insert the value if it's not already mapped, otherwise change the old reference to this. */
@@ -183,8 +187,8 @@ H_TEMPLATE_T value_t * HashMap<value_t>::replace( char *label, value_t *old_valu
 }
 
 H_TEMPLATE_T void HashMap<value_t>::clear(){
-    unsigned int i, size(m_map.size());
-    for( i = 0; i < size; --i ){
+    unsigned int i, size(m_elements);
+    for( i = 0; i < size; ++i ){
         delete m_map[i];
     }
     m_map.clear();

@@ -36,78 +36,78 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hmap){
-	if( (HYB_ARGC() % 2) != 0 ){
-		hyb_throw( H_ET_SYNTAX, "function 'map' requires an even number of parameters (called with %d)", HYB_ARGC() );
+	if( (ob_argc() % 2) != 0 ){
+		hyb_throw( H_ET_SYNTAX, "function 'map' requires an even number of parameters (called with %d)", ob_argc() );
 	}
 	unsigned int i;
-	Object *map = OB_DOWNCAST( MK_MAP_OBJ() );
+	Object *map = ob_dcast( gc_new_map() );
 	for( i = 0; i < data->size(); i += 2 ){
-		ob_cl_set( map, HYB_ARGV(i), HYB_ARGV(i + 1) );
+		ob_cl_set( map, ob_argv(i), ob_argv(i + 1) );
 	}
 	return map;
 }
 
 HYBRIS_DEFINE_FUNCTION(hmapelements){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'mapelements' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'mapelements' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otMap );
+	ob_type_assert( ob_argv(0), otMap );
 
-    return OB_DOWNCAST( MK_INT_OBJ( MAP_UPCAST(HYB_ARGV(0))->items ) );
+    return ob_dcast( gc_new_integer( ob_map_ucast(ob_argv(0))->items ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hmappop){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'mappop' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'mappop' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otMap );
+	ob_type_assert( ob_argv(0), otMap );
 
-	return ob_cl_pop( HYB_ARGV(0) );
+	return ob_cl_pop( ob_argv(0) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hunmap){
-	if( HYB_ARGC() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'unmap' requires 2 parameters (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'unmap' requires 2 parameters (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otMap );
+	ob_type_assert( ob_argv(0), otMap );
 
-	return ob_cl_remove( HYB_ARGV(0), HYB_ARGV(1) );
+	return ob_cl_remove( ob_argv(0), ob_argv(1) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hismapped){
-	if( HYB_ARGC() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'ismapped' requires 2 parameters (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'ismapped' requires 2 parameters (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otMap );
+	ob_type_assert( ob_argv(0), otMap );
 
-	Object *map  = HYB_ARGV(0),
-           *find = HYB_ARGV(1);
+	Object *map  = ob_argv(0),
+           *find = ob_argv(1);
 	unsigned int i;
 
-	for( i = 0; i < MAP_UPCAST(map)->items; ++i ){
-		if( ob_cmp( MAP_UPCAST(map)->values[i], find ) == 0 ){
-			return OB_DOWNCAST( MK_INT_OBJ(i) );
+	for( i = 0; i < ob_map_ucast(map)->items; ++i ){
+		if( ob_cmp( ob_map_ucast(map)->values[i], find ) == 0 ){
+			return ob_dcast( gc_new_integer(i) );
 		}
 	}
 
-	return OB_DOWNCAST( MK_INT_OBJ(-1) );
+	return ob_dcast( gc_new_integer(-1) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hhaskey){
-	if( HYB_ARGC() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'haskey' requires 2 parameters (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'haskey' requires 2 parameters (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otMap );
+	ob_type_assert( ob_argv(0), otMap );
 
-	Object *map = HYB_ARGV(0),
-	       *key = HYB_ARGV(1);
+	Object *map = ob_argv(0),
+	       *key = ob_argv(1);
 	unsigned int i;
 
-	for( i = 0; i < MAP_UPCAST(map)->items; ++i ){
-		if( ob_cmp( MAP_UPCAST(map)->keys[i], key ) == 0 ){
-			return OB_DOWNCAST( MK_INT_OBJ(i) );
+	for( i = 0; i < ob_map_ucast(map)->items; ++i ){
+		if( ob_cmp( ob_map_ucast(map)->keys[i], key ) == 0 ){
+			return ob_dcast( gc_new_integer(i) );
 		}
 	}
 
-	return OB_DOWNCAST( MK_INT_OBJ(-1) );
+	return ob_dcast( gc_new_integer(-1) );
 }

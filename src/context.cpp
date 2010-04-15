@@ -102,18 +102,18 @@ void Context::init( int argc, char *argv[] ){
     signal( SIGSEGV, Context::signal_handler );
 
     /* initialize command line arguments */
-    HYBRIS_DEFINE_CONSTANT( this, "argc", MK_TMP_INT_OBJ(argc - 1) );
+    HYBRIS_DEFINE_CONSTANT( this, "argc", gc_new_integer(argc - 1) );
     for( i = 1; i < argc; ++i ){
         sprintf( name, "%d", i - 1 );
-        HYBRIS_DEFINE_CONSTANT( this, name, MK_TMP_STRING_OBJ(argv[i]) );
+        HYBRIS_DEFINE_CONSTANT( this, name, gc_new_string(argv[i]) );
     }
     /* initialize misc constants */
-    HYBRIS_DEFINE_CONSTANT( this, "true",  MK_TMP_INT_OBJ(1) );
-    HYBRIS_DEFINE_CONSTANT( this, "false", MK_TMP_INT_OBJ(0) );
+    HYBRIS_DEFINE_CONSTANT( this, "true",  gc_new_integer(1) );
+    HYBRIS_DEFINE_CONSTANT( this, "false", gc_new_integer(0) );
 
-    HYBRIS_DEFINE_CONSTANT( this, "__VERSION__",  MK_TMP_STRING_OBJ(VERSION) );
-    HYBRIS_DEFINE_CONSTANT( this, "__LIB_PATH__", MK_TMP_STRING_OBJ(LIB_PATH) );
-    HYBRIS_DEFINE_CONSTANT( this, "__INC_PATH__", MK_TMP_STRING_OBJ(INC_PATH) );
+    HYBRIS_DEFINE_CONSTANT( this, "__VERSION__",  gc_new_string(VERSION) );
+    HYBRIS_DEFINE_CONSTANT( this, "__LIB_PATH__", gc_new_string(LIB_PATH) );
+    HYBRIS_DEFINE_CONSTANT( this, "__INC_PATH__", gc_new_string(INC_PATH) );
 }
 
 void Context::release(){

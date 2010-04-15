@@ -52,27 +52,27 @@ typedef Object * (*function_t)( Context *, vmem_t * );
 #define HYBRIS_DEFINE_STRUCTURE( ctx, name, n, attrs ) ctx->defineType( name, n, attrs )
 
 /* macro to easily access hybris functions parameters */
-#define HYB_ARGV(i) (data->at(i))
+#define ob_argv(i)    (data->at(i))
 /* macro to easily access hybris functions parameters number */
-#define HYB_ARGC()  (data->size())
-/* typed versions of HYB_ARGV macro */
-#define INT_ARGV(i)    INT_VALUE( data->at(i) )
-#define ALIAS_ARGV(i)  ALIAS_VALUE( data->at(i) )
-#define EXTERN_ARGV(i) EXTERN_VALUE( data->at(i) )
-#define FLOAT_ARGV(i)  FLOAT_VALUE( data->at(i) )
-#define CHAR_ARGV(i)   CHAR_VALUE( data->at(i) )
-#define STRING_ARGV(i) STRING_VALUE( data->at(i) )
-#define BINARY_ARGV(i) BINARY_VALUE( data->at(i) )
-#define VECTOR_ARGV(i) VECTOR_VALUE( data->at(i) )
-#define MAP_ARGV(i)    MAP_VALUE( data->at(i) )
-#define MATRIX_ARGV(i) MATRIX_VALUE( data->at(i) )
-#define STRUCT_ARGV(i) STRUCT_VALUE( data->at(i) )
+#define ob_argc()     (data->size())
+/* typed versions of ob_argv macro */
+#define int_argv(i)    ob_int_val( data->at(i) )
+#define alias_argv(i)  ob_alias_val( data->at(i) )
+#define extern_argv(i) ob_extern_val( data->at(i) )
+#define float_argv(i)  ob_float_val( data->at(i) )
+#define char_argv(i)   ob_char_val( data->at(i) )
+#define string_argv(i) ob_string_val( data->at(i) )
+#define binary_argv(i) BINARY_VALUE( data->at(i) )
+#define vector_argv(i) ob_vector_val( data->at(i) )
+#define map_argv(i)    ob_map_val( data->at(i) )
+#define matrix_argv(i) ob_matrix_val( data->at(i) )
+#define struct_argv(i) STRUCT_VALUE( data->at(i) )
 
 /* macros to assert an object type */
-#define HYB_TYPE_ASSERT(o,t)      if( !(o->type->code == t) ){ \
+#define ob_type_assert(o,t)      if( !(o->type->code == t) ){ \
                                      hyb_throw( H_ET_SYNTAX, "'%s' is not a valid variable type", o->type->name ); \
                                   }
-#define HYB_TYPES_ASSERT(o,t1,t2) if( !(o->type->code == t1) && !(o->type->code == t2) ){ \
+#define ob_types_assert(o,t1,t2) if( !(o->type->code == t1) && !(o->type->code == t2) ){ \
                                      hyb_throw( H_ET_SYNTAX, "'%s' is not a valid variable type", o->type->name ); \
                                   }
 
@@ -127,22 +127,22 @@ class Context {
             /* threads mutex */
             pthread_mutex_t   th_mutex;
             /* lock the pthread mutex */
-            inline void lock(){
+            __force_inline void lock(){
                 pthread_mutex_lock( &th_mutex );
             }
             /* release the pthread mutex */
-            inline void unlock(){
+            __force_inline void unlock(){
                 pthread_mutex_unlock( &th_mutex );
             }
             /* add a thread to the threads pool */
-            inline void pool( pthread_t tid = 0 ){
+            __force_inline void pool( pthread_t tid = 0 ){
                 tid = (tid == 0 ? pthread_self() : tid);
                 lock();
                 th_pool.push_back(tid);
                 unlock();
             }
             /* remove a thread from the threads pool */
-            inline void depool( pthread_t tid = 0 ){
+            __force_inline void depool( pthread_t tid = 0 ){
                 tid = (tid == 0 ? pthread_self() : tid);
 
                 lock();
@@ -155,10 +155,10 @@ class Context {
                 unlock();
             }
         #else
-            inline void lock(){}
-            inline void unlock(){}
-            inline void pool( pthread_t tid = 0 ){}
-            inline void depool( pthread_t tid = 0 ){}
+            __force_inline void lock(){}
+            __force_inline void unlock(){}
+            __force_inline void pool( pthread_t tid = 0 ){}
+            __force_inline void depool( pthread_t tid = 0 ){}
         #endif
         /* source file handle */
         FILE          *fp;
@@ -186,19 +186,19 @@ class Context {
 
         int chdir();
 
-        inline void trace( char *function, vframe_t *frame ){
+        __force_inline void trace( char *function, vframe_t *frame ){
             lock();
                 stack_trace.push_back( mk_trace( function, frame  ) );
             unlock();
         }
 
-        inline void detrace(){
+        __force_inline void detrace(){
             lock();
                 stack_trace.pop_back();
             unlock();
         }
 
-        inline void timer( int start = 0 ){
+        __force_inline void timer( int start = 0 ){
             if( args.tm_timer ){
                 /* first call */
                 if( args.tm_start == 0 && start ){
@@ -219,8 +219,8 @@ class Context {
         void loadModule( char *module );
         function_t getFunction( char *identifier );
 
-        inline Object * defineType( char *name, int nattrs, char *attributes[] ){
-            StructureObject *type = MK_STRUCT_OBJ();
+        __force_inline Object * defineType( char *name, int nattrs, char *attributes[] ){
+            StructureObject *type = gc_new_struct();
             unsigned int     i;
 
             for( i = 0; i < nattrs; ++i ){
@@ -235,7 +235,7 @@ class Context {
             return vtypes.insert( name, (Object *)type );
         }
 
-        inline void defineType( char *name, Object *type ){
+        __force_inline void defineType( char *name, Object *type ){
            /*
             * Prevent the structure definition from being deleted by the gc.
             */
@@ -244,7 +244,7 @@ class Context {
             vtypes.insert( name, type );
         }
 
-        inline Object * getType( char *name ){
+        __force_inline Object * getType( char *name ){
             return vtypes.find(name);
         }
 };

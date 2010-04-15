@@ -46,62 +46,62 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 extern "C" void hybris_module_init( Context * ctx ){
-    HYBRIS_DEFINE_CONSTANT( ctx, "SEEK_SET", MK_TMP_INT_OBJ(SEEK_SET) );
-    HYBRIS_DEFINE_CONSTANT( ctx, "SEEK_CUR", MK_TMP_INT_OBJ(SEEK_CUR) );
-    HYBRIS_DEFINE_CONSTANT( ctx, "SEEK_END", MK_TMP_INT_OBJ(SEEK_END) );
-    HYBRIS_DEFINE_CONSTANT( ctx, "DT_BLK",   MK_TMP_INT_OBJ(DT_BLK)  );
-    HYBRIS_DEFINE_CONSTANT( ctx, "DT_CHR",   MK_TMP_INT_OBJ(DT_CHR)  );
-    HYBRIS_DEFINE_CONSTANT( ctx, "DT_DIR",   MK_TMP_INT_OBJ(DT_DIR)  );
-    HYBRIS_DEFINE_CONSTANT( ctx, "DT_FIFO",  MK_TMP_INT_OBJ(DT_FIFO) );
-    HYBRIS_DEFINE_CONSTANT( ctx, "DT_LNK",   MK_TMP_INT_OBJ(DT_LNK)  );
-    HYBRIS_DEFINE_CONSTANT( ctx, "DT_REG",   MK_TMP_INT_OBJ(DT_REG)  );
-    HYBRIS_DEFINE_CONSTANT( ctx, "DT_SOCK",  MK_TMP_INT_OBJ(DT_SOCK) );
+    HYBRIS_DEFINE_CONSTANT( ctx, "SEEK_SET", gc_new_integer(SEEK_SET) );
+    HYBRIS_DEFINE_CONSTANT( ctx, "SEEK_CUR", gc_new_integer(SEEK_CUR) );
+    HYBRIS_DEFINE_CONSTANT( ctx, "SEEK_END", gc_new_integer(SEEK_END) );
+    HYBRIS_DEFINE_CONSTANT( ctx, "DT_BLK",   gc_new_integer(DT_BLK)  );
+    HYBRIS_DEFINE_CONSTANT( ctx, "DT_CHR",   gc_new_integer(DT_CHR)  );
+    HYBRIS_DEFINE_CONSTANT( ctx, "DT_DIR",   gc_new_integer(DT_DIR)  );
+    HYBRIS_DEFINE_CONSTANT( ctx, "DT_FIFO",  gc_new_integer(DT_FIFO) );
+    HYBRIS_DEFINE_CONSTANT( ctx, "DT_LNK",   gc_new_integer(DT_LNK)  );
+    HYBRIS_DEFINE_CONSTANT( ctx, "DT_REG",   gc_new_integer(DT_REG)  );
+    HYBRIS_DEFINE_CONSTANT( ctx, "DT_SOCK",  gc_new_integer(DT_SOCK) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfopen){
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
+	ob_type_assert( ob_argv(0), otString );
+	ob_type_assert( ob_argv(1), otString );
 
     Object *_return = NULL;
-    if( HYB_ARGC() == 2 ){
-        _return = OB_DOWNCAST( PTR_TO_INT_OBJ( fopen( STRING_ARGV(0).c_str(), STRING_ARGV(1).c_str() ) ) );
+    if( ob_argc() == 2 ){
+        _return = ob_dcast( PTR_TO_INT_OBJ( fopen( string_argv(0).c_str(), string_argv(1).c_str() ) ) );
     }
 	else{
-		hyb_throw( H_ET_SYNTAX, "function 'fopen' requires 2 parameters (called with %d)", HYB_ARGC() );
+		hyb_throw( H_ET_SYNTAX, "function 'fopen' requires 2 parameters (called with %d)", ob_argc() );
 	}
     return _return;
 }
 
 HYBRIS_DEFINE_FUNCTION(hfseek){
-	if( HYB_ARGC() != 3 ){
-		hyb_throw( H_ET_SYNTAX, "function 'fseek' requires 3 parameters (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 3 ){
+		hyb_throw( H_ET_SYNTAX, "function 'fseek' requires 3 parameters (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), otInteger );
-	HYB_TYPE_ASSERT( HYB_ARGV(3), otInteger );
+	ob_type_assert( ob_argv(0), otInteger );
+	ob_type_assert( ob_argv(1), otInteger );
+	ob_type_assert( ob_argv(3), otInteger );
 
-	return OB_DOWNCAST( MK_INT_OBJ( fseek( (FILE *)INT_ARGV(0), INT_ARGV(1), INT_ARGV(2) ) ) );
+	return ob_dcast( gc_new_integer( fseek( (FILE *)int_argv(0), int_argv(1), int_argv(2) ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hftell){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'ftell' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'ftell' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
+	ob_type_assert( ob_argv(0), otInteger );
 
-    return OB_DOWNCAST( MK_INT_OBJ( ftell( (FILE *)INT_ARGV(0) ) ) );
+    return ob_dcast( gc_new_integer( ftell( (FILE *)int_argv(0) ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfsize){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'fsize' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'fsize' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPES_ASSERT( HYB_ARGV(0), otInteger, otString );
+	ob_types_assert( ob_argv(0), otInteger, otString );
 	int size = 0, pos;
 	FILE *fp;
 
-	if( HYB_ARGV(0)->type->code == otInteger ){
-	    fp  = (FILE *)INT_ARGV(0);
+	if( ob_argv(0)->type->code == otInteger ){
+	    fp  = (FILE *)int_argv(0);
 		pos = ftell(fp);
 
 		fseek( fp, 0, SEEK_END );
@@ -109,89 +109,89 @@ HYBRIS_DEFINE_FUNCTION(hfsize){
 		fseek( fp, pos, SEEK_SET );
 	}
 	else{
-		fp = fopen( STRING_ARGV(0).c_str(), "r" );
+		fp = fopen( string_argv(0).c_str(), "r" );
 		if( fp == NULL ){
-			hyb_throw( H_ET_GENERIC, "'%s' no such file or directory", STRING_ARGV(0).c_str() );
+			hyb_throw( H_ET_GENERIC, "'%s' no such file or directory", string_argv(0).c_str() );
 		}
 		fseek( fp, 0, SEEK_END );
 		size = ftell( fp );
 		fclose(fp);
 	}
 
-	return OB_DOWNCAST( MK_INT_OBJ(size) );
+	return ob_dcast( gc_new_integer(size) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfread){
-	if( HYB_ARGC() < 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'fread' requires 2 or 3 parameters (called with %d)", HYB_ARGC() );
+	if( ob_argc() < 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'fread' requires 2 or 3 parameters (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
+	ob_type_assert( ob_argv(0), otInteger );
 
-	FILE *fp = (FILE *)INT_ARGV(0);
+	FILE *fp = (FILE *)int_argv(0);
 	int fd = fileno(fp);
 	size_t size = 0;
-	Object *object   = HYB_ARGV(1);
+	Object *object   = ob_argv(1);
 
 	/* explicit size declaration */
-	if( HYB_ARGC() == 3 ){
-		size = INT_ARGV(2);
+	if( ob_argc() == 3 ){
+		size = int_argv(2);
 	}
 
 	return ob_from_fd( object, fd, size );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfwrite){
-	if( HYB_ARGC() < 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'fwrite' requires 2 or 3 parameters (called with %d)", HYB_ARGC() );
+	if( ob_argc() < 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'fwrite' requires 2 or 3 parameters (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
+	ob_type_assert( ob_argv(0), otInteger );
 
-	FILE *fp = (FILE *)INT_ARGV(0);
+	FILE *fp = (FILE *)int_argv(0);
 	int fd = fileno(fp);
 	size_t size = 0;
-	Object *object   = HYB_ARGV(1);
+	Object *object   = ob_argv(1);
 
 	/* explicit size declaration */
-	if( HYB_ARGC() == 3 ){
-		size = INT_ARGV(2);
+	if( ob_argc() == 3 ){
+		size = int_argv(2);
 	}
 
 	return ob_to_fd( object, fd, size );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfgets){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'fgets' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'fgets' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
+	ob_type_assert( ob_argv(0), otInteger );
 
 	char line[0xFFFF] = {0};
 
-	if( fgets( line, 0xFFFF, (FILE *)INT_ARGV(0) ) ){
-		return OB_DOWNCAST( MK_STRING_OBJ(line) );
+	if( fgets( line, 0xFFFF, (FILE *)int_argv(0) ) ){
+		return ob_dcast( gc_new_string(line) );
 	}
 	else{
-		return OB_DOWNCAST( MK_INT_OBJ(0) );
+		return ob_dcast( gc_new_integer(0) );
 	}
 }
 
 HYBRIS_DEFINE_FUNCTION(hfclose){
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
-    if( HYB_ARGC() ){
-		fclose( (FILE *)INT_ARGV(0) );
+	ob_type_assert( ob_argv(0), otInteger );
+    if( ob_argc() ){
+		fclose( (FILE *)int_argv(0) );
     }
-    return OB_DOWNCAST( MK_INT_OBJ(0) );
+    return ob_dcast( gc_new_integer(0) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfile){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'file' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'file' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	ob_type_assert( ob_argv(0), otString );
 
-	FILE *fp = fopen( STRING_ARGV(0).c_str(), "rt" );
+	FILE *fp = fopen( string_argv(0).c_str(), "rt" );
 	if( !fp ){
-		hyb_throw( H_ET_GENERIC, "could not open '%s' for reading", STRING_ARGV(0).c_str() );
+		hyb_throw( H_ET_GENERIC, "could not open '%s' for reading", string_argv(0).c_str() );
 	}
 
 	string buffer;
@@ -202,7 +202,7 @@ HYBRIS_DEFINE_FUNCTION(hfile){
 
 	buffer[ buffer.size() - 2 ] = 0x00;
 
-    return OB_DOWNCAST( MK_STRING_OBJ(buffer.c_str()) );
+    return ob_dcast( gc_new_string(buffer.c_str()) );
 }
 
 void readdir_recurse( char *root, char *dir, VectorObject *vector ){
@@ -222,7 +222,7 @@ void readdir_recurse( char *root, char *dir, VectorObject *vector ){
     }
 
     while( (ent = readdir(dirh)) != NULL ){
-        MapObject *file = MK_MAP_OBJ();
+        MapObject *file = gc_new_map();
         string name  = "";
         if( path[strlen(path) - 1] != '/' && ent->d_name[0] != '/' ){
 			name = string(path) + "/" + string(ent->d_name);
@@ -230,10 +230,10 @@ void readdir_recurse( char *root, char *dir, VectorObject *vector ){
 		else{
 			name = string(path) + string(ent->d_name);
 		}
-        ob_cl_set_reference( OB_DOWNCAST(file), OB_DOWNCAST( MK_STRING_OBJ("name") ), OB_DOWNCAST( MK_STRING_OBJ(name.c_str()) ) );
-        ob_cl_set_reference( OB_DOWNCAST(file), OB_DOWNCAST( MK_STRING_OBJ("type") ), OB_DOWNCAST( MK_INT_OBJ(ent->d_type) ) );
+        ob_cl_set_reference( ob_dcast(file), ob_dcast( gc_new_string("name") ), ob_dcast( gc_new_string(name.c_str()) ) );
+        ob_cl_set_reference( ob_dcast(file), ob_dcast( gc_new_string("type") ), ob_dcast( gc_new_integer(ent->d_type) ) );
 
-		ob_cl_push_reference( OB_DOWNCAST(vector), OB_DOWNCAST(file) );
+		ob_cl_push_reference( ob_dcast(vector), ob_dcast(file) );
 
         if( ent->d_type == DT_DIR && strcmp( ent->d_name, ".." ) != 0 && strcmp( ent->d_name, "." ) != 0 ){
             readdir_recurse( path, ent->d_name, vector );
@@ -244,37 +244,37 @@ void readdir_recurse( char *root, char *dir, VectorObject *vector ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hreaddir){
-    if( HYB_ARGC() < 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'readdir' requires at least 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() < 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'readdir' requires at least 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	ob_type_assert( ob_argv(0), otString );
 
     DIR           *dir;
     struct dirent *ent;
 
-    if( (dir = opendir( STRING_ARGV(0).c_str() )) == NULL ) {
-        hyb_throw( H_ET_GENERIC, "could not open directory '%s' for reading", STRING_ARGV(0).c_str() );
+    if( (dir = opendir( string_argv(0).c_str() )) == NULL ) {
+        hyb_throw( H_ET_GENERIC, "could not open directory '%s' for reading", string_argv(0).c_str() );
     }
 
-    VectorObject *files 	= MK_VECTOR_OBJ();
-	int           recursive = ( HYB_ARGC() > 1 && ob_lvalue(HYB_ARGV(1)) );
+    VectorObject *files 	= gc_new_vector();
+	int           recursive = ( ob_argc() > 1 && ob_lvalue(ob_argv(1)) );
     while( (ent = readdir(dir)) != NULL ){
-    	MapObject *file = MK_MAP_OBJ();
+    	MapObject *file = gc_new_map();
 
-    	ob_cl_set_reference( OB_DOWNCAST(file), OB_DOWNCAST( MK_STRING_OBJ("name") ), OB_DOWNCAST( MK_STRING_OBJ(ent->d_name) ) );
-    	ob_cl_set_reference( OB_DOWNCAST(file), OB_DOWNCAST( MK_STRING_OBJ("type") ), OB_DOWNCAST( MK_INT_OBJ(ent->d_type) ) );
+    	ob_cl_set_reference( ob_dcast(file), ob_dcast( gc_new_string("name") ), ob_dcast( gc_new_string(ent->d_name) ) );
+    	ob_cl_set_reference( ob_dcast(file), ob_dcast( gc_new_string("type") ), ob_dcast( gc_new_integer(ent->d_type) ) );
 
-    	ob_cl_push_reference( OB_DOWNCAST(files), OB_DOWNCAST(file) );
+    	ob_cl_push_reference( ob_dcast(files), ob_dcast(file) );
 
         if( recursive ){
             if( ent->d_type == DT_DIR && strcmp( ent->d_name, ".." ) != 0 && strcmp( ent->d_name, "." ) != 0 ){
-                readdir_recurse( (char *)STRING_ARGV(0).c_str(), ent->d_name, files );
+                readdir_recurse( (char *)string_argv(0).c_str(), ent->d_name, files );
             }
         }
     }
 
     closedir(dir);
 
-    return OB_DOWNCAST(files);
+    return ob_dcast(files);
 }
 

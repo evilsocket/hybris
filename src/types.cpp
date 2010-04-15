@@ -121,8 +121,8 @@ int ob_cmp( Object *o, Object * cmp ){
 }
 
 long ob_ivalue( Object * o ){
-    if( IS_INTEGER_TYPE(o) ){
-        return (INT_UPCAST(o))->value;
+    if( ob_is_int(o) ){
+        return (ob_int_ucast(o))->value;
     }
     else if( o->type->ivalue != HYB_UNIMPLEMENTED_FUNCTION ){
         return o->type->ivalue(o);
@@ -137,8 +137,8 @@ long ob_ivalue( Object * o ){
 }
 
 double ob_fvalue( Object *o ){
-    if( IS_FLOAT_TYPE(o) ){
-        return FLOAT_UPCAST(o)->value;
+    if( ob_is_float(o) ){
+        return ob_float_ucast(o)->value;
     }
     else if( o->type->fvalue != HYB_UNIMPLEMENTED_FUNCTION ){
         return o->type->fvalue(o);
@@ -243,7 +243,7 @@ Object *ob_range( Object *a, Object *b ){
     else if( ob_is_type_in( b, &Char_Type, &Integer_Type, NULL ) == false ){
         hyb_throw( H_ET_SYNTAX, "invalid type %s for right operand '..'", a->type->name );
     }
-    else if( OB_SAME_TYPE(a,b) == false ){
+    else if( ob_same_type(a,b) == false ){
 		hyb_throw( H_ET_SYNTAX, "types must be the same for '..' operator" );
 	}
 

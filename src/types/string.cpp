@@ -134,30 +134,30 @@ void string_set_references( Object *me, int ref ){
 }
 
 Object *string_clone( Object *me ){
-    return (Object *)MK_STRING_OBJ( STRING_UPCAST(me)->value.c_str() );
+    return (Object *)gc_new_string( ob_string_ucast(me)->value.c_str() );
 }
 
 size_t string_get_size( Object *me ){
-	return STRING_UPCAST(me)->items;
+	return ob_string_ucast(me)->items;
 }
 
 byte *string_serialize( Object *o, size_t size ){
 	size_t s = (size > ob_get_size(o) ? ob_get_size(o) : size != 0 ? size : ob_get_size(o) );
 	byte  *buffer = new byte[s];
 
-	memcpy( buffer, STRING_UPCAST(o)->value.c_str(), s );
+	memcpy( buffer, ob_string_ucast(o)->value.c_str(), s );
 
 	return buffer;
 }
 
 Object *string_deserialize( Object *o, byte *buffer, size_t size ){
 	if( size ){
-		o = OB_DOWNCAST( MK_STRING_OBJ("") );
+		o = ob_dcast( gc_new_string("") );
 		char *tmp = new char[size + 1];
 		memset( &tmp, 0x00,   size + 1 );
 		memcpy( &tmp, buffer, size );
 
-		STRING_UPCAST(o)->value = tmp;
+		ob_string_ucast(o)->value = tmp;
 
 		delete[] tmp;
 	}
@@ -165,13 +165,13 @@ Object *string_deserialize( Object *o, byte *buffer, size_t size ){
 		size_t i = 0;
 		byte   c;
 
-		STRING_UPCAST(o)->value = "";
+		ob_string_ucast(o)->value = "";
 		do{
-			STRING_VALUE(o) += c = buffer[i++];
+			ob_string_val(o) += c = buffer[i++];
 		}
 		while( c != '\n' );
 
-		STRING_UPCAST(o)->items = i;
+		ob_string_ucast(o)->items = i;
 	}
 	return o;
 }
@@ -180,9 +180,9 @@ Object *string_to_fd( Object *o, int fd, size_t size ){
 	size_t s = (size > ob_get_size(o) ? ob_get_size(o) : size != 0 ? size : ob_get_size(o));
 	int    written;
 
-	written = write( fd, STRING_UPCAST(o)->value.c_str(), s );
+	written = write( fd, ob_string_ucast(o)->value.c_str(), s );
 
-	return OB_DOWNCAST( MK_INT_OBJ(written) );
+	return ob_dcast( gc_new_integer(written) );
 }
 
 Object *string_from_fd( Object *o, int fd, size_t size ){
@@ -192,29 +192,29 @@ Object *string_from_fd( Object *o, int fd, size_t size ){
 		memset( &tmp, 0x00, size + 1 );
 		rd = read( fd, &tmp, size );
 
-		STRING_UPCAST(o)->value = tmp;
+		ob_string_ucast(o)->value = tmp;
 
 		delete[] tmp;
 	}
 	else{
 		byte c, n;
 
-		STRING_UPCAST(o)->value = "";
+		ob_string_ucast(o)->value = "";
 		do{
 			if( (n = read( fd, &c, sizeof(byte) )) > 0 ){
 				rd++;
-				STRING_VALUE(o) += c;
-				STRING_UPCAST(o)->items++;
+				ob_string_val(o) += c;
+				ob_string_ucast(o)->items++;
 			}
 		}
 		while( c != '\n' && n && c);
 	}
-	return OB_DOWNCAST( MK_INT_OBJ(rd) );
+	return ob_dcast( gc_new_integer(rd) );
 }
 
 int string_cmp( Object *me, Object *cmp ){
     string svalue = ob_svalue(cmp),
-           mvalue = STRING_UPCAST(me)->value;
+           mvalue = ob_string_ucast(me)->value;
 
     if( mvalue == svalue ){
         return 0;
@@ -228,26 +228,26 @@ int string_cmp( Object *me, Object *cmp ){
 }
 
 long string_ivalue( Object *me ){
-    return atol( STRING_UPCAST(me)->value.c_str() );
+    return atol( ob_string_ucast(me)->value.c_str() );
 }
 
 double string_fvalue( Object *me ){
-    return atof( STRING_UPCAST(me)->value.c_str() );
+    return atof( ob_string_ucast(me)->value.c_str() );
 }
 
 bool string_lvalue( Object *me ){
-    return (bool)STRING_UPCAST(me)->value.size();
+    return (bool)ob_string_ucast(me)->value.size();
 }
 
 string string_svalue( Object *me ){
-    return STRING_UPCAST(me)->value;
+    return ob_string_ucast(me)->value;
 }
 
 void string_print( Object *me, int tabs ){
     for( int i = 0; i < tabs; ++i ){
         printf( "\t" );
     }
-    printf( "%s", STRING_UPCAST(me)->value.c_str() );
+    printf( "%s", ob_string_ucast(me)->value.c_str() );
 }
 
 void string_scanf( Object *me ){
@@ -255,7 +255,7 @@ void string_scanf( Object *me ){
 
     scanf( "%s", tmp );
 
-    STRING_UPCAST(me)->value = tmp;
+    ob_string_ucast(me)->value = tmp;
 }
 
 Object * string_to_string( Object *me ){
@@ -263,7 +263,7 @@ Object * string_to_string( Object *me ){
 }
 
 Object * string_to_int( Object *me ){
-    return (Object *)MK_INT_OBJ( atol(STRING_UPCAST(me)->value.c_str()) );
+    return (Object *)gc_new_integer( atol(ob_string_ucast(me)->value.c_str()) );
 }
 
 Object * string_from_int( Object *i ){
@@ -272,7 +272,7 @@ Object * string_from_int( Object *i ){
 
     sprintf( tmp, "%ld", ivalue );
 
-    return (Object *)MK_STRING_OBJ( tmp );
+    return (Object *)gc_new_string( tmp );
 }
 
 Object * string_from_float( Object *f ){
@@ -281,7 +281,7 @@ Object * string_from_float( Object *f ){
 
     sprintf( tmp, "%lf", fvalue );
 
-    return (Object *)MK_STRING_OBJ( tmp );
+    return (Object *)gc_new_string( tmp );
 }
 
 Object * string_regexp( Object *me, Object *r ){
@@ -296,7 +296,7 @@ Object * string_regexp( Object *me, Object *r ){
 		pcrecpp::RE_Options OPTS(opts);
 		pcrecpp::RE         REGEX( regex.c_str(), OPTS );
 
-        return (Object *)MK_INT_OBJ( REGEX.PartialMatch(subject.c_str()) );
+        return (Object *)gc_new_integer( REGEX.PartialMatch(subject.c_str()) );
 	}
 	else{
 		pcrecpp::RE_Options  OPTS(opts);
@@ -304,7 +304,7 @@ Object * string_regexp( Object *me, Object *r ){
 		pcrecpp::StringPiece SUBJECT( subject.c_str() );
 		string  match;
 
-        VectorObject *matches = MK_VECTOR_OBJ();
+        VectorObject *matches = gc_new_vector();
         int i = 0;
 
         while( REGEX.FindAndConsume( &SUBJECT, &match ) == true ){
@@ -312,7 +312,7 @@ Object * string_regexp( Object *me, Object *r ){
                 hyb_throw( H_ET_GENERIC, "something of your regex is forcing infinite matches" );
             }
 
-            ob_cl_push_reference( (Object *)matches, (Object *)MK_STRING_OBJ(match.c_str()) );
+            ob_cl_push_reference( (Object *)matches, (Object *)gc_new_string(match.c_str()) );
         }
 
         return (Object *)matches;
@@ -321,8 +321,8 @@ Object * string_regexp( Object *me, Object *r ){
 
 /** arithmetic operators **/
 Object *string_assign( Object *me, Object *op ){
-    if( IS_STRING_TYPE(op) ){
-        STRING_UPCAST(me)->value = STRING_UPCAST(op)->value;
+    if( ob_is_string(op) ){
+        ob_string_ucast(me)->value = ob_string_ucast(op)->value;
     }
     else {
         Object *clone = ob_clone(op);
@@ -336,11 +336,11 @@ Object *string_assign( Object *me, Object *op ){
 }
 
 Object *string_l_same( Object *me, Object *op ){
-    return (Object *)MK_INT_OBJ( (STRING_UPCAST(me))->value == ob_svalue(op) );
+    return (Object *)gc_new_integer( (ob_string_ucast(me))->value == ob_svalue(op) );
 }
 
 Object *string_l_diff( Object *me, Object *op ){
-    return (Object *)MK_INT_OBJ( (STRING_UPCAST(me))->value != ob_svalue(op) );
+    return (Object *)gc_new_integer( (ob_string_ucast(me))->value != ob_svalue(op) );
 }
 
 /** collection operators **/
@@ -348,14 +348,14 @@ Object *string_cl_concat( Object *me, Object *op ){
     string mvalue = ob_svalue(me),
            svalue = ob_svalue(op);
 
-    return (Object *)MK_STRING_OBJ( (mvalue + svalue).c_str() );
+    return (Object *)gc_new_string( (mvalue + svalue).c_str() );
 }
 
 Object *string_cl_inplace_concat( Object *me, Object *op ){
     string svalue = ob_svalue(op);
 
-    STRING_UPCAST(me)->value += svalue;
-    STRING_UPCAST(me)->items += svalue.size();
+    ob_string_ucast(me)->value += svalue;
+    ob_string_ucast(me)->items += svalue.size();
 
     return me;
 }
@@ -363,24 +363,24 @@ Object *string_cl_inplace_concat( Object *me, Object *op ){
 Object *string_cl_at( Object *me, Object *i ){
     size_t idx = ob_ivalue(i);
     #ifdef BOUNDS_CHECK
-    if( idx >= STRING_UPCAST(me)->items ){
+    if( idx >= ob_string_ucast(me)->items ){
         hyb_throw( H_ET_GENERIC, "index out of bounds" );
     }
     #endif
-    char chr = STRING_UPCAST(me)->value[idx];
+    char chr = ob_string_ucast(me)->value[idx];
 
-    return (Object *)MK_CHAR_OBJ( chr );
+    return (Object *)gc_new_char( chr );
 }
 
 Object *string_cl_set( Object *me, Object *i, Object *v ){
     size_t idx = ob_ivalue(i);
     #ifdef BOUNDS_CHECK
-    if( idx >= STRING_UPCAST(me)->items ){
+    if( idx >= ob_string_ucast(me)->items ){
         hyb_throw( H_ET_GENERIC, "index out of bounds" );
     }
     #endif
 
-    STRING_UPCAST(me)->value[idx] = ob_ivalue(v);
+    ob_string_ucast(me)->value[idx] = ob_ivalue(v);
 
     return me;
 }

@@ -21,7 +21,7 @@
 
 void vector_set_references( Object *me, int ref ){
     VectorObjectIterator i;
-    VectorObject *vme = VECTOR_UPCAST(me);
+    VectorObject *vme = ob_vector_ucast(me);
 
     me->ref += ref;
 
@@ -33,8 +33,8 @@ void vector_set_references( Object *me, int ref ){
 /** generic function pointers **/
 Object *vector_clone( Object *me ){
     VectorObjectIterator i;
-    VectorObject *vclone = MK_VECTOR_OBJ(),
-                 *vme    = VECTOR_UPCAST(me);
+    VectorObject *vclone = gc_new_vector(),
+                 *vme    = ob_vector_ucast(me);
 
     for( i = vme->value.begin(); i != vme->value.end(); i++ ){
         ob_cl_push_reference( (Object *)vclone, ob_clone( *i ) );
@@ -45,7 +45,7 @@ Object *vector_clone( Object *me ){
 
 void vector_free( Object *me ){
     VectorObjectIterator i;
-    VectorObject *vme = VECTOR_UPCAST(me);
+    VectorObject *vme = ob_vector_ucast(me);
     Object       *item;
 
     for( i = vme->value.begin(); i != vme->value.end(); i++ ){
@@ -58,7 +58,7 @@ void vector_free( Object *me ){
 }
 
 size_t vector_get_size( Object *me ){
-	return VECTOR_UPCAST(me)->items;
+	return ob_vector_ucast(me)->items;
 }
 
 Object *vector_to_fd( Object *o, int fd, size_t size ){
@@ -66,19 +66,19 @@ Object *vector_to_fd( Object *o, int fd, size_t size ){
 	int    written(0);
 
 	for( i = 0; i < s; ++i ){
-		written += INT_VALUE( ob_to_fd( VECTOR_UPCAST(o)->value[i], fd, 0 ) );
+		written += ob_int_val( ob_to_fd( ob_vector_ucast(o)->value[i], fd, 0 ) );
 	}
 
-	return OB_DOWNCAST( MK_INT_OBJ(written) );
+	return ob_dcast( gc_new_integer(written) );
 }
 
 int vector_cmp( Object *me, Object *cmp ){
-    if( !IS_VECTOR_TYPE(cmp) ){
+    if( !ob_is_vector(cmp) ){
         return 1;
     }
     else {
-        VectorObject *vme  = VECTOR_UPCAST(me),
-                     *vcmp = VECTOR_UPCAST(cmp);
+        VectorObject *vme  = ob_vector_ucast(me),
+                     *vcmp = ob_vector_ucast(cmp);
         size_t        vme_size( vme->value.size() ),
                       vcmp_size( vcmp->value.size() );
 
@@ -107,15 +107,15 @@ int vector_cmp( Object *me, Object *cmp ){
 }
 
 long vector_ivalue( Object *me ){
-    return static_cast<long>( VECTOR_UPCAST(me)->items );
+    return static_cast<long>( ob_vector_ucast(me)->items );
 }
 
 double vector_fvalue( Object *me ){
-    return static_cast<double>( VECTOR_UPCAST(me)->items );
+    return static_cast<double>( ob_vector_ucast(me)->items );
 }
 
 bool vector_lvalue( Object *me ){
-    return static_cast<bool>( VECTOR_UPCAST(me)->items );
+    return static_cast<bool>( ob_vector_ucast(me)->items );
 }
 
 string vector_svalue( Object *o ){
@@ -124,7 +124,7 @@ string vector_svalue( Object *o ){
 
 void vector_print( Object *me, int tabs ){
     VectorObjectIterator i;
-    VectorObject *vme = VECTOR_UPCAST(me);
+    VectorObject *vme = ob_vector_ucast(me);
     Object       *item;
     int           j;
 
@@ -161,23 +161,23 @@ Object *vector_cl_push( Object *me, Object *o ){
 }
 
 Object *vector_cl_push_reference( Object *me, Object *o ){
-    VECTOR_UPCAST(me)->value.push_back( o );
-    VECTOR_UPCAST(me)->items++;
+    ob_vector_ucast(me)->value.push_back( o );
+    ob_vector_ucast(me)->items++;
 
     return me;
 }
 
 Object *vector_cl_pop( Object *me ){
-    size_t last_idx = VECTOR_UPCAST(me)->items - 1;
+    size_t last_idx = ob_vector_ucast(me)->items - 1;
     #ifdef BOUNDS_CHECK
     if( last_idx < 0 ){
         hyb_throw( H_ET_GENERIC, "could not pop an element from an empty array" );
     }
     #endif
 
-    Object *last_item = VECTOR_UPCAST(me)->value[last_idx];
-    VECTOR_UPCAST(me)->value.pop_back();
-    VECTOR_UPCAST(me)->items--;
+    Object *last_item = ob_vector_ucast(me)->value[last_idx];
+    ob_vector_ucast(me)->value.pop_back();
+    ob_vector_ucast(me)->items--;
 
     return last_item;
 }
@@ -185,14 +185,14 @@ Object *vector_cl_pop( Object *me ){
 Object *vector_cl_remove( Object *me, Object *i ){
     size_t idx = ob_ivalue(i);
     #ifdef BOUNDS_CHECK
-    if( idx >= VECTOR_UPCAST(me)->items ){
+    if( idx >= ob_vector_ucast(me)->items ){
         hyb_throw( H_ET_GENERIC, "index out of bounds" );
     }
     #endif
 
-    Object *item = VECTOR_UPCAST(me)->value[idx];
-    VECTOR_UPCAST(me)->value.erase( VECTOR_UPCAST(me)->value.begin() + idx );
-    VECTOR_UPCAST(me)->items--;
+    Object *item = ob_vector_ucast(me)->value[idx];
+    ob_vector_ucast(me)->value.erase( ob_vector_ucast(me)->value.begin() + idx );
+    ob_vector_ucast(me)->items--;
 
     return item;
 }
@@ -200,12 +200,12 @@ Object *vector_cl_remove( Object *me, Object *i ){
 Object *vector_cl_at( Object *me, Object *i ){
     size_t idx = ob_ivalue(i);
     #ifdef BOUNDS_CHECK
-    if( idx >= VECTOR_UPCAST(me)->items ){
+    if( idx >= ob_vector_ucast(me)->items ){
         hyb_throw( H_ET_GENERIC, "index out of bounds" );
     }
     #endif
 
-    return VECTOR_UPCAST(me)->value[idx];
+    return ob_vector_ucast(me)->value[idx];
 }
 
 Object *vector_cl_set( Object *me, Object *i, Object *v ){
@@ -215,16 +215,16 @@ Object *vector_cl_set( Object *me, Object *i, Object *v ){
 Object *vector_cl_set_reference( Object *me, Object *i, Object *v ){
     size_t idx = ob_ivalue(i);
     #ifdef BOUNDS_CHECK
-    if( idx >= VECTOR_UPCAST(me)->items ){
+    if( idx >= ob_vector_ucast(me)->items ){
         hyb_throw( H_ET_GENERIC, "index out of bounds" );
     }
     #endif
 
-    Object *old = VECTOR_UPCAST(me)->value[idx];
+    Object *old = ob_vector_ucast(me)->value[idx];
 
     ob_free(old);
 
-    VECTOR_UPCAST(me)->value[idx] = v;
+    ob_vector_ucast(me)->value[idx] = v;
 
     return me;
 }

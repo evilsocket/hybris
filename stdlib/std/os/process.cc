@@ -40,61 +40,61 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hexec){
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	ob_type_assert( ob_argv(0), otString );
     Object *_return = NULL;
-    if( HYB_ARGC() ){
-        _return = OB_DOWNCAST( MK_INT_OBJ( system( STRING_ARGV(0).c_str() ) ) );
+    if( ob_argc() ){
+        _return = ob_dcast( gc_new_integer( system( string_argv(0).c_str() ) ) );
     }
 	else{
-		hyb_throw( H_ET_SYNTAX, "function 'exec' requires 1 parameter (called with %d)", HYB_ARGC() );
+		hyb_throw( H_ET_SYNTAX, "function 'exec' requires 1 parameter (called with %d)", ob_argc() );
 	}
     return _return;
 }
 
 HYBRIS_DEFINE_FUNCTION(hfork){
-    return OB_DOWNCAST( MK_INT_OBJ( fork() ) );
+    return ob_dcast( gc_new_integer( fork() ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hgetpid){
-    return OB_DOWNCAST( MK_INT_OBJ( getpid() ) );
+    return ob_dcast( gc_new_integer( getpid() ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hwait){
-	if( HYB_ARGC() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'wait' requires 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'wait' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
+	ob_type_assert( ob_argv(0), otInteger );
 
-	return OB_DOWNCAST( MK_INT_OBJ( wait( &(INT_ARGV(0)) ) ) );
+	return ob_dcast( gc_new_integer( wait( &(int_argv(0)) ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hpopen){
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
+	ob_type_assert( ob_argv(0), otString );
+	ob_type_assert( ob_argv(1), otString );
 
-    if( HYB_ARGC() == 2 ){
-        return  OB_DOWNCAST( PTR_TO_INT_OBJ( popen( STRING_ARGV(0).c_str(), STRING_ARGV(1).c_str() ) ) );
+    if( ob_argc() == 2 ){
+        return  ob_dcast( PTR_TO_INT_OBJ( popen( string_argv(0).c_str(), string_argv(1).c_str() ) ) );
     }
 	else{
-		hyb_throw( H_ET_SYNTAX, "function 'popen' requires 2 parameters (called with %d)", HYB_ARGC() );
+		hyb_throw( H_ET_SYNTAX, "function 'popen' requires 2 parameters (called with %d)", ob_argc() );
 	}
 }
 
 HYBRIS_DEFINE_FUNCTION(hpclose){
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
-    if( HYB_ARGC() ){
-		pclose( (FILE *)INT_ARGV(0) );
+	ob_type_assert( ob_argv(0), otInteger );
+    if( ob_argc() ){
+		pclose( (FILE *)int_argv(0) );
     }
-    return OB_DOWNCAST( MK_INT_OBJ(0) );
+    return ob_dcast( gc_new_integer(0) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hexit){
     int code = 0;
-    if( HYB_ARGC() > 0 ){
-		HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
-		code = (long)INT_ARGV(0);
+    if( ob_argc() > 0 ){
+		ob_type_assert( ob_argv(0), otInteger );
+		code = (long)int_argv(0);
 	}
 	exit(code);
 
-    return OB_DOWNCAST( MK_INT_OBJ(0) );
+    return ob_dcast( gc_new_integer(0) );
 }

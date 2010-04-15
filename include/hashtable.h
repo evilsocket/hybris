@@ -72,6 +72,9 @@
 * If you need to, set this to a value you'll never use for data.  */
 #define EMPTY -3UL                /* steal more of the bck->data space */
 
+#ifndef __force_inline
+#	define __force_inline __inline__ __attribute__((always_inline))
+#endif
 
    /* This is what an item is.  Either can be cast to a pointer. */
 typedef struct {

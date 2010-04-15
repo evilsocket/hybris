@@ -26,6 +26,10 @@
 #	include <pthread.h>
 #endif
 
+#ifndef __force_inline
+#	define __force_inline __inline__ __attribute__((always_inline))
+#endif
+
 /*
  * This is the new (and hopefully the last one) garbage
  * collector implementation.
@@ -99,6 +103,11 @@ typedef struct _gc {
 }
 gc_t;
 
+/*
+ * Set the 'threshold' attribute of the gc structure.
+ * Return the old threshold value.
+ */
+size_t			gc_set_threshold( size_t threshold );
 /* 
  * Add an object to the gc pool and start to track
  * it for reference changes.

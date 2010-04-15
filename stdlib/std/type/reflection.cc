@@ -35,67 +35,67 @@ extern "C" named_function_t hybris_module_functions[] = {
 
 HYBRIS_DEFINE_FUNCTION(hvar_names){
 	unsigned int i;
-	VectorObject *array = MK_VECTOR_OBJ();
+	VectorObject *array = gc_new_vector();
 	for( i = 0; i < ctx->vmem.size(); ++i ){
-		ob_cl_push_reference( OB_DOWNCAST(array), OB_DOWNCAST( MK_STRING_OBJ(ctx->vmem.label(i)) ) );
+		ob_cl_push_reference( ob_dcast(array), ob_dcast( gc_new_string(ctx->vmem.label(i)) ) );
 	}
-	return OB_DOWNCAST(array);
+	return ob_dcast(array);
 }
 
 HYBRIS_DEFINE_FUNCTION(hvar_values){
 	unsigned int i;
-	VectorObject *array = MK_VECTOR_OBJ();
+	VectorObject *array = gc_new_vector();
 	for( i = 0; i < ctx->vmem.size(); ++i ){
-		ob_cl_push( OB_DOWNCAST(array), ctx->vmem.at(i) );
+		ob_cl_push( ob_dcast(array), ctx->vmem.at(i) );
 	}
-	return OB_DOWNCAST(array);
+	return ob_dcast(array);
 }
 
 HYBRIS_DEFINE_FUNCTION(huser_functions){
 	unsigned int i;
-	VectorObject *array = MK_VECTOR_OBJ();
+	VectorObject *array = gc_new_vector();
 	for( i = 0; i < ctx->vcode.size(); ++i ){
-		ob_cl_push_reference( OB_DOWNCAST(array), OB_DOWNCAST( MK_STRING_OBJ(ctx->vcode.label(i)) ) );
+		ob_cl_push_reference( ob_dcast(array), ob_dcast( gc_new_string(ctx->vcode.label(i)) ) );
 	}
-	return OB_DOWNCAST(array);
+	return ob_dcast(array);
 }
 
 HYBRIS_DEFINE_FUNCTION(hdyn_functions){
     unsigned int i, j, mods = ctx->modules.size(), dyns;
 
-    Object *map = OB_DOWNCAST( MK_MAP_OBJ() );
+    Object *map = ob_dcast( gc_new_map() );
     for( i = 0; i < mods; ++i ){
         module_t *mod = ctx->modules[i];
-        Object   *dyn = OB_DOWNCAST( MK_VECTOR_OBJ() );
+        Object   *dyn = ob_dcast( gc_new_vector() );
         dyns          = mod->functions.size();
         for( j = 0; j < dyns; ++j ){
-        	ob_cl_push_reference( dyn, OB_DOWNCAST( MK_STRING_OBJ(mod->functions[j]->identifier.c_str()) ) );
+        	ob_cl_push_reference( dyn, ob_dcast( gc_new_string(mod->functions[j]->identifier.c_str()) ) );
         }
 
-        ob_cl_set_reference( map, OB_DOWNCAST( MK_STRING_OBJ( mod->name.c_str() ) ), dyn );
+        ob_cl_set_reference( map, ob_dcast( gc_new_string( mod->name.c_str() ) ), dyn );
     }
     return map;
 }
 
 HYBRIS_DEFINE_FUNCTION(hcall){
-	if( HYB_ARGC() < 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'call' requires at least 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() < 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'call' requires at least 1 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	ob_type_assert( ob_argv(0), otString );
 
 	Node *call         = new Node(H_NT_CALL);
-    call->value.m_call = STRING_ARGV(0);
-	if( HYB_ARGC() > 1 ){
+    call->value.m_call = string_argv(0);
+	if( ob_argc() > 1 ){
 		unsigned int i;
-		for( i = 1; i < HYB_ARGC(); ++i ){
-			switch( HYB_ARGV(i)->type->code ){
-				case otInteger : call->addChild( new ConstantNode( INT_ARGV(i) ) );   break;
-				case otFloat   : call->addChild( new ConstantNode( FLOAT_ARGV(i) ) ); break;
-				case otChar    : call->addChild( new ConstantNode( CHAR_ARGV(i) ) );   break;
-				case otString  : call->addChild( new ConstantNode( (char *)STRING_ARGV(i).c_str() ) ); break;
+		for( i = 1; i < ob_argc(); ++i ){
+			switch( ob_argv(i)->type->code ){
+				case otInteger : call->addChild( new ConstantNode( int_argv(i) ) );   break;
+				case otFloat   : call->addChild( new ConstantNode( float_argv(i) ) ); break;
+				case otChar    : call->addChild( new ConstantNode( char_argv(i) ) );   break;
+				case otString  : call->addChild( new ConstantNode( (char *)string_argv(i).c_str() ) ); break;
 
 				default :
-                    hyb_throw( H_ET_GENERIC, "type %s not supported for reflected call", HYB_ARGV(i)->type->name );
+                    hyb_throw( H_ET_GENERIC, "type %s not supported for reflected call", ob_argv(i)->type->name );
 			}
 		}
 	}

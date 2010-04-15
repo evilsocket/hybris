@@ -22,7 +22,7 @@
 /** generic function pointers **/
 void matrix_set_references( Object *me, int ref ){
     size_t x, y;
-    MatrixObject *mme = MATRIX_UPCAST(me);
+    MatrixObject *mme = ob_matrix_ucast(me);
 
     me->ref += ref;
 
@@ -36,8 +36,8 @@ void matrix_set_references( Object *me, int ref ){
 Object *matrix_clone( Object *me ){
     size_t x, y;
     vector<Object *> dummy;
-    MatrixObject *mclone = MK_MATRIX_OBJ(0,0,dummy),
-                 *mme    = MATRIX_UPCAST(me);
+    MatrixObject *mclone = gc_new_matrix(0,0,dummy),
+                 *mme    = ob_matrix_ucast(me);
     Object       *clone;
 
     mclone->rows    = mme->rows;
@@ -60,7 +60,7 @@ Object *matrix_clone( Object *me ){
 }
 
 void matrix_free( Object *me ){
-    MatrixObject *mme = MATRIX_UPCAST(me);
+    MatrixObject *mme = ob_matrix_ucast(me);
     Object       *item;
     size_t        x, y;
 
@@ -78,16 +78,16 @@ void matrix_free( Object *me ){
 }
 
 size_t matrix_get_size( Object *me ){
-	return MATRIX_UPCAST(me)->items;
+	return ob_matrix_ucast(me)->items;
 }
 
 int matrix_cmp( Object *me, Object *cmp ){
-    if( !IS_MATRIX_TYPE(cmp) ){
+    if( !ob_is_matrix(cmp) ){
         return 1;
     }
     else {
-        MatrixObject *mme  = MATRIX_UPCAST(me),
-                     *mcmp = MATRIX_UPCAST(cmp);
+        MatrixObject *mme  = ob_matrix_ucast(me),
+                     *mcmp = ob_matrix_ucast(cmp);
         size_t        mme_size( mme->items ),
                       mcmp_size( mcmp->items ),
                       mme_rows( mme->rows ),
@@ -122,15 +122,15 @@ int matrix_cmp( Object *me, Object *cmp ){
 }
 
 long matrix_ivalue( Object *me ){
-    return static_cast<long>( MATRIX_UPCAST(me)->items );
+    return static_cast<long>( ob_matrix_ucast(me)->items );
 }
 
 double matrix_fvalue( Object *me ){
-    return static_cast<double>( MATRIX_UPCAST(me)->items );
+    return static_cast<double>( ob_matrix_ucast(me)->items );
 }
 
 bool matrix_lvalue( Object *me ){
-    return static_cast<bool>( MATRIX_UPCAST(me)->items );
+    return static_cast<bool>( ob_matrix_ucast(me)->items );
 }
 
 string matrix_svalue( Object *me ){
@@ -138,7 +138,7 @@ string matrix_svalue( Object *me ){
 }
 
 void matrix_print( Object *me, int tabs ){
-    MatrixObject *mme = MATRIX_UPCAST(me);
+    MatrixObject *mme = ob_matrix_ucast(me);
     size_t        x, y, j;
 
     for( j = 0; j < tabs; ++j ){ printf( "\t" ); }
@@ -165,11 +165,11 @@ Object *matrix_assign( Object *me, Object *op ){
 }
 
 Object *matrix_add( Object *me, Object *o ){
-    MatrixObject *mme = MATRIX_UPCAST(ob_clone(me));
+    MatrixObject *mme = ob_matrix_ucast(ob_clone(me));
     size_t x, y;
 
-    if( IS_MATRIX_TYPE(o) ){
-        MatrixObject *mo = MATRIX_UPCAST(o);
+    if( ob_is_matrix(o) ){
+        MatrixObject *mo = ob_matrix_ucast(o);
         if( mme->rows != mo->rows || mme->columns != mo->columns ){
             hyb_throw( H_ET_SYNTAX, "matrices have to be the same size" );
         }
@@ -191,16 +191,16 @@ Object *matrix_add( Object *me, Object *o ){
 }
 
 Object *matrix_sub( Object *me, Object *o ){
-    MatrixObject *mme = MATRIX_UPCAST(me);
+    MatrixObject *mme = ob_matrix_ucast(me);
     size_t x, y;
 
-    if( IS_MATRIX_TYPE(o) ){
-        MatrixObject *mo = MATRIX_UPCAST(o);
+    if( ob_is_matrix(o) ){
+        MatrixObject *mo = ob_matrix_ucast(o);
         if( mme->rows != mo->rows || mme->columns != mo->columns ){
             hyb_throw( H_ET_SYNTAX, "matrices have to be the same size" );
         }
 
-        mme = MATRIX_UPCAST( ob_clone(me) );
+        mme = ob_matrix_ucast( ob_clone(me) );
         for( x = 0; x < mme->rows; ++x ){
             for( y = 0; y < mme->columns; ++y ){
                 ob_inplace_sub( mme->matrix[x][y], mo->matrix[x][y] );
@@ -208,7 +208,7 @@ Object *matrix_sub( Object *me, Object *o ){
         }
     }
     else{
-        mme = MATRIX_UPCAST( ob_clone(me) );
+        mme = ob_matrix_ucast( ob_clone(me) );
         for( x = 0; x < mme->rows; ++x ){
             for( y = 0; y < mme->columns; ++y ){
                 ob_inplace_sub( mme->matrix[x][y], o );
@@ -220,17 +220,17 @@ Object *matrix_sub( Object *me, Object *o ){
 }
 
 Object *matrix_mul( Object *me, Object *o ){
-    MatrixObject *mme = MATRIX_UPCAST(me),
+    MatrixObject *mme = ob_matrix_ucast(me),
                  *nm;
     unsigned int x, y, z;
 
-    if( IS_MATRIX_TYPE(o) ){
-        MatrixObject *mo = MATRIX_UPCAST(o);
+    if( ob_is_matrix(o) ){
+        MatrixObject *mo = ob_matrix_ucast(o);
         if( mme->columns != mo->rows ){
             hyb_throw( H_ET_SYNTAX, "first matrix columns have to be the same size of second matrix rows" );
         }
 
-        nm = MATRIX_UPCAST( gc_track( OB_DOWNCAST(new MatrixObject( mme->columns, mo->rows )), sizeof(MatrixObject) ) );
+        nm = ob_matrix_ucast( gc_track( ob_dcast(new MatrixObject( mme->columns, mo->rows )), sizeof(MatrixObject) ) );
         for( x = 0; x < mme->rows; ++x ){
             for( y = 0; y < mo->columns; ++y ){
                 for( z = 0; z < mme->columns; ++z ){
@@ -240,7 +240,7 @@ Object *matrix_mul( Object *me, Object *o ){
         }
     }
     else{
-        nm = MATRIX_UPCAST( ob_clone(me) );
+        nm = ob_matrix_ucast( ob_clone(me) );
         for( x = 0; x < nm->rows; ++x ){
             for( y = 0; y < nm->columns; ++y ){
                 ob_inplace_mul( nm->matrix[x][y], o );
@@ -252,11 +252,11 @@ Object *matrix_mul( Object *me, Object *o ){
 }
 
 Object *matrix_div( Object *me, Object *o ){
-    MatrixObject *mme = MATRIX_UPCAST( ob_clone(me) );
+    MatrixObject *mme = ob_matrix_ucast( ob_clone(me) );
     size_t x, y;
 
-    if( IS_MATRIX_TYPE(o) ){
-        MatrixObject *mo = MATRIX_UPCAST(o);
+    if( ob_is_matrix(o) ){
+        MatrixObject *mo = ob_matrix_ucast(o);
         if( mme->rows != mo->rows || mme->columns != mo->columns ){
             hyb_throw( H_ET_SYNTAX, "matrices have to be the same size" );
         }
@@ -278,11 +278,11 @@ Object *matrix_div( Object *me, Object *o ){
 }
 
 Object *matrix_inplace_add( Object *me, Object *o ){
-    MatrixObject *mme = MATRIX_UPCAST(me);
+    MatrixObject *mme = ob_matrix_ucast(me);
     size_t x, y;
 
-    if( IS_MATRIX_TYPE(o) ){
-        MatrixObject *mo = MATRIX_UPCAST(o);
+    if( ob_is_matrix(o) ){
+        MatrixObject *mo = ob_matrix_ucast(o);
         if( mme->rows != mo->rows || mme->columns != mo->columns ){
             hyb_throw( H_ET_SYNTAX, "matrices have to be the same size" );
         }
@@ -304,11 +304,11 @@ Object *matrix_inplace_add( Object *me, Object *o ){
 }
 
 Object *matrix_inplace_sub( Object *me, Object *o ){
-    MatrixObject *mme = MATRIX_UPCAST(me);
+    MatrixObject *mme = ob_matrix_ucast(me);
     size_t x, y;
 
-    if( IS_MATRIX_TYPE(o) ){
-        MatrixObject *mo = MATRIX_UPCAST(o);
+    if( ob_is_matrix(o) ){
+        MatrixObject *mo = ob_matrix_ucast(o);
         if( mme->rows != mo->rows || mme->columns != mo->columns ){
             hyb_throw( H_ET_SYNTAX, "matrices have to be the same size" );
         }
@@ -338,11 +338,11 @@ Object *matrix_inplace_mul( Object *me, Object *op ){
 }
 
 Object *matrix_inplace_div( Object *me, Object *o ){
-    MatrixObject *mme = MATRIX_UPCAST(me);
+    MatrixObject *mme = ob_matrix_ucast(me);
     size_t x, y;
 
-    if( IS_MATRIX_TYPE(o) ){
-        MatrixObject *mo = MATRIX_UPCAST(o);
+    if( ob_is_matrix(o) ){
+        MatrixObject *mo = ob_matrix_ucast(o);
         if( mme->rows != mo->rows || mme->columns != mo->columns ){
             hyb_throw( H_ET_SYNTAX, "matrices have to be the same size" );
         }
@@ -366,7 +366,7 @@ Object *matrix_inplace_div( Object *me, Object *o ){
 /** collection operators **/
 Object *matrix_cl_at( Object *me, Object *i ){
     size_t idx = ob_ivalue(i);
-    MatrixObject *mme = MATRIX_UPCAST(me);
+    MatrixObject *mme = ob_matrix_ucast(me);
 
     #ifdef BOUNDS_CHECK
     if( idx >= mme->columns ){
@@ -374,7 +374,7 @@ Object *matrix_cl_at( Object *me, Object *i ){
     }
     #endif
 
-    VectorObject *vector = MK_VECTOR_OBJ();
+    VectorObject *vector = gc_new_vector();
     size_t        x = idx, y;
 
     for( y = 0; y < mme->rows; ++y ){

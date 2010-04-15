@@ -32,27 +32,27 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 
-inline char a2i(char ch) {
+__force_inline char a2i(char ch) {
   return isdigit(ch) ? ch - '0' : tolower(ch) - 'a' + 10;
 }
 
-inline char i2a(char code) {
+__force_inline char i2a(char code) {
   static char hex[] = "0123456789abcdef";
   return hex[code & 15];
 }
 
-inline bool is_base64(unsigned char c) {
+__force_inline bool is_base64(unsigned char c) {
   return (isalnum(c) || (c == '+') || (c == '/'));
 }
 
 HYBRIS_DEFINE_FUNCTION(hurlencode){
     Object *_return;
-    if( HYB_ARGC() != 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'urlencode' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+        hyb_throw( H_ET_SYNTAX, "function 'urlencode' requires 1 parameter (called with %d)", ob_argc() );
     }
-    HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+    ob_type_assert( ob_argv(0), otString );
 
-    char *pstr = (char *)STRING_ARGV(0).c_str(),
+    char *pstr = (char *)string_argv(0).c_str(),
          *buf  = (char *)malloc( strlen(pstr) * 3 + 1 ),
          *pbuf = buf;
 
@@ -72,7 +72,7 @@ HYBRIS_DEFINE_FUNCTION(hurlencode){
     }
     *pbuf = '\0';
 
-    _return = OB_DOWNCAST( MK_STRING_OBJ(buf) );
+    _return = ob_dcast( gc_new_string(buf) );
 
     free(buf);
 
@@ -81,12 +81,12 @@ HYBRIS_DEFINE_FUNCTION(hurlencode){
 
 HYBRIS_DEFINE_FUNCTION(hurldecode){
     Object *_return;
-    if( HYB_ARGC() != 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'urldecode' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+        hyb_throw( H_ET_SYNTAX, "function 'urldecode' requires 1 parameter (called with %d)", ob_argc() );
     }
-    HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+    ob_type_assert( ob_argv(0), otString );
 
-    char *pstr = (char *)STRING_ARGV(0).c_str(),
+    char *pstr = (char *)string_argv(0).c_str(),
          *buf  = (char *)malloc(strlen(pstr) + 1),
          *pbuf = buf;
 
@@ -108,7 +108,7 @@ HYBRIS_DEFINE_FUNCTION(hurldecode){
 
     *pbuf = '\0';
 
-    _return = OB_DOWNCAST( MK_STRING_OBJ(buf) );
+    _return = ob_dcast( gc_new_string(buf) );
 
     free(buf);
 
@@ -116,17 +116,17 @@ HYBRIS_DEFINE_FUNCTION(hurldecode){
 }
 
 HYBRIS_DEFINE_FUNCTION(hbase64encode) {
-    if( HYB_ARGC() != 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'base64encode' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+        hyb_throw( H_ET_SYNTAX, "function 'base64encode' requires 1 parameter (called with %d)", ob_argc() );
     }
-    HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+    ob_type_assert( ob_argv(0), otString );
 
     static const char b64_charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     std::string ret;
     unsigned char block_3[3];
     unsigned char block_4[4];
-    char * str = (char *)STRING_ARGV(0).c_str();
+    char * str = (char *)string_argv(0).c_str();
     int i = 0,
         j = 0,
         size = strlen(str);;
@@ -163,18 +163,18 @@ HYBRIS_DEFINE_FUNCTION(hbase64encode) {
         }
     }
 
-    return OB_DOWNCAST( MK_STRING_OBJ(ret.c_str()) );
+    return ob_dcast( gc_new_string(ret.c_str()) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hbase64decode) {
-    if( HYB_ARGC() != 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'base64decode' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+        hyb_throw( H_ET_SYNTAX, "function 'base64decode' requires 1 parameter (called with %d)", ob_argc() );
     }
-    HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+    ob_type_assert( ob_argv(0), otString );
 
     static const std::string b64_charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     std::string ret;
-    char * str = (char *)STRING_ARGV(0).c_str();
+    char * str = (char *)string_argv(0).c_str();
     int in_len = strlen(str),
         i = 0,
         j = 0,
@@ -218,5 +218,5 @@ HYBRIS_DEFINE_FUNCTION(hbase64decode) {
         }
     }
 
-    return OB_DOWNCAST( MK_STRING_OBJ(ret.c_str()) );
+    return ob_dcast( gc_new_string(ret.c_str()) );
 }

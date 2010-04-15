@@ -111,12 +111,6 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                 /* $ */
                 case T_DOLLAR :
                     return onDollar( frame, node );
-                /* * */
-                case T_PTR :
-                    return onPointer( frame, node );
-                /** TODO case T_OBJ :
-                    return onObject( frame, node );
-                **/
                 /* expression .. expression */
                 case T_RANGE :
                     return onRange( frame, node );
@@ -255,14 +249,14 @@ Node * Engine::findEntryPoint( vframe_t *frame, Node *call ){
 		return function;
 	}
 	/* then search for a function alias */
-	AliasObject *alias = ALIAS_UPCAST( frame->get( callname ) );
-	if( alias != H_UNDEFINED && IS_ALIAS_TYPE(alias) ){
+	AliasObject *alias = ob_alias_ucast( frame->get( callname ) );
+	if( alias != H_UNDEFINED && ob_is_alias(alias) ){
 		return (Node *)alias->value;
 	}
 	/* try to evaluate the call as an alias itself */
 	if( call->value.m_alias_call != NULL ){
 		alias = (AliasObject *)exec( frame, call->value.m_alias_call );
-		if( IS_ALIAS_TYPE(alias) ){
+		if( ob_is_alias(alias) ){
 			return (Node *)alias->value;
 		}
 	}
@@ -299,7 +293,7 @@ Object *Engine::onIdentifier( vframe_t *frame, Node *node ){
 		/*
 		 * Create an alias to that code region (basically its index).
 		 */
-		return OB_DOWNCAST( MK_ALIAS_OBJ( H_ADDRESS_OF(function) ) );
+		return ob_dcast( gc_new_alias( H_ADDRESS_OF(function) ) );
 	}
 	/*
 	 * Ok ok, got it! It's undefined, raise an error.
@@ -338,7 +332,7 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
 	 * That could be the user types definition segments, who knows (the gc should),
 	 * anyway, check if it's REALLY a user defined type.
 	 */
-    else if( IS_STRUCT_TYPE(owner) == false ){
+    else if( ob_is_struct(owner) == false ){
         hyb_throw( H_ET_SYNTAX, "'%s' is not a structure identifier", identifier );
     }
 	/* 
@@ -361,7 +355,7 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
 		 * Ok, let's consider the next element and shift
 		 * relationships between owner and child pointers.
 		 */
-        else if( IS_STRUCT_TYPE(child) ){
+        else if( ob_is_struct(child) ){
             owner    = child;
             owner_id = child_id;
         }
@@ -407,7 +401,7 @@ Object *Engine::onFunctionDeclaration( vframe_t *frame, Node *node ){
 Object *Engine::onStructureDeclaration( vframe_t *frame, Node * node ){
     int        i, attributes( node->children() );
     char      *s_name = (char *)node->value.m_identifier.c_str();
-    Object    *s      = (Object *)MK_STRUCT_OBJ();
+    Object    *s      = (Object *)gc_new_struct();
 
     for( i = 0; i < attributes; ++i ){
         ob_add_attribute( s, (char *)node->child(i)->value.m_identifier.c_str() );
@@ -455,7 +449,7 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
     ctx->detrace();
 
     /* return function evaluation value */
-    return (result == H_UNDEFINED ? (Object *)MK_INT_OBJ(0) : result);
+    return (result == H_UNDEFINED ? (Object *)gc_new_integer(0) : result);
 }
 
 Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
@@ -514,7 +508,7 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
     ctx->detrace();
 
     /* return function evaluation value */
-    return (result == H_UNDEFINED ? (Object *)MK_INT_OBJ(0) : result);
+    return (result == H_UNDEFINED ? (Object *)gc_new_integer(0) : result);
 }
 
 Object *Engine::onTypeCall( vframe_t *frame, Node *type ){
@@ -541,17 +535,17 @@ Object *Engine::onTypeCall( vframe_t *frame, Node *type ){
 		 * has (non ini'ed attributes are set to 0 by default), but
 		 * you can not set more attributes than the structure have.
 		 */
-        if( children > STRUCT_UPCAST(structure)->items ){
+        if( children > ob_struct_ucast(structure)->items ){
             hyb_throw( H_ET_SYNTAX, "structure '%s' has %d attributes, initialized with %d",
                                  type_name,
-                                 STRUCT_UPCAST(structure)->items,
+                                 ob_struct_ucast(structure)->items,
                                  children );
         }
 
         for( i = 0; i < children; ++i ){
             object = exec( frame, type->child(i) );
 
-            ob_set_attribute( structure, (char *)STRUCT_UPCAST(structure)->names[i].c_str(), object );
+            ob_set_attribute( structure, (char *)ob_struct_ucast(structure)->names[i].c_str(), object );
         }
     }
 
@@ -578,7 +572,7 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
         }
         return H_UNDEFINED;
     }
-    else if( IS_EXTERN_TYPE(fn_pointer) == false ){
+    else if( ob_is_extern(fn_pointer) == false ){
         if( threaded ){
             ctx->depool();
         }
@@ -606,7 +600,7 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
     ctx->detrace();
 
     /* return function evaluation value */
-    return (result == H_UNDEFINED ? (Object *)MK_INT_OBJ(0) : result);
+    return (result == H_UNDEFINED ? (Object *)gc_new_integer(0) : result);
 }
 
 Object *Engine::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
@@ -636,34 +630,13 @@ Object *Engine::onDollar( vframe_t *frame, Node *node ){
     o    = exec( frame, node->child(0) );
     name = ob_to_string(o);
 
-    if( (o = frame->get( (char *)STRING_UPCAST(name)->value.c_str() )) == H_UNDEFINED ){
-        hyb_throw( H_ET_SYNTAX, "'%s' undeclared identifier", STRING_UPCAST(name)->value.c_str() );
+    if( (o = frame->get( (char *)ob_string_ucast(name)->value.c_str() )) == H_UNDEFINED ){
+        hyb_throw( H_ET_SYNTAX, "'%s' undeclared identifier", ob_string_ucast(name)->value.c_str() );
     }
 
     return o;
 }
 
-Object *Engine::onPointer( vframe_t *frame, Node *node ){
-    Object *o   = H_UNDEFINED,
-           *res = H_UNDEFINED;
-
-    o   = exec( frame, node->child(0) );
-    res = (Object *)PTR_TO_INT_OBJ(o);
-
-    return res;
-}
-/**
-TODO:
-Object *Engine::onObject( vframe_t *frame, Node *node ){
-    Object *o   = H_UNDEFINED,
-           *res = H_UNDEFINED;
-
-    o   = exec( frame, node->child(0) );
-    res = o->getObject();
-
-    return res;
-}
-**/
 Object *Engine::onReturn( vframe_t *frame, Node *node ){
     return exec(  frame, node->child(0) );
 }
@@ -801,7 +774,7 @@ Object *Engine::onForeach( vframe_t *frame, Node *node ){
     size       = ob_get_size(v);
 
     for( i = 0; i < size; ++i ){
-        frame->add( identifier, VECTOR_UPCAST(v)->value[i] );
+        frame->add( identifier, ob_vector_ucast(v)->value[i] );
         result = exec( frame, body );
     }
 
@@ -823,8 +796,8 @@ Object *Engine::onForeachm( vframe_t *frame, Node *node ){
     size             = ob_get_size(map);
 
     for( i = 0; i < size; ++i ){
-        frame->add( key_identifier,   MAP_UPCAST(map)->keys[i] );
-        frame->add( value_identifier, MAP_UPCAST(map)->values[i] );
+        frame->add( key_identifier,   ob_map_ucast(map)->keys[i] );
+        frame->add( value_identifier, ob_map_ucast(map)->values[i] );
         result = exec(  frame, body );
     }
 

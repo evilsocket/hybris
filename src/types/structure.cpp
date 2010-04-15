@@ -22,7 +22,7 @@
 /** generic function pointers **/
 void struct_set_references( Object *me, int ref ){
     StructureObjectValueIterator vi;
-    StructureObject *sme = STRUCT_UPCAST(me);
+    StructureObject *sme = ob_struct_ucast(me);
 
     me->ref += ref;
 
@@ -32,8 +32,8 @@ void struct_set_references( Object *me, int ref ){
 }
 
 Object *struct_clone( Object *me ){
-    StructureObject *sclone = MK_STRUCT_OBJ(),
-                    *sme    = STRUCT_UPCAST(me);
+    StructureObject *sclone = gc_new_struct(),
+                    *sme    = ob_struct_ucast(me);
     StructureObjectNameIterator  ni;
     StructureObjectValueIterator vi;
 
@@ -47,12 +47,12 @@ Object *struct_clone( Object *me ){
 }
 
 size_t struct_get_size( Object *me ){
-	return STRUCT_UPCAST(me)->items;
+	return ob_struct_ucast(me)->items;
 }
 
 void struct_free( Object *me ){
     StructureObjectValueIterator vi;
-    StructureObject *sme = STRUCT_UPCAST(me);
+    StructureObject *sme = ob_struct_ucast(me);
     Object          *vitem;
 
     for( vi = sme->values.begin(); vi != sme->values.end(); vi++ ){
@@ -68,12 +68,12 @@ void struct_free( Object *me ){
 }
 
 int struct_cmp( Object *me, Object *cmp ){
-    if( !IS_STRUCT_TYPE(cmp) ){
+    if( !ob_is_struct(cmp) ){
         return 1;
     }
     else {
-        StructureObject *sme  = STRUCT_UPCAST(me),
-                  *scmp = STRUCT_UPCAST(cmp);
+        StructureObject *sme  = ob_struct_ucast(me),
+                  *scmp = ob_struct_ucast(cmp);
         size_t     sme_nsize( sme->names.size() ),
                    mcmp_nsize( scmp->names.size() ),
                    sme_vsize( sme->values.size() ),
@@ -107,15 +107,15 @@ int struct_cmp( Object *me, Object *cmp ){
 }
 
 long struct_ivalue( Object *me ){
-    return static_cast<long>( STRUCT_UPCAST(me)->items );
+    return static_cast<long>( ob_struct_ucast(me)->items );
 }
 
 double struct_fvalue( Object *me ){
-    return static_cast<double>( STRUCT_UPCAST(me)->items );
+    return static_cast<double>( ob_struct_ucast(me)->items );
 }
 
 bool struct_lvalue( Object *me ){
-    return static_cast<bool>( STRUCT_UPCAST(me)->items );
+    return static_cast<bool>( ob_struct_ucast(me)->items );
 }
 
 string struct_svalue( Object *me ){
@@ -123,7 +123,7 @@ string struct_svalue( Object *me ){
 }
 
 void struct_print( Object *me, int tabs ){
-    StructureObject *sme = STRUCT_UPCAST(me);
+    StructureObject *sme = ob_struct_ucast(me);
     int        i, j;
 
     printf( "struct {\n" );
@@ -150,15 +150,15 @@ Object *struct_assign( Object *me, Object *op ){
 
 /** structure operators **/
 void struct_add_attribute( Object *me, char *name ){
-    StructureObject *sme = STRUCT_UPCAST(me);
+    StructureObject *sme = ob_struct_ucast(me);
 
     sme->names.push_back( name );
-    sme->values.push_back( (Object *)MK_INT_OBJ(0) );
+    sme->values.push_back( (Object *)gc_new_integer(0) );
     sme->items = sme->names.size();
 }
 
 Object *struct_get_attribute( Object *me, char *name ){
-    StructureObject *sme = STRUCT_UPCAST(me);
+    StructureObject *sme = ob_struct_ucast(me);
 
     int i, sz( sme->items );
     for( i = 0; i < sz; ++i ){
@@ -171,7 +171,7 @@ Object *struct_get_attribute( Object *me, char *name ){
 }
 
 void struct_set_attribute_reference( Object *me, char *name, Object *value ){
-    StructureObject *sme = STRUCT_UPCAST(me);
+    StructureObject *sme = ob_struct_ucast(me);
     Object          *o;
     int i, sz( sme->items );
 

@@ -28,24 +28,24 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hbinary){
-    if( HYB_ARGC() < 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'binary' requires at least 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() < 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'binary' requires at least 1 parameter (called with %d)", ob_argc() );
 	}
 	vector<unsigned char> stream;
 	unsigned int          i;
 
 	for( i = 0; i < data->size(); ++i ){
-        HYB_TYPES_ASSERT( HYB_ARGV(i), otInteger, otChar );
+        ob_types_assert( ob_argv(i), otInteger, otChar );
 
-        if( IS_INTEGER_TYPE( HYB_ARGV(i) ) ){
-            stream.push_back( (unsigned char)INT_ARGV(i) );
+        if( ob_is_int( ob_argv(i) ) ){
+            stream.push_back( (unsigned char)int_argv(i) );
         }
         else{
-            stream.push_back( (unsigned char)CHAR_ARGV(i) );
+            stream.push_back( (unsigned char)char_argv(i) );
         }
 	}
 
-    return OB_DOWNCAST( MK_BINARY_OBJ(stream) );
+    return ob_dcast( gc_new_binary(stream) );
 }
 
 void do_simple_packing( vector<byte>& stream, Object *o, size_t size ){
@@ -64,14 +64,14 @@ void do_simple_packing( vector<byte>& stream, Object *o, size_t size ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hpack){
-	if( HYB_ARGC() < 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'pack' requires at least 2 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() < 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'pack' requires at least 2 parameter (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(1), otInteger );
+	ob_type_assert( ob_argv(1), otInteger );
 
 	vector<byte> stream;
-	size_t 		 i, j, size( INT_ARGV(1) );
-	Object      *o = HYB_ARGV(0);
+	size_t 		 i, j, size( int_argv(1) );
+	Object      *o = ob_argv(0);
 
 	switch( o->type->code ){
 		case otInteger :
@@ -82,21 +82,21 @@ HYBRIS_DEFINE_FUNCTION(hpack){
 			do_simple_packing( stream, o, size );
 		break;
 		case otVector  :
-			if( (HYB_ARGC() - 1) != ob_get_size(o) ){
-				hyb_throw( H_ET_SYNTAX, "not enough parameters to pack an array of %d elements (given %d)", ob_get_size(o), HYB_ARGC() );
+			if( (ob_argc() - 1) != ob_get_size(o) ){
+				hyb_throw( H_ET_SYNTAX, "not enough parameters to pack an array of %d elements (given %d)", ob_get_size(o), ob_argc() );
 			}
-			for( i = 1, j = 0; i < HYB_ARGC(); ++i, ++j ){
-				HYB_TYPE_ASSERT( HYB_ARGV(i), otInteger );
-				do_simple_packing( stream, VECTOR_UPCAST(o)->value[j], INT_ARGV(i) );
+			for( i = 1, j = 0; i < ob_argc(); ++i, ++j ){
+				ob_type_assert( ob_argv(i), otInteger );
+				do_simple_packing( stream, ob_vector_ucast(o)->value[j], int_argv(i) );
 			}
 		break;
 		case otStructure :
-			if( (HYB_ARGC() - 1) != ob_get_size(o) ){
-				hyb_throw( H_ET_SYNTAX, "not enough parameters to pack a structure with %d attributes (given %d)", ob_get_size(o), HYB_ARGC() );
+			if( (ob_argc() - 1) != ob_get_size(o) ){
+				hyb_throw( H_ET_SYNTAX, "not enough parameters to pack a structure with %d attributes (given %d)", ob_get_size(o), ob_argc() );
 			}
-			for( i = 1, j = 0; i < HYB_ARGC(); ++i, ++j ){
-				HYB_TYPE_ASSERT( HYB_ARGV(i), otInteger );
-				do_simple_packing( stream, STRUCT_UPCAST(o)->values[j], INT_ARGV(i) );
+			for( i = 1, j = 0; i < ob_argc(); ++i, ++j ){
+				ob_type_assert( ob_argv(i), otInteger );
+				do_simple_packing( stream, ob_struct_ucast(o)->values[j], int_argv(i) );
 			}
 		break;
 
@@ -104,7 +104,7 @@ HYBRIS_DEFINE_FUNCTION(hpack){
 			hyb_throw( H_ET_SYNTAX, "unsupported %s type in pack function", o->type->name );
 	}
 
-	return OB_DOWNCAST( MK_BINARY_OBJ(stream) );
+	return ob_dcast( gc_new_binary(stream) );
 }
 
 

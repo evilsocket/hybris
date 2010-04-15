@@ -25,7 +25,7 @@ void float_set_references( Object *me, int ref ){
 }
 
 Object *float_clone( Object *me ){
-    return (Object *)MK_FLOAT_OBJ( FLOAT_UPCAST(me)->value );
+    return (Object *)gc_new_float( ob_float_ucast(me)->value );
 }
 
 size_t float_get_size( Object *me ){
@@ -36,15 +36,15 @@ byte *float_serialize( Object *o, size_t size ){
 	size_t i, s   = (size > ob_get_size(o) ? ob_get_size(o) : size != 0 ? size : ob_get_size(o) );
 	byte  *buffer = new byte[s];
 
-	memcpy( buffer, &(FLOAT_UPCAST(o)->value), s );
+	memcpy( buffer, &(ob_float_ucast(o)->value), s );
 
 	return buffer;
 }
 
 Object *float_deserialize( Object *o, byte *buffer, size_t size ){
 	if( size ){
-		o = OB_DOWNCAST( MK_FLOAT_OBJ(0) );
-		memcpy( &(FLOAT_UPCAST(o)->value), buffer, size );
+		o = ob_dcast( gc_new_float(0) );
+		memcpy( &(ob_float_ucast(o)->value), buffer, size );
 	}
 	return o;
 }
@@ -53,25 +53,25 @@ Object *float_to_fd( Object *o, int fd, size_t size ){
 	size_t s = (size > ob_get_size(o) ? ob_get_size(o) : size != 0 ? size : ob_get_size(o));
 	int    written;
 
-	written = write( fd, &((FLOAT_UPCAST(o))->value), s );
+	written = write( fd, &((ob_float_ucast(o))->value), s );
 
-	return OB_DOWNCAST( MK_INT_OBJ(written) );
+	return ob_dcast( gc_new_integer(written) );
 }
 
 Object *float_from_fd( Object *o, int fd, size_t size ){
 	int rd = 0;
 	if( size ){
-		rd = read( fd, &((FLOAT_UPCAST(o))->value), size );
+		rd = read( fd, &((ob_float_ucast(o))->value), size );
 	}
 	else{
 		return ob_from_fd( o, fd, sizeof(double) );
 	}
-	return OB_DOWNCAST( MK_INT_OBJ(rd) );
+	return ob_dcast( gc_new_integer(rd) );
 }
 
 int float_cmp( Object *me, Object *cmp ){
     double fvalue = ob_fvalue(cmp),
-           mvalue = FLOAT_UPCAST(me)->value;
+           mvalue = ob_float_ucast(me)->value;
 
     if( mvalue == fvalue ){
         return 0;
@@ -85,19 +85,19 @@ int float_cmp( Object *me, Object *cmp ){
 }
 
 long float_ivalue( Object *me ){
-    return (long)FLOAT_UPCAST(me)->value;
+    return (long)ob_float_ucast(me)->value;
 }
 
 double float_fvalue( Object *me ){
-    return FLOAT_UPCAST(me)->value;
+    return ob_float_ucast(me)->value;
 }
 
 bool float_lvalue( Object *me ){
-    return (bool)FLOAT_UPCAST(me)->value;
+    return (bool)ob_float_ucast(me)->value;
 }
 
 string float_svalue( Object *me ){
-    double fvalue = FLOAT_UPCAST(me)->value;
+    double fvalue = ob_float_ucast(me)->value;
     char svalue[0xFF] = {0};
 
     sprintf( svalue, "%lf", fvalue );
@@ -109,11 +109,11 @@ void float_print( Object *me, int tabs ){
     for( int i = 0; i < tabs; ++i ){
         printf( "\t" );
     }
-    printf( "%lf", FLOAT_UPCAST(me)->value );
+    printf( "%lf", ob_float_ucast(me)->value );
 }
 
 void float_scanf( Object *me ){
-    scanf( "%lf", &FLOAT_UPCAST(me)->value );
+    scanf( "%lf", &ob_float_ucast(me)->value );
 }
 
 Object * float_to_string( Object *me ){
@@ -123,11 +123,11 @@ Object * float_to_string( Object *me ){
 }
 
 Object * float_to_int( Object *me ){
-    return (Object *)MK_INT_OBJ( FLOAT_UPCAST(me)->value );
+    return (Object *)gc_new_integer( ob_float_ucast(me)->value );
 }
 
 Object * float_from_int( Object *me ){
-    return (Object *)MK_FLOAT_OBJ( (INT_UPCAST(me))->value );
+    return (Object *)gc_new_float( (ob_int_ucast(me))->value );
 }
 
 Object * float_from_float( Object *me ){
@@ -136,8 +136,8 @@ Object * float_from_float( Object *me ){
 
 /** arithmetic operators **/
 Object *float_assign( Object *me, Object *op ){
-    if( IS_FLOAT_TYPE(op) ){
-        FLOAT_UPCAST(me)->value = FLOAT_UPCAST(op)->value;
+    if( ob_is_float(op) ){
+        ob_float_ucast(me)->value = ob_float_ucast(op)->value;
     }
     else {
         Object *clone = ob_clone(op);
@@ -151,7 +151,7 @@ Object *float_assign( Object *me, Object *op ){
 }
 
 Object *float_factorial( Object *me ){
-    double fvalue = FLOAT_UPCAST(me)->value;
+    double fvalue = ob_float_ucast(me)->value;
     int    ifact  = 1,
            i;
 
@@ -159,112 +159,112 @@ Object *float_factorial( Object *me ){
         ifact *= i;
     }
 
-    return (Object *)MK_FLOAT_OBJ(ifact);
+    return (Object *)gc_new_float(ifact);
 }
 
 Object *float_increment( Object *me ){
-    FLOAT_UPCAST(me)->value++;
+    ob_float_ucast(me)->value++;
 
     return me;
 }
 
 Object *float_decrement( Object *me ){
-    FLOAT_UPCAST(me)->value--;
+    ob_float_ucast(me)->value--;
 
     return me;
 }
 
 Object *float_minus( Object *me ){
-    return (Object *)MK_FLOAT_OBJ( -FLOAT_UPCAST(me)->value );
+    return (Object *)gc_new_float( -ob_float_ucast(me)->value );
 }
 
 Object *float_add( Object *me, Object *op ){
     double fvalue = ob_fvalue(op);
 
-    return (Object *)MK_FLOAT_OBJ( FLOAT_UPCAST(me)->value + fvalue );
+    return (Object *)gc_new_float( ob_float_ucast(me)->value + fvalue );
 }
 
 Object *float_sub( Object *me, Object *op ){
     double fvalue = ob_fvalue(op);
 
-    return (Object *)MK_FLOAT_OBJ( FLOAT_UPCAST(me)->value - fvalue );
+    return (Object *)gc_new_float( ob_float_ucast(me)->value - fvalue );
 }
 
 Object *float_mul( Object *me, Object *op ){
     double fvalue = ob_fvalue(op);
 
-    return (Object *)MK_FLOAT_OBJ( FLOAT_UPCAST(me)->value * fvalue );
+    return (Object *)gc_new_float( ob_float_ucast(me)->value * fvalue );
 }
 
 Object *float_div( Object *me, Object *op ){
     double fvalue = ob_fvalue(op);
 
-    return (Object *)MK_FLOAT_OBJ( FLOAT_UPCAST(me)->value / fvalue );
+    return (Object *)gc_new_float( ob_float_ucast(me)->value / fvalue );
 }
 
 Object *float_mod( Object *me, Object *op ){
-    double a = FLOAT_UPCAST(me)->value,
+    double a = ob_float_ucast(me)->value,
            b = ob_fvalue(op);
 
-    return (Object *)MK_FLOAT_OBJ( fmod( a, b ) );
+    return (Object *)gc_new_float( fmod( a, b ) );
 }
 
 Object *float_inplace_add( Object *me, Object *op ){
-    FLOAT_UPCAST(me)->value += ob_fvalue(op);
+    ob_float_ucast(me)->value += ob_fvalue(op);
 
     return me;
 }
 
 Object *float_inplace_sub( Object *me, Object *op ){
-    FLOAT_UPCAST(me)->value -= ob_fvalue(op);
+    ob_float_ucast(me)->value -= ob_fvalue(op);
 
     return me;
 }
 
 Object *float_inplace_mul( Object *me, Object *op ){
-    FLOAT_UPCAST(me)->value *= ob_fvalue(op);
+    ob_float_ucast(me)->value *= ob_fvalue(op);
 
     return me;
 }
 
 Object *float_inplace_div( Object *me, Object *op ){
-    FLOAT_UPCAST(me)->value /= ob_fvalue(op);
+    ob_float_ucast(me)->value /= ob_fvalue(op);
 
     return me;
 }
 
 Object *float_inplace_mod( Object *me, Object *op ){
-    double a = FLOAT_UPCAST(me)->value,
+    double a = ob_float_ucast(me)->value,
            b = ob_fvalue(op);
 
-    FLOAT_UPCAST(me)->value = fmod( a, b );
+    ob_float_ucast(me)->value = fmod( a, b );
 
     return me;
 }
 
 /** bitwise operators **/
 Object *float_bw_and( Object *me, Object *op ){
-    return (Object *)MK_FLOAT_OBJ( (int)FLOAT_UPCAST(me)->value & ob_ivalue(op) );
+    return (Object *)gc_new_float( (int)ob_float_ucast(me)->value & ob_ivalue(op) );
 }
 
 Object *float_bw_or( Object *me, Object *op ){
-    return (Object *)MK_FLOAT_OBJ( (int)FLOAT_UPCAST(me)->value | ob_ivalue(op) );
+    return (Object *)gc_new_float( (int)ob_float_ucast(me)->value | ob_ivalue(op) );
 }
 
 Object *float_bw_not( Object *me ){
-    return (Object *)MK_FLOAT_OBJ( ~(int)FLOAT_UPCAST(me)->value );
+    return (Object *)gc_new_float( ~(int)ob_float_ucast(me)->value );
 }
 
 Object *float_bw_xor( Object *me, Object *op ){
-    return (Object *)MK_FLOAT_OBJ( (int)FLOAT_UPCAST(me)->value ^ ob_ivalue(op) );
+    return (Object *)gc_new_float( (int)ob_float_ucast(me)->value ^ ob_ivalue(op) );
 }
 
 Object *float_bw_lshift( Object *me, Object *op ){
-    return (Object *)MK_FLOAT_OBJ( (int)FLOAT_UPCAST(me)->value << ob_ivalue(op) );
+    return (Object *)gc_new_float( (int)ob_float_ucast(me)->value << ob_ivalue(op) );
 }
 
 Object *float_bw_rshift( Object *me, Object *op ){
-    return (Object *)MK_FLOAT_OBJ( (int)FLOAT_UPCAST(me)->value >> ob_ivalue(op) );
+    return (Object *)gc_new_float( (int)ob_float_ucast(me)->value >> ob_ivalue(op) );
 }
 
 Object *float_bw_inplace_and( Object *me, Object *op ){
@@ -272,7 +272,7 @@ Object *float_bw_inplace_and( Object *me, Object *op ){
 
     ivalue &= ob_ivalue(op);
 
-    FLOAT_UPCAST(me)->value = ivalue;
+    ob_float_ucast(me)->value = ivalue;
 
     return me;
 }
@@ -282,7 +282,7 @@ Object *float_bw_inplace_or( Object *me, Object *op ){
 
     ivalue |= ob_ivalue(op);
 
-    FLOAT_UPCAST(me)->value = ivalue;
+    ob_float_ucast(me)->value = ivalue;
 
     return me;
 }
@@ -292,7 +292,7 @@ Object *float_bw_inplace_xor( Object *me, Object *op ){
 
     ivalue ^= ob_ivalue(op);
 
-    FLOAT_UPCAST(me)->value = ivalue;
+    ob_float_ucast(me)->value = ivalue;
 
     return me;
 }
@@ -302,7 +302,7 @@ Object *float_bw_inplace_lshift( Object *me, Object *op ){
 
     ivalue <<= ob_ivalue(op);
 
-    FLOAT_UPCAST(me)->value = ivalue;
+    ob_float_ucast(me)->value = ivalue;
 
     return me;
 }
@@ -312,62 +312,62 @@ Object *float_bw_inplace_rshift( Object *me, Object *op ){
 
     ivalue >>= ob_ivalue(op);
 
-    FLOAT_UPCAST(me)->value = ivalue;
+    ob_float_ucast(me)->value = ivalue;
 
     return me;
 }
 
 /** logic operators **/
 Object *float_l_not( Object *me ){
-    return (Object *)MK_FLOAT_OBJ( !FLOAT_UPCAST(me)->value );
+    return (Object *)gc_new_float( !ob_float_ucast(me)->value );
 }
 
 Object *float_l_same( Object *me, Object *op ){
     double fvalue = ob_fvalue(op);
 
-    return (Object *)MK_FLOAT_OBJ( FLOAT_UPCAST(me)->value == fvalue );
+    return (Object *)gc_new_float( ob_float_ucast(me)->value == fvalue );
 }
 
 Object *float_l_diff( Object *me, Object *op ){
     double fvalue = ob_fvalue(op);
 
-    return (Object *)MK_FLOAT_OBJ( FLOAT_UPCAST(me)->value != fvalue );
+    return (Object *)gc_new_float( ob_float_ucast(me)->value != fvalue );
 }
 
 Object *float_l_less( Object *me, Object *op ){
     double fvalue = ob_fvalue(op);
 
-    return (Object *)MK_FLOAT_OBJ( FLOAT_UPCAST(me)->value < fvalue );
+    return (Object *)gc_new_float( ob_float_ucast(me)->value < fvalue );
 }
 
 Object *float_l_greater( Object *me, Object *op ){
     double fvalue = ob_fvalue(op);
 
-    return (Object *)MK_FLOAT_OBJ( FLOAT_UPCAST(me)->value > fvalue );
+    return (Object *)gc_new_float( ob_float_ucast(me)->value > fvalue );
 }
 
 Object *float_l_less_or_same( Object *me, Object *op ){
     double fvalue = ob_fvalue(op);
 
-    return (Object *)MK_FLOAT_OBJ( FLOAT_UPCAST(me)->value <= fvalue );
+    return (Object *)gc_new_float( ob_float_ucast(me)->value <= fvalue );
 }
 
 Object *float_l_greater_or_same( Object *me, Object *op ){
     double fvalue = ob_fvalue(op);
 
-    return (Object *)MK_FLOAT_OBJ( FLOAT_UPCAST(me)->value >= fvalue );
+    return (Object *)gc_new_float( ob_float_ucast(me)->value >= fvalue );
 }
 
 Object *float_l_or( Object *me, Object *op ){
     double fvalue = ob_fvalue(op);
 
-    return (Object *)MK_FLOAT_OBJ( FLOAT_UPCAST(me)->value || fvalue );
+    return (Object *)gc_new_float( ob_float_ucast(me)->value || fvalue );
 }
 
 Object *float_l_and( Object *me, Object *op ){
     double fvalue = ob_fvalue(op);
 
-    return (Object *)MK_FLOAT_OBJ( FLOAT_UPCAST(me)->value && fvalue );
+    return (Object *)gc_new_float( ob_float_ucast(me)->value && fvalue );
 }
 
 /** collection operators **/
@@ -375,7 +375,7 @@ Object *float_cl_concat( Object *me, Object *op ){
     string mvalue = ob_svalue(me),
            svalue = ob_svalue(op);
 
-    return (Object *)MK_STRING_OBJ( (mvalue + svalue).c_str() );
+    return (Object *)gc_new_string( (mvalue + svalue).c_str() );
 }
 
 IMPLEMENT_TYPE(Float) {

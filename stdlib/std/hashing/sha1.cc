@@ -296,12 +296,12 @@ void sha1_finish( sha1_context *ctx, unsigned char output[20] )
 }
 
 HYBRIS_DEFINE_FUNCTION(hsha1){
-    if( HYB_ARGC() != 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'sha1' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+        hyb_throw( H_ET_SYNTAX, "function 'sha1' requires 1 parameter (called with %d)", ob_argc() );
     }
-    HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+    ob_type_assert( ob_argv(0), otString );
 
-	string        str 	   = STRING_ARGV(0),
+	string        str 	   = string_argv(0),
 				  str_hash("");
 	unsigned char hash[20] = {0};
 	char		  hex[3]   = {0};
@@ -317,5 +317,5 @@ HYBRIS_DEFINE_FUNCTION(hsha1){
 		str_hash += hex;
 	}
 
-    return OB_DOWNCAST( MK_STRING_OBJ( str_hash.c_str() ) );
+    return ob_dcast( gc_new_string( str_hash.c_str() ) );
 }

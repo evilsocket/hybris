@@ -93,12 +93,12 @@ static unsigned long crc_table[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hcrc32){
-    if( HYB_ARGC() != 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'crc32' requires 1 parameter (called with %d)", HYB_ARGC() );
+    if( ob_argc() != 1 ){
+        hyb_throw( H_ET_SYNTAX, "function 'crc32' requires 1 parameter (called with %d)", ob_argc() );
     }
-    HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+    ob_type_assert( ob_argv(0), otString );
 
-	string str = STRING_ARGV(0);
+	string str = string_argv(0);
 
     unsigned long crc( 0xFFFFFFFF ), i, size(str.size());
 
@@ -107,5 +107,5 @@ HYBRIS_DEFINE_FUNCTION(hcrc32){
     }
     crc ^= 0xFFFFFFFF;
 
-    return OB_DOWNCAST( MK_INT_OBJ(crc) );
+    return ob_dcast( gc_new_integer(crc) );
 }

@@ -31,14 +31,14 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hrex_match){
-	if( HYB_ARGC() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'rex_match' requires 2 parameters (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'rex_match' requires 2 parameters (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
+	ob_type_assert( ob_argv(0), otString );
+	ob_type_assert( ob_argv(1), otString );
 
-	string rawreg  = STRING_ARGV(0),
-		   subject = STRING_ARGV(1),
+	string rawreg  = string_argv(0),
+		   subject = string_argv(1),
 		   regex;
 	int    opts;
 
@@ -47,18 +47,18 @@ HYBRIS_DEFINE_FUNCTION(hrex_match){
 	pcrecpp::RE_Options OPTS(opts);
 	pcrecpp::RE         REGEX( regex.c_str(), OPTS );
 
-	return OB_DOWNCAST( MK_INT_OBJ( REGEX.PartialMatch(subject.c_str()) ) );
+	return ob_dcast( gc_new_integer( REGEX.PartialMatch(subject.c_str()) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hrex_matches){
-	if( HYB_ARGC() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'rex_matches' requires 2 parameters (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'rex_matches' requires 2 parameters (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
+	ob_type_assert( ob_argv(0), otString );
+	ob_type_assert( ob_argv(1), otString );
 
-	string rawreg  = STRING_ARGV(0),
-		   subject = STRING_ARGV(1),
+	string rawreg  = string_argv(0),
+		   subject = string_argv(1),
 		   regex;
 	int    opts, i = 0;
 
@@ -68,29 +68,29 @@ HYBRIS_DEFINE_FUNCTION(hrex_matches){
 	pcrecpp::RE          REGEX( regex.c_str(), OPTS );
 	pcrecpp::StringPiece SUBJECT( subject.c_str() );
 	string   match;
-	Object  *matches = OB_DOWNCAST( MK_VECTOR_OBJ() );
+	Object  *matches = ob_dcast( gc_new_vector() );
 
     while( REGEX.FindAndConsume( &SUBJECT, &match ) == true ){
 		if( i++ > H_PCRE_MAX_MATCHES ){
 			hyb_throw( H_ET_GENERIC, "something of your regex is forcing infinite matches" );
 		}
-		ob_cl_push_reference( matches, OB_DOWNCAST( MK_STRING_OBJ(match.c_str()) ) );
+		ob_cl_push_reference( matches, ob_dcast( gc_new_string(match.c_str()) ) );
 	}
 
 	return matches;
 }
 
 HYBRIS_DEFINE_FUNCTION(hrex_replace){
-	if( HYB_ARGC() != 3 ){
-		hyb_throw( H_ET_SYNTAX, "function 'rex_replace' requires 2 parameters (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 3 ){
+		hyb_throw( H_ET_SYNTAX, "function 'rex_replace' requires 2 parameters (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), otString );
-	HYB_TYPES_ASSERT( HYB_ARGV(2), otString, otChar );
+	ob_type_assert( ob_argv(0), otString );
+	ob_type_assert( ob_argv(1), otString );
+	ob_types_assert( ob_argv(2), otString, otChar );
 
-	string rawreg  = STRING_ARGV(0).c_str(),
-		   subject = STRING_ARGV(1).c_str(),
-		   replace = IS_STRING_TYPE( HYB_ARGV(2) ) ? STRING_ARGV(2).c_str() : string("") + (char)ob_ivalue(HYB_ARGV(2)),
+	string rawreg  = string_argv(0).c_str(),
+		   subject = string_argv(1).c_str(),
+		   replace = ob_is_string( ob_argv(2) ) ? string_argv(2).c_str() : string("") + (char)ob_ivalue(ob_argv(2)),
 		   regex;
 	int    opts;
 
@@ -101,5 +101,5 @@ HYBRIS_DEFINE_FUNCTION(hrex_replace){
 
 	REGEX.GlobalReplace( replace.c_str(), &subject );
 
-	return OB_DOWNCAST( MK_STRING_OBJ( subject.c_str() ) );
+	return ob_dcast( gc_new_string( subject.c_str() ) );
 }

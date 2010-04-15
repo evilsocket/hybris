@@ -35,7 +35,7 @@ class VirtualMemory : public HashMap<Object> {
         VirtualMemory();
         ~VirtualMemory();
 
-        inline Object *get( char *identifier ){
+        __force_inline Object *get( char *identifier ){
         	return find(identifier);
         }
 
@@ -43,7 +43,7 @@ class VirtualMemory : public HashMap<Object> {
 
         VirtualMemory *clone();
 
-        inline void release(){
+        __force_inline void release(){
         	clear();
         }
 };

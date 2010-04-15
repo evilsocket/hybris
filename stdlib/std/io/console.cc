@@ -54,7 +54,7 @@ byte *binary_serialize( Object *o ){
     byte *buffer = new byte[ size ];
 
     for( i = 0; i < size; ++i ){
-        buffer[i] = (byte)ob_ivalue( BINARY_UPCAST(o)->value[i] );
+        buffer[i] = (byte)ob_ivalue( ob_binary_ucast(o)->value[i] );
     }
 
     return buffer;
@@ -80,7 +80,7 @@ static void ctype_convert( Object *o, dll_arg_t *pa ) {
 	}
     else if( o->type->code == otString ){
 		pa->type    = &ffi_type_pointer;
-		pa->value.p = (void *)STRING_VALUE(o).c_str();
+		pa->value.p = (void *)ob_string_val(o).c_str();
 	}
 	else if( o->type->code == otBinary ){
 	    pa->dynamic = true;
@@ -88,23 +88,25 @@ static void ctype_convert( Object *o, dll_arg_t *pa ) {
         pa->value.p = (void *)binary_serialize(o);
 	}
 	else{
-        hyb_throw( H_ET_SYNTAX, "could not use '%s' type for printf function", o->type->name );
+		string s = ob_svalue(o);
+		pa->type    = &ffi_type_pointer;
+		pa->value.p = (void *)s.c_str();
 	}
 }
 
 HYBRIS_DEFINE_FUNCTION(hprint){
     unsigned int i;
-    for( i = 0; i < HYB_ARGC(); ++i ){
-        ob_print( HYB_ARGV(i) );
+    for( i = 0; i < ob_argc(); ++i ){
+        ob_print( ob_argv(i) );
     }
     return NULL;
 }
 
 HYBRIS_DEFINE_FUNCTION(hprintln){
-    if( HYB_ARGC() ){
+    if( ob_argc() ){
         unsigned int i;
-        for( i = 0; i < HYB_ARGC(); ++i ){
-            ob_print( HYB_ARGV(i) );
+        for( i = 0; i < ob_argc(); ++i ){
+            ob_print( ob_argv(i) );
             printf( "\n" );
         }
     }
@@ -115,21 +117,21 @@ HYBRIS_DEFINE_FUNCTION(hprintln){
 }
 
 HYBRIS_DEFINE_FUNCTION(hprintf){
-	if( HYB_ARGC() < 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'printf' requires at least 1 parameter (called with %d)", HYB_ARGC() );
+	if( ob_argc() < 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'printf' requires at least 1 parameter (called with %d)", ob_argc() );
 	}
-	else if( HYB_ARGC() > PRINTF_MAX_ARGS ){
-		hyb_throw( H_ET_SYNTAX, "function 'printf' supports at max %d parameters (called with %d)", PRINTF_MAX_ARGS, HYB_ARGC() );
+	else if( ob_argc() > PRINTF_MAX_ARGS ){
+		hyb_throw( H_ET_SYNTAX, "function 'printf' supports at max %d parameters (called with %d)", PRINTF_MAX_ARGS, ob_argc() );
 	}
 
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	ob_type_assert( ob_argv(0), otString );
 
 	typedef int (* function_t)(void);
 	function_t function = (function_t)printf;
 
 	ffi_cif    cif;
 	ffi_arg    ul_ret;
-	int        dsize( HYB_ARGC() ),
+	int        dsize( ob_argc() ),
 			   argc( dsize ),
 			   i;
 	ffi_type **args_t;
@@ -143,9 +145,9 @@ HYBRIS_DEFINE_FUNCTION(hprintf){
 	memset( args, 0, sizeof(dll_arg_t) * argc );
 
 	/* convert objects to c-type equivalents */
-	ctype_convert( HYB_ARGV(0), &args[0] );
+	ctype_convert( ob_argv(0), &args[0] );
 	for( i = 1, parg = &args[1]; i < dsize; ++i, ++parg ){
-		ctype_convert( HYB_ARGV(i), parg );
+		ctype_convert( ob_argv(i), parg );
 	}
 	/* assign types and values */
 	for( i = 0; i < dsize; ++i ){
@@ -171,22 +173,22 @@ HYBRIS_DEFINE_FUNCTION(hprintf){
 		}
 	}
 
-	return OB_DOWNCAST( MK_INT_OBJ(ul_ret) );
+	return ob_dcast( gc_new_integer(ul_ret) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hinput){
     Object *_return;
-    if( HYB_ARGC() == 2 ){
-        ob_print( HYB_ARGV(0) );
-        ob_input( HYB_ARGV(1) );
-        _return = HYB_ARGV(1);
+    if( ob_argc() == 2 ){
+        ob_print( ob_argv(0) );
+        ob_input( ob_argv(1) );
+        _return = ob_argv(1);
     }
-    else if( HYB_ARGC() == 1 ){
-        ob_input( HYB_ARGV(0) );
-        _return = HYB_ARGV(0);
+    else if( ob_argc() == 1 ){
+        ob_input( ob_argv(0) );
+        _return = ob_argv(0);
     }
 	else{
-		hyb_throw( H_ET_SYNTAX, "function 'input' requires 1 or 2 parameters (called with %d)", HYB_ARGC() );
+		hyb_throw( H_ET_SYNTAX, "function 'input' requires 1 or 2 parameters (called with %d)", ob_argc() );
 	}
 
     return _return;

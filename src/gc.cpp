@@ -23,13 +23,13 @@ extern void hyb_throw( H_ERROR_TYPE type, const char *format, ... );
 
 gc_t __gc;
 
-inline void gc_lock(){
+__force_inline void gc_lock(){
 	#ifdef MT_SUPPORT
 	pthread_mutex_lock( &__gc.mutex );
 	#endif
 }
 
-inline void gc_unlock(){
+__force_inline void gc_unlock(){
 	#ifdef MT_SUPPORT
 	pthread_mutex_unlock( &__gc.mutex );
 	#endif
@@ -81,6 +81,16 @@ void gc_free( gc_item_t *item ){
     delete item->pobj;
 
     gc_pool_remove(item);
+}
+
+size_t gc_set_threshold( size_t threshold ){
+	size_t old = __gc.threshold;
+
+	gc_lock();
+	__gc.threshold = threshold;
+	gc_unlock();
+
+	return old;
 }
 
 struct _Object *gc_track( struct _Object *o, size_t size ){

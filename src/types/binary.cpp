@@ -35,7 +35,7 @@ void binary_set_references( Object *me, int ref ){
 
 Object *binary_clone( Object *me ){
     BinaryObjectIterator i;
-    BinaryObject *bclone = MK_BINARY_OBJ(),
+    BinaryObject *bclone = gc_new_binary(),
                  *bme    = (BinaryObject *)me;
 
     for( i = bme->value.begin(); i != bme->value.end(); i++ ){
@@ -60,7 +60,7 @@ void binary_free( Object *me ){
 }
 
 size_t binary_get_size( Object *me ){
-	return BINARY_UPCAST(me)->items;
+	return ob_binary_ucast(me)->items;
 }
 
 byte *binary_serialize( Object *o, size_t size ){
@@ -79,9 +79,9 @@ Object *binary_deserialize( Object *o, byte *buffer, size_t size ){
 	size_t i;
 
 	if( size ){
-		o = OB_DOWNCAST( MK_BINARY_OBJ() );
+		o = ob_dcast( gc_new_binary() );
 		for( i = 0; i < size; ++i ){
-			ob_cl_push( o, OB_DOWNCAST( MK_INT_OBJ(buffer[i]) ) );
+			ob_cl_push( o, ob_dcast( gc_new_integer(buffer[i]) ) );
 		}
 	}
 
@@ -89,7 +89,7 @@ Object *binary_deserialize( Object *o, byte *buffer, size_t size ){
 }
 
 int binary_cmp( Object *me, Object *cmp ){
-    if( !IS_BINARY_TYPE(cmp) ){
+    if( !ob_is_binary(cmp) ){
         return 1;
     }
     else {
@@ -123,15 +123,15 @@ int binary_cmp( Object *me, Object *cmp ){
 }
 
 long binary_ivalue( Object *me ){
-    return static_cast<long>( BINARY_UPCAST(me)->items );
+    return static_cast<long>( ob_binary_ucast(me)->items );
 }
 
 double binary_fvalue( Object *me ){
-    return static_cast<double>( BINARY_UPCAST(me)->items );
+    return static_cast<double>( ob_binary_ucast(me)->items );
 }
 
 bool binary_lvalue( Object *me ){
-    return static_cast<bool>( BINARY_UPCAST(me)->items );
+    return static_cast<bool>( ob_binary_ucast(me)->items );
 }
 
 string binary_svalue( Object *me ){
@@ -185,7 +185,7 @@ Object *binary_cl_push_reference( Object *me, Object *o ){
     }
 
     ((BinaryObject *)me)->value.push_back( o );
-    BINARY_UPCAST(me)->items++;
+    ob_binary_ucast(me)->items++;
 
     return me;
 }
@@ -193,7 +193,7 @@ Object *binary_cl_push_reference( Object *me, Object *o ){
 Object *binary_cl_at( Object *me, Object *i ){
     size_t idx = ob_ivalue(i);
     #ifdef BOUNDS_CHECK
-    if( idx >= BINARY_UPCAST(me)->items ){
+    if( idx >= ob_binary_ucast(me)->items ){
         hyb_throw( H_ET_GENERIC, "index out of bounds" );
     }
     #endif
@@ -208,7 +208,7 @@ Object *binary_cl_set( Object *me, Object *i, Object *v ){
 Object *binary_cl_set_reference( Object *me, Object *i, Object *v ){
     size_t idx = ob_ivalue(i);
     #ifdef BOUNDS_CHECK
-    if( idx >= BINARY_UPCAST(me)->items ){
+    if( idx >= ob_binary_ucast(me)->items ){
         hyb_throw( H_ET_GENERIC, "index out of bounds" );
     }
     #endif

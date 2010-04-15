@@ -81,11 +81,11 @@ typedef unsigned char byte;
  *      static Object {type}_Type = { ... }
  * to determine if the object it's of the given type .
  */
-#define OB_TYPE_CHECK( o, t ) ((o)->type->code == (t ## _Type).code)
+#define ob_is_typeof( o, t ) ((o)->type->code == (t ## _Type).code)
 /*
  *  Determine whenever two objects are of the same type.
  */
-#define OB_SAME_TYPE( a, b ) ((a)->type->code == (b)->type->code)
+#define ob_same_type( a, b ) ((a)->type->code == (b)->type->code)
 /*
  * Macros to declare a type and then to implement its type structure.
  *
@@ -104,7 +104,7 @@ typedef unsigned char byte;
 /*
  * Macro to downcast any type structure to the base one.
  */
-#define OB_DOWNCAST(o)    (Object *)(o)
+#define ob_dcast(o)      (Object *)(o)
 /*
  * Pre declaration to implement basic object type .
  */
@@ -171,10 +171,11 @@ enum H_OBJECT_TYPE {
     otBinary,
     otVector,
     otMap,
+    otMatrix,
+    otStructure,
     otAlias,
     otExtern,
-    otMatrix,
-    otStructure
+    otPointer
 };
 /*
  * Object type description structure .
@@ -395,29 +396,22 @@ typedef struct _ExternObject {
 }
 ExternObject;
 
-#define IS_INTEGER_TYPE(o) OB_TYPE_CHECK(o,Integer)
-#define IS_ALIAS_TYPE(o)   OB_TYPE_CHECK(o,Alias)
-#define IS_EXTERN_TYPE(o)  OB_TYPE_CHECK(o,Extern)
-#define INT_UPCAST(o)     (IntegerObject *)(o)
-#define ALIAS_UPCAST(o)   (AliasObject *)(o)
-#define EXTERN_UPCAST(o)  (ExternObject *)(o)
-#define MK_INT_OBJ(v)     INT_UPCAST( (gc_track( OB_DOWNCAST( new IntegerObject( static_cast<long>(v) ) ), sizeof(IntegerObject) )) )
-#define MK_ALIAS_OBJ(v)   ALIAS_UPCAST( (gc_track( OB_DOWNCAST( new AliasObject( static_cast<long>(v) ) ), sizeof(AliasObject) )) )
-#define MK_EXTERN_OBJ(v)  EXTERN_UPCAST( (gc_track( OB_DOWNCAST( new ExternObject( static_cast<long>(v) ) ), sizeof(ExternObject) )) )
-#define INT_VALUE(o)      (((IntegerObject *)(o))->value)
-#define ALIAS_VALUE(o)    (((AliasObject *)(o))->value)
-#define EXTERN_VALUE(o)   (((ExternObject *)(o))->value)
-
+#define ob_is_int(o) 	   ob_is_typeof(o,Integer)
+#define ob_is_alias(o)     ob_is_typeof(o,Alias)
+#define ob_is_extern(o)    ob_is_typeof(o,Extern)
+#define ob_int_ucast(o)    (IntegerObject *)(o)
+#define ob_alias_ucast(o)  (AliasObject *)(o)
+#define ob_extern_ucast(o) (ExternObject *)(o)
+#define ob_int_val(o)      (((IntegerObject *)(o))->value)
+#define ob_alias_val(o)    (((AliasObject *)(o))->value)
+#define ob_extern_val(o)   (((ExternObject *)(o))->value)
+#define gc_new_integer(v)  ob_int_ucast( (gc_track( ob_dcast( new IntegerObject( static_cast<long>(v) ) ), sizeof(IntegerObject) )) )
+#define gc_new_alias(v)    ob_alias_ucast( (gc_track( ob_dcast( new AliasObject( static_cast<long>(v) ) ), sizeof(AliasObject) )) )
+#define gc_new_extern(v)   ob_extern_ucast( (gc_track( ob_dcast( new ExternObject( static_cast<long>(v) ) ), sizeof(ExternObject) )) )
 /*
  * A macro to cast any pointer into an Integer representing its address.
  */
-#define PTR_TO_INT_OBJ(p) MK_INT_OBJ( H_ADDRESS_OF(p) )
-/*
- * Alias and extern don't have a temporary creation macro.
- * C'mon who the hell really needs a "temporary function pointer" ? XD
- * Maybe in future for lambda expressions, who knows.
- */
-#define MK_TMP_INT_OBJ(v) &( IntegerObject( static_cast<long>(v) ) )
+#define PTR_TO_INT_OBJ(p) gc_new_integer( H_ADDRESS_OF(p) )
 
 DECLARE_TYPE(Float);
 
@@ -431,11 +425,10 @@ typedef struct _FloatObject {
 }
 FloatObject;
 
-#define IS_FLOAT_TYPE(o)    OB_TYPE_CHECK(o,Float)
-#define FLOAT_UPCAST(o)     ((FloatObject *)(o))
-#define MK_FLOAT_OBJ(v)     FLOAT_UPCAST( (gc_track( OB_DOWNCAST(new FloatObject( static_cast<double>(v) )), sizeof(FloatObject) )) )
-#define MK_TMP_FLOAT_OBJ(v) &( FloatObject( static_cast<double>(v) )
-#define FLOAT_VALUE(o)      (((FloatObject *)(o))->value)
+#define ob_is_float(o)    ob_is_typeof(o,Float)
+#define ob_float_ucast(o) ((FloatObject *)(o))
+#define ob_float_val(o)   (((FloatObject *)(o))->value)
+#define gc_new_float(v)   ob_float_ucast( (gc_track( ob_dcast(new FloatObject( static_cast<double>(v) )), sizeof(FloatObject) )) )
 
 DECLARE_TYPE(Char);
 
@@ -449,11 +442,10 @@ typedef struct _CharObject {
 }
 CharObject;
 
-#define IS_CHAR_TYPE(o)    OB_TYPE_CHECK(o,Char)
-#define CHAR_UPCAST(o)     ((CharObject *)(o))
-#define MK_CHAR_OBJ(v)     CHAR_UPCAST( (gc_track( OB_DOWNCAST(new CharObject( static_cast<char>(v) )), sizeof(CharObject) )) )
-#define MK_TMP_CHAR_OBJ(v) &( CharObject( static_cast<char>(v) )
-#define CHAR_VALUE(o)      ((CharObject *)(o))->value
+#define ob_is_char(o)    ob_is_typeof(o,Char)
+#define ob_char_ucast(o) ((CharObject *)(o))
+#define ob_char_val(o)   ((CharObject *)(o))->value
+#define gc_new_char(v)   ob_char_ucast( (gc_track( ob_dcast(new CharObject( static_cast<char>(v) )), sizeof(CharObject) )) )
 
 DECLARE_TYPE(String);
 
@@ -474,12 +466,11 @@ typedef struct _StringObject {
 }
 StringObject;
 
-#define IS_STRING_TYPE(o)    OB_TYPE_CHECK(o,String)
-#define STRING_UPCAST(o)     ((StringObject *)(o))
-#define MK_STRING_OBJ(v)     STRING_UPCAST( (gc_track( OB_DOWNCAST(new StringObject( (char *)(v) )), sizeof(StringObject) )) )
-#define MK_TMP_STRING_OBJ(v) &( StringObject( (char *)(v)  ) )
-#define STRING_VALUE(o)      ((StringObject *)(o))->value
-#define CHARP_VALUE(o)       ((char *)STRING_VALUE(o).c_str())
+#define ob_is_string(o)    ob_is_typeof(o,String)
+#define ob_string_ucast(o) ((StringObject *)(o))
+#define ob_string_val(o)   ((StringObject *)(o))->value
+#define ob_lpcstr_val(o)   (ob_string_val(o).c_str())
+#define gc_new_string(v)   ob_string_ucast( (gc_track( ob_dcast(new StringObject( (char *)(v) )), sizeof(StringObject) )) )
 
 DECLARE_TYPE(Binary);
 
@@ -502,7 +493,7 @@ typedef struct _BinaryObject {
         #endif
         vector<unsigned char>::iterator i;
         for( i = data.begin(); i != data.end(); i++ ){
-            ob_cl_push_reference( (Object *)this, (Object *)MK_CHAR_OBJ(*i) );
+            ob_cl_push_reference( (Object *)this, (Object *)gc_new_char(*i) );
         }
     }
 }
@@ -510,10 +501,9 @@ BinaryObject;
 
 typedef vector<Object *>::iterator BinaryObjectIterator;
 
-#define IS_BINARY_TYPE(o)    OB_TYPE_CHECK(o,Binary)
-#define BINARY_UPCAST(o)     ((BinaryObject *)(o))
-#define MK_BINARY_OBJ(d)     BINARY_UPCAST( (gc_track( OB_DOWNCAST(new BinaryObject(d)), sizeof(BinaryObject) )) )
-#define MK_TMP_BINARY_OBJ(d) &( BinaryObject(d) )
+#define ob_is_binary(o)    ob_is_typeof(o,Binary)
+#define ob_binary_ucast(o) ((BinaryObject *)(o))
+#define gc_new_binary(d)   ob_binary_ucast( (gc_track( ob_dcast(new BinaryObject(d)), sizeof(BinaryObject) )) )
 
 DECLARE_TYPE(Vector);
 
@@ -533,11 +523,11 @@ VectorObject;
 
 typedef vector<Object *>::iterator VectorObjectIterator;
 
-#define IS_VECTOR_TYPE(o)   OB_TYPE_CHECK(o,Vector)
-#define VECTOR_UPCAST(o)    ((VectorObject *)(o))
-#define MK_VECTOR_OBJ()     VECTOR_UPCAST( (gc_track( OB_DOWNCAST(new VectorObject()), sizeof(VectorObject) )) )
-#define MK_TMP_VECTOR_OBJ() &( VectorObject() )
-#define VECTOR_VALUE(o)     (((VectorObject *)(o)))
+#define ob_is_vector(o)    ob_is_typeof(o,Vector)
+#define ob_vector_ucast(o) ((VectorObject *)(o))
+#define ob_vector_val(o)   (((VectorObject *)(o)))
+#define gc_new_vector()    ob_vector_ucast( (gc_track( ob_dcast(new VectorObject()), sizeof(VectorObject) )) )
+
 DECLARE_TYPE(Map);
 
 int map_find( Object *m, Object *key );
@@ -560,11 +550,10 @@ MapObject;
 
 typedef vector<Object *>::iterator MapObjectIterator;
 
-#define IS_MAP_TYPE(o)   OB_TYPE_CHECK(o,Map)
-#define MAP_UPCAST(o)    ((MapObject *)(o))
-#define MAP_VALUE(o)	 (MapObject *)(o)
-#define MK_MAP_OBJ()     MAP_UPCAST( (gc_track( OB_DOWNCAST(new MapObject()), sizeof(MapObject) )) )
-#define MK_TMP_MAP_OBJ() &( MapObject() )
+#define ob_is_map(o)    ob_is_typeof(o,Map)
+#define ob_map_ucast(o) ((MapObject *)(o))
+#define ob_map_val(o)	(MapObject *)(o)
+#define gc_new_map()    ob_map_ucast( (gc_track( ob_dcast(new MapObject()), sizeof(MapObject) )) )
 
 DECLARE_TYPE(Matrix);
 
@@ -621,7 +610,7 @@ typedef struct _MatrixObject {
         else{
             for( x = 0; x < rows; ++x ){
                 for( y = 0; y < columns; ++y ){
-                    Object * o   = (Object *)MK_INT_OBJ(0);
+                    Object * o   = (Object *)gc_new_integer(0);
                     matrix[x][y] = o;
                 }
             }
@@ -630,12 +619,10 @@ typedef struct _MatrixObject {
 }
 MatrixObject;
 
-#define IS_MATRIX_TYPE(o)    OB_TYPE_CHECK(o,Matrix)
-#define MATRIX_UPCAST(o)     ((MatrixObject *)(o))
-#define MATRIX_VALUE(o)      ((MatrixObject *)o)
-#define MK_MATRIX_OBJ()      MATRIX_UPCAST( (gc_track( OB_DOWNCAST(new MatrixObject()), sizeof(MatrixObject) )) )
-#define MK_MATRIX_OBJ(r,c,v) MATRIX_UPCAST( (gc_track( OB_DOWNCAST(new MatrixObject(r,c,v)), sizeof(MatrixObject) )) )
-#define MK_TMP_MATRIX_OBJ()  &( MatrixObject() )
+#define ob_is_matrix(o)      ob_is_typeof(o,Matrix)
+#define ob_matrix_ucast(o)   ((MatrixObject *)(o))
+#define ob_matrix_val(o)     ((MatrixObject *)o)
+#define gc_new_matrix(r,c,v) ob_matrix_ucast( (gc_track( ob_dcast(new MatrixObject(r,c,v)), sizeof(MatrixObject) )) )
 
 DECLARE_TYPE(Structure);
 
@@ -658,10 +645,9 @@ StructureObject;
 typedef vector<string>::iterator   StructureObjectNameIterator;
 typedef vector<Object *>::iterator StructureObjectValueIterator;
 
-#define IS_STRUCT_TYPE(o)   OB_TYPE_CHECK(o,Structure)
-#define STRUCT_UPCAST(o)    ((StructureObject *)(o))
-#define MK_STRUCT_OBJ()     STRUCT_UPCAST( (gc_track( OB_DOWNCAST(new StructureObject()), sizeof(StructureObject) )) )
-#define MK_TMP_STRUCT_OBJ() &( StructureObject() )
+#define ob_is_struct(o)    ob_is_typeof(o,Structure)
+#define ob_struct_ucast(o) ((StructureObject *)(o))
+#define gc_new_struct()    ob_struct_ucast( (gc_track( ob_dcast(new StructureObject()), sizeof(StructureObject) )) )
 
 #endif
 

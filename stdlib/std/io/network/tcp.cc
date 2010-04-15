@@ -46,76 +46,76 @@ extern "C" named_function_t hybris_module_functions[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hsettimeout){
-	if( HYB_ARGC() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'settimeout' requires 2 parameters (called with %d)", HYB_ARGC() );
+	if( ob_argc() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'settimeout' requires 2 parameters (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
-	HYB_TYPE_ASSERT( HYB_ARGV(1), otInteger );
+	ob_type_assert( ob_argv(0), otInteger );
+	ob_type_assert( ob_argv(1), otInteger );
 
-	struct timeval tout = { 0 , INT_ARGV(1) };
+	struct timeval tout = { 0 , int_argv(1) };
 
-	setsockopt( INT_ARGV(0), SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
-	setsockopt( INT_ARGV(0), SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
+	setsockopt( int_argv(0), SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
+	setsockopt( int_argv(0), SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
 
-	return OB_DOWNCAST( MK_INT_OBJ(0) );
+	return ob_dcast( gc_new_integer(0) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hconnect){
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+	ob_type_assert( ob_argv(0), otString );
 
 	Object *_return = NULL;
-	if( HYB_ARGC() >= 2 ){
+	if( ob_argc() >= 2 ){
 		int sd = socket( AF_INET, SOCK_STREAM, 0 );
 		if( sd <= 0 ){
-			return OB_DOWNCAST( MK_INT_OBJ(-1) );
+			return ob_dcast( gc_new_integer(-1) );
 		}
-		if( HYB_ARGC() == 3 ){
-			HYB_TYPE_ASSERT( HYB_ARGV(2), otInteger );
-			struct timeval tout = { 0 , INT_ARGV(2) };
+		if( ob_argc() == 3 ){
+			ob_type_assert( ob_argv(2), otInteger );
+			struct timeval tout = { 0 , int_argv(2) };
 
 			setsockopt( sd, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
 			setsockopt( sd, SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
 		}
 
 		struct sockaddr_in server;
-		hostent * host = gethostbyname( STRING_ARGV(0).c_str() );
+		hostent * host = gethostbyname( string_argv(0).c_str() );
 		if( host ){
 			bzero( &server, sizeof(server) );
 			server.sin_family      = AF_INET;
-			server.sin_port        = htons( INT_ARGV(1) );
+			server.sin_port        = htons( int_argv(1) );
 			bcopy( host->h_addr, &(server.sin_addr.s_addr), host->h_length );
 		}
 
 		if( connect( sd, (struct sockaddr*)&server, sizeof(server) ) != 0 ){
-			return OB_DOWNCAST( MK_INT_OBJ(-1) );
+			return ob_dcast( gc_new_integer(-1) );
 		}
 
-		_return = OB_DOWNCAST( MK_INT_OBJ(sd) );
+		_return = ob_dcast( gc_new_integer(sd) );
     }
 	else{
-		hyb_throw( H_ET_SYNTAX, "function 'connect' requires at least 2 parameters (called with %d)", HYB_ARGC() );
+		hyb_throw( H_ET_SYNTAX, "function 'connect' requires at least 2 parameters (called with %d)", ob_argc() );
 	}
     return _return;
 }
 
 HYBRIS_DEFINE_FUNCTION(hserver){
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
+	ob_type_assert( ob_argv(0), otInteger );
 
 	Object *_return = NULL;
-	if( HYB_ARGC() >= 1 ){
+	if( ob_argc() >= 1 ){
 		int sd = socket( AF_INET, SOCK_STREAM, 0 );
 		if( sd <= 0 ){
-			return OB_DOWNCAST( MK_INT_OBJ(-1) );
+			return ob_dcast( gc_new_integer(-1) );
 		}
-		if( HYB_ARGC() == 2 ){
-			HYB_TYPE_ASSERT( HYB_ARGV(1), otInteger );
-			struct timeval tout = { 0 , INT_ARGV(1) };
+		if( ob_argc() == 2 ){
+			ob_type_assert( ob_argv(1), otInteger );
+			struct timeval tout = { 0 , int_argv(1) };
 
 			setsockopt( sd, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
 			setsockopt( sd, SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
 		}
 
-		short int port = INT_ARGV(0);
+		short int port = int_argv(0);
 		struct    sockaddr_in servaddr;
 
 		memset(&servaddr, 0, sizeof(servaddr));
@@ -124,81 +124,81 @@ HYBRIS_DEFINE_FUNCTION(hserver){
 		servaddr.sin_port        = htons(port);
 
 		if ( bind( sd, (struct sockaddr *)&servaddr, sizeof(servaddr) ) < 0 ) {
-			return OB_DOWNCAST( MK_INT_OBJ(-1) );
+			return ob_dcast( gc_new_integer(-1) );
 		}
 
 		if ( listen( sd, 1024 ) < 0 ) {
-			return OB_DOWNCAST( MK_INT_OBJ(-1) );
+			return ob_dcast( gc_new_integer(-1) );
 		}
 
-		_return = OB_DOWNCAST( MK_INT_OBJ(sd) );
+		_return = ob_dcast( gc_new_integer(sd) );
     }
 	else{
-		hyb_throw( H_ET_SYNTAX, "function 'server' requires at least 1 parameters (called with %d)", HYB_ARGC() );
+		hyb_throw( H_ET_SYNTAX, "function 'server' requires at least 1 parameters (called with %d)", ob_argc() );
 	}
     return _return;
 }
 
 HYBRIS_DEFINE_FUNCTION(haccept){
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
+	ob_type_assert( ob_argv(0), otInteger );
 
 	Object *_return = NULL;
-	if( HYB_ARGC() >= 1 ){
-		int sd = INT_ARGV(0),
+	if( ob_argc() >= 1 ){
+		int sd = int_argv(0),
 		    csd;
 
 		if( (csd = accept( sd, NULL, NULL) ) < 0 ) {
-			return OB_DOWNCAST( MK_INT_OBJ(-1) );
+			return ob_dcast( gc_new_integer(-1) );
 		}
 
-		_return = OB_DOWNCAST( MK_INT_OBJ(csd) );
+		_return = ob_dcast( gc_new_integer(csd) );
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "function 'accept' requires 1 parameters (called with %d)", HYB_ARGC() );
+		hyb_throw( H_ET_SYNTAX, "function 'accept' requires 1 parameters (called with %d)", ob_argc() );
 	}
 
     return _return;
 }
 
 HYBRIS_DEFINE_FUNCTION(hrecv){
-	if( HYB_ARGC() < 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'recv' requires 2 or 3 parameters (called with %d)", HYB_ARGC() );
+	if( ob_argc() < 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'recv' requires 2 or 3 parameters (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
+	ob_type_assert( ob_argv(0), otInteger );
 
-	int sd = INT_ARGV(0);
+	int sd = int_argv(0);
 	size_t size = 0;
-	Object *object   = HYB_ARGV(1);
+	Object *object   = ob_argv(1);
 
 	/* explicit size declaration */
-	if( HYB_ARGC() == 3 ){
-		size = INT_ARGV(2);
+	if( ob_argc() == 3 ){
+		size = int_argv(2);
 	}
 
 	return ob_from_fd( object, sd, size );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsend){
-	if( HYB_ARGC() < 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'send' requires 2 or 3 parameters (called with %d)", HYB_ARGC() );
+	if( ob_argc() < 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'send' requires 2 or 3 parameters (called with %d)", ob_argc() );
 	}
-	HYB_TYPE_ASSERT( HYB_ARGV(0), otInteger );
+	ob_type_assert( ob_argv(0), otInteger );
 
-	int sd = INT_ARGV(0);
+	int sd = int_argv(0);
 	size_t size = 0;
-	Object *object   = HYB_ARGV(1);
+	Object *object   = ob_argv(1);
 
 	/* explicit size declaration */
-	if( HYB_ARGC() == 3 ){
-		size = INT_ARGV(2);
+	if( ob_argc() == 3 ){
+		size = int_argv(2);
 	}
 
 	return ob_to_fd( object, sd, size );
 }
 
 HYBRIS_DEFINE_FUNCTION(hclose){
-    if( HYB_ARGC() ){
-		close( INT_ARGV(0) );
+    if( ob_argc() ){
+		close( int_argv(0) );
     }
-    return OB_DOWNCAST( MK_INT_OBJ(0) );
+    return ob_dcast( gc_new_integer(0) );
 }

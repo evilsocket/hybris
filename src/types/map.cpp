@@ -47,7 +47,7 @@ void map_set_references( Object *me, int ref ){
 
 Object *map_clone( Object *me ){
     MapObjectIterator ki, vi;
-    MapObject *mclone = MK_MAP_OBJ(),
+    MapObject *mclone = gc_new_map(),
               *mme    = (MapObject *)me;
     Object    *kclone,
               *vclone;
@@ -88,11 +88,11 @@ void map_free( Object *me ){
 }
 
 size_t map_get_size( Object *me ){
-	return MAP_UPCAST(me)->items;
+	return ob_map_ucast(me)->items;
 }
 
 int map_cmp( Object *me, Object *cmp ){
-    if( !IS_MAP_TYPE(cmp) ){
+    if( !ob_is_map(cmp) ){
         return 1;
     }
     else {
@@ -132,15 +132,15 @@ int map_cmp( Object *me, Object *cmp ){
 }
 
 long map_ivalue( Object *me ){
-    return static_cast<long>( MAP_UPCAST(me)->items );
+    return static_cast<long>( ob_map_ucast(me)->items );
 }
 
 double map_fvalue( Object *me ){
-    return static_cast<double>( MAP_UPCAST(me)->items );
+    return static_cast<double>( ob_map_ucast(me)->items );
 }
 
 bool map_lvalue( Object *me ){
-    return static_cast<bool>( MAP_UPCAST(me)->items );
+    return static_cast<bool>( ob_map_ucast(me)->items );
 }
 
 string map_svalue( Object *o ){
@@ -183,7 +183,7 @@ Object *map_assign( Object *me, Object *op ){
 
 /** collection operators **/
 Object *map_cl_pop( Object *me ){
-    size_t last_idx = MAP_UPCAST(me)->items - 1;
+    size_t last_idx = ob_map_ucast(me)->items - 1;
     #ifdef BOUNDS_CHECK
     if( last_idx < 0 ){
         hyb_throw( H_ET_GENERIC, "could not pop an element from an empty map" );
@@ -196,7 +196,7 @@ Object *map_cl_pop( Object *me ){
     ((MapObject *)me)->keys.pop_back();
     ((MapObject *)me)->values.pop_back();
 
-    MAP_UPCAST(me)->items--;
+    ob_map_ucast(me)->items--;
 
     ob_free(kitem);
 
@@ -212,7 +212,7 @@ Object *map_cl_remove( Object *me, Object *k ){
 		((MapObject *)me)->keys.erase( ((MapObject *)me)->keys.begin() + idx );
 		((MapObject *)me)->values.erase( ((MapObject *)me)->values.begin() + idx );
 
-		MAP_UPCAST(me)->items--;
+		ob_map_ucast(me)->items--;
 
 		ob_free(kitem);
 
@@ -243,7 +243,7 @@ Object *map_cl_set_reference( Object *me, Object *k, Object *v ){
     else{
         ((MapObject *)me)->keys.push_back( k );
         ((MapObject *)me)->values.push_back( v );
-        MAP_UPCAST(me)->items++;
+        ob_map_ucast(me)->items++;
     }
 
     return me;
