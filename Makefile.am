@@ -25,15 +25,15 @@ LIBOBJ=src/context.lo \
 	   src/engine.lo \
 	   src/node.lo \
 	   src/types.lo \
-	   src/binary.lo \
-	   src/char.lo \
-	   src/float.lo \
-	   src/integer.lo \
-	   src/map.lo \
-	   src/matrix.lo \
-	   src/string.lo \
-	   src/structure.lo \
-	   src/vector.lo \
+	   src/types/binary.lo \
+	   src/types/char.lo \
+	   src/types/float.lo \
+	   src/types/integer.lo \
+	   src/types/map.lo \
+	   src/types/matrix.lo \
+	   src/types/string.lo \
+	   src/types/structure.lo \
+	   src/types/vector.lo \
 	   src/hashtable.lo \
 	   src/vmem.lo \
 	   src/vcode.lo \
@@ -49,15 +49,15 @@ SOURCES=src/common.cpp \
 		src/vcode.cpp \
 		src/node.cpp \
 		src/types.cpp \
-		src/binary.cpp \
-		src/char.cpp \
-		src/float.cpp \
-		src/integer.cpp \
-		src/map.cpp \
-		src/matrix.cpp \
-		src/string.cpp \
-		src/structure.cpp \
-		src/vector.cpp \
+		src/types/binary.cpp \
+		src/types/char.cpp \
+		src/types/float.cpp \
+		src/types/integer.cpp \
+		src/types/map.cpp \
+		src/types/matrix.cpp \
+		src/types/string.cpp \
+		src/types/structure.cpp \
+		src/types/vector.cpp \
 	    src/engine.cpp \
 	    src/parser.cpp
 
@@ -101,7 +101,7 @@ lib: $(LOBJECTS)
 	
 hybris: $(OBJECTS)
 	@printf "\x1b[33;01m@ Creating $(TARGET) ..."
-	@$(CXX) src/*.o -o $(TARGET) $(CFLAGS) $(LFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
+	@$(CXX) src/*.o src/types/*.o -o $(TARGET) $(CFLAGS) $(LFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
 	@$(CHECK_FOR_ERRORS)
 
 stdlib: $(STDOBJ)
@@ -133,7 +133,7 @@ src/lexer.cpp: src/lexer.l.cpp
 	@$(CHECK_FOR_ERRORS)
 
 clean:
-	rm -f src/lexer.cpp include/lexer.h include/parser.h src/parser.hpp src/parser.cpp src/*.o src/*.lo $(TARGET)
+	rm -f src/lexer.cpp include/lexer.h include/parser.h src/parser.hpp src/parser.cpp src/*.o src/*.lo src/types/*.o src/types/*.lo $(TARGET)
 	rm -f lib$(TARGET).so.1.0
 	rm -f lib$(TARGET).so
 	rm -f lib$(TARGET).so.1

@@ -21,29 +21,31 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "map.h"
+#include "hashmap.h"
 #include "types.h"
 
 /* helper macro to obtain the address of a pointer */
 #define H_ADDRESS_OF(o)      reinterpret_cast<ulong>(o)
 /* default null value for an Object pointer */
 #define H_UNDEFINED          NULL
-/* anonymous identifier to be used upon temporary stacks creation */
-#define HANONYMOUSIDENTIFIER     (char *)"HANONYMOUSIDENTIFIER"
-#define HANONYMOUSIDENTIFIER_FTM (char *)"HANONYMOUSIDENTIFIER%d"
 
-class VirtualMemory : public Map<Object> {
+class VirtualMemory : public HashMap<Object> {
     public :
 
         VirtualMemory();
         ~VirtualMemory();
 
-        Object *get( char *identifier );
+        inline Object *get( char *identifier ){
+        	return find(identifier);
+        }
+
         Object *add( char *identifier, Object *object );
 
         VirtualMemory *clone();
 
-        void release();
+        inline void release(){
+        	clear();
+        }
 };
 
 /* post type definitions */

@@ -20,16 +20,19 @@
 #	define _HVCODE_H_
 
 #include "node.h"
-#include "map.h"
+#include "hashmap.h"
 #include "vmem.h"
 
-class VirtualCode : public Map<Node> {
+class VirtualCode : public HashMap<Node> {
     public :
 
         VirtualCode();
         ~VirtualCode();
 
-        Node *get( char *identifier );
+        inline Node *get( char *identifier ){
+        	return find(identifier);
+        }
+
         Node *add( char *identifier, Node *node );
 
         void release();

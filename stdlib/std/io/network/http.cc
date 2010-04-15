@@ -258,7 +258,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp){
     }
 
     for( i = 1; i < HYB_ARGC(); ++i ){
-        hdata.insert( HANONYMOUSIDENTIFIER, HYB_ARGV(i) );
+        hdata.push( HYB_ARGV(i) );
     }
 
     if( method == HTTP_GET ){

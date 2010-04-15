@@ -31,7 +31,6 @@
 #ifndef _HHASHTABLE_H_
 #   define _HHASHTABLE_H_
 
-
 #include <sys/types.h>         /* includes definition of "ulong", we hope */
 #include <stdio.h>
 
@@ -44,18 +43,19 @@
 #	define LOG_WORD_SIZE          5       /* log_2(sizeof(ulong)) [in bits] */
 #	endif
 #endif
-
-   /* The following gives a speed/time tradeoff: how many buckets are  *
-    * in each bin.  0 gives 32 buckets/bin, which is a good number.    */
+/* The following gives a speed/time tradeoff: how many buckets are  *
+ * in each bin.  0 gives 32 buckets/bin, which is a good number.    */
 #ifndef LOG_BM_WORDS
 #	define LOG_BM_WORDS        0      /* each group has 2^L_B_W * 32 buckets */
 #endif
-
-   /* The following are all parameters that affect performance. */
+/* The following are all parameters that affect performance. */
 #ifndef JUMP
 #	define JUMP(key, offset)   ( ++(offset) )  /* ( 1 ) for linear hashing */
 #endif
 
+#ifndef INSERT_ONLY
+#	define INSERT_ONLY         1
+#endif
 #ifndef FAST_DELETE
 #	define FAST_DELETE         1      /* if it's 1, we never shrink the ht */
 #endif
@@ -68,19 +68,8 @@
 #ifndef MIN_HASH_SIZE
 #	define MIN_HASH_SIZE       512    /* ht size when first created */
 #endif
-   /* When deleting a bucket, we can't just empty it (future hashes  *
-    * may fail); instead we set the data field to DELETED.  Thus you *
-    * should set DELETED to a data value you never use.  Better yet, *
-    * if you don't need to delete, define INSERT_ONLY.               */
-
-#define DELETED                   -2UL
-#define IS_BCK_DELETED(bck)       ( (bck) && (bck)->data == DELETED )
-#define SET_BCK_DELETED(ht, bck)  do { (bck)->data = DELETED;                \
-                                  FREE_KEY(ht, (bck)->key); } while ( 0 )
-
-
-   /* We need the following only for dense buckets (Dense##x above).  *
-    * If you need to, set this to a value you'll never use for data.  */
+/* We need the following only for dense buckets (Dense##x above).  *
+* If you need to, set this to a value you'll never use for data.  */
 #define EMPTY -3UL                /* steal more of the bck->data space */
 
 
@@ -108,24 +97,6 @@ typedef struct hash_table {
    dense_iterator_t *iter; /* used in First/NextBucket */
 } hash_table_t;
 
-   /* Small keys are stored and passed directly, but large keys are
-    * stored and passed as pointers.  To make it easier to remember
-    * what to pass, we provide two functions:
-    *   PTR_KEY: give it a pointer to your data, and it returns
-    *            something appropriate to send to Hash() functions or
-    *            be stored in a data field.
-    *   KEY_PTR: give it something returned by a Hash() routine, and
-    *            it returns a (char *) pointer to the actual data.
-    */
-#define HashKeySize(ht)   ( ((ulong *)(ht))[0] )  /* this is how we inline */
-#define HashSize(ht)      ( ((ulong *)(ht))[1] )  /* ...a la C++ :-) */
-
-#define STORES_PTR(ht)    ( HashKeySize(ht) == 0 || \
-			    HashKeySize(ht) > sizeof(ulong) )
-#define KEY_PTR(ht, key)  ( STORES_PTR(ht) ? (char *)(key) : (char *)&(key) )
-#define PTR_KEY( ht, ptr )  ( STORES_PTR(ht) ? (ulong)(ptr) : *(ulong *)(ptr) )
-
-/* for PTR_KEY, not for users */
 unsigned long ht_copy				 ( char *pul );
 hash_table_t *ht_alloc				 ( int cchKey, int fSaveKeys );
 void 		  ht_clear 				 ( hash_table_t *ht );
@@ -138,9 +109,6 @@ hash_item_t  *ht_find_or_insert_item ( hash_table_t *ht, hash_item_t *pItem );
 /* insert functions */
 hash_item_t  *ht_insert				 ( hash_table_t *ht, ulong key, ulong data, int skip_search = 0 );
 hash_item_t  *ht_insert_item		 ( hash_table_t *ht, hash_item_t *pItem );
-/* delete functions */
-int 		  ht_delete				 ( hash_table_t *ht, ulong key );
-int 		  ht_delete_last		 ( hash_table_t *ht );
 /* bucket functions */
 hash_item_t  *ht_first_bucket 		 ( hash_table_t *ht );
 hash_item_t  *ht_next_bucket		 ( hash_table_t *ht );

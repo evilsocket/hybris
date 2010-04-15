@@ -18,16 +18,12 @@
 */
 #include "vmem.h"
 
-VirtualMemory::VirtualMemory() : Map<Object>() {
+VirtualMemory::VirtualMemory() : HashMap<Object>() {
 
 }
 
 VirtualMemory::~VirtualMemory(){
-
-}
-
-Object *VirtualMemory::get( char *identifier ){
-    return find(identifier);
+	release();
 }
 
 Object *VirtualMemory::add( char *identifier, Object *object ){
@@ -36,17 +32,12 @@ Object *VirtualMemory::add( char *identifier, Object *object ){
 
     /* if object does not exist yet, create a new one */
     if( (old = get( identifier )) == H_UNDEFINED ){
-        if( object != H_UNDEFINED ){
+    	if( object != H_UNDEFINED ){
             o = ob_clone(object);
-
             ob_set_references( o, +1 );
+        }
 
-            insert( identifier, o );
-        }
-        else{
-            insert( identifier, H_UNDEFINED );
-        }
-        return o;
+        return insert( identifier, o );
     }
     /* else set the new value */
     else{
@@ -72,8 +63,4 @@ VirtualMemory *VirtualMemory::clone(){
     }
 
     return clone;
-}
-
-void VirtualMemory::release(){
-    clear();
 }

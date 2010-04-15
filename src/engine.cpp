@@ -422,8 +422,7 @@ Object *Engine::onStructureDeclaration( vframe_t *frame, Node * node ){
 }
 
 Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
-    char        *callname = (char *)call->value.m_call.c_str(),
-    		     identifier[0xFF] = {0};
+    char        *callname = (char *)call->value.m_call.c_str();
     function_t   function;
     Node        *node;
     vframe_t     stack;
@@ -441,15 +440,11 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
         node  = call->child(i);
         value = exec( frame, node );
 		/*
-		 * Create a temporary identifier to not overwrite the function pointer itself.
-		 */
-		sprintf( identifier, "%s%d", HANONYMOUSIDENTIFIER, i );
-		/*
 		 * Value references count is set to zero now, builtins
 		 * do not care about reference counting, so this object will
 		 * be safely freed after the function call by the gc.
 		 */
-		stack.insert( identifier, value );
+		stack.push( value );
     }
 
     ctx->trace( callname, &stack );
@@ -564,12 +559,11 @@ Object *Engine::onTypeCall( vframe_t *frame, Node *type ){
 }
 
 Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
-    char    *callname         = (char *)call->value.m_call.c_str(),
-             identifier[0xFF] = {0};
+    char    *callname      = (char *)call->value.m_call.c_str();
     vframe_t stack;
-    Object  *value            = H_UNDEFINED,
-            *result           = H_UNDEFINED,
-            *fn_pointer       = H_UNDEFINED;
+    Object  *value         = H_UNDEFINED,
+            *result        = H_UNDEFINED,
+            *fn_pointer    = H_UNDEFINED;
     unsigned int children,
                  i;
     /*
@@ -592,20 +586,16 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
     }
 
     /* at this point we're sure that it's an extern function pointer, so build the frame for hdllcall */
-    stack.insert( HANONYMOUSIDENTIFIER, fn_pointer );
+    stack.push( fn_pointer );
     children = call->children();
     for( i = 0; i < children; ++i ){
         value = exec( frame, call->child(i) );
-        /*
-         * Create a temporary identifier to not overwrite the function pointer itself.
-         */
-        sprintf( identifier, "%s%d", HANONYMOUSIDENTIFIER, i );
         /*
          * Value references count is set to zero now, builtins
          * do not care about reference counting, so this object will
          * be safely freed after the function call by the gc.
          */
-        stack.insert( identifier, value );
+        stack.push( value );
     }
 
     ctx->trace( callname, &stack );

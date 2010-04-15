@@ -173,7 +173,7 @@ class Context {
         /* execution arguments */
         h_args_t       args;
         /* functions lookup hashtable cache */
-        Map<named_function_t> modules_cache;
+        HashMap<named_function_t> modules_cache;
         /* dynamically loaded modules */
         h_modules_t    modules;
         /* code execution engine */

@@ -36,48 +36,14 @@
 #include <assert.h>
 #include "hashtable.h"     /* all the types */
 
-   /* if keys are stored directly but cchKey is less than sizeof(ulong), */
-   /* this cuts off the bits at the end */
-char grgKeyTruncMask[sizeof(ulong)][sizeof(ulong)];
-#define KEY_TRUNC(ht, key)                                                    \
-   ( STORES_PTR(ht) || (ht)->cchKey == sizeof(ulong)                          \
-       ? (key) : ((key) & *(ulong *)&(grgKeyTruncMask[(ht)->cchKey][0])) )
-
-   /* round num up to a multiple of wordsize.  (LOG_WORD_SIZE-3 is in bytes) */
+/* round num up to a multiple of wordsize.  (LOG_WORD_SIZE-3 is in bytes) */
 #define WORD_ROUND(num)         ( ((num-1) | ((1<<(LOG_WORD_SIZE-3))-1)) + 1 )
-#define NULL_TERMINATED  0    /* val of cchKey if keys are null-term strings */
+/* Useful operations we do to keys: compare them, copy them, free them */
+#define KEY_CMP(ht, key1, key2)      ( strcmp((char *)key1, (char *)key2) )
+#define COPY_KEY(ht, keyTo, keyFrom) (keyTo) = (ulong)malloc( WORD_ROUND(strlen((char *)(keyFrom))+1) );  \
+									 strcpy((char *)(keyTo), (char *)(keyFrom))
 
-   /* Useful operations we do to keys: compare them, copy them, free them */
-
-#define KEY_CMP(ht, key1, key2)      ( !STORES_PTR(ht)  ? (key1) - (key2) :   \
-                                       (key1) == (key2) ? 0 :                 \
-                                       HashKeySize(ht) == NULL_TERMINATED ?   \
-                                          strcmp((char *)key1, (char *)key2) :\
-                                          memcmp((void *)key1, (void *)key2,  \
-						 HashKeySize(ht)) )
-
-#define COPY_KEY(ht, keyTo, keyFrom) do                                       \
-   if ( !STORES_PTR(ht) || !(ht)->fSaveKeys )                                 \
-      (keyTo) = (keyFrom);                     /* just copy pointer or info */\
-   else if ( (ht)->cchKey == NULL_TERMINATED )        /* copy 0-term.ed str */\
-   {                                                                          \
-      (keyTo) = (ulong)malloc( WORD_ROUND(strlen((char *)(keyFrom))+1) );  \
-      strcpy((char *)(keyTo), (char *)(keyFrom));                             \
-   }                                                                          \
-   else                                                                       \
-   {                                                                          \
-      (keyTo) = (ulong) malloc( WORD_ROUND((ht)->cchKey) );                \
-      memcpy( (char *)(keyTo), (char *)(keyFrom), (ht)->cchKey);              \
-   }                                                                          \
-   while ( 0 )
-
-#define FREE_KEY(ht, key) do                                                  \
-   if ( STORES_PTR(ht) && (ht)->fSaveKeys )                                   \
-     if ( (ht)->cchKey == NULL_TERMINATED )                                   \
-        ht_free((char *)(key), WORD_ROUND(strlen((char *)(key))+1));           \
-     else                                                                     \
-        ht_free((char *)(key), WORD_ROUND((ht)->cchKey));                      \
-   while ( 0 )
+#define FREE_KEY(ht, key) ht_free((char *)(key), WORD_ROUND(strlen((char *)(key))+1))
 
    /* the following are useful for bitmaps */
    /* Format is like this (if 1 word = 4 bits):  3210 7654 ba98 fedc ... */
@@ -105,22 +71,6 @@ inline static void ht_free(void *ptr, ulong size)
    if ( size > 0 )         /* some systems seem to not like freeing NULL */
       free(ptr);
 }
-
-/*************************************************************************\
-| HTSetupKeyTrunc()                                                       |
-|     If keys are stored directly but cchKey is less than                 |
-|     sizeof(ulong), this cuts off the bits at the end.                   |
-\*************************************************************************/
-
-inline static void HTSetupKeyTrunc(void)
-{
-   int i, j;
-
-   for ( i = 0; i < sizeof(ulong); ++i )
-      for ( j = 0; j < sizeof(ulong); ++j )
-        grgKeyTruncMask[i][j] = j < i ? 255 : 0;   /* chars have 8 bits */
-}
-
 
 /* ======================================================================== */
 /*                            TABLE ROUTINES                                */
@@ -341,7 +291,7 @@ inline static ulong Hash(hash_table_t *ht, char *key, ulong cBuckets)
 {
    ulong a, b, c, cchKey, cchKeyOrig;
 
-   cchKeyOrig = ht->cchKey == NULL_TERMINATED ? strlen(key) : ht->cchKey;
+   cchKeyOrig = strlen(key);
    a = b = c = 0x9e3779b9;       /* the golden ratio; an arbitrary value */
 
    for ( cchKey = cchKeyOrig;  cchKey >= 3 * sizeof(ulong);
@@ -437,7 +387,7 @@ inline static hash_item_t *Rehash(hash_table_t *ht, ulong cNewBuckets, hash_item
 	 continue;             /* ignore if we see it during the iteration */
 
       offset = 0;                              /* a new i for a new bucket */
-      for ( iBucketFirst = Hash(ht, KEY_PTR(ht, bck->key), cNewBuckets);
+      for ( iBucketFirst = Hash(ht, (char *)(bck->key), cNewBuckets);
             !DenseTableIsEmpty(tableNew, iBucketFirst);
             iBucketFirst = (iBucketFirst + JUMP(KEY_PTR(ht,bck->key), offset)) & (cNewBuckets-1) );
         bckNew = DenseTableInsert(tableNew, bck, iBucketFirst, &fOverwrite);
@@ -469,7 +419,7 @@ inline static hash_item_t *Find(hash_table_t *ht, ulong key, ulong *piEmpty)
 
    ht->posLastFind = NULL;        /* set up for failure: a new find starts */
 
-   iBucketFirst = Hash(ht, KEY_PTR(ht, key), ht->cBuckets);
+   iBucketFirst = Hash(ht, (char *)(key), ht->cBuckets);
 
    /* now try all i > 0 */
    while( 1 ) {
@@ -479,13 +429,6 @@ inline static hash_item_t *Find(hash_table_t *ht, ulong key, ulong *piEmpty)
 		 if( piEmpty && !fFoundEmpty ) *piEmpty = iBucketFirst;
 		 return NULL;
       }
-      /* always 0 ifdef INSERT_ONLY */
-      else if ( IS_BCK_DELETED(item) ) {
-		if( piEmpty && !fFoundEmpty ) {
-		   *piEmpty = iBucketFirst;
-		   fFoundEmpty = 1;
-		}
-	  }
       /* item found */
 	  else {
 		/* must be occupied */
@@ -496,7 +439,7 @@ inline static hash_item_t *Find(hash_table_t *ht, ulong key, ulong *piEmpty)
 		//}
 	  }
 
-      iBucketFirst = ((iBucketFirst + JUMP(KEY_PTR(ht, key), offset)) & (ht->cBuckets-1));
+      iBucketFirst = ((iBucketFirst + JUMP((char *)(key), offset)) & (ht->cBuckets-1));
    }
 }
 
@@ -580,14 +523,13 @@ hash_table_t *ht_alloc(int cchKey, int fSaveKeys)
 
    ht = (hash_table_t *) malloc(sizeof(hash_table_t));   /* set everything to 0 */
    ht->cBuckets = DenseTableAllocate(&ht->table, MIN_HASH_SIZE);
-   ht->cchKey = cchKey <= 0 ? NULL_TERMINATED : cchKey;
+   ht->cchKey = cchKey <= 0 ? 0 : cchKey;
    ht->cItems = 0;
    ht->cDeletedItems = 0;
    ht->fSaveKeys = fSaveKeys;
    ht->cDeltaGoalSize = 0;
    ht->iter = (dense_iterator_t *)malloc( sizeof(dense_iterator_t) );
 
-   HTSetupKeyTrunc();                           /* in util.c */
    return ht;
 }
 
@@ -595,7 +537,7 @@ void ht_clear(hash_table_t *ht)
 {
    hash_item_t *bck;
 
-   if ( STORES_PTR(ht) && ht->fSaveKeys )       /* need to free keys */
+   if ( ht->fSaveKeys )       /* need to free keys */
       for ( bck = ht_first_bucket(ht); bck; bck = ht_next_bucket(ht) )
       {
 	 FREE_KEY(ht, bck->key);
@@ -633,7 +575,7 @@ void ht_free(hash_table_t *ht)
 
 hash_item_t *ht_find(hash_table_t *ht, ulong key)
 {
-   return Find( ht, KEY_TRUNC(ht, key), NULL );
+   return Find( ht, key, NULL );
 }
 
 hash_item_t *ht_find_last(hash_table_t *ht)
@@ -656,7 +598,7 @@ hash_item_t *ht_find_last(hash_table_t *ht)
 hash_item_t *ht_find_or_insert(hash_table_t *ht, ulong key, ulong dataInsert)
 {
       /* This is equivalent to Insert without samekey-overwrite */
-   return Insert(ht, KEY_TRUNC(ht, key), dataInsert, 0);
+   return Insert(ht, key, dataInsert, 0);
 }
 
 hash_item_t *ht_find_or_insert_item(hash_table_t *ht, hash_item_t *pItem)
@@ -666,54 +608,12 @@ hash_item_t *ht_find_or_insert_item(hash_table_t *ht, hash_item_t *pItem)
 
 hash_item_t *ht_insert(hash_table_t *ht, ulong key, ulong data, int skip_search /*= 0*/ )
 {
-   return Insert(ht, KEY_TRUNC(ht, key), data, SAMEKEY_OVERWRITE, skip_search );
+   return Insert(ht, key, data, SAMEKEY_OVERWRITE, skip_search );
 }
 
 hash_item_t *ht_insert_item(hash_table_t *ht, hash_item_t *pItem)
 {
    return ht_insert(ht, pItem->key, pItem->data);
-}
-
-int ht_delete(hash_table_t *ht, ulong key)
-{
-	key = KEY_TRUNC(ht, key);
-
-	SET_BCK_DELETED(ht, ht->posLastFind);       /* find set this, how nice */
-   --ht->cItems;
-   ++ht->cDeletedItems;
-   if ( ht->cDeltaGoalSize < 0 )  /* heading towards our goal of deletion */
-	  ++ht->cDeltaGoalSize;
-
-   if ( !FAST_DELETE && ht->cItems < ht->cBuckets * OCCUPANCY_PCT*0.4
-		&& ht->cDeltaGoalSize >= 0       /* wait until we're done deleting */
-		&& (ht->cBuckets >> 1) >= MIN_HASH_SIZE )                /* shrink */
-	  Rehash(ht,
-		 NextPow2((ulong)((ht->cItems+ht->cDeltaGoalSize)/OCCUPANCY_PCT)),
-		 NULL);
-   ht->posLastFind = NULL;           /* last operation is delete, not find */
-   return 1;
-}
-
-int ht_delete_last(hash_table_t *ht)
-{
-   if ( !ht->posLastFind  )                /* last find failed */
-      return 0;
-
-   ulong key = KEY_TRUNC(ht, key);
-
-   	SET_BCK_DELETED(ht, ht->posLastFind);       /* find set this, how nice */
-	--ht->cItems;
-	++ht->cDeletedItems;
-	if ( ht->cDeltaGoalSize < 0 )  /* heading towards our goal of deletion */
-	++ht->cDeltaGoalSize;
-
-	if ( !FAST_DELETE && ht->cItems < ht->cBuckets * OCCUPANCY_PCT*0.4
-	&& ht->cDeltaGoalSize >= 0       /* wait until we're done deleting */
-	&& (ht->cBuckets >> 1) >= MIN_HASH_SIZE )                /* shrink */
-		Rehash( ht,
-				NextPow2((ulong)((ht->cItems+ht->cDeltaGoalSize)/OCCUPANCY_PCT)),
-				NULL);
-	ht->posLastFind = NULL;           /* last operation is delete, not find */
 }
 
 /*************************************************************************\
@@ -727,23 +627,12 @@ int ht_delete_last(hash_table_t *ht)
 
 hash_item_t *ht_first_bucket(hash_table_t *ht)
 {
-   hash_item_t *retval;
-
-   for ( retval = DenseTableFirstBucket(ht->iter, ht->table, ht->cBuckets);
-	 retval;  retval = DenseTableNextBucket(ht->iter) )
-      if ( !IS_BCK_DELETED(retval) )
-	 	return retval;
-   return NULL;
+	return DenseTableFirstBucket(ht->iter, ht->table, ht->cBuckets);
 }
 
 hash_item_t *ht_next_bucket(hash_table_t *ht)
 {
-   hash_item_t *retval;
-
-   while ( (retval=DenseTableNextBucket(ht->iter)) )
-      if ( !IS_BCK_DELETED(retval) )
-    	  return retval;
-   return NULL;
+	return DenseTableNextBucket(ht->iter);
 }
 
 /*************************************************************************\

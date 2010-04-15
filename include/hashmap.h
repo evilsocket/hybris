@@ -27,9 +27,6 @@
 #   define H_ADDRESS_OF(o)      reinterpret_cast<ulong>(o)
 /* default null value for an Object pointer */
 #   define H_UNDEFINED          NULL
-/* anonymous identifier to be used upon temporary stacks creation */
-#   define HANONYMOUSIDENTIFIER     (char *)"HANONYMOUSIDENTIFIER"
-#   define HANONYMOUSIDENTIFIER_FTM (char *)"HANONYMOUSIDENTIFIER%d"
 #endif
 
 #include <vector>
@@ -40,9 +37,23 @@ using std::string;
 
 #define H_TEMPLATE_T template< typename value_t >
 
-H_TEMPLATE_T class Map {
+/*
+ * This class is the base for all the lookup tables inside Hybris.
+ * It's used by VirtualMemory, VirtualCode, cache tables and so on.
+ *
+ * HashMap has two main containers.
+ *
+ * m_map   : A vector to have items fast access by index.
+ * m_table : An hash table to have fast access by label.
+ *
+ * They points to the same objects so, changing the value of an item in
+ * the vector will change that value inside the table, and viceversa.
+ */
+H_TEMPLATE_T class HashMap {
 protected :
-
+	/*
+	 * Structure rapresentation for an item the the map.
+	 */
     typedef struct map_pair {
         string        label;
         value_t      *value;
@@ -58,39 +69,6 @@ protected :
     unsigned int     m_elements;
     vector<pair_t *> m_map;
     hash_table_t    *m_table;
-
-    inline int search_index( char *label ){
-		int i, j,
-        	size( m_elements ),
-            send( size - 1 );
-
-		for( i = 0, j = send; i < size && j >= 0; ++i, --j ){
-			if( m_map[i]->label == label ){
-				return i;
-			}else if( m_map[j]->label == label ){
-				return j;
-			}
-		}
-		return -1;
-	}
-
-	inline int search_index( value_t *value ){
-		int  i, j,
-        	 size( m_elements ),
-             send( size - 1 );
-		ulong v_address( H_ADDRESS_OF(value) );
-
-		for( i = 0, j = send; i < size && j >= 0; ++i, --j ){
-			if( H_ADDRESS_OF(m_map[i]->value) == v_address ){
-				return i;
-			}else if( H_ADDRESS_OF(m_map[j]->value) == v_address ){
-				return j;
-			}
-		}
-		return -1;
-	}
-
-
 
 public  :
 
@@ -131,89 +109,82 @@ public  :
         return m_map.rend();
     }
 
-    Map();
-    ~Map();
+    HashMap();
+    ~HashMap();
 
+    /* Get the number of items mapped here. f*/
     inline unsigned int size(){
 		return m_elements;
 	}
-
+    /* Get the value of the item at 'index' position */
     inline value_t *at( unsigned int index ){
         return m_map[index]->value;
 	}
-
+    /* Get the label of the item at 'index' position */
 	inline const char * label( unsigned int index ){
 		return m_map[index]->label.c_str();
 	}
-
-	inline value_t *replace( char *label, value_t *old_value, value_t *new_value ){
-		hash_item_t *item;
-
-		if( (item = ht_find( m_table, PTR_KEY( m_table, label ) )) != NULL ){
-			((pair_t *)item->data)->value = new_value;
-		}
-		else{
-			ht_insert( m_table, PTR_KEY( m_table, label ), (u_long)new_value, 1 );
-		}
-
-		return old_value;
-
-		/*
-        int idx = search_index( (value_t *)old_value );
-
-        m_map[idx]->value = new_value;
-        ht_insert( m_table, PTR_KEY( m_table, label ), (u_long)new_value );
-
-        return old_value;
-		*/
-	}
-
+	/* Insert the value if it's not already mapped, otherwise change the old reference to this. */
     value_t *insert( char *label, value_t *value );
-    value_t *set( char *label, value_t *value );
+    /* Insert the value with an anonymous unique identifier */
+    value_t *push( value_t *value );
+    /* Find the item mappeb with 'label', or return NULL if it's not here */
     value_t *find( char *label );
-
-    void     pop();
+    /* Replace the value if it already exists */
+    value_t *replace( char *label, value_t *old_value, value_t *new_value );
+    /* Clear the whole table */
     void     clear();
 };
 
-H_TEMPLATE_T Map<value_t>::Map(){
+H_TEMPLATE_T HashMap<value_t>::HashMap(){
     m_table    = ht_alloc( 0, 1 );
     m_elements = 0;
 }
 
-H_TEMPLATE_T Map<value_t>::~Map(){
+H_TEMPLATE_T HashMap<value_t>::~HashMap(){
     clear();
+    ht_free(m_table);
 }
 
-H_TEMPLATE_T value_t * Map<value_t>::insert( char *label, value_t *value ){
-	pair_t *pair = new pair_t( label, value);
+H_TEMPLATE_T value_t * HashMap<value_t>::insert( char *label, value_t *value ){
+	pair_t *pair = new pair_t( label, value );
 	m_map.push_back( pair );
-    ht_insert( m_table, PTR_KEY( m_table, label ), (u_long)pair );
+    ht_insert( m_table, (u_long)label, (u_long)pair );
     m_elements++;
     return value;
 }
 
-H_TEMPLATE_T value_t * Map<value_t>::find( char *label ){
-    hash_item_t *item = ht_find( m_table, PTR_KEY( m_table, label ) );
+H_TEMPLATE_T value_t * HashMap<value_t>::push( value_t *value ){
+	char label[0xFF] = {0};
+	sprintf( label, "HANONYMOUSIDENTIFIER%d", m_elements );
+	pair_t *pair = new pair_t( label, value );
+	m_map.push_back( pair );
+	ht_insert( m_table, (u_long)label, (u_long)pair );
+	m_elements++;
+	return value;
+}
+
+H_TEMPLATE_T value_t * HashMap<value_t>::find( char *label ){
+    hash_item_t *item = ht_find( m_table, (u_long)label );
     if( item ){
         return ((pair_t *)item->data)->value;
     }
     return H_UNDEFINED;
 }
 
-H_TEMPLATE_T void Map<value_t>::pop(){
-    if( m_map.size() > 0 ){
-        m_elements--;
-        int index = m_map.size() - 1;
-        ht_delete( m_table, PTR_KEY( m_table, m_map[index]->label ) );
-        delete m_map[ index ];
-        m_map.pop_back();
-    }
+H_TEMPLATE_T value_t * HashMap<value_t>::replace( char *label, value_t *old_value, value_t *new_value ){
+	hash_item_t *item;
+
+	if( (item = ht_find( m_table, (u_long)label )) != NULL ){
+		((pair_t *)item->data)->value = new_value;
+	}
+
+	return old_value;
 }
 
-H_TEMPLATE_T void Map<value_t>::clear(){
-    unsigned int i;
-    for( i = 0; i < m_map.size(); --i ){
+H_TEMPLATE_T void HashMap<value_t>::clear(){
+    unsigned int i, size(m_map.size());
+    for( i = 0; i < size; --i ){
         delete m_map[i];
     }
     m_map.clear();

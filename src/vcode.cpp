@@ -18,7 +18,7 @@
 */
 #include "vcode.h"
 
-VirtualCode::VirtualCode(){
+VirtualCode::VirtualCode() : HashMap<Node>() {
     #ifdef MEM_DEBUG
     printf( "[MEM DEBUG] !!! Virtual code table initialized .\n" );
     #endif
@@ -26,10 +26,6 @@ VirtualCode::VirtualCode(){
 
 VirtualCode::~VirtualCode(){
     release();
-}
-
-Node *VirtualCode::get( char *identifier ){
-    return find(identifier);
 }
 
 Node *VirtualCode::add( char *identifier, Node *node ){
