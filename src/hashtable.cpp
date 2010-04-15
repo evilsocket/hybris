@@ -178,9 +178,10 @@ inline static hash_item_t *DenseTableInsert(dense_bin_t *bin, hash_item_t *bckIn
 
 inline static hash_item_t *DenseTableNextBucket(dense_iterator_t *iter)
 {
+	hash_item_t *buckets = iter->bin->rgBuckets;
    for ( ++iter->pos; iter->pos < iter->cBuckets; ++iter->pos )
-      if ( !DenseTableIsEmpty(iter->bin, iter->pos) )
-	 return iter->bin->rgBuckets + iter->pos;
+      if ( !DENSE_IS_EMPTY( buckets, iter->pos ) )
+	 	return buckets + iter->pos;
    return NULL;                        /* all remaining groups were empty */
 }
 

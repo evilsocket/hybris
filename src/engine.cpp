@@ -782,7 +782,7 @@ Object *Engine::onFor( vframe_t *frame, Node *node ){
     for( init;
          ob_lvalue( (boolean = exec(  frame, condition )) );
          (inc     = exec(  frame, increment )) ){
-        result = exec( frame, body );
+         result = exec( frame, body );
     }
 
     return H_UNDEFINED;
@@ -938,7 +938,7 @@ Object *Engine::onAssign( vframe_t *frame, Node *node ){
 	 * If the first child node is not an attribute (therefore it's an identifier),
 	 * define it (or replace its value) onto the vm frame we are in.
 	 * If it's already defined, the ::add method will decrement the old value's
-	 * reference counter by 1.
+	 * reference counter by 1 and replace it with the new value.
 	 */
     if( node->child(0)->type() != H_NT_ATTRIBUTE ){
         char   *identifier = (char *)node->child(0)->value.m_identifier.c_str();

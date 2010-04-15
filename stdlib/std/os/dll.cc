@@ -118,7 +118,7 @@ HYBRIS_DEFINE_FUNCTION(hdllcall){
         hyb_throw( H_ET_SYNTAX, "function 'dllcall' requires at least 1 parameter (called with %d)", HYB_ARGC() );
     }
     else if( HYB_ARGC() > CALL_MAX_ARGS + 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'dllcall' support at max %d parameters (called with %d)", CALL_MAX_ARGS, HYB_ARGC() );
+        hyb_throw( H_ET_SYNTAX, "function 'dllcall' supports at max %d parameters (called with %d)", CALL_MAX_ARGS, HYB_ARGC() );
     }
 
     HYB_TYPE_ASSERT( HYB_ARGV(0), otExtern );

@@ -17,17 +17,80 @@
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <hybris.h>
+#include <dlfcn.h>
+#include <ffi.h>
 
 HYBRIS_DEFINE_FUNCTION(hprint);
 HYBRIS_DEFINE_FUNCTION(hprintln);
+HYBRIS_DEFINE_FUNCTION(hprintf);
 HYBRIS_DEFINE_FUNCTION(hinput);
 
 extern "C" named_function_t hybris_module_functions[] = {
 	{ "print", hprint },
 	{ "println", hprintln },
+	{ "printf",  hprintf },
 	{ "input", hinput },
 	{ "", NULL }
 };
+
+#define PRINTF_MAX_ARGS 256
+
+union call_arg_ctype {
+    char   c;
+    int    i;
+    double d;
+    void  *p;
+};
+
+typedef struct {
+	ffi_type            *type;
+	union call_arg_ctype value;
+	bool                 dynamic;
+}
+dll_arg_t;
+
+byte *binary_serialize( Object *o ){
+    size_t i, size( ob_get_size(o) );
+    byte *buffer = new byte[ size ];
+
+    for( i = 0; i < size; ++i ){
+        buffer[i] = (byte)ob_ivalue( BINARY_UPCAST(o)->value[i] );
+    }
+
+    return buffer;
+}
+
+static void ctype_convert( Object *o, dll_arg_t *pa ) {
+    pa->dynamic = false;
+	if( o->type->code == otVoid ){
+        pa->type    = &ffi_type_pointer;
+        pa->value.p = H_UNDEFINED;
+	}
+    else if( o->type->code == otInteger || o->type->code == otAlias || o->type->code == otExtern ){
+		pa->type    = &ffi_type_sint;
+		pa->value.i = ob_ivalue(o);
+	}
+	else if( o->type->code == otChar ){
+        pa->type    = &ffi_type_schar;
+        pa->value.c = ob_ivalue(o);
+	}
+	else if( o->type->code == otFloat ){
+	    pa->type    = &ffi_type_double;
+        pa->value.d = ob_fvalue(o);
+	}
+    else if( o->type->code == otString ){
+		pa->type    = &ffi_type_pointer;
+		pa->value.p = (void *)STRING_VALUE(o).c_str();
+	}
+	else if( o->type->code == otBinary ){
+	    pa->dynamic = true;
+        pa->type    = &ffi_type_pointer;
+        pa->value.p = (void *)binary_serialize(o);
+	}
+	else{
+        hyb_throw( H_ET_SYNTAX, "could not use '%s' type for printf function", o->type->name );
+	}
+}
 
 HYBRIS_DEFINE_FUNCTION(hprint){
     unsigned int i;
@@ -49,6 +112,66 @@ HYBRIS_DEFINE_FUNCTION(hprintln){
         printf("\n");
     }
     return NULL;
+}
+
+HYBRIS_DEFINE_FUNCTION(hprintf){
+	if( HYB_ARGC() < 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'printf' requires at least 1 parameter (called with %d)", HYB_ARGC() );
+	}
+	else if( HYB_ARGC() > PRINTF_MAX_ARGS ){
+		hyb_throw( H_ET_SYNTAX, "function 'printf' supports at max %d parameters (called with %d)", PRINTF_MAX_ARGS, HYB_ARGC() );
+	}
+
+	HYB_TYPE_ASSERT( HYB_ARGV(0), otString );
+
+	typedef int (* function_t)(void);
+	function_t function = (function_t)printf;
+
+	ffi_cif    cif;
+	ffi_arg    ul_ret;
+	int        dsize( HYB_ARGC() ),
+			   argc( dsize ),
+			   i;
+	ffi_type **args_t;
+	void     **args_v;
+	dll_arg_t *args, *parg;
+
+	args   = (dll_arg_t *)alloca( sizeof(dll_arg_t) * argc );
+	args_t = (ffi_type **)alloca( sizeof(ffi_type *) * argc );
+	args_v = (void **)alloca( sizeof(void *) * argc );
+
+	memset( args, 0, sizeof(dll_arg_t) * argc );
+
+	/* convert objects to c-type equivalents */
+	ctype_convert( HYB_ARGV(0), &args[0] );
+	for( i = 1, parg = &args[1]; i < dsize; ++i, ++parg ){
+		ctype_convert( HYB_ARGV(i), parg );
+	}
+	/* assign types and values */
+	for( i = 0; i < dsize; ++i ){
+		args_t[i] = args[i].type;
+		if( args_t[i]->type == FFI_TYPE_STRUCT ){
+			args_v[i] = (void *)args[i].value.p;
+		}
+		else{
+			args_v[i] = (void *)&args[i].value;
+		}
+	}
+
+	if( ffi_prep_cif( &cif, FFI_DEFAULT_ABI, argc, &ffi_type_ulong, args_t ) != FFI_OK ){
+		hyb_throw( H_ET_GENERIC, "ffi_prep_cif failed" );
+	}
+
+	ffi_call( &cif, FFI_FN(function), &ul_ret, args_v );
+
+	/* release dynamically allocated data */
+	for( i = 0; i < argc; ++i ){
+		if( args[i].dynamic == true ){
+			delete [] args[i].value.p;
+		}
+	}
+
+	return OB_DOWNCAST( MK_INT_OBJ(ul_ret) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hinput){
