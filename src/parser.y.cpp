@@ -20,6 +20,7 @@
 
 #include "hybris.h"
 #include "engine.h"
+#include <getopt.h>
 
 #define YY_(s) (char *)s
 
@@ -354,40 +355,120 @@ int hyb_banner(){
 
 int hyb_usage( char *argvz ){
     hyb_banner();
-    printf( "\nUsage: %s file (--trace) (--time)\n"
-            "\t-h  (--help)  : Will print this menu .\n"
-            "\t-tm (--time)  : Will print execution time in micro seconds .\n"
-            "\t-t  (--trace) : Will enable stack trace report on errors .\n\n", argvz );
+    printf( "\nUsage: %s <options> file\n\n"
+    		"Where <options> is one or more among followring values :\n"
+    		"\t-g (--gc)    : Set the garbage collection memory threshold, expressend in bytes, \n"
+    		"\t                kilobytes (with K postfix) or megabytes (with M postfix).\n"
+    		"\t                \tEx: -g 10K or -g 1024 or --gc=100M\n"
+            "\t-h (--help)  : Print this menu .\n"
+            "\t-t (--time)  : Print execution time in micro seconds .\n"
+            "\t-s (--trace) : Enable stack trace report on errors .\n\n", argvz );
     return 0;
 }
 
 int main( int argc, char *argv[] ){
-    int i, f_offset = 0;
+    static struct option options[] = {
+            {"gc",    1, 0, 'g' },
+            {"time",  0, 0, 't' },
+            {"trace", 0, 0, 's' },
+            {"help",  0, 0, 'h' },
+            {0, 0, 0, 0}
+    };
 
-    for( i = 0; i < argc; ++i ){
-        if( strcmp( argv[i], "--trace" ) == 0 || strcmp( argv[i], "-t" ) == 0 ){
-            __context.args.stacktrace = 1;
-        }
-        else if( strcmp( argv[i], "--time" ) == 0 || strcmp( argv[i], "-tm" ) == 0 ){
-            __context.args.tm_timer   = 1;
-        }
-        else if( strcmp( argv[i], "--help" ) == 0 || strcmp( argv[i], "-h" ) == 0 ){
-            return hyb_usage(argv[0]);
-        }
-        else if( f_offset == 0 ){
-            f_offset = i;
+    int index = 0;
+    char c, multiplier, *p;
+    long gc_threshold;
+
+    while( (c = getopt_long( argc, argv, "g:tsh", options, &index)) != -1 ){
+        switch (c) {
+			/*
+			 * Handle garbage collection threshold argument.
+			 * Allowed values are :
+			 *
+			 * nnn  (bytes)
+			 * nnnK (kilo bytes)
+			 * nnnM (mega bytes)
+			 *
+			 * Where nnn is the number of bytes, K is the kilo multiplier (1024),
+			 * and M the mega multiplier (1024^2).
+			 */
+			case 'g':
+				p = optarg;
+				/*
+				 * Shift the pointer until first non digit character is reached
+				 * or the end of the string is reached.
+				 */
+				while( *(++p) != 0x00 && *p >= '0' && *p <= '9' );
+
+				multiplier = *p;
+				/*
+				 * Optarg now contains only the integer part of the argument.
+				 */
+				optarg[ p - optarg ] = 0x00;
+
+				gc_threshold = atol(optarg);
+				/*
+				 * Check for valid integer values.
+				 */
+				if( gc_threshold == 0 ){
+					hyb_throw( H_ET_GENERIC, "Invalid memory size %s given.", optarg );
+				}
+				/*
+				 * Check for a valid multiplier.
+				 */
+				else if( multiplier != 0x00 && strchr( "kKmM", multiplier ) == 0 ){
+					hyb_throw( H_ET_GENERIC, "Invalid multiplier %c given.", multiplier );
+				}
+				/*
+				 * Perform multiplication if multiplier was specified (multiplier != 0x00)
+				 */
+				switch(multiplier){
+					case 'K' :
+					case 'k' :
+						gc_threshold *= 1024;
+					break;
+
+					case 'M' :
+					case 'm' :
+						gc_threshold *= 1048576;
+					break;
+				}
+				/*
+				 * Check for integer overflow.
+				 */
+				if( gc_threshold <= 0 ){
+					hyb_throw( H_ET_GENERIC, "Memory limit is too high." );
+				}
+				/*
+				 * Done, let's pass it to the context structure.
+				 */
+				__context.args.gc_threshold = gc_threshold;
+			break;
+
+        	case 't':
+        		__context.args.tm_timer   = 1;
+        	break;
+        	case 's':
+        		__context.args.stacktrace = 1;
+        	break;
+        	case 'h':
+        		return hyb_usage(argv[0]);
+            break;
         }
     }
 
-    if( f_offset > 0 ){
-        strncpy( __context.args.source, argv[f_offset], sizeof(__context.args.source) );
-        if( hyb_file_exists(__context.args.source) == 0 ){
-            printf( "\033[22;31mERROR : '%s' no such file or directory.\n\n\033[00m", __context.args.source );
-            return hyb_usage( argv[0] );
-        }
+    if( optind < argc ){
+        strncpy( __context.args.source, argv[optind], sizeof(__context.args.source) );
+		if( hyb_file_exists(__context.args.source) == 0 ){
+			printf( "\033[22;31mERROR : '%s' no such file or directory.\n\n\033[00m", __context.args.source );
+			return hyb_usage( argv[0] );
+		}
     }
-
-    __context.init( argc, argv );
+    /*
+     * Context will receive every argument starting from the script
+     * name to build the script virtual argv.
+     */
+    __context.init( argc - (optind - 1), argv + (optind - 1) );
 
     extern FILE *yyin;
     yyin = __context.openFile();

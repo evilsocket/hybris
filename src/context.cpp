@@ -101,9 +101,13 @@ void Context::init( int argc, char *argv[] ){
     /* set signal handler */
     signal( SIGSEGV, Context::signal_handler );
 
+    if( args.gc_threshold > 0 ){
+    	gc_set_threshold(args.gc_threshold);
+    }
+
     /* initialize command line arguments */
     HYBRIS_DEFINE_CONSTANT( this, "argc", gc_new_integer(argc - 1) );
-    for( i = 1; i < argc; ++i ){
+    for( i = 0; i < argc; ++i ){
         sprintf( name, "%d", i - 1 );
         HYBRIS_DEFINE_CONSTANT( this, name, gc_new_string(argv[i]) );
     }

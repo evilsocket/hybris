@@ -42,9 +42,11 @@ typedef struct {
     char rootpath[0xFF];
     int  stacktrace;
 
-    int           tm_timer;
+    int   tm_timer;
     ulong tm_start;
     ulong tm_end;
+
+    ulong gc_threshold;
 }
 h_args_t;
 

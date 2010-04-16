@@ -96,7 +96,7 @@ size_t gc_set_threshold( size_t threshold ){
 struct _Object *gc_track( struct _Object *o, size_t size ){
     if( o == NULL ){
         /*
-         * We assume that 'o' was previously allocated with one of the MK_..._OBJ
+         * We assume that 'o' was previously allocated with one of the gc_new_*
          * macros, therefore, if its pointer is null, most of it there was a memory
          * allocation problem.
          */
