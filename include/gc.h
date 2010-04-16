@@ -125,5 +125,23 @@ void            gc_collect();
  * used when the program is exiting, not before.
  */
 void            gc_release();
+/*
+ * Object allocation macros.
+ *
+ * 1 .: Alloc new specialized type pointer.
+ * 2 .: Downcast to Object * and let the gc track it.
+ * 3 .: Upcast back to specialized type pointer and return to user.
+ */
+#define gc_new_integer(v)    ob_int_ucast(    gc_track( ob_dcast( new IntegerObject( static_cast<long>(v) ) ), sizeof(IntegerObject) ) )
+#define gc_new_alias(v)      ob_alias_ucast(  gc_track( ob_dcast( new AliasObject( static_cast<long>(v) ) ),   sizeof(AliasObject) ) )
+#define gc_new_extern(v)     ob_extern_ucast( gc_track( ob_dcast( new ExternObject( static_cast<long>(v) ) ),  sizeof(ExternObject) ) )
+#define gc_new_float(v)      ob_float_ucast(  gc_track( ob_dcast( new FloatObject( static_cast<double>(v) ) ), sizeof(FloatObject) ) )
+#define gc_new_char(v)       ob_char_ucast(   gc_track( ob_dcast( new CharObject( static_cast<char>(v) ) ),    sizeof(CharObject) ) )
+#define gc_new_string(v)     ob_string_ucast( gc_track( ob_dcast( new StringObject( (char *)(v) ) ),           sizeof(StringObject) ) )
+#define gc_new_binary(d)     ob_binary_ucast( gc_track( ob_dcast( new BinaryObject(d) ),                       sizeof(BinaryObject) ) )
+#define gc_new_vector()      ob_vector_ucast( gc_track( ob_dcast( new VectorObject() ),                        sizeof(VectorObject) ) )
+#define gc_new_map()         ob_map_ucast(    gc_track( ob_dcast( new MapObject() ),                           sizeof(MapObject) ) )
+#define gc_new_matrix(r,c,v) ob_matrix_ucast( gc_track( ob_dcast( new MatrixObject(r,c,v) ),                   sizeof(MatrixObject) ) )
+#define gc_new_struct()      ob_struct_ucast( gc_track( ob_dcast( new StructureObject() ),                     sizeof(StructureObject) ) )
 
 #endif

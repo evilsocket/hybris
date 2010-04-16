@@ -405,9 +405,6 @@ ExternObject;
 #define ob_int_val(o)      (((IntegerObject *)(o))->value)
 #define ob_alias_val(o)    (((AliasObject *)(o))->value)
 #define ob_extern_val(o)   (((ExternObject *)(o))->value)
-#define gc_new_integer(v)  ob_int_ucast( (gc_track( ob_dcast( new IntegerObject( static_cast<long>(v) ) ), sizeof(IntegerObject) )) )
-#define gc_new_alias(v)    ob_alias_ucast( (gc_track( ob_dcast( new AliasObject( static_cast<long>(v) ) ), sizeof(AliasObject) )) )
-#define gc_new_extern(v)   ob_extern_ucast( (gc_track( ob_dcast( new ExternObject( static_cast<long>(v) ) ), sizeof(ExternObject) )) )
 /*
  * A macro to cast any pointer into an Integer representing its address.
  */
@@ -428,7 +425,6 @@ FloatObject;
 #define ob_is_float(o)    ob_is_typeof(o,Float)
 #define ob_float_ucast(o) ((FloatObject *)(o))
 #define ob_float_val(o)   (((FloatObject *)(o))->value)
-#define gc_new_float(v)   ob_float_ucast( (gc_track( ob_dcast(new FloatObject( static_cast<double>(v) )), sizeof(FloatObject) )) )
 
 DECLARE_TYPE(Char);
 
@@ -445,7 +441,6 @@ CharObject;
 #define ob_is_char(o)    ob_is_typeof(o,Char)
 #define ob_char_ucast(o) ((CharObject *)(o))
 #define ob_char_val(o)   ((CharObject *)(o))->value
-#define gc_new_char(v)   ob_char_ucast( (gc_track( ob_dcast(new CharObject( static_cast<char>(v) )), sizeof(CharObject) )) )
 
 DECLARE_TYPE(String);
 
@@ -470,7 +465,6 @@ StringObject;
 #define ob_string_ucast(o) ((StringObject *)(o))
 #define ob_string_val(o)   ((StringObject *)(o))->value
 #define ob_lpcstr_val(o)   (ob_string_val(o).c_str())
-#define gc_new_string(v)   ob_string_ucast( (gc_track( ob_dcast(new StringObject( (char *)(v) )), sizeof(StringObject) )) )
 
 DECLARE_TYPE(Binary);
 
@@ -503,7 +497,6 @@ typedef vector<Object *>::iterator BinaryObjectIterator;
 
 #define ob_is_binary(o)    ob_is_typeof(o,Binary)
 #define ob_binary_ucast(o) ((BinaryObject *)(o))
-#define gc_new_binary(d)   ob_binary_ucast( (gc_track( ob_dcast(new BinaryObject(d)), sizeof(BinaryObject) )) )
 
 DECLARE_TYPE(Vector);
 
@@ -526,7 +519,6 @@ typedef vector<Object *>::iterator VectorObjectIterator;
 #define ob_is_vector(o)    ob_is_typeof(o,Vector)
 #define ob_vector_ucast(o) ((VectorObject *)(o))
 #define ob_vector_val(o)   (((VectorObject *)(o)))
-#define gc_new_vector()    ob_vector_ucast( (gc_track( ob_dcast(new VectorObject()), sizeof(VectorObject) )) )
 
 DECLARE_TYPE(Map);
 
@@ -553,7 +545,6 @@ typedef vector<Object *>::iterator MapObjectIterator;
 #define ob_is_map(o)    ob_is_typeof(o,Map)
 #define ob_map_ucast(o) ((MapObject *)(o))
 #define ob_map_val(o)	(MapObject *)(o)
-#define gc_new_map()    ob_map_ucast( (gc_track( ob_dcast(new MapObject()), sizeof(MapObject) )) )
 
 DECLARE_TYPE(Matrix);
 
@@ -622,7 +613,6 @@ MatrixObject;
 #define ob_is_matrix(o)      ob_is_typeof(o,Matrix)
 #define ob_matrix_ucast(o)   ((MatrixObject *)(o))
 #define ob_matrix_val(o)     ((MatrixObject *)o)
-#define gc_new_matrix(r,c,v) ob_matrix_ucast( (gc_track( ob_dcast(new MatrixObject(r,c,v)), sizeof(MatrixObject) )) )
 
 DECLARE_TYPE(Structure);
 
@@ -647,7 +637,6 @@ typedef vector<Object *>::iterator StructureObjectValueIterator;
 
 #define ob_is_struct(o)    ob_is_typeof(o,Structure)
 #define ob_struct_ucast(o) ((StructureObject *)(o))
-#define gc_new_struct()    ob_struct_ucast( (gc_track( ob_dcast(new StructureObject()), sizeof(StructureObject) )) )
 
 #endif
 
