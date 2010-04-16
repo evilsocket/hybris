@@ -48,7 +48,7 @@ fi
 # Checks for libraries.
 AC_CHECK_LIB( [dl],  [dlsym],        [], [AC_MSG_ERROR([libdl is missing])] ) 
 AC_DEFINE( PCRE_SUPPORT, 1, [support for regular expressions] )
-AC_CHECK_LIB( [pcrecpp], [pcre_compile], [], [AC_MSG_ERROR([libpcrecpp is missing])] ) 
+AC_CHECK_LIB( [pcre], [pcre_compile], [], [AC_MSG_ERROR([libpcre is missing])] ) 
 AC_DEFINE( MT_SUPPORT, 1, [multi threading support] )
 AC_CHECK_LIB( [pthread], [pthread_create], [], [AC_MSG_ERROR([libpthread is missing])] )
 AC_CHECK_HEADERS( [pthread.h], [], [AC_MSG_ERROR([pthread.h header missing])] )

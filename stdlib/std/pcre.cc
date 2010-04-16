@@ -17,72 +17,18 @@
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <hybris.h>
-#include <pcrecpp.h>
+#include <pcre.h>
 
-HYBRIS_DEFINE_FUNCTION(hrex_match);
-HYBRIS_DEFINE_FUNCTION(hrex_matches);
-HYBRIS_DEFINE_FUNCTION(hrex_replace);
+HYBRIS_DEFINE_FUNCTION(hpcre_replace);
 
 extern "C" named_function_t hybris_module_functions[] = {
-    { "rex_match", hrex_match },
-    { "rex_matches", hrex_matches },
-    { "rex_replace", hrex_replace },
+    { "pcre_replace", hpcre_replace },
     { "", NULL }
 };
 
-HYBRIS_DEFINE_FUNCTION(hrex_match){
-	if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'rex_match' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_type_assert( ob_argv(0), otString );
-	ob_type_assert( ob_argv(1), otString );
-
-	string rawreg  = string_argv(0),
-		   subject = string_argv(1),
-		   regex;
-	int    opts;
-
-	string_parse_pcre( rawreg, regex, opts );
-
-	pcrecpp::RE_Options OPTS(opts);
-	pcrecpp::RE         REGEX( regex.c_str(), OPTS );
-
-	return ob_dcast( gc_new_integer( REGEX.PartialMatch(subject.c_str()) ) );
-}
-
-HYBRIS_DEFINE_FUNCTION(hrex_matches){
-	if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'rex_matches' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_type_assert( ob_argv(0), otString );
-	ob_type_assert( ob_argv(1), otString );
-
-	string rawreg  = string_argv(0),
-		   subject = string_argv(1),
-		   regex;
-	int    opts, i = 0;
-
-	string_parse_pcre( rawreg, regex, opts );
-
-	pcrecpp::RE_Options  OPTS(opts);
-	pcrecpp::RE          REGEX( regex.c_str(), OPTS );
-	pcrecpp::StringPiece SUBJECT( subject.c_str() );
-	string   match;
-	Object  *matches = ob_dcast( gc_new_vector() );
-
-    while( REGEX.FindAndConsume( &SUBJECT, &match ) == true ){
-		if( i++ > H_PCRE_MAX_MATCHES ){
-			hyb_throw( H_ET_GENERIC, "something of your regex is forcing infinite matches" );
-		}
-		ob_cl_push_reference( matches, ob_dcast( gc_new_string(match.c_str()) ) );
-	}
-
-	return matches;
-}
-
-HYBRIS_DEFINE_FUNCTION(hrex_replace){
+HYBRIS_DEFINE_FUNCTION(hpcre_replace){
 	if( ob_argc() != 3 ){
-		hyb_throw( H_ET_SYNTAX, "function 'rex_replace' requires 2 parameters (called with %d)", ob_argc() );
+		hyb_throw( H_ET_SYNTAX, "function 'pcre_replace' requires 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 	ob_type_assert( ob_argv(1), otString );
@@ -91,15 +37,36 @@ HYBRIS_DEFINE_FUNCTION(hrex_replace){
 	string rawreg  = string_argv(0).c_str(),
 		   subject = string_argv(1).c_str(),
 		   replace = ob_is_string( ob_argv(2) ) ? string_argv(2).c_str() : string("") + (char)ob_ivalue(ob_argv(2)),
-		   regex;
-	int    opts;
+		   pattern;
+	int    		 opts, i, ccount, rc,
+				*offsets,
+				 eoffset;
+	const char  *error;
+	pcre 		*compiled;
 
-	string_parse_pcre( rawreg, regex, opts );
+	string_parse_pcre( rawreg, pattern, opts );
 
-	pcrecpp::RE_Options OPTS(opts);
-	pcrecpp::RE         REGEX( regex.c_str(), OPTS );
+	compiled = pcre_compile( pattern.c_str(), opts, &error, &eoffset, 0 );
+	if( !compiled ){
+		hyb_throw( H_ET_GENERIC, "error during regex evaluation at offset %d (%s)", eoffset, error );
+	}
 
-	REGEX.GlobalReplace( replace.c_str(), &subject );
+	rc = pcre_fullinfo( compiled, 0, PCRE_INFO_CAPTURECOUNT, &ccount );
+
+	offsets = new int[ 3 * (ccount + 1) ];
+
+	rc = pcre_exec( compiled, 0, subject.c_str(), subject.length(), 0, 0, offsets, 3 * (ccount + 1) );
+
+	VectorObject *matches = gc_new_vector();
+
+	if( rc >= 0 ){
+		for( i = 1; i < rc; ++i ){
+			string match = subject.substr( offsets[2*i], offsets[2*i+1] - offsets[2*i] );
+			subject.replace( offsets[2*i], match.length(), replace );
+		}
+	}
+
+	delete[] offsets;
 
 	return ob_dcast( gc_new_string( subject.c_str() ) );
 }

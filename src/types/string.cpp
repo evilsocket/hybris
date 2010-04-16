@@ -20,6 +20,7 @@
 #include "types.h"
 #include <math.h>
 #include <stdio.h>
+#include <pcre.h>
 
 extern void hyb_throw( H_ERROR_TYPE type, const char *format, ... );
 
@@ -68,64 +69,6 @@ void string_parse( string& s ){
             repl += (char)l_hex;
             string_replace( s, "\\x" + s_hex, repl );
     }
-}
-
-int string_classify_pcre( string& r ){
-    pcrecpp::RE_Options  OPTS( PCRE_CASELESS | PCRE_EXTENDED );
-	pcrecpp::RE          MULTI_REGEX( ".*[^" +
-									  pcrecpp::RE::QuoteMeta("\\") + "]" +
-									  pcrecpp::RE::QuoteMeta("(") + "[^" +
-									  pcrecpp::RE::QuoteMeta(")") + "]+[^" +
-									  pcrecpp::RE::QuoteMeta("\\") + "]" +
-									  pcrecpp::RE::QuoteMeta(")") + ".*", OPTS );
-
-	if( MULTI_REGEX.PartialMatch(r.c_str()) ){
-		return H_PCRE_MULTI_MATCH;
-	}
-	else if(0){
-		return H_PCRE_REPLACE_MATCH;
-	}
-	else{
-		return H_PCRE_BOOL_MATCH;
-	}
-}
-
-void string_parse_pcre( string& raw, string& regex, int& opts ){
-    unsigned int i;
-	vector<string> blocks;
-	pcrecpp::RE_Options  OPTS( PCRE_CASELESS | PCRE_EXTENDED );
-	pcrecpp::RE          REGEX( "^/(.*?)/([i|m|s|x|U]*)$", OPTS );
-	pcrecpp::StringPiece SUBJECT( raw );
-	string   rex, sopts;
-
-    while( REGEX.FindAndConsume( &SUBJECT, &rex, &sopts ) == true ){
-		blocks.push_back( rex );
-		blocks.push_back( sopts );
-	}
-
-	if( blocks.size() ){
-		if( blocks.size() != 2 ){
-			hyb_throw( H_ET_SYNTAX, "invalid pcre regular expression syntax" );
-		}
-		opts  = 0;
-		regex = blocks[0];
-		sopts = blocks[1];
-
-		/* parse options */
-		for( i = 0; i < sopts.size(); i++ ){
-			switch( sopts[i] ){
-				case 'i' : opts |= PCRE_CASELESS;  break;
-				case 'm' : opts |= PCRE_MULTILINE; break;
-				case 's' : opts |= PCRE_DOTALL;    break;
-				case 'x' : opts |= PCRE_EXTENDED;  break;
-				case 'U' : opts |= PCRE_UNGREEDY;  break;
-			}
-		}
-	}
-	else{
-		opts  = 0;
-		regex = raw;
-	}
 }
 
 /** generic function pointers **/
@@ -284,39 +227,82 @@ Object * string_from_float( Object *f ){
     return (Object *)gc_new_string( tmp );
 }
 
+void string_parse_pcre( string& raw, string& regex, int& opts ){
+    int i, ccount, rc,
+	   *offsets,
+        eoffset;
+	const char  *error;
+    string       pattern("^/(.*?)/([i|m|s|x|U]*)$"),
+				 sopts;
+    pcre 		*compiled;
+
+    compiled = pcre_compile( pattern.c_str(), 0, &error, &eoffset, 0 );
+    rc 		 = pcre_fullinfo( compiled, 0, PCRE_INFO_CAPTURECOUNT, &ccount );
+    offsets  = new int[ 3 * (ccount + 1) ];
+    rc 		 = pcre_exec( compiled, 0, raw.c_str(), raw.length(), 0, 0, offsets, 3 * (ccount + 1) );
+
+    if( rc < 0 ){
+    	regex = raw;
+    	opts  = 0;
+    }
+    else{
+    	regex = raw.substr( offsets[2], offsets[3] - offsets[2] );
+    	sopts = raw.substr( offsets[4], offsets[5] - offsets[4] );
+    	opts  = 0;
+
+		/* parse options */
+		for( i = 0; i < sopts.size(); i++ ){
+			switch( sopts[i] ){
+				case 'i' : opts |= PCRE_CASELESS;  break;
+				case 'm' : opts |= PCRE_MULTILINE; break;
+				case 's' : opts |= PCRE_DOTALL;    break;
+				case 'x' : opts |= PCRE_EXTENDED;  break;
+				case 'U' : opts |= PCRE_UNGREEDY;  break;
+			}
+		}
+    }
+
+    delete[] offsets;
+}
+
 Object * string_regexp( Object *me, Object *r ){
-	string rawreg  = ob_svalue(r),
-		   subject = ob_svalue(me),
-		   regex;
-	int    opts;
+	string 		 rawreg  = ob_svalue(r),
+			     subject = ob_svalue(me),
+				 pattern;
+	int    		 opts, i, ccount, rc,
+				*offsets,
+				 eoffset;
+	const char  *error;
+	pcre 		*compiled;
 
-	string_parse_pcre( rawreg, regex, opts );
+	string_parse_pcre( rawreg, pattern, opts );
 
-	if( string_classify_pcre( regex ) == H_PCRE_BOOL_MATCH ){
-		pcrecpp::RE_Options OPTS(opts);
-		pcrecpp::RE         REGEX( regex.c_str(), OPTS );
+	compiled = pcre_compile( pattern.c_str(), opts, &error, &eoffset, 0 );
+	if( !compiled ){
+		hyb_throw( H_ET_GENERIC, "error during regex evaluation at offset %d (%s)", eoffset, error );
+    }
 
-        return (Object *)gc_new_integer( REGEX.PartialMatch(subject.c_str()) );
+	rc = pcre_fullinfo( compiled, 0, PCRE_INFO_CAPTURECOUNT, &ccount );
+
+	offsets = new int[ 3 * (ccount + 1) ];
+
+	rc = pcre_exec( compiled, 0, subject.c_str(), subject.length(), 0, 0, offsets, 3 * (ccount + 1) );
+
+	VectorObject *matches = gc_new_vector();
+
+	if( rc >= 0 ){
+		for( i = 1; i < rc; ++i ){
+			ob_cl_push_reference( (Object *)matches,
+								  (Object *)gc_new_string(
+											  subject.substr( offsets[2*i], offsets[2*i+1] - offsets[2*i] ).c_str()
+											)
+								);
+		}
 	}
-	else{
-		pcrecpp::RE_Options  OPTS(opts);
-		pcrecpp::RE          REGEX( regex.c_str(), OPTS );
-		pcrecpp::StringPiece SUBJECT( subject.c_str() );
-		string  match;
 
-        VectorObject *matches = gc_new_vector();
-        int i = 0;
+	delete[] offsets;
 
-        while( REGEX.FindAndConsume( &SUBJECT, &match ) == true ){
-            if( i++ > H_PCRE_MAX_MATCHES ){
-                hyb_throw( H_ET_GENERIC, "something of your regex is forcing infinite matches" );
-            }
-
-            ob_cl_push_reference( (Object *)matches, (Object *)gc_new_string(match.c_str()) );
-        }
-
-        return (Object *)matches;
-	}
+	return (Object *)matches;
 }
 
 /** arithmetic operators **/

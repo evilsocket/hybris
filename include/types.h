@@ -23,7 +23,7 @@
 #include <stdarg.h>
 #include <string>
 #include <vector>
-#include <pcrecpp.h>
+#include <pcre.h>
 #include <string.h>
 #include <stdio.h>
 #include <vector>
@@ -446,7 +446,6 @@ DECLARE_TYPE(String);
 
 void string_parse( string& s );
 void string_replace( string &source, const string find, string replace );
-int  string_classify_pcre( string& r );
 void string_parse_pcre( string& raw, string& regex, int& opts );
 
 typedef struct _StringObject {
