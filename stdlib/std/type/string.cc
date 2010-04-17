@@ -23,6 +23,7 @@ HYBRIS_DEFINE_FUNCTION(hstrfind);
 HYBRIS_DEFINE_FUNCTION(hsubstr);
 HYBRIS_DEFINE_FUNCTION(hstrreplace);
 HYBRIS_DEFINE_FUNCTION(hstrsplit);
+HYBRIS_DEFINE_FUNCTION(htrim);
 
 extern "C" named_function_t hybris_module_functions[] = {
 	{ "strlen", hstrlen },
@@ -30,12 +31,13 @@ extern "C" named_function_t hybris_module_functions[] = {
 	{ "substr", hsubstr },
 	{ "strreplace", hstrreplace },
 	{ "strsplit", hstrsplit },
+	{ "trim",     htrim },
 	{ "", NULL }
 };
 
 HYBRIS_DEFINE_FUNCTION(hstrlen){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'strlen' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_throw( H_ET_SYNTAX, "function 'strlen' requires 1 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 
@@ -44,7 +46,7 @@ HYBRIS_DEFINE_FUNCTION(hstrlen){
 
 HYBRIS_DEFINE_FUNCTION(hstrfind){
 	if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'strfind' requires 2 parameter (called with %d)", ob_argc() );
+		hyb_throw( H_ET_SYNTAX, "function 'strfind' requires 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 	ob_type_assert( ob_argv(1), otString );
@@ -56,7 +58,7 @@ HYBRIS_DEFINE_FUNCTION(hstrfind){
 
 HYBRIS_DEFINE_FUNCTION(hsubstr){
 	if( ob_argc() != 3 ){
-		hyb_throw( H_ET_SYNTAX, "function 'substr' requires 3 parameter (called with %d)", ob_argc() );
+		hyb_throw( H_ET_SYNTAX, "function 'substr' requires 3 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 
@@ -67,7 +69,7 @@ HYBRIS_DEFINE_FUNCTION(hsubstr){
 
 HYBRIS_DEFINE_FUNCTION(hstrreplace){
 	if( ob_argc() != 3 ){
-		hyb_throw( H_ET_SYNTAX, "function 'strreplace' requires 3 parameter (called with %d)", ob_argc() );
+		hyb_throw( H_ET_SYNTAX, "function 'strreplace' requires 3 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 	ob_type_assert( ob_argv(1), otString );
@@ -87,7 +89,7 @@ HYBRIS_DEFINE_FUNCTION(hstrreplace){
 
 HYBRIS_DEFINE_FUNCTION(hstrsplit){
 	if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'strsplit' requires 2 parameter (called with %d)", ob_argc() );
+		hyb_throw( H_ET_SYNTAX, "function 'strsplit' requires 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 	ob_types_assert( ob_argv(1), otString, otChar );
@@ -109,4 +111,25 @@ HYBRIS_DEFINE_FUNCTION(hstrsplit){
 	}
 
 	return ob_dcast( array );
+}
+
+HYBRIS_DEFINE_FUNCTION(htrim){
+	if( ob_argc() != 1 ){
+		hyb_throw( H_ET_SYNTAX, "function 'trim' requires 1 parameter (called with %d)", ob_argc() );
+	}
+	ob_type_assert( ob_argv(0), otString );
+
+	string s = ob_string_val( ob_argv(0) );
+	int i = 0, len = s.length(), j = len - 1;
+
+	while( strchr( " \t\n\r\0\x0B", s[i] ) != NULL ){
+		i++;
+	}
+	while( strchr( " \t\n\r\0\x0B", s[j] ) != NULL ){
+		j--;
+	}
+
+	s = s.substr( i, len - i - (len - j) + 1 );
+
+	return (Object *)gc_new_string(s.c_str());
 }

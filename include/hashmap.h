@@ -146,7 +146,12 @@ H_TEMPLATE_T HashMap<value_t>::HashMap(){
 }
 
 H_TEMPLATE_T HashMap<value_t>::~HashMap(){
-    clear();
+	/*
+	 * No need to clear here.
+	 * Table will be freed by ht_free and objects will be
+	 * garbage collected.
+	 */
+    // clear();
     ht_free(m_table);
 }
 

@@ -23,7 +23,10 @@ VirtualMemory::VirtualMemory() : HashMap<Object>() {
 }
 
 VirtualMemory::~VirtualMemory(){
-	release();
+	/*
+	 * See note on ~HashMap()
+	 */
+	// release();
 }
 
 Object *VirtualMemory::add( char *identifier, Object *object ){
