@@ -23,6 +23,9 @@
 #include "hashmap.h"
 #include "vmem.h"
 
+/*
+ * This class represent user defined functions.
+ */
 class VirtualCode : public HashMap<Node> {
     public :
 

@@ -29,6 +29,10 @@
 /* default null value for an Object pointer */
 #define H_UNDEFINED          NULL
 
+/*
+ * This class represent a memory segment where constants
+ * and variables are defined.
+ */
 class VirtualMemory : public HashMap<Object> {
     public :
 

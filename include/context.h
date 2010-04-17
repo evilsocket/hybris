@@ -112,14 +112,25 @@ typedef HashMap<named_function_t> h_mcache_t;
 
 class Context {
     private :
-
+		/*
+		 * The main SIGSEGV handler to print the stack trace.
+		 */
         static void signal_handler( int signo );
-
+        /*
+         * Create a detailed string for the function call.
+         */
         string mk_trace( char *function, vframe_t *frame );
-
+        /*
+         * Split 'str' into 'tokens' vector using 'delimiters'.
+         */
         void   str_split( string& str, string delimiters, vector<string>& tokens );
-
+        /*
+         * Load a .so module given its full path and name.
+         */
         void   loadModule( string path, string name );
+        /*
+         * Handle an entire namespace modules loading.
+         */
         void   loadNamespace( string path );
 
     public  :
@@ -184,23 +195,38 @@ class Context {
 
         Context();
 
+        /*
+         * Open the file given in 'args' structure by main, otherwise
+         * return the stdin handler.
+         */
         FILE *openFile();
+        /*
+         * If this->fp != stdin close it.
+         */
         void closeFile();
-
+        /*
+         * Change working directory to the script one.
+         */
         int chdir();
-
+        /*
+         * Push a function name inside the stack trace vector.
+         */
         __force_inline void trace( char *function, vframe_t *frame ){
             lock();
                 stack_trace.push_back( mk_trace( function, frame  ) );
             unlock();
         }
-
+        /*
+         * Remove last pushed function from the stack trace vector.
+         */
         __force_inline void detrace(){
             lock();
                 stack_trace.pop_back();
             unlock();
         }
-
+        /*
+         * Compute execution time and print it.
+         */
         __force_inline void timer( int start = 0 ){
             if( args.tm_timer ){
                 /* first call */
@@ -216,12 +242,61 @@ class Context {
                 }
             }
         }
-
+        /*
+         * Initialize the context attributes and global constants.
+         */
         void init( int argc, char *argv[] );
+        /*
+         * Release the context (free memory).
+         */
         void release();
+        /*
+         * Load a dynamic module given its namespace or load an entire
+         * namespace tree if the '*' token is given.
+         *
+         * i.e. std.* will load the entire std modules tree.
+         *
+         */
         void loadModule( char *module );
-        function_t getFunction( char *identifier );
+        /*
+         * Find out if a function has been registered by some previously
+         * loaded module and return its pointer.
+         * Handle function pointer caching.
+         */
+        __force_inline function_t getFunction( char *identifier ){
+        	unsigned int i, j,
+						 ndyns( modules.size() ),
+						 nfuncs;
 
+			/* first check if it's already in cache */
+			named_function_t * cache = mcache.find(identifier);
+			if( cache != H_UNDEFINED ){
+				return cache->function;
+			}
+
+			/* search it in dynamic loaded modules */
+			for( i = 0; i < ndyns; ++i ){
+				/* for each function of the module */
+				nfuncs = modules[i]->functions.size();
+				for( j = 0; j < nfuncs; ++j ){
+					if( modules[i]->functions[j]->identifier == identifier ){
+						// fix issue #0000014
+						lock();
+						/* found it, add to the cache and return */
+						cache = modules[i]->functions[j];
+						mcache.insert( identifier, cache );
+
+						unlock();
+
+						return cache->function;
+					}
+				}
+			}
+			return H_UNDEFINED;
+        }
+        /*
+         * Define a structure inside the vtypes member.
+         */
         __force_inline Object * defineType( char *name, int nattrs, char *attributes[] ){
             StructureObject *type = gc_new_struct();
             unsigned int     i;
@@ -229,7 +304,6 @@ class Context {
             for( i = 0; i < nattrs; ++i ){
                 ob_add_attribute( (Object *)type, attributes[i] );
             }
-
            /*
             * Prevent the structure definition from being deleted by the gc.
             */
@@ -237,7 +311,10 @@ class Context {
 
             return vtypes.insert( name, (Object *)type );
         }
-
+        /*
+         * Same as before, but the structure will be defined from an alreay
+         * created object.
+         */
         __force_inline void defineType( char *name, Object *type ){
            /*
             * Prevent the structure definition from being deleted by the gc.
@@ -246,7 +323,9 @@ class Context {
 
             vtypes.insert( name, type );
         }
-
+        /*
+         * Find the object pointer of a user defined type (i.e. structures).
+         */
         __force_inline Object * getType( char *name ){
             return vtypes.find(name);
         }

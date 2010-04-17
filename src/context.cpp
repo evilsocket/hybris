@@ -273,34 +273,3 @@ void Context::loadModule( char *module ){
     loadModule( path, name );
 }
 
-function_t Context::getFunction( char *identifier ){
-    unsigned int i, j,
-                 ndyns( modules.size() ),
-                 nfuncs;
-
-    /* first check if it's already in cache */
-    named_function_t * cache = mcache.find(identifier);
-    if( cache != H_UNDEFINED ){
-		return cache->function;
-	}
-
-    /* search it in dynamic loaded modules */
-    for( i = 0; i < ndyns; ++i ){
-        /* for each function of the module */
-        nfuncs = modules[i]->functions.size();
-        for( j = 0; j < nfuncs; ++j ){
-            if( modules[i]->functions[j]->identifier == identifier ){
-            	// fix issue #0000014
-            	lock();
-                /* found it, add to the cache and return */
-            	cache = modules[i]->functions[j];
-                mcache.insert( identifier, cache );
-
-                unlock();
-
-                return cache->function;
-            }
-        }
-    }
-    return H_UNDEFINED;
-}

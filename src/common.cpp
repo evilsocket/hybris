@@ -100,14 +100,8 @@ void hyb_throw( H_ERROR_TYPE type, const char *format, ... ){
 }
 
 int hyb_file_exists( char *filename ){
-    FILE *fp = fopen( filename, "r" );
-    if( fp ){
-        fclose(fp);
-        return 1;
-    }
-    else{
-        return 0;
-    }
+	struct stat sbuff;
+	return ( stat(filename, &sbuff) == 0 );
 }
 
 ulong hyb_uticks(){

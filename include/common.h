@@ -25,18 +25,26 @@
 #include <string.h>
 #include <signal.h>
 #include <setjmp.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "types.h"
 
 #define HMAXARGS 200
 
+/*
+ * Function declaration descriptor.
+ */
 typedef struct {
     char function[0xFF];
     int  argc;
     char argv[HMAXARGS][0xFF];
 }
 function_decl_t;
-
+/*
+ * Command line arguments descriptor.
+ */
 typedef struct {
     char source[0xFF];
     char rootpath[0xFF];
@@ -49,19 +57,40 @@ typedef struct {
     ulong gc_threshold;
 }
 h_args_t;
-
+/*
+ * Describes what type a given error is.
+ */
 enum H_ERROR_TYPE {
     H_ET_WARNING = 0,
     H_ET_GENERIC,
     H_ET_SYNTAX
 };
-
+/*
+ * Main flex error routine.
+ */
 void yyerror( char *error );
-
+/*
+ * Throw an error with a given type and a give message,
+ * if type == H_ET_WARNING the process will continue, otherwise
+ * the process will be hard killed.
+ */
 void  hyb_throw( H_ERROR_TYPE type, const char *format, ... );
+/*
+ * Print the call stack trace.
+ */
 void  hyb_print_stacktrace( int force = 0 );
+/*
+ * Check if the given file exists.
+ */
 int   hyb_file_exists ( char *filename );
+/*
+ * Get cpu ticks to compute execution time.
+ */
 ulong hyb_uticks();
+/*
+ * Perform time difference and print it in a human
+ * readable form.
+ */
 void  hyb_timediff( ulong uticks, char *buffer );
 
 #endif

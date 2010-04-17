@@ -357,11 +357,11 @@ int hyb_usage( char *argvz ){
     hyb_banner();
     printf( "\nUsage: %s <options> file\n\n"
     		"Where <options> is one or more among followring values :\n"
+    		"\t-h (--help)  : Print this menu and exit.\n"
     		"\t-g (--gc)    : Set the garbage collection memory threshold, expressend in bytes, \n"
-    		"\t                kilobytes (with K postfix) or megabytes (with M postfix).\n"
-    		"\t                \tEx: -g 10K or -g 1024 or --gc=100M\n"
-            "\t-h (--help)  : Print this menu .\n"
-            "\t-t (--time)  : Print execution time in micro seconds .\n"
+    		"\t               kilobytes (with K postfix) or megabytes (with M postfix).\n"
+    		"\t               i.e. -g 10K or -g 1024 or --gc=100M\n"
+            "\t-t (--time)  : Compute execution time and print it to stdout.\n"
             "\t-s (--trace) : Enable stack trace report on errors .\n\n", argvz );
     return 0;
 }

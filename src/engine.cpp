@@ -418,7 +418,6 @@ Object *Engine::onStructureDeclaration( vframe_t *frame, Node * node ){
 Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
     char        *callname = (char *)call->value.m_call.c_str();
     function_t   function;
-    Node        *node;
     vframe_t     stack;
     unsigned int i(0),
                  children( call->children() );
@@ -431,8 +430,7 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
     /* do object assignment */
     for( i = 0; i < children; ++i ){
         /* create function stack value */
-        node  = call->child(i);
-        value = exec( frame, node );
+        value = exec( frame, call->child(i) );
 		/*
 		 * Value references count is set to zero now, builtins
 		 * do not care about reference counting, so this object will

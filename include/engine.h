@@ -23,26 +23,62 @@
 
 class Context;
 
+/*
+ * Tnis is the main class that will execute the script tree.
+ */
 class Engine {
     private :
-
+		/*
+		 * Main context.
+		 */
         Context *ctx;
+        /*
+         * Memory segment.
+         */
         vmem_t  *vm;
+        /*
+         * Code segment
+         */
         vcode_t *vc;
+        /*
+         * Type definitions segment.
+         */
         vmem_t  *vt;
-
+        /*
+         * Find the entry point (address) of a given user defined function.
+         */
         Node   *findEntryPoint( vframe_t *frame, Node *call );
-
+        /*
+         * Handle hybris builtin function call.
+         */
         Object *onBuiltinFunctionCall( vframe_t *, Node * );
+        /*
+         * Handle user defined function call.
+         */
         Object *onUserFunctionCall( vframe_t *, Node *, int threaded = 0 );
+        /*
+         * Handle type definition ctor call.
+         */
         Object *onTypeCall( vframe_t *, Node * );
+        /*
+         * Handle dynamic loaded function call.
+         */
         Object *onDllFunctionCall( vframe_t *, Node *, int threaded = 0 );
 
     public  :
 
         Engine( Context *context );
         ~Engine();
-
+        /*
+		 * Node handler dispatcher.
+		 */
+		Object *exec( vframe_t *frame, Node *node );
+        /*
+         * Node handlers for each type of node (statement, expression, ...).
+         *
+         * The handler will recieve the current memory frame and the node
+         * to execute or reduce.
+         */
         Object *onIdentifier( vframe_t *, Node * );
         Object *onAttribute( vframe_t *, Node * );
         Object *onConstant( vframe_t *, Node * );
@@ -102,8 +138,6 @@ class Engine {
         Object *onEq( vframe_t *, Node * );
         Object *onLand( vframe_t *, Node * );
         Object *onLor( vframe_t *, Node * );
-
-        Object *exec( vframe_t *frame, Node *node );
 };
 
 
