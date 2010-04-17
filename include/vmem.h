@@ -41,6 +41,12 @@ class VirtualMemory : public HashMap<Object> {
 
         Object *add( char *identifier, Object *object );
 
+        __force_inline Object *addConstant( char *identifier, Object *object ){
+        	Object *o = add(identifier,object);
+        	o->attributes |= H_OA_CONSTANT;
+        	return o;
+        }
+
         VirtualMemory *clone();
 
         __force_inline void release(){

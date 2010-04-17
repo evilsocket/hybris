@@ -25,7 +25,9 @@
 #ifdef MT_SUPPORT
 #	include <pthread.h>
 #endif
-
+/*
+ * Force specified functions to be inlined by the compiler.
+ */
 #ifndef __force_inline
 #	define __force_inline __inline__ __attribute__((always_inline))
 #endif
@@ -46,7 +48,8 @@
  *
  * NOTE:
  * To make this work, ALL the new objects should be passed
- * instantly to the gc_track function.
+ * instantly to the gc_track function, so use the gc_new_* macros instead
+ * of new operator or malloc C function to create an object.
  * No manually deletion is necessary.
  */
 #define GC_DEFAULT_MEMORY_THRESHOLD 2048000

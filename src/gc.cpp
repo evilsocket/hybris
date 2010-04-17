@@ -21,6 +21,9 @@
 
 extern void hyb_throw( H_ERROR_TYPE type, const char *format, ... );
 
+/*
+ * The main garbage collector global structure.
+ */
 gc_t __gc;
 
 __force_inline void gc_lock(){
@@ -35,7 +38,7 @@ __force_inline void gc_unlock(){
 	#endif
 }
 
-void gc_pool_append( gc_item_t *item ){
+__force_inline void gc_pool_append( gc_item_t *item ){
 	if( __gc.pool_head == NULL ){
 		__gc.pool_head = item;
 		item->prev     = NULL;
@@ -49,7 +52,7 @@ void gc_pool_append( gc_item_t *item ){
 	item->next 	   = NULL;
 }
 
-void gc_pool_remove( gc_item_t *item ) {
+__force_inline void gc_pool_remove( gc_item_t *item ) {
 	if( item->prev == NULL ){
 		__gc.pool_head = item->next;
 	}
@@ -78,8 +81,20 @@ void gc_free( gc_item_t *item ){
     __gc.items--;
     __gc.usage -= item->size;
 
+    /*
+     * If the object is a collection, ob_free is needed to
+     * decrement its items reference counter too so, if they were
+     * referenced only by this collection they will be freed upon
+     * the next gc_collect trigger.
+     */
+	ob_free( item->pobj );
+	/*
+	 * Finally delete the object pointer itself.
+	 */
     delete item->pobj;
-
+    /*
+     * And remove the item from the gc pool.
+     */
     gc_pool_remove(item);
 }
 
@@ -105,8 +120,14 @@ struct _Object *gc_track( struct _Object *o, size_t size ){
 
     gc_lock();
 
+    /*
+     * Increment item number and memory usage counters.
+     */
     __gc.items++;
     __gc.usage += size;
+    /*
+     * Append the item to the gc pool.
+     */
     gc_pool_append( new gc_item_t(o,size) );
 
     gc_unlock();
