@@ -152,6 +152,10 @@ H_TEMPLATE_T HashMap<value_t>::~HashMap(){
 	 * garbage collected.
 	 */
     // clear();
+	unsigned int i, size(m_elements);
+	for( i = 0; i < size; ++i ){
+		delete m_map[i];
+	}
     ht_free(m_table);
 }
 
