@@ -25,7 +25,7 @@ HYBRIS_DEFINE_FUNCTION(hunmap);
 HYBRIS_DEFINE_FUNCTION(hismapped);
 HYBRIS_DEFINE_FUNCTION(hhaskey);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "map", hmap },
 	{ "mapelements", hmapelements },
 	{ "mappop", hmappop },
@@ -90,7 +90,7 @@ HYBRIS_DEFINE_FUNCTION(hismapped){
 		}
 	}
 
-	return ob_dcast( gc_new_integer(-1) );
+	return H_DEFAULT_ERROR;
 }
 
 HYBRIS_DEFINE_FUNCTION(hhaskey){
@@ -109,5 +109,5 @@ HYBRIS_DEFINE_FUNCTION(hhaskey){
 		}
 	}
 
-	return ob_dcast( gc_new_integer(-1) );
+	return H_DEFAULT_ERROR;
 }

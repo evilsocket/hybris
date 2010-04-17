@@ -21,7 +21,7 @@
 
 HYBRIS_DEFINE_FUNCTION(hpcre_replace);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
     { "pcre_replace", hpcre_replace },
     { "", NULL }
 };

@@ -22,7 +22,7 @@ HYBRIS_DEFINE_FUNCTION(hmatrix);
 HYBRIS_DEFINE_FUNCTION(hcolumns);
 HYBRIS_DEFINE_FUNCTION(hrows);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "matrix", hmatrix },
 	{ "columns", hcolumns },
 	{ "rows", hrows },

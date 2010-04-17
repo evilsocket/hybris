@@ -21,7 +21,7 @@
 HYBRIS_DEFINE_FUNCTION(hbinary);
 HYBRIS_DEFINE_FUNCTION(hpack);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "binary", hbinary },
 	{ "pack", hpack },
 	{ "", NULL }

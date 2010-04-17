@@ -25,7 +25,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get);
 HYBRIS_DEFINE_FUNCTION(hhttp_post);
 HYBRIS_DEFINE_FUNCTION(hhttp);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "http_get", hhttp_get },
 	{ "http_post", hhttp_post },
 	{ "http", hhttp },

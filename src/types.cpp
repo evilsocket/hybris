@@ -21,6 +21,9 @@
 
 #define HYB_UNIMPLEMENTED_FUNCTION 0
 
+IntegerObject __default_return_value(0);
+IntegerObject __default_error_value(-1);
+
 extern void hyb_throw( H_ERROR_TYPE type, const char *format, ... );
 
 bool ob_is_type_in( Object *o, ... ){

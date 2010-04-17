@@ -25,7 +25,7 @@ HYBRIS_DEFINE_FUNCTION(hdlllink);
 HYBRIS_DEFINE_FUNCTION(hdllcall);
 HYBRIS_DEFINE_FUNCTION(hdllclose);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "dllopen", hdllopen },
 	{ "dlllink", hdlllink },
 	{ "dllcall", hdllcall },
@@ -180,6 +180,6 @@ HYBRIS_DEFINE_FUNCTION(hdllclose){
 
 	dlclose( (void *)int_argv(0) );
 
-    return ob_dcast( gc_new_integer(0) );
+    return H_DEFAULT_RETURN;
 }
 

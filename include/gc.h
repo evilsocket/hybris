@@ -116,6 +116,19 @@ size_t			gc_set_threshold( size_t threshold );
  */
 struct _Object *gc_track( struct _Object *o, size_t size );
 /*
+ * Return the number of objects tracked by the gc.
+ */
+size_t			gc_mm_items();
+/*
+ * Return the actual memory usage in bytes.
+ */
+size_t          gc_mm_usage();
+/*
+ * Return the threshold value upon wich the gc the collect routine
+ * will be triggered.
+ */
+size_t			gc_mm_threshold();
+/*
  * Fire the collection routines if the memory usage is
  * above the threshold.
  */

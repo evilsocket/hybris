@@ -449,7 +449,7 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
     ctx->detrace();
 
     /* return function evaluation value */
-    return (result == H_UNDEFINED ? (Object *)gc_new_integer(0) : result);
+    return result;
 }
 
 Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
@@ -508,7 +508,7 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
     ctx->detrace();
 
     /* return function evaluation value */
-    return (result == H_UNDEFINED ? (Object *)gc_new_integer(0) : result);
+    return result;
 }
 
 Object *Engine::onTypeCall( vframe_t *frame, Node *type ){
@@ -600,7 +600,7 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
     ctx->detrace();
 
     /* return function evaluation value */
-    return (result == H_UNDEFINED ? (Object *)gc_new_integer(0) : result);
+    return result;
 }
 
 Object *Engine::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){

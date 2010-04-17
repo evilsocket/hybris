@@ -20,7 +20,7 @@
 
 HYBRIS_DEFINE_FUNCTION(hcrc32);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
     {"crc32", hcrc32 },
     { "", NULL }
 };

@@ -114,6 +114,18 @@ struct _Object *gc_track( struct _Object *o, size_t size ){
     return o;
 }
 
+size_t gc_mm_items(){
+	return __gc.items;
+}
+
+size_t gc_mm_usage(){
+	return __gc.usage;
+}
+
+size_t gc_mm_threshold(){
+	return __gc.threshold;
+}
+
 void gc_collect(){
     /**
      * Execute garbage collection loop only if used memory has reaced the

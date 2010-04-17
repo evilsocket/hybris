@@ -16,26 +16,34 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef _HHYBRIS_H_
-#   define _HHYBRIS_H_
+#include <hybris.h>
 
-#include "context.h"
-#include "vmem.h"
-#include "vcode.h"
-#include "node.h"
-#include "common.h"
+HYBRIS_DEFINE_FUNCTION(hgc_collect);
+HYBRIS_DEFINE_FUNCTION(hgc_mm_items);
+HYBRIS_DEFINE_FUNCTION(hgc_mm_usage);
+HYBRIS_DEFINE_FUNCTION(hgc_mm_threshold);
 
-/*
- * Default ok and error return values.
- *
- * Declared inside the object to optimize allocations
- * of the same object.
- */
-extern IntegerObject __default_return_value;
-extern IntegerObject __default_error_value;
+HYBRIS_EXPORTED_FUNCTIONS() {
+	{ "gc_collect",	 hgc_collect },
+    { "gc_mm_items", hgc_mm_items },
+    { "gc_mm_usage", hgc_mm_usage },
+    { "gc_mm_threshold", hgc_mm_threshold },
+    { "", NULL }
+};
 
-#define H_DEFAULT_RETURN (Object *)&__default_return_value
-#define H_DEFAULT_ERROR  (Object *)&__default_error_value
+HYBRIS_DEFINE_FUNCTION(hgc_collect){
+	gc_collect();
+	return ob_dcast( H_DEFAULT_RETURN );
+}
 
-#endif
+HYBRIS_DEFINE_FUNCTION(hgc_mm_items){
+	return ob_dcast( gc_new_integer(gc_mm_items()) );
+}
 
+HYBRIS_DEFINE_FUNCTION(hgc_mm_usage){
+	return ob_dcast( gc_new_integer(gc_mm_usage()) );
+}
+
+HYBRIS_DEFINE_FUNCTION(hgc_mm_threshold){
+	return ob_dcast( gc_new_integer(gc_mm_threshold()) );
+}

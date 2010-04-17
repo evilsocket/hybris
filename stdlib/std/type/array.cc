@@ -24,7 +24,7 @@ HYBRIS_DEFINE_FUNCTION(hpop);
 HYBRIS_DEFINE_FUNCTION(hremove);
 HYBRIS_DEFINE_FUNCTION(hcontains);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "array", harray },
 	{ "elements", helements },
 	{ "pop", hpop },
@@ -85,6 +85,6 @@ HYBRIS_DEFINE_FUNCTION(hcontains){
 		}
 	}
 
-	return ob_dcast( gc_new_integer(-1) );
+	return H_DEFAULT_ERROR;
 }
 

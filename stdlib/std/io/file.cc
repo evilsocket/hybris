@@ -31,7 +31,7 @@ HYBRIS_DEFINE_FUNCTION(hfclose);
 HYBRIS_DEFINE_FUNCTION(hfile);
 HYBRIS_DEFINE_FUNCTION(hreaddir);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "fopen", hfopen },
 	{ "fseek", hfseek },
 	{ "ftell", hftell },
@@ -171,7 +171,7 @@ HYBRIS_DEFINE_FUNCTION(hfgets){
 		return ob_dcast( gc_new_string(line) );
 	}
 	else{
-		return ob_dcast( gc_new_integer(0) );
+		return H_DEFAULT_RETURN;
 	}
 }
 
@@ -180,7 +180,7 @@ HYBRIS_DEFINE_FUNCTION(hfclose){
     if( ob_argc() ){
 		fclose( (FILE *)int_argv(0) );
     }
-    return ob_dcast( gc_new_integer(0) );
+    return H_DEFAULT_RETURN;
 }
 
 HYBRIS_DEFINE_FUNCTION(hfile){

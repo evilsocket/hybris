@@ -25,7 +25,7 @@ HYBRIS_DEFINE_FUNCTION(hstrreplace);
 HYBRIS_DEFINE_FUNCTION(hstrsplit);
 HYBRIS_DEFINE_FUNCTION(htrim);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "strlen", hstrlen },
 	{ "strfind", hstrfind },
 	{ "substr", hsubstr },

@@ -23,7 +23,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create);
 HYBRIS_DEFINE_FUNCTION(hpthread_exit);
 HYBRIS_DEFINE_FUNCTION(hpthread_join);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "pthread_create", hpthread_create },
 	{ "pthread_exit", hpthread_exit },
 	{ "pthread_join", hpthread_join },
@@ -108,7 +108,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
 				hyb_throw( H_ET_WARNING, "Unknown system error while creating the thread" );
     	}
 
-    	return ob_dcast( gc_new_integer(-1) );
+    	return H_DEFAULT_ERROR;
     }
 }
 
@@ -116,7 +116,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_exit){
     ctx->depool();
 
 	pthread_exit(NULL);
-    return ob_dcast( gc_new_integer(0) );
+    return H_DEFAULT_RETURN;
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_join){
@@ -132,10 +132,10 @@ HYBRIS_DEFINE_FUNCTION(hpthread_join){
     if( tid != -1 ){
     	pthread_join( tid, &status );
 		ctx->depool();
-		return ob_dcast( gc_new_integer(0) );
+		return H_DEFAULT_RETURN;
     }
     else{
-    	return ob_dcast( gc_new_integer(-1) );
+    	return H_DEFAULT_ERROR;
     }
 }
 

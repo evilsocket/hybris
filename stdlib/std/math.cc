@@ -39,7 +39,7 @@ HYBRIS_DEFINE_FUNCTION(hsqrt);
 HYBRIS_DEFINE_FUNCTION(htan);
 HYBRIS_DEFINE_FUNCTION(htanh);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
     {"acos", hacos },
     {"asin", hasin },
     {"atan", hatan },

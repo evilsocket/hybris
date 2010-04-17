@@ -24,7 +24,7 @@ HYBRIS_DEFINE_FUNCTION(huser_functions);
 HYBRIS_DEFINE_FUNCTION(hdyn_functions);
 HYBRIS_DEFINE_FUNCTION(hcall);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "var_names", hvar_names },
 	{ "var_values", hvar_values },
 	{ "user_functions", huser_functions },

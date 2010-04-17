@@ -25,7 +25,7 @@ HYBRIS_DEFINE_FUNCTION(hprintln);
 HYBRIS_DEFINE_FUNCTION(hprintf);
 HYBRIS_DEFINE_FUNCTION(hinput);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "print", hprint },
 	{ "println", hprintln },
 	{ "printf",  hprintf },
@@ -99,7 +99,7 @@ HYBRIS_DEFINE_FUNCTION(hprint){
     for( i = 0; i < ob_argc(); ++i ){
         ob_print( ob_argv(i) );
     }
-    return NULL;
+    return H_DEFAULT_RETURN;
 }
 
 HYBRIS_DEFINE_FUNCTION(hprintln){
@@ -113,7 +113,7 @@ HYBRIS_DEFINE_FUNCTION(hprintln){
     else{
         printf("\n");
     }
-    return NULL;
+    return H_DEFAULT_RETURN;
 }
 
 HYBRIS_DEFINE_FUNCTION(hprintf){

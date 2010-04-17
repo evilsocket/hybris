@@ -114,7 +114,12 @@ void Context::init( int argc, char *argv[] ){
     /* initialize misc constants */
     HYBRIS_DEFINE_CONSTANT( this, "true",  gc_new_integer(1) );
     HYBRIS_DEFINE_CONSTANT( this, "false", gc_new_integer(0) );
-
+    /*
+     * Define __FILE__ if we are not in stdin reading mode.
+     */
+    if( argc >= 2 ){
+    	HYBRIS_DEFINE_CONSTANT( this, "__FILE__",     gc_new_string(argv[1]) );
+    }
     HYBRIS_DEFINE_CONSTANT( this, "__VERSION__",  gc_new_string(VERSION) );
     HYBRIS_DEFINE_CONSTANT( this, "__LIB_PATH__", gc_new_string(LIB_PATH) );
     HYBRIS_DEFINE_CONSTANT( this, "__INC_PATH__", gc_new_string(INC_PATH) );
@@ -149,7 +154,7 @@ void Context::release(){
     }
 
 	modules.clear();
-	modules_cache.clear();
+	mcache.clear();
     vmem.release();
     vcode.release();
     vtypes.release();
@@ -274,9 +279,9 @@ function_t Context::getFunction( char *identifier ){
                  nfuncs;
 
     /* first check if it's already in cache */
-    named_function_t * cached_function = modules_cache.find(identifier);
-    if( cached_function != H_UNDEFINED ){
-		return cached_function->function;
+    named_function_t * cache = mcache.find(identifier);
+    if( cache != H_UNDEFINED ){
+		return cache->function;
 	}
 
     /* search it in dynamic loaded modules */
@@ -288,11 +293,12 @@ function_t Context::getFunction( char *identifier ){
             	// fix issue #0000014
             	lock();
                 /* found it, add to the cache and return */
-                cached_function = modules[i]->functions[j];
-                modules_cache.insert( identifier, cached_function );
+            	cache = modules[i]->functions[j];
+                mcache.insert( identifier, cache );
+
                 unlock();
 
-                return cached_function->function;
+                return cache->function;
             }
         }
     }

@@ -23,7 +23,7 @@ HYBRIS_DEFINE_FUNCTION(hurldecode);
 HYBRIS_DEFINE_FUNCTION(hbase64encode);
 HYBRIS_DEFINE_FUNCTION(hbase64decode);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
     {"urlencode", hurlencode },
     {"urldecode", hurldecode },
     {"base64encode", hbase64encode },

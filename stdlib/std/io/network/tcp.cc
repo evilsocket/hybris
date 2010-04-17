@@ -34,7 +34,7 @@ HYBRIS_DEFINE_FUNCTION(hrecv);
 HYBRIS_DEFINE_FUNCTION(hsend);
 HYBRIS_DEFINE_FUNCTION(hclose);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "settimeout", hsettimeout },
 	{ "connect", hconnect },
 	{ "server", hserver },
@@ -57,7 +57,7 @@ HYBRIS_DEFINE_FUNCTION(hsettimeout){
 	setsockopt( int_argv(0), SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
 	setsockopt( int_argv(0), SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
 
-	return ob_dcast( gc_new_integer(0) );
+	return H_DEFAULT_RETURN;
 }
 
 HYBRIS_DEFINE_FUNCTION(hconnect){
@@ -67,7 +67,7 @@ HYBRIS_DEFINE_FUNCTION(hconnect){
 	if( ob_argc() >= 2 ){
 		int sd = socket( AF_INET, SOCK_STREAM, 0 );
 		if( sd <= 0 ){
-			return ob_dcast( gc_new_integer(-1) );
+			return H_DEFAULT_ERROR;
 		}
 		if( ob_argc() == 3 ){
 			ob_type_assert( ob_argv(2), otInteger );
@@ -87,7 +87,7 @@ HYBRIS_DEFINE_FUNCTION(hconnect){
 		}
 
 		if( connect( sd, (struct sockaddr*)&server, sizeof(server) ) != 0 ){
-			return ob_dcast( gc_new_integer(-1) );
+			return H_DEFAULT_ERROR;
 		}
 
 		_return = ob_dcast( gc_new_integer(sd) );
@@ -105,7 +105,7 @@ HYBRIS_DEFINE_FUNCTION(hserver){
 	if( ob_argc() >= 1 ){
 		int sd = socket( AF_INET, SOCK_STREAM, 0 );
 		if( sd <= 0 ){
-			return ob_dcast( gc_new_integer(-1) );
+			return H_DEFAULT_ERROR;
 		}
 		if( ob_argc() == 2 ){
 			ob_type_assert( ob_argv(1), otInteger );
@@ -124,11 +124,11 @@ HYBRIS_DEFINE_FUNCTION(hserver){
 		servaddr.sin_port        = htons(port);
 
 		if ( bind( sd, (struct sockaddr *)&servaddr, sizeof(servaddr) ) < 0 ) {
-			return ob_dcast( gc_new_integer(-1) );
+			return H_DEFAULT_ERROR;
 		}
 
 		if ( listen( sd, 1024 ) < 0 ) {
-			return ob_dcast( gc_new_integer(-1) );
+			return H_DEFAULT_ERROR;
 		}
 
 		_return = ob_dcast( gc_new_integer(sd) );
@@ -148,7 +148,7 @@ HYBRIS_DEFINE_FUNCTION(haccept){
 		    csd;
 
 		if( (csd = accept( sd, NULL, NULL) ) < 0 ) {
-			return ob_dcast( gc_new_integer(-1) );
+			return H_DEFAULT_ERROR;
 		}
 
 		_return = ob_dcast( gc_new_integer(csd) );
@@ -200,5 +200,5 @@ HYBRIS_DEFINE_FUNCTION(hclose){
     if( ob_argc() ){
 		close( int_argv(0) );
     }
-    return ob_dcast( gc_new_integer(0) );
+    return H_DEFAULT_RETURN;
 }

@@ -37,7 +37,7 @@ HYBRIS_DEFINE_FUNCTION(htostring);
 HYBRIS_DEFINE_FUNCTION(hfromxml);
 HYBRIS_DEFINE_FUNCTION(htoxml);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "isint", hisint },
 	{ "isfloat", hisfloat },
 	{ "ischar", hischar },

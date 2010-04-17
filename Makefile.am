@@ -83,6 +83,7 @@ STDSRC=stdlib/std/hashing/md5.cc \
 	   stdlib/std/os/time.cc \
 	   stdlib/std/os/threads.cc \
 	   stdlib/std/os/process.cc \
+	   stdlib/std/gc.cc \
 	   stdlib/std/pcre.cc \
 	   stdlib/std/math.cc
 		

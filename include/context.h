@@ -50,6 +50,8 @@ typedef Object * (*function_t)( Context *, vmem_t * );
 #define HYBRIS_DEFINE_CONSTANT( ctx, name, value ) ctx->vmem.add( (char *)name, (Object *)value )
 /* macro to define a new structure type given its name and its attribute names */
 #define HYBRIS_DEFINE_STRUCTURE( ctx, name, n, attrs ) ctx->defineType( name, n, attrs )
+/* macro to define module exported functions structure */
+#define HYBRIS_EXPORTED_FUNCTIONS() extern "C" named_function_t hybris_module_functions[] =
 
 /* macro to easily access hybris functions parameters */
 #define ob_argv(i)    (data->at(i))
@@ -105,7 +107,8 @@ module_t;
 /* module initializer function pointer prototype */
 typedef void (*initializer_t)( Context * );
 
-typedef vector<module_t *>           h_modules_t;
+typedef vector<module_t *>        h_modules_t;
+typedef HashMap<named_function_t> h_mcache_t;
 
 class Context {
     private :
@@ -173,7 +176,7 @@ class Context {
         /* execution arguments */
         h_args_t       args;
         /* functions lookup hashtable cache */
-        HashMap<named_function_t> modules_cache;
+        h_mcache_t	   mcache;
         /* dynamically loaded modules */
         h_modules_t    modules;
         /* code execution engine */

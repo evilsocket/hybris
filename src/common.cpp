@@ -80,7 +80,7 @@ void hyb_throw( H_ERROR_TYPE type, const char *format, ... ){
         break;
         // syntax error, same as generic one but print line number
         case H_ET_SYNTAX  :
-            sprintf( error, "\033[22;31mSyntax error on line %d : %s .\n\033[00m", yylineno, message );
+            sprintf( error, "\033[22;31mSyntax error : %s .\n\033[00m", message );
             fault = true;
         break;
     }

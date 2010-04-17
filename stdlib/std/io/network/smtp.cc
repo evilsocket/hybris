@@ -26,9 +26,9 @@
 #include <netdb.h>
 #include <hybris.h>
 
-#define safe_send( sd, b ) if( sd_write(sd, b) <= 0 ){ close(sd); return ob_dcast( gc_new_integer(-1) ); }
+#define safe_send( sd, b ) if( sd_write(sd, b) <= 0 ){ close(sd); return H_DEFAULT_ERROR; }
 #define safe_read( sd, b ) if( (buffer = sd_read(sd)) == "" ){ \
-                            close(sd); return ob_dcast( gc_new_integer(-1) ); \
+                            close(sd); return H_DEFAULT_ERROR; \
                            } \
                            else if( buffer.find("220") == string::npos && \
                                     buffer.find("235") == string::npos && \
@@ -40,7 +40,7 @@
 
 HYBRIS_DEFINE_FUNCTION(hsmtp_send);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "smtp_send", hsmtp_send },
 	{ "", NULL }
 };
@@ -204,7 +204,7 @@ HYBRIS_DEFINE_FUNCTION(hsmtp_send){
 
 	sd = sd_create( (char *)server_name.c_str(), port );
 	if ( sd == -1 ){
-		return ob_dcast( gc_new_integer(-1) );
+		return H_DEFAULT_ERROR;
 	}
 
 	safe_send( sd, "EHLO hybris_mailer\r\n" );
@@ -266,5 +266,5 @@ HYBRIS_DEFINE_FUNCTION(hsmtp_send){
 
 	close(sd);
 
-	return ob_dcast( gc_new_integer(0) );
+	return H_DEFAULT_RETURN;
 }

@@ -29,7 +29,7 @@ HYBRIS_DEFINE_FUNCTION(htime);
 HYBRIS_DEFINE_FUNCTION(hstrtime);
 HYBRIS_DEFINE_FUNCTION(hstrdate);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "ticks", hticks },
 	{ "usleep", husleep },
 	{ "sleep", hsleep },
@@ -66,7 +66,7 @@ HYBRIS_DEFINE_FUNCTION(husleep){
     ts.tv_nsec = ts.tv_sec * 1000;
     nanosleep(&ts,&ts);
 
-	return ob_dcast( gc_new_integer(0) );
+	return H_DEFAULT_RETURN;
 }
 
 HYBRIS_DEFINE_FUNCTION(hsleep){
@@ -81,7 +81,7 @@ HYBRIS_DEFINE_FUNCTION(hsleep){
     ts.tv_nsec = ts.tv_sec * 1000;
     nanosleep(&ts,&ts);
 
-	return ob_dcast( gc_new_integer(0) );
+	return H_DEFAULT_RETURN;
 }
 
 HYBRIS_DEFINE_FUNCTION(htime){

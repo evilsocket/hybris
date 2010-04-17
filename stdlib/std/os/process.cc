@@ -28,7 +28,7 @@ HYBRIS_DEFINE_FUNCTION(hpopen);
 HYBRIS_DEFINE_FUNCTION(hpclose);
 HYBRIS_DEFINE_FUNCTION(hexit);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "exec", hexec },
 	{ "fork", hfork },
 	{ "getpid", hgetpid },
@@ -85,7 +85,7 @@ HYBRIS_DEFINE_FUNCTION(hpclose){
     if( ob_argc() ){
 		pclose( (FILE *)int_argv(0) );
     }
-    return ob_dcast( gc_new_integer(0) );
+    return H_DEFAULT_RETURN;
 }
 
 HYBRIS_DEFINE_FUNCTION(hexit){
@@ -96,5 +96,5 @@ HYBRIS_DEFINE_FUNCTION(hexit){
 	}
 	exit(code);
 
-    return ob_dcast( gc_new_integer(0) );
+    return H_DEFAULT_RETURN;
 }

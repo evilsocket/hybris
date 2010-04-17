@@ -23,7 +23,7 @@
 HYBRIS_DEFINE_FUNCTION(hxml_load);
 HYBRIS_DEFINE_FUNCTION(hxml_parse);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "xml_load", hxml_load },
 	{ "xml_parse", hxml_parse },
 	{ "", NULL }

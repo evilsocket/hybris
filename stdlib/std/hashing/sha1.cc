@@ -20,7 +20,7 @@
 
 HYBRIS_DEFINE_FUNCTION(hsha1);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
     {"sha1", hsha1 },
     { "", NULL }
 };

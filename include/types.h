@@ -187,11 +187,19 @@ enum H_OBJECT_TYPE {
  * ob_* function to avoid sigsegvs on null function pointers.
  */
 typedef struct _object_type_t {
-    /** type code **/
+    /*
+     * Type code among H_OBJECT_TYPE enumeration values used
+     * for type comparision.
+     */
     H_OBJECT_TYPE code;
-    /** type name **/
+    /*
+     * Type name.
+     */
     const char   *name;
-    /** type basic size **/
+    /*
+     * Type basic size, if the object is a collection size is set to 0
+     * and ob_get_size will return the number of its elements.
+     */
     size_t        size;
 
     /** generic function pointers **/
@@ -277,81 +285,307 @@ typedef struct _object_type_t {
 }
 object_type_t;
 
-/*
+/**
  * Those are the function interfaces that will check for function availability
  * on each type, type compatibility, reference counting and so on .
- * They should be used on every access on type functions instead
- * of the function pointers directly.
+ * They MUST be used on every access on type functions instead of the function pointers directly.
+ */
+
+/*
+ * Return true if 'o' is of one of the types specified by arguments, otherwise false.
  */
 bool    ob_is_type_in( Object *o, ... );
+/*
+ * Increment the object references by 'ref' (i.e. ob_set_references(o,-1) will decrement them).
+ */
 void    ob_set_references( Object *o, int ref );
+/*
+ * Create a clone of the object.
+ */
 Object* ob_clone( Object *o );
+/*
+ * Eventually free object inner elements (for colletions) and decrement its reference counter.
+ */
 bool    ob_free( Object *o );
+/*
+ * Return the size of the object or, in case it's a collection, the number of its elements.
+ */
 size_t  ob_get_size( Object *o );
+/*
+ * Serialize the object to a binary stream.
+ */
 byte *  ob_serialize( Object *, size_t );
+/*
+ * Deserialize the object from a binary stream.
+ */
 Object *ob_deserialize( Object *, byte *, size_t );
+/*
+ * Write 'size' bytes of the object to a generic file descriptor, otherwise if
+ * size is not specified (size = 0), write it all.
+ */
 Object *ob_to_fd( Object *, int, size_t );
+/*
+ * Read 'size' bytes from a generic file descriptor and create an object, if
+ * size is not specified (size = 0), read 'ob_get_size' bytes or until a newline
+ * byte is reached if the object is a string.
+ */
 Object *ob_from_fd( Object *, int, size_t );
+/*
+ * Compare two objects, return :
+ *
+ * 0  if o == cmp
+ * 1  if o >  cmp
+ * -1 if o < cmp
+ */
 int     ob_cmp( Object *o, Object * cmp );
+/*
+ * Get the integer representation of an object.
+ */
 long    ob_ivalue( Object *o );
+/*
+ * Get the float representation of an object.
+ */
 double  ob_fvalue( Object *o );
+/*
+ * Get the logical representation of an object, if object is a collection
+ * return ob_get_size(0) != 0.
+ */
 bool    ob_lvalue( Object *o );
+/*
+ * Get the string representation of an object.
+ */
 string  ob_svalue( Object *o );
+/*
+ * Print an object to stdout preceeded by 'tabs' tabs.
+ */
 void    ob_print( Object *o, int tabs = 0 );
+/*
+ * Read from stdin and create an object accordingly to the format.
+ */
 void    ob_input( Object *o );
+/*
+ * Convert an object to string type.
+ */
 Object *ob_to_string( Object *o );
+/*
+ * Convert an object to integer type.
+ */
 Object *ob_to_int( Object *o );
+/*
+ * Create an object from an integer type.
+ */
 Object *ob_from_int( Object *o );
+/*
+ * Create an object from a double type.
+ */
 Object *ob_from_float( Object *o );
+/*
+ * Create a vector representing the range [a,b].
+ */
 Object *ob_range( Object *a, Object *b );
+/*
+ * Apply a regular expression 'b' to the object 'a' and return
+ * matches with the operator a ~= b.
+ */
 Object *ob_apply_regexp( Object *a, Object *b );
+/*
+ * Clone the object 'b', increment its references, call ob_free(a) and
+ * assign the clone to 'a'.
+ */
 Object *ob_assign( Object *a, Object *b );
+/*
+ * Compute the factorial of the object.
+ */
 Object *ob_factorial( Object *o );
+/*
+ * Increment the object value by 1.
+ */
 Object *ob_increment( Object *o );
+/*
+ * Decrement the object value by 1.
+ */
 Object *ob_decrement( Object *o );
+/*
+ * Return -o.
+ */
 Object *ob_uminus( Object *o );
+/*
+ * Compute a + b.
+ */
 Object *ob_add( Object *a, Object *b );
+/*
+ * Compute a - b.
+ */
 Object *ob_sub( Object *a, Object *b );
+/*
+ * Compute a * b.
+ */
 Object *ob_mul( Object *a, Object *b );
+/*
+ * Compute a / b.
+ */
 Object *ob_div( Object *a, Object *b );
+/*
+ * Compute a % b.
+ */
 Object *ob_mod( Object *a, Object *b );
+/*
+ * Compute a += b.
+ */
 Object *ob_inplace_add( Object *a, Object *b );
+/*
+ * Compute a -= b.
+ */
 Object *ob_inplace_sub( Object *a, Object *b );
+/*
+ * Compute a *= b.
+ */
 Object *ob_inplace_mul( Object *a, Object *b );
+/*
+ * Compute a /= b.
+ */
 Object *ob_inplace_div( Object *a, Object *b );
+/*
+ * Compute a %= b.
+ */
 Object *ob_inplace_mod( Object *a, Object *b );
+/*
+ * Compute a & b.
+ */
 Object *ob_bw_and( Object *a, Object *b );
+/*
+ * Compute a | b.
+ */
 Object *ob_bw_or( Object *a, Object *b );
+/*
+ * Compute ~o.
+ */
 Object *ob_bw_not( Object *o );
+/*
+ * Compute a ^ b.
+ */
 Object *ob_bw_xor( Object *a, Object *b );
+/*
+ * Compute a << b.
+ */
 Object *ob_bw_lshift( Object *a, Object *b );
+/*
+ * Compute a >> b.
+ */
 Object *ob_bw_rshift( Object *a, Object *b );
+/*
+ * Compute a &= b.
+ */
 Object *ob_bw_inplace_and( Object *a, Object *b );
+/*
+ * Compute a |= b.
+ */
 Object *ob_bw_inplace_or( Object *a, Object *b );
+/*
+ * Compute a ^= b.
+ */
 Object *ob_bw_inplace_xor( Object *a, Object *b );
+/*
+ * Compute a <<= b.
+ */
 Object *ob_bw_inplace_lshift( Object *a, Object *b );
+/*
+ * Compute a >>= b.
+ */
 Object *ob_bw_inplace_rshift( Object *a, Object *b );
+/*
+ * Compute !o.
+ */
 Object *ob_l_not( Object *o );
+/*
+ * Compute a == b.
+ */
 Object *ob_l_same( Object *a, Object *b );
+/*
+ * Compute a != b.
+ */
 Object *ob_l_diff( Object *a, Object *b );
+/*
+ * Compute a < b.
+ */
 Object *ob_l_less( Object *a, Object *b );
+/*
+ * Compute a > b.
+ */
 Object *ob_l_greater( Object *a, Object *b );
+/*
+ * Compute a <= b.
+ */
 Object *ob_l_less_or_same( Object *a, Object *b );
+/*
+ * Compute a >= b.
+ */
 Object *ob_l_greater_or_same( Object *a, Object *b );
+/*
+ * Compute a || b.
+ */
 Object *ob_l_or( Object *a, Object *b );
+/*
+ * Compute a && b.
+ */
 Object *ob_l_and( Object *a, Object *b );
+/*
+ * Compute a.b
+ */
 Object *ob_cl_concat( Object *a, Object *b );
+/*
+ * Compute a .= b
+ */
 Object *ob_cl_inplace_concat( Object *a, Object *b );
+/*
+ * Create a clone of 'b' and call ob_cl_push_reference( a, clone ) to
+ * push the clone inside the collection 'a'.
+ */
 Object *ob_cl_push( Object *a, Object *b );
+/*
+ * Push the object 'b' inside the collection 'a', incrementing the
+ * reference counter of 'b'.
+ */
 Object *ob_cl_push_reference( Object *a, Object *b );
+/*
+ * Remove the last element from the collection 'o' and return it.
+ */
 Object *ob_cl_pop( Object *o );
+/*
+ * Remove the element at index/key 'b' from the collection 'a' and return it.
+ */
 Object *ob_cl_remove( Object *a, Object *b );
+/*
+ * Get the item at index/key 'b' from the collection 'a'.
+ */
 Object *ob_cl_at( Object *a, Object *b );
+/*
+ * Create a clone of 'c' and call ob_cl_set_reference( a, b, clone ) to
+ * put the clone at the index/key 'b' of the collection 'a'.
+ */
 Object *ob_cl_set( Object *a, Object *b, Object *c );
+/*
+ * Put the object 'c' at the index/key 'b' inside the collection 'a' and
+ * increment 'c' reference counter.
+ */
 Object *ob_cl_set_reference( Object *a, Object *b, Object *c );
+/*
+ * Define a new attribute 'a' for the structure 's'.
+ */
 void    ob_add_attribute( Object *s, char *a );
+/*
+ * Get the value of the attribute 'a' from the structure 's'.
+ */
 Object *ob_get_attribute( Object *s, char *a );
+/*
+ * Create a clone of 'v' and call ob_set_attribute_reference( s, a, clone )
+ * to set the value of the attribute 'a' inside the structure 's'.
+ */
 void    ob_set_attribute( Object *s, char *a, Object *v );
+/*
+ * Set the value of the attribute 'a' inside the structure 's' and increment
+ * 'v' reference counter.
+ */
 void    ob_set_attribute_reference( Object *s, char *a, Object *v );
 
 /**

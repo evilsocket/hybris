@@ -20,7 +20,7 @@
 
 HYBRIS_DEFINE_FUNCTION(hmd5);
 
-extern "C" named_function_t hybris_module_functions[] = {
+HYBRIS_EXPORTED_FUNCTIONS() {
     {"md5", hmd5 },
     { "", NULL }
 };
