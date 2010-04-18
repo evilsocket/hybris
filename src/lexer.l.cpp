@@ -172,6 +172,8 @@ include          BEGIN(T_INCLUSION);
 
 "return"        return T_RETURN;
 
+"extends"		return T_EXTENDS;
+
 "private"       return T_PRIVATE;
 "protected"     return T_PROTECTED;
 "public"        return T_PUBLIC;

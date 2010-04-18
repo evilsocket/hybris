@@ -447,6 +447,34 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 		}
 	}
 	/*
+	 * Check if the class extends some other class.
+	 */
+	ClassNode *cnode = (ClassNode *)node;
+	if( cnode->m_extends.size() > 0 ){
+		for( NodeList::iterator ni = cnode->m_extends.begin(); ni != cnode->m_extends.end(); ni++ ){
+			Object *type = ctx->getType( (char *)(*ni)->value.m_identifier.c_str() );
+			if( type == H_UNDEFINED ){
+				hyb_throw( H_ET_SYNTAX, "'%s' undeclared class type", (*ni)->value.m_identifier.c_str() );
+			}
+			else if( ob_is_class(type) == false ){
+				hyb_throw( H_ET_SYNTAX, "couldn't extend from '%s' type", type->type->name );
+			}
+
+			ClassObject 			 *cobj = ob_class_ucast(type);
+			ClassObjectNameIterator   ni;
+			ClassObjectValueIterator  vi;
+			ClassObjectMethodIterator mi;
+
+			for( ni = cobj->a_names.begin(), vi = cobj->a_values.begin(); ni != cobj->a_names.end(); ni++, vi++ ){
+				ob_set_attribute( c, (char *)(*ni).c_str(), (*vi) );
+			}
+			for( ni = cobj->m_names.begin(), mi = cobj->m_values.begin(); ni != cobj->m_names.end(); ni++, mi++ ){
+				ob_define_method( c, (char *)(*ni).c_str(), (*mi) );
+			}
+		}
+	}
+
+	/*
 	 * ::defineType will take care of the class attributes
 	 * to prevent it to be garbage collected (see ::onConstant).
 	 */
@@ -703,8 +731,8 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 
 	Node     *method;
 	int       calls(call->value.m_method_call.size());
-	string     child_id = (*method_call.begin())->value.m_identifier,
-			   owner_id = child_id;
+	string    child_id = (*method_call.begin())->value.m_identifier,
+			  owner_id = child_id;
 	NodeIterator i( method_call.begin() );
 
 	/*
@@ -759,7 +787,7 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 	 * Nothing found, neither an attribute nor a method!
 	 */
 	if( method == H_UNDEFINED ){
-		hyb_throw( H_ET_SYNTAX, "'%s' does not name a method neither an attribute", child_id.c_str() );
+		hyb_throw( H_ET_SYNTAX, "'%s' does not name a method neither an attribute of '%s'", child_id.c_str(), owner_id.c_str() );
 	}
 
 	Node    *identifier           = H_UNDEFINED;
@@ -811,7 +839,7 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 Object *Engine::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
     Object *result = H_UNDEFINED;
 
-    /* check if function is a function */
+    /* check if function is a builtin function */
     if( (result = onBuiltinFunctionCall( frame, call )) == H_UNDEFINED ){
         /* check for an user defined function */
         if( (result = onUserFunctionCall( frame, call, threaded )) == H_UNDEFINED ){

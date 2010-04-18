@@ -270,7 +270,7 @@ Object * string_regexp( Object *me, Object *r ){
 			     subject = ob_svalue(me),
 				 pattern;
 	int    		 opts, i, ccount, rc,
-				*offsets,
+				*offsets, offset = 0,
 				 eoffset;
 	const char  *error;
 	pcre 		*compiled;
@@ -286,18 +286,17 @@ Object * string_regexp( Object *me, Object *r ){
 
 	offsets = new int[ 3 * (ccount + 1) ];
 
-	rc = pcre_exec( compiled, 0, subject.c_str(), subject.length(), 0, 0, offsets, 3 * (ccount + 1) );
-
 	VectorObject *matches = gc_new_vector();
 
-	if( rc >= 0 ){
+	while( (rc = pcre_exec( compiled, 0, subject.c_str(), subject.length(), offset, 0, offsets, 3 * (ccount + 1) )) > 0 ){
+		const char *data;
 		for( i = 1; i < rc; ++i ){
+			pcre_get_substring( subject.c_str(), offsets, rc, i, &data );
 			ob_cl_push_reference( (Object *)matches,
-								  (Object *)gc_new_string(
-											  subject.substr( offsets[2*i], offsets[2*i+1] - offsets[2*i] ).c_str()
-											)
+								  (Object *)gc_new_string(data)
 								);
 		}
+		offset = offsets[1];
 	}
 
 	delete[] offsets;

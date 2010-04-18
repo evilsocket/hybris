@@ -53,7 +53,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 	ob_type_assert( ob_argv(0), otString );
 	ob_type_assert( ob_argv(1), otString );
 	if( ob_argc() >= 3 ){
-		ob_type_assert( ob_argv(2), otMap );
+		ob_type_assert( ob_argv(2), otInteger );
 	}
 
 	CURL  *cd;
@@ -96,7 +96,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 		curl_easy_setopt( cd, CURLOPT_SSL_VERIFYHOST, 0L );
 	}
 
-	if( ob_argc() > 3 ){
+	if( ob_argc() >= 4 ){
 		ob_type_assert( ob_argv(3), otMap );
 		unsigned int i;
 		string header;

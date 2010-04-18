@@ -239,7 +239,8 @@ class MethodNode : public Node {
 /* class type definition */
 class ClassNode : public Node {
 	public :
-		ClassNode( char *classname, NodeList *members );
+		NodeList m_extends;
+		ClassNode( char *classname, NodeList *extends, NodeList *members );
 };
 
 /* method calls (a subset of StatementNode) */

@@ -47,7 +47,7 @@
 #define MK_SWITCH_DEF_NODE(a,b,c) new StatementNode( T_SWITCH, a, b, c )
 #define MK_FUNCTION_NODE(a, b)    new FunctionNode( a, 1, b )
 #define MK_STRUCT_NODE(a, b)      new StructureNode( a, b )
-#define MK_CLASS_NODE(a, b)       new ClassNode( a, b )
+#define MK_CLASS_NODE(a, b, c)    new ClassNode( a, b, c )
 #define MK_METHOD_NODE(a, b, c)   new MethodNode( a, b, 1, c )
 /* expressions */
 #define MK_RETURN_NODE(a)         new ExpressionNode( T_RETURN, 1, a )
@@ -192,6 +192,7 @@ Context __context;
 %token T_NEW
 %token T_STRUCT
 %token T_CLASS
+%token T_EXTENDS
 
 %nonassoc T_IF_END
 %nonassoc T_SB_END
@@ -209,6 +210,7 @@ Context __context;
 %type <argv>   T_ARGV_LIST
 %type <argv>   T_CASE_LIST
 %type <argv>   T_ATTR_LIST
+%type <argv>   T_IDENT_CHAIN
 %type <argv>   T_IDENT_LIST
 %type <argv>   T_METHOD_LIST
 %type <argv>   T_CLASS_MEMBERS
@@ -274,9 +276,12 @@ T_CLASS_MEMBERS : T_ATTR_LIST T_METHOD_LIST T_CLASS_MEMBERS {
 			    	$$ = MK_NODE_LIST();
 			    };
 
+T_IDENT_CHAIN : T_IDENT T_MAPS T_IDENT_CHAIN { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
+              | T_IDENT T_MAPS T_IDENT       { $$ = MK_NODE_LIST(); $$->tail( MK_IDENT_NODE($1), MK_IDENT_NODE($3) ); }
 
-T_IDENT_LIST : T_IDENT T_MAPS T_IDENT_LIST { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
-             | T_IDENT T_MAPS T_IDENT      { $$ = MK_NODE_LIST(); $$->tail( MK_IDENT_NODE($1), MK_IDENT_NODE($3) ); }
+T_IDENT_LIST : T_IDENT ',' T_IDENT_CHAIN { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
+			 | T_IDENT ',' T_IDENT       { $$ = MK_NODE_LIST(); $$->tail( MK_IDENT_NODE($1), MK_IDENT_NODE($3) );   }
+			 | T_IDENT 					 { $$ = MK_NODE_LIST(); $$->head( MK_IDENT_NODE($1) ); }
 
 statement  : T_EOSTMT                                                   { $$ = MK_EOSTMT_NODE( NULL, NULL ); }
 	   	   | expression                                                 { $$ = MK_NODE($1); }
@@ -308,8 +313,12 @@ statement  : T_EOSTMT                                                   { $$ = M
            | T_FUNCTION_PROTOTYPE '{' statements '}'                    { $$ = MK_FUNCTION_NODE( $1, $3 ); }
            /* structure declaration */
            | T_STRUCT T_IDENT '{' T_ATTR_LIST '}'                       { $$ = MK_STRUCT_NODE( $2, $4 ); }
-		   /* class declaration */
-           | T_CLASS T_IDENT '{' T_CLASS_MEMBERS '}' 					{ $$ = MK_CLASS_NODE( $2, $4 ); };
+		   /* simple class declaration */
+           | T_CLASS T_IDENT '{' T_CLASS_MEMBERS '}' 					{ $$ = MK_CLASS_NODE( $2, NULL, $4 ); }
+           /* complex class declaration */
+           | T_CLASS T_IDENT T_EXTENDS T_IDENT_LIST '{' T_CLASS_MEMBERS '}' {
+        	   $$ = MK_CLASS_NODE( $2, $4, $6 );
+           }
 
 statements : /* empty */          { $$ = MK_NODE(0);  }
            | statement            { $$ = MK_NODE($1); }
@@ -321,11 +330,11 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            | T_STRING                                         { $$ = MK_CONST_NODE($1); }
            /* identifiers and attributes */
            | T_IDENT                                          { $$ = MK_IDENT_NODE($1); }
-           | T_IDENT_LIST                                     { $$ = MK_IDLST_NODE($1);  }
+           | T_IDENT_CHAIN                                     { $$ = MK_IDLST_NODE($1);  }
            /* expression evaluation returns an identifier */
            | T_DOLLAR expression                              { $$ = MK_DOLLAR_NODE($2); }
            /* attribute declaration/assignation */
-           | T_IDENT_LIST T_ASSIGN expression                 { $$ = MK_ASSIGN_NODE( MK_IDLST_NODE($1), $3 ); }
+           | T_IDENT_CHAIN T_ASSIGN expression                 { $$ = MK_ASSIGN_NODE( MK_IDLST_NODE($1), $3 ); }
 		   /* identifier declaration/assignation */
 		   | T_IDENT T_ASSIGN expression                      { $$ = MK_ASSIGN_NODE( MK_IDENT_NODE($1), $3 ); }
            /* a single subscript could be an expression itself */
@@ -376,7 +385,7 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            | T_NEW T_IDENT '(' T_ARGV_LIST ')' %prec T_NEW_END { $$ = MK_NEW_NODE( $2, $4 ); }
            /* function call (consider two different cases due to hybris function calls */
 		   | T_IDENT      '(' T_ARGV_LIST ')' %prec T_CALL_END { $$ = MK_CALL_NODE( $1, $3 ); }
-		   | T_IDENT_LIST '(' T_ARGV_LIST ')' %prec T_CALL_END { $$ = MK_METHOD_CALL_NODE( $1, $3 ); }
+		   | T_IDENT_CHAIN '(' T_ARGV_LIST ')' %prec T_CALL_END { $$ = MK_METHOD_CALL_NODE( $1, $3 ); }
            | expression '(' T_ARGV_LIST ')'                    { $$ = MK_CALL_NODE( $1, $3 ); }
            /* ternary operator */
            | '(' expression '?' expression ':' expression ')' { $$ = MK_QUESTION_NODE( $2, $4, $6 ); }

@@ -423,8 +423,13 @@ MethodNode::MethodNode( const char *name, H_ACCESS_SPECIFIER access ) : Node(H_N
 }
 
 /* class type definition */
-ClassNode::ClassNode( char *classname, NodeList *members ) : Node(H_NT_CLASS) {
+ClassNode::ClassNode( char *classname, NodeList *extends, NodeList *members ) : Node(H_NT_CLASS) {
 	value.m_identifier = classname;
+	if( extends != NULL ){
+		for( NodeList::iterator ni = extends->begin(); ni != extends->end(); ni++ ){
+			m_extends.push_back( *ni );
+		}
+	}
 	if( members != NULL ){
 		reserve( members->size() );
 		for( NodeList::iterator ni = members->begin(); ni != members->end(); ni++ ){
