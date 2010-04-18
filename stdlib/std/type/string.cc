@@ -37,7 +37,7 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 
 HYBRIS_DEFINE_FUNCTION(hstrlen){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'strlen' requires 1 parameters (called with %d)", ob_argc() );
+		hyb_throw( H_ET_SYNTAX, "function 'strlen' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 

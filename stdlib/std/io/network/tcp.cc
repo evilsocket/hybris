@@ -154,7 +154,7 @@ HYBRIS_DEFINE_FUNCTION(haccept){
 		_return = ob_dcast( gc_new_integer(csd) );
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "function 'accept' requires 1 parameters (called with %d)", ob_argc() );
+		hyb_throw( H_ET_SYNTAX, "function 'accept' requires 1 parameter (called with %d)", ob_argc() );
 	}
 
     return _return;
