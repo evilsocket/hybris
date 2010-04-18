@@ -167,16 +167,13 @@ include          BEGIN(T_INCLUSION);
 "default"       return T_DEFAULT;
 
 "new"			return T_NEW;
+
 "struct"        return T_STRUCT;
+
 "class"         return T_CLASS;
-
-"return"        return T_RETURN;
-
 "extends"		return T_EXTENDS;
 
-"private"       return T_PRIVATE;
-"protected"     return T_PROTECTED;
-"public"        return T_PUBLIC;
+"return"        return T_RETURN;
 
 "function"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*")" {
 	yylval.function   = hyb_lex_function(yytext);

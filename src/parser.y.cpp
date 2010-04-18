@@ -115,8 +115,6 @@ Context __context;
     char    identifier[0xFF];
     /* function prototype declaration */
     function_decl_t *function;
-    /* access specifier */
-    char *access;
     /* method prototype declaration */
     method_decl_t *method;
     /* function call temp arg list */
@@ -132,9 +130,6 @@ Context __context;
 %token <byte>       T_CHAR;
 %token <string>     T_STRING;
 %token <identifier> T_IDENT;
-%token <access>     T_PRIVATE;
-%token <access>		T_PUBLIC;
-%token <access>		T_PROTECTED;
 %token <function>   T_FUNCTION_PROTOTYPE;
 %token <method>   	T_METHOD_PROTOTYPE;
 
@@ -214,7 +209,6 @@ Context __context;
 %type <argv>   T_IDENT_LIST
 %type <argv>   T_METHOD_LIST
 %type <argv>   T_CLASS_MEMBERS
-//%type <access> T_ACCESS_SPECIFIER
 %%
 
 program    : body           { __context.timer( HYB_TIMER_STOP ); }
