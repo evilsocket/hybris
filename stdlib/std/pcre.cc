@@ -40,7 +40,8 @@ HYBRIS_DEFINE_FUNCTION(hpcre_replace){
 		   pattern;
 	int    		 opts, i, ccount, rc,
 				*offsets,
-				 eoffset;
+				 eoffset,
+				 offset(0);
 	const char  *error;
 	pcre 		*compiled;
 
@@ -55,17 +56,14 @@ HYBRIS_DEFINE_FUNCTION(hpcre_replace){
 
 	offsets = new int[ 3 * (ccount + 1) ];
 
-	rc = pcre_exec( compiled, 0, subject.c_str(), subject.length(), 0, 0, offsets, 3 * (ccount + 1) );
-
-	VectorObject *matches = gc_new_vector();
-
-	if( rc >= 0 ){
+	while( (rc = pcre_exec( compiled, 0, subject.c_str(), subject.length(), offset, 0, offsets, 3 * (ccount + 1) )) > 0 ){
+		const char *data;
 		for( i = 1; i < rc; ++i ){
-			string match = subject.substr( offsets[2*i], offsets[2*i+1] - offsets[2*i] );
-			subject.replace( offsets[2*i], match.length(), replace );
+			pcre_get_substring( subject.c_str(), offsets, rc, i, &data );
+			subject.replace( offsets[2*i], strlen(data), replace );
 		}
+		offset = offsets[1];
 	}
-
 	delete[] offsets;
 
 	return ob_dcast( gc_new_string( subject.c_str() ) );
