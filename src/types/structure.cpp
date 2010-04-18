@@ -278,6 +278,8 @@ IMPLEMENT_TYPE(Structure) {
     struct_add_attribute, // add_attribute
     struct_get_attribute, // get_attribute
     struct_set_attribute, // set_attribute
-    struct_set_attribute_reference  // set_attribute_reference
+    struct_set_attribute_reference, // set_attribute_reference
+    0, // define_method
+    0  // get_method
 };
 

@@ -19,6 +19,7 @@
 #include "node.h"
 #include "vmem.h"
 #include "engine.h"
+#include <assert.h>
 
 NodeValue::NodeValue() :
     m_constant(NULL),
@@ -26,6 +27,8 @@ NodeValue::NodeValue() :
     m_expression(0),
     m_statement(0),
     m_function(""),
+    m_method(""),
+    m_access(asPublic),
     m_call(""),
     m_alias_call(NULL),
     m_switch(NULL),
@@ -130,6 +133,50 @@ Node *Node::clone(){
             	}
             }
         break;
+
+        case H_NT_METHOD :
+			clone = new MethodNode( value.m_method.c_str(), value.m_access );
+			for( i = 0; i < sz; ++i ){
+				if( child(i) ){
+					clone->push_back( child(i)->clone() );
+				}
+			}
+        break;
+
+        case H_NT_METHOD_CALL :
+			clone = new MethodCallNode( NULL, NULL );
+			clone->value.m_method_call = value.m_method_call;
+			for( i = 0; i < sz; ++i ){
+				if( child(i) ){
+					clone->push_back( child(i)->clone() );
+				}
+			}
+        break;
+
+        case H_NT_ATTRIBUTE :
+        	clone = new AttributeNode( NULL );
+        	clone->value.m_identifier = value.m_identifier;
+        	for( i = 0; i < sz; ++i ){
+				if( child(i) ){
+					clone->push_back( child(i)->clone() );
+				}
+			}
+        break;
+
+        case H_NT_NEW :
+        	clone = new NewNode( (char *)value.m_identifier.c_str(), NULL );
+        	for( i = 0; i < sz; ++i ){
+				if( child(i) ){
+					clone->push_back( child(i)->clone() );
+				}
+			}
+        break;
+
+        default:
+        	/*
+        	 * THIS SHOULD NEVER HAPPEN!
+        	 */
+        	assert(false);
     }
 
 	return clone;
@@ -312,6 +359,18 @@ CallNode::CallNode( Node *alias, NodeList *argv ) :  Node(H_NT_CALL) {
 	}
 }
 
+/* structure or class creation */
+NewNode::NewNode( char *type, NodeList *argv ) : Node(H_NT_NEW){
+	value.m_identifier = type;
+	if( argv != NULL ){
+		reserve( argv->size() );
+		for( NodeList::iterator ni = argv->begin(); ni != argv->end(); ni++ ){
+			push_back( *ni );
+		}
+		delete argv;
+	}
+}
+
 /* struct type definition */
 StructureNode::StructureNode( char *s_name, NodeList *attributes ) : Node(H_NT_STRUCT) {
     value.m_identifier = s_name;
@@ -324,4 +383,68 @@ StructureNode::StructureNode( char *s_name, NodeList *attributes ) : Node(H_NT_S
 	}
 }
 
+/* methods */
+MethodNode::MethodNode( char *access, method_decl_t *declaration, int argc, ... ) : Node(H_NT_METHOD) {
+    value.m_method = declaration->method;
+	if( strcmp( access, "public" ) == 0 ){
+		value.m_access = asPublic;
+	}
+	else if( strcmp( access, "private" ) == 0 ){
+		value.m_access = asPrivate;
+	}
+	else if( strcmp( access, "protected" ) == 0 ){
+		value.m_access = asProtected;
+	}
+	else{
+		value.m_access = asPublic;
+	}
 
+	// printf( "new %d method (%s)\n", value.m_access, access );
+
+    va_list ap;
+	int i;
+
+    reserve( declaration->argc + argc );
+	/* add method prototype args children */
+	for( i = 0; i < declaration->argc; ++i ){
+		push_back( new IdentifierNode( declaration->argv[i] ) );
+	}
+	/* add method body statements node */
+	va_start( ap, argc );
+	for( i = 0; i < argc; ++i ){
+		push_back( va_arg( ap, Node * ) );
+	}
+	va_end(ap);
+}
+
+MethodNode::MethodNode( const char *name, H_ACCESS_SPECIFIER access ) : Node(H_NT_METHOD) {
+	value.m_method = name;
+	value.m_access = access;
+}
+
+/* class type definition */
+ClassNode::ClassNode( char *classname, NodeList *members ) : Node(H_NT_CLASS) {
+	value.m_identifier = classname;
+	if( members != NULL ){
+		reserve( members->size() );
+		for( NodeList::iterator ni = members->begin(); ni != members->end(); ni++ ){
+			push_back( *ni );
+		}
+		delete members;
+	}
+}
+
+/* method calls (a subset of StatementNode) */
+MethodCallNode::MethodCallNode( NodeList *mcall, NodeList *argv ) : Node(H_NT_METHOD_CALL) {
+	if( mcall ){
+		value.m_method_call = *mcall;
+		delete mcall;
+	}
+	if( argv != NULL ){
+		reserve( argv->size() );
+		for( NodeList::iterator ni = argv->begin(); ni != argv->end(); ni++ ){
+			push_back( *ni );
+		}
+		delete argv;
+	}
+}

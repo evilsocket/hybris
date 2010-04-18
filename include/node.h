@@ -30,15 +30,25 @@ using std::list;
 using std::string;
 
 enum H_NODE_TYPE {
-    H_NT_NONE       = 0,
-    H_NT_CONSTANT,
-    H_NT_IDENTIFIER,
-    H_NT_EXPRESSION,
-    H_NT_STATEMENT,
-    H_NT_FUNCTION,
-    H_NT_CALL,
-    H_NT_STRUCT,
-    H_NT_ATTRIBUTE
+    H_NT_NONE        = 0,
+    H_NT_CONSTANT    = 1,
+    H_NT_IDENTIFIER  = 2,
+    H_NT_EXPRESSION  = 3,
+    H_NT_STATEMENT   = 4,
+    H_NT_FUNCTION    = 5,
+    H_NT_CALL        = 6,
+    H_NT_METHOD_CALL = 7,
+    H_NT_STRUCT      = 8,
+    H_NT_ATTRIBUTE   = 9,
+    H_NT_METHOD		 = 10,
+    H_NT_CLASS		 = 11,
+    H_NT_NEW	     = 12
+};
+
+enum H_ACCESS_SPECIFIER {
+	asPublic = 0,
+	asPrivate,
+	asProtected
 };
 
 /* pre declaration of class Node */
@@ -69,19 +79,24 @@ class NodeList : public list<Node *> {
         }
 };
 
+typedef NodeList::iterator NodeIterator;
+
 /* possible values for a generic node */
 class NodeValue {
     public :
 
-        Object *m_constant;
-        string  m_identifier;
-        int     m_expression;
-        int     m_statement;
-        Node   *m_switch;
-        Node   *m_default;
-        string  m_function;
-        string  m_call;
-        Node   *m_alias_call;
+        Object  *m_constant;
+        string   m_identifier;
+        int      m_expression;
+        int      m_statement;
+        Node    *m_switch;
+        Node    *m_default;
+        string   m_function;
+        H_ACCESS_SPECIFIER m_access;
+        string   m_method;
+        string   m_call;
+        NodeList m_method_call;
+        Node    *m_alias_call;
 
         NodeValue();
         ~NodeValue();
@@ -112,6 +127,26 @@ public  :
 
     __force_inline Node *child( unsigned int i ){
         return at(i);
+    }
+
+    __force_inline Node *callBody(){
+    	int i, sz( size() );
+    	for( i = 0; i < sz; ++i ){
+    		if( at(i)->type() != H_NT_IDENTIFIER ){
+    			return at(i);
+    		}
+    	}
+    	return NULL;
+    }
+
+    __force_inline int callDefinedArgc(){
+    	int argc(0), i, sz( size() );
+		for( i = 0; i < sz; ++i ){
+			if( at(i)->type() == H_NT_IDENTIFIER ){
+				++argc;
+			}
+		}
+		return argc;
     }
 
     void addChild( Node *child );
@@ -180,11 +215,37 @@ class CallNode : public Node {
         CallNode( Node *alias, NodeList *argv );
 };
 
+/* structure or class creation */
+class NewNode : public Node {
+	public :
+
+		NewNode( char *type, NodeList *argv );
+};
+
 /* struct type definition */
 class StructureNode : public Node {
     public :
 
         StructureNode( char *s_name, NodeList *attributes );
+};
+
+/* method declarations */
+class MethodNode : public Node {
+	public :
+		MethodNode( char *access, method_decl_t *declaration, int argc, ... );
+		MethodNode( const char *name, H_ACCESS_SPECIFIER access );
+};
+
+/* class type definition */
+class ClassNode : public Node {
+	public :
+		ClassNode( char *classname, NodeList *members );
+};
+
+/* method calls (a subset of StatementNode) */
+class MethodCallNode : public Node {
+    public :
+		MethodCallNode( NodeList *mcall, NodeList *argv );
 };
 
 #endif

@@ -166,16 +166,15 @@ Object *int_range( Object *a, Object *b ){
 Object *int_assign( Object *me, Object *op ){
     if( ob_is_int(op) ){
         (ob_int_ucast(me))->value = (ob_int_ucast(op))->value;
+        return me;
     }
     else {
         Object *clone = ob_clone(op);
 
-        me = clone;
-
         ob_set_references( clone, +1 );
-    }
 
-    return me;
+        return (me = clone);
+    }
 }
 
 Object *int_factorial( Object *me ){
@@ -693,5 +692,7 @@ IMPLEMENT_TYPE(Extern) {
     0, // add_attribute;
     0, // get_attribute;
     0, // set_attribute;
-    0  // set_attribute_reference;
+    0, // set_attribute_reference
+    0, // define_method
+    0  // get_method
 };

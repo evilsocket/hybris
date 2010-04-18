@@ -43,6 +43,15 @@ typedef struct {
 }
 function_decl_t;
 /*
+ * Method declaration descriptor.
+ */
+typedef struct {
+    char method[0xFF];
+    int  argc;
+    char argv[HMAXARGS][0xFF];
+}
+method_decl_t;
+/*
  * Command line arguments descriptor.
  */
 typedef struct {

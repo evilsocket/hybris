@@ -118,6 +118,8 @@ typedef struct _Object {
 Object;
 
 
+class Node;
+
 /*
  * Type function pointers descriptors .
  */
@@ -155,10 +157,13 @@ typedef Object * (*ob_unary_function_t)         ( Object * );
 typedef Object * (*ob_binary_function_t)        ( Object *, Object * );
 // {a}<operator{b} '=' {c}
 typedef Object * (*ob_ternary_function_t)       ( Object *, Object *, Object * );
-// functions to manage structure attributes
+// functions to manage structure and class attributes
 typedef void     (*ob_add_attribute_function_t) ( Object *, char * );
 typedef Object * (*ob_get_attribute_function_t) ( Object *, char * );
 typedef void     (*ob_set_attribute_function_t) ( Object *, char *, Object * );
+// functions to manage class methods
+typedef void     (*ob_define_method_function_t) ( Object *, char *, Node * );
+typedef Node   * (*ob_get_method_function_t)	( Object *, char * );
 /*
  * Object type codes enumeration
  */
@@ -175,7 +180,8 @@ enum H_OBJECT_TYPE {
     otStructure,
     otAlias,
     otExtern,
-    otPointer
+    otPointer,
+    otClass
 };
 /*
  * Object type description structure .
@@ -277,11 +283,15 @@ typedef struct _object_type_t {
     ob_ternary_function_t       cl_set;
     ob_ternary_function_t       cl_set_reference;
 
-    /** structure operators **/
+    /** structure and class operators **/
     ob_add_attribute_function_t add_attribute;
     ob_get_attribute_function_t get_attribute;
     ob_set_attribute_function_t set_attribute;
     ob_set_attribute_function_t set_attribute_reference;
+
+    /** class operators **/
+    ob_define_method_function_t define_method;
+    ob_get_method_function_t    get_method;
 }
 object_type_t;
 
@@ -587,6 +597,14 @@ void    ob_set_attribute( Object *s, char *a, Object *v );
  * 'v' reference counter.
  */
 void    ob_set_attribute_reference( Object *s, char *a, Object *v );
+/*
+ * Define the method 'name' with give 'code' inside the 'c' class.
+ */
+void    ob_define_method( Object *c, char *name, Node *code );
+/*
+ * Get the method 'name' from the 'c' class.
+ */
+Node   *ob_get_method( Object *c, char *name );
 
 /**
  * Types definition.
@@ -870,6 +888,35 @@ typedef vector<Object *>::iterator StructureObjectValueIterator;
 
 #define ob_is_struct(o)    ob_is_typeof(o,Structure)
 #define ob_struct_ucast(o) ((StructureObject *)(o))
+
+DECLARE_TYPE(Class);
+
+typedef struct _ClassObject {
+    BASE_OBJECT_HEADER;
+    size_t           items;
+    vector<string>   a_names;
+    vector<Object *> a_values;
+    vector<string>   m_names;
+    vector<Node *>   m_values;
+
+    _ClassObject() : items(0), BASE_OBJECT_HEADER_INIT(Class) {
+        // define to test space reservation optimization
+        #ifdef RESERVED_VECTORS_SPACE
+			a_names.reserve( RESERVE_VECTORS_SPACE );
+            a_values.reserve( RESERVE_VECTORS_SPACE );
+            m_names.reserve( RESERVE_VECTORS_SPACE );
+            m_values.reserve( RESERVE_VECTORS_SPACE );
+        #endif
+    }
+}
+ClassObject;
+
+typedef vector<string>::iterator   ClassObjectNameIterator;
+typedef vector<Object *>::iterator ClassObjectValueIterator;
+typedef vector<Node *>::iterator   ClassObjectMethodIterator;
+
+#define ob_is_class(o)    ob_is_typeof(o,Class)
+#define ob_class_ucast(o) ((ClassObject *)(o))
 
 #endif
 

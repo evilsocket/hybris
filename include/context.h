@@ -49,7 +49,7 @@ typedef Object * (*function_t)( Context *, vmem_t * );
 /* macro to define a constant value */
 #define HYBRIS_DEFINE_CONSTANT( ctx, name, value ) ctx->vmem.addConstant( (char *)name, (Object *)value )
 /* macro to define a new structure type given its name and its attribute names */
-#define HYBRIS_DEFINE_STRUCTURE( ctx, name, n, attrs ) ctx->defineType( name, n, attrs )
+#define HYBRIS_DEFINE_STRUCTURE( ctx, name, n, attrs ) ctx->defineStructure( name, n, attrs )
 /* macro to define module exported functions structure */
 #define HYBRIS_EXPORTED_FUNCTIONS() extern "C" named_function_t hybris_module_functions[] =
 
@@ -297,7 +297,7 @@ class Context {
         /*
          * Define a structure inside the vtypes member.
          */
-        __force_inline Object * defineType( char *name, int nattrs, char *attributes[] ){
+        __force_inline Object * defineStructure( char *name, int nattrs, char *attributes[] ){
             StructureObject *type = gc_new_struct();
             unsigned int     i;
 
@@ -305,26 +305,26 @@ class Context {
                 ob_add_attribute( (Object *)type, attributes[i] );
             }
            /*
-            * Prevent the structure definition from being deleted by the gc.
+            * Prevent the structure or class definition from being deleted by the gc.
             */
             type->attributes |= H_OA_CONSTANT;
 
             return vtypes.insert( name, (Object *)type );
         }
         /*
-         * Same as before, but the structure will be defined from an alreay
+         * Same as before, but the structure or the class will be defined from an alreay
          * created object.
          */
         __force_inline void defineType( char *name, Object *type ){
            /*
-            * Prevent the structure definition from being deleted by the gc.
+            * Prevent the structure or class definition from being deleted by the gc.
             */
             type->attributes |= H_OA_CONSTANT;
 
             vtypes.insert( name, type );
         }
         /*
-         * Find the object pointer of a user defined type (i.e. structures).
+         * Find the object pointer of a user defined type (i.e. structures or classes).
          */
         __force_inline Object * getType( char *name ){
             return vtypes.find(name);

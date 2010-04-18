@@ -57,13 +57,13 @@ class Engine {
          */
         Object *onUserFunctionCall( vframe_t *, Node *, int threaded = 0 );
         /*
-         * Handle type definition ctor call.
-         */
-        Object *onTypeCall( vframe_t *, Node * );
-        /*
          * Handle dynamic loaded function call.
          */
         Object *onDllFunctionCall( vframe_t *, Node *, int threaded = 0 );
+        /*
+         * Handle method call.
+         */
+        Object *onMethodCall( vframe_t *, Node * );
 
     public  :
 
@@ -84,7 +84,9 @@ class Engine {
         Object *onConstant( vframe_t *, Node * );
         Object *onFunctionDeclaration( vframe_t *, Node * );
         Object *onStructureDeclaration( vframe_t *, Node * );
+        Object *onClassDeclaration( vframe_t *, Node * );
         Object *onFunctionCall( vframe_t *, Node *, int threaded = 0 );
+        Object *onNewType( vframe_t *, Node * );
         Object *onDollar( vframe_t *, Node * );
         Object *onReturn( vframe_t *, Node * );
         Object *onRange( vframe_t *, Node * );

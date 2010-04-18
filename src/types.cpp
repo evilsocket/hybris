@@ -678,7 +678,7 @@ void ob_add_attribute( Object *s, char *a ){
 		return s->type->add_attribute(s,a);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a structure", s->type->name );
+		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", s->type->name );
 	}
 }
 
@@ -687,7 +687,7 @@ Object *ob_get_attribute( Object *s, char *a ){
 		return s->type->get_attribute(s,a);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a structure", s->type->name );
+		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", s->type->name );
 	}
 }
 
@@ -696,7 +696,7 @@ void ob_set_attribute( Object *s, char *a, Object *v ){
 		return s->type->set_attribute(s,a,v);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a structure", s->type->name );
+		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", s->type->name );
 	}
 }
 
@@ -706,7 +706,24 @@ void ob_set_attribute_reference( Object *s, char *a, Object *v ){
 		return s->type->set_attribute_reference(s,a,v);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a structure", s->type->name );
+		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", s->type->name );
 	}
 }
 
+void ob_define_method( Object *c, char *name, Node *code ){
+	if( c->type->define_method != HYB_UNIMPLEMENTED_FUNCTION ){
+		c->type->define_method( c, name, code );
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a class", c->type->name );
+	}
+}
+
+Node *ob_get_method( Object *c, char *name ){
+	if( c->type->get_method != HYB_UNIMPLEMENTED_FUNCTION ){
+		return c->type->get_method( c, name );
+	}
+	else{
+		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a class", c->type->name );
+	}
+}

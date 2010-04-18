@@ -465,6 +465,8 @@ IMPLEMENT_TYPE(Float) {
     0, // add_attribute;
     0, // get_attribute;
     0, // set_attribute;
-    0  // set_attribute_reference;
+    0, // set_attribute_reference
+    0, // define_method
+    0  // get_method
 };
 

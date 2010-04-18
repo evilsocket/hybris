@@ -47,6 +47,8 @@
 #define MK_SWITCH_DEF_NODE(a,b,c) new StatementNode( T_SWITCH, a, b, c )
 #define MK_FUNCTION_NODE(a, b)    new FunctionNode( a, 1, b )
 #define MK_STRUCT_NODE(a, b)      new StructureNode( a, b )
+#define MK_CLASS_NODE(a, b)       new ClassNode( a, b )
+#define MK_METHOD_NODE(a, b, c)   new MethodNode( a, b, 1, c )
 /* expressions */
 #define MK_RETURN_NODE(a)         new ExpressionNode( T_RETURN, 1, a )
 #define MK_EOSTMT_NODE(a, b)      new ExpressionNode( T_EOSTMT, 2, a, b )
@@ -92,7 +94,9 @@
 #define MK_LAND_NODE(a, b)		  new ExpressionNode( T_LAND, 2, a, b )
 #define MK_LOR_NODE(a, b)		  new ExpressionNode( T_LOR, 2, a, b )
 #define MK_PCRE_NODE(a, b)		  new ExpressionNode( T_REGEX_OP, 2, a, b )
+#define MK_NEW_NODE( a, b )		  new NewNode( a, b )
 #define MK_CALL_NODE(a, b)        new CallNode( a, b )
+#define MK_METHOD_CALL_NODE(a,b)  new MethodCallNode( a, b )
 #define MK_QUESTION_NODE(a, b, c) new StatementNode( T_QUESTION, 3, a, b, c )
 
 extern int yyparse(void);
@@ -111,6 +115,10 @@ Context __context;
     char    identifier[0xFF];
     /* function prototype declaration */
     function_decl_t *function;
+    /* access specifier */
+    char *access;
+    /* method prototype declaration */
+    method_decl_t *method;
     /* function call temp arg list */
     NodeList *argv;
     /* not reduced node */
@@ -124,7 +132,11 @@ Context __context;
 %token <byte>       T_CHAR;
 %token <string>     T_STRING;
 %token <identifier> T_IDENT;
+%token <access>     T_PRIVATE;
+%token <access>		T_PUBLIC;
+%token <access>		T_PROTECTED;
 %token <function>   T_FUNCTION_PROTOTYPE;
+%token <method>   	T_METHOD_PROTOTYPE;
 
 %token T_EOSTMT
 %token T_DDOT
@@ -177,12 +189,9 @@ Context __context;
 %token T_OBJ
 %token T_RETURN
 %token T_CALL
+%token T_NEW
 %token T_STRUCT
 %token T_CLASS
-%token T_PRIVATE
-%token T_PROTECTED
-%token T_PUBLIC
-%token T_STATIC
 
 %nonassoc T_IF_END
 %nonassoc T_SB_END
@@ -191,15 +200,19 @@ Context __context;
 %nonassoc T_ELSE
 %nonassoc T_UMINUS
 %nonassoc T_DOT_END
+%nonassoc T_NEW_END
 
 %left T_LNOT T_GE T_LE T_EQ T_NE T_GREATER T_LESS T_LAND T_LOR
 %left T_DOLLAR T_INC T_DEC T_MULE T_MUL T_DIVE T_DIV T_PLUSE T_PLUS T_MINUSE T_MINUS T_DOTE T_DOT
 
-%type <node> statement expression statements
-%type <argv> T_ARGV_LIST
-%type <argv> T_CASE_LIST
-%type <argv> T_ATTR_LIST
-%type <argv> T_IDENT_LIST
+%type <node>   statement expression statements
+%type <argv>   T_ARGV_LIST
+%type <argv>   T_CASE_LIST
+%type <argv>   T_ATTR_LIST
+%type <argv>   T_IDENT_LIST
+%type <argv>   T_METHOD_LIST
+%type <argv>   T_CLASS_MEMBERS
+//%type <access> T_ACCESS_SPECIFIER
 %%
 
 program    : body           { __context.timer( HYB_TIMER_STOP ); }
@@ -222,7 +235,45 @@ T_CASE_LIST  : T_CASE expression ':' statements T_BREAK T_EOSTMT T_CASE_LIST { $
 
 T_ATTR_LIST  : T_IDENT ',' T_ATTR_LIST      { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
              | T_IDENT T_EOSTMT T_ATTR_LIST { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
-             | /* empty */                  { $$ = MK_NODE_LIST(); };
+             | /* empty */                 	{ $$ = MK_NODE_LIST(); };
+
+T_METHOD_LIST : T_METHOD_PROTOTYPE '{' statements '}' T_METHOD_LIST {
+				 $$ = MK_NODE($5);
+				 $$->head( MK_METHOD_NODE( "public", $1, $3 ) );
+			 }
+		     | T_METHOD_PROTOTYPE '{' statements '}' {
+		    	 $$ = MK_NODE_LIST();
+		    	 $$->tail( MK_METHOD_NODE( "public", $1, $3 ) );
+		     };
+
+T_CLASS_MEMBERS : T_ATTR_LIST T_METHOD_LIST T_CLASS_MEMBERS {
+					$$ = MK_NODE($3);
+					for( NodeIterator i = $1->begin(); i != $1->end(); i++ ){
+						$$->tail( *i );
+					}
+					for( NodeIterator j = $2->begin(); j != $2->end(); j++ ){
+						$$->tail( *j );
+					}
+				}
+			    | T_METHOD_LIST T_ATTR_LIST T_CLASS_MEMBERS {
+			    	$$ = MK_NODE($3);
+			    	for( NodeIterator i = $1->begin(); i != $1->end(); i++ ){
+						$$->tail( *i );
+					}
+					for( NodeIterator j = $2->begin(); j != $2->end(); j++ ){
+						$$->tail( *j );
+					}
+			    }
+			    | T_ATTR_LIST {
+			    	$$ = MK_NODE($1);
+			    }
+			    | T_METHOD_LIST {
+			    	$$ = MK_NODE($1);
+			    }
+			    | {
+			    	$$ = MK_NODE_LIST();
+			    };
+
 
 T_IDENT_LIST : T_IDENT T_MAPS T_IDENT_LIST { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
              | T_IDENT T_MAPS T_IDENT      { $$ = MK_NODE_LIST(); $$->tail( MK_IDENT_NODE($1), MK_IDENT_NODE($3) ); }
@@ -256,7 +307,9 @@ statement  : T_EOSTMT                                                   { $$ = M
            /* function declaration */
            | T_FUNCTION_PROTOTYPE '{' statements '}'                    { $$ = MK_FUNCTION_NODE( $1, $3 ); }
            /* structure declaration */
-           | T_STRUCT T_IDENT '{' T_ATTR_LIST '}'                       { $$ = MK_STRUCT_NODE( $2, $4 ); };
+           | T_STRUCT T_IDENT '{' T_ATTR_LIST '}'                       { $$ = MK_STRUCT_NODE( $2, $4 ); }
+		   /* class declaration */
+           | T_CLASS T_IDENT '{' T_CLASS_MEMBERS '}' 					{ $$ = MK_CLASS_NODE( $2, $4 ); };
 
 statements : /* empty */          { $$ = MK_NODE(0);  }
            | statement            { $$ = MK_NODE($1); }
@@ -319,9 +372,12 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            | expression T_LOR expression                      { $$ = MK_LOR_NODE( $1, $3 ); }
            /* regex specific */
            | expression T_REGEX_OP expression                 { $$ = MK_PCRE_NODE( $1, $3 ); }
+           /* structure or class creation */
+           | T_NEW T_IDENT '(' T_ARGV_LIST ')' %prec T_NEW_END { $$ = MK_NEW_NODE( $2, $4 ); }
            /* function call (consider two different cases due to hybris function calls */
-		   | T_IDENT    '(' T_ARGV_LIST ')'  %prec T_CALL_END { $$ = MK_CALL_NODE( $1, $3 ); }
-           | expression '(' T_ARGV_LIST ')'                   { $$ = MK_CALL_NODE( $1, $3 ); }
+		   | T_IDENT      '(' T_ARGV_LIST ')' %prec T_CALL_END { $$ = MK_CALL_NODE( $1, $3 ); }
+		   | T_IDENT_LIST '(' T_ARGV_LIST ')' %prec T_CALL_END { $$ = MK_METHOD_CALL_NODE( $1, $3 ); }
+           | expression '(' T_ARGV_LIST ')'                    { $$ = MK_CALL_NODE( $1, $3 ); }
            /* ternary operator */
            | '(' expression '?' expression ':' expression ')' { $$ = MK_QUESTION_NODE( $2, $4, $6 ); }
            /* group expression */
@@ -355,7 +411,7 @@ int hyb_banner(){
 
 int hyb_usage( char *argvz ){
     hyb_banner();
-    printf( "\nUsage: %s <options> file\n\n"
+    printf( "\nUsage: %s <options> <file>\n\n"
     		"Where <options> is one or more among followring values :\n"
     		"\t-h (--help)  : Print this menu and exit.\n"
     		"\t-g (--gc)    : Set the garbage collection memory threshold, expressend in bytes, \n"

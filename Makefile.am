@@ -33,6 +33,7 @@ LIBOBJ=src/context.lo \
 	   src/types/matrix.lo \
 	   src/types/string.lo \
 	   src/types/structure.lo \
+	   src/types/class.lo \
 	   src/types/vector.lo \
 	   src/hashtable.lo \
 	   src/vmem.lo \
@@ -57,6 +58,7 @@ SOURCES=src/common.cpp \
 		src/types/matrix.cpp \
 		src/types/string.cpp \
 		src/types/structure.cpp \
+		src/types/class.cpp \
 		src/types/vector.cpp \
 	    src/engine.cpp \
 	    src/parser.cpp

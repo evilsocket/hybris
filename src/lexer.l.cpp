@@ -36,6 +36,8 @@ void             hyb_lex_string( char delimiter, char *buffer );
 char             hyb_lex_char( char delimiter );
 // handle function prototypes declarations
 function_decl_t *hyb_lex_function( char * text );
+// handle method prototypes declarations
+method_decl_t   *hyb_lex_method( char * text );
 
 extern int     yylineno;
 extern Context __context;
@@ -164,6 +166,7 @@ include          BEGIN(T_INCLUSION);
 "break"         return T_BREAK;
 "default"       return T_DEFAULT;
 
+"new"			return T_NEW;
 "struct"        return T_STRUCT;
 "class"         return T_CLASS;
 
@@ -172,11 +175,15 @@ include          BEGIN(T_INCLUSION);
 "private"       return T_PRIVATE;
 "protected"     return T_PROTECTED;
 "public"        return T_PUBLIC;
-"static"        return T_STATIC;
 
 "function"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*")" {
 	yylval.function   = hyb_lex_function(yytext);
 	return T_FUNCTION_PROTOTYPE;
+}
+
+"method"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*")" {
+	yylval.method   = hyb_lex_method(yytext);
+	return T_METHOD_PROTOTYPE;
 }
 
 {identifier}                           { strncpy( yylval.identifier, yytext, 0xFF ); return T_IDENT; }
@@ -280,6 +287,59 @@ function_decl_t *hyb_lex_function( char * text ){
     int  end = 0;
 
     memset( declaration->function, 0x00, 0xFF );
+    while( hyb_lex_isspace(*sptr) ){ sptr++; };
+
+    while( !hyb_lex_isspace(*sptr) && *sptr != '(' ){
+        *dptr = *sptr;
+        sptr++;
+        dptr++;
+    }
+
+    declaration->argc = 0;
+    sptr++;
+    dptr = var;
+    while( end == 0 ){
+        switch( *sptr ){
+            /* skip whitespaces */
+            case '\r' :
+            case '\n' :
+            case '\t' :
+            case ' '  : break;
+            /* end of variable name declaration */
+            case ',' :
+                strcpy( declaration->argv[declaration->argc], var );
+                memset( var, 0x00, 0xFF );
+                declaration->argc++;
+                dptr = var;
+                break;
+                /* end of function declaration, end last parameter without comma */
+            case ')' :
+                if( var[0] != 0x00 ){
+                    strcpy( declaration->argv[declaration->argc], var );
+                    memset( var, 0x00, 0xFF );
+                    declaration->argc++;
+                }
+                end = 1;
+                break;
+                /* still in variable name declaration */
+            default :
+                *dptr = *sptr;
+                dptr++;
+        }
+        sptr++;
+    }
+
+    return declaration;
+}
+
+method_decl_t *hyb_lex_method( char * text ){
+	method_decl_t *declaration = new method_decl_t;
+    char *sptr = text + strlen( "method " ),
+         *dptr = declaration->method,
+         var[0xFF] = {0};
+    int  end = 0;
+
+    memset( declaration->method, 0x00, 0xFF );
     while( hyb_lex_isspace(*sptr) ){ sptr++; };
 
     while( !hyb_lex_isspace(*sptr) && *sptr != '(' ){

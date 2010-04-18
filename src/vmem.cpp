@@ -17,6 +17,7 @@
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "vmem.h"
+#include "common.h"
 
 VirtualMemory::VirtualMemory() : HashMap<Object>() {
 

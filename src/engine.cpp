@@ -53,12 +53,20 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
         /* function definition */
         case H_NT_FUNCTION   :
             return onFunctionDeclaration( frame, node );
+        /* structure or class creation */
+        case H_NT_NEW :
+            return onNewType( frame, node );
         /* function call */
         case H_NT_CALL       :
             return onFunctionCall( frame, node );
+        case H_NT_METHOD_CALL :
+        	return onMethodCall( frame, node );
+
         /* struct type declaration */
         case H_NT_STRUCT :
             return onStructureDeclaration( frame, node );
+        case H_NT_CLASS :
+			return onClassDeclaration( frame, node );
 
         /* statements */
         case H_NT_STATEMENT :
@@ -304,8 +312,8 @@ Object *Engine::onIdentifier( vframe_t *frame, Node *node ){
 }
 
 Object *Engine::onAttribute( vframe_t *frame, Node *node ){
-    Object    *owner = H_UNDEFINED,
-              *child = H_UNDEFINED;
+    Object    *owner  = H_UNDEFINED,
+              *child  = H_UNDEFINED;
     int        i, j, attributes(node->children());
     char      *identifier = (char *)node->value.m_identifier.c_str(),
               *owner_id   = identifier,
@@ -324,7 +332,7 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
 	/*
 	 * Nope :( not defined anywhere.
 	 */
-    else if( owner == H_UNDEFINED ){
+    if( owner == H_UNDEFINED ){
         hyb_throw( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
     }
 	/*
@@ -332,11 +340,11 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
 	 * That could be the user types definition segments, who knows (the gc should),
 	 * anyway, check if it's REALLY a user defined type.
 	 */
-    else if( ob_is_struct(owner) == false ){
-        hyb_throw( H_ET_SYNTAX, "'%s' is not a structure identifier", identifier );
+    else if( ob_is_struct(owner) == false && ob_is_class(owner) == false ){
+        hyb_throw( H_ET_SYNTAX, "'%s' does not name a structure nor a class", identifier );
     }
 	/* 
-	 * Loop each element of the chain :
+	 * Loop each element of the members chain :
 	 * 
 	 * foo->bar->moo->...->X
 	 * 
@@ -345,17 +353,17 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
     for( i = 0; i < attributes; ++i ){
         child_id = (char *)node->child(i)->value.m_identifier.c_str();
         child    = ob_get_attribute( owner, child_id );
-		/*
+        /*
 		 * Something went wrong dude!
 		 */
         if( child == H_UNDEFINED ){
-            hyb_throw( H_ET_SYNTAX, "'%s' is not an attribute of %s", child_id, owner_id );
+       		hyb_throw( H_ET_SYNTAX, "'%s' is not a member of %s", child_id, owner_id );
         }
-		/*
+        /*
 		 * Ok, let's consider the next element and shift
 		 * relationships between owner and child pointers.
 		 */
-        else if( ob_is_struct(child) ){
+        if( ob_is_struct(child) || ob_is_class(child) ){
             owner    = child;
             owner_id = child_id;
         }
@@ -366,6 +374,7 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
             return child;
         }
     }
+    return owner;
 }
 
 Object *Engine::onConstant( vframe_t *frame, Node *node ){
@@ -407,12 +416,41 @@ Object *Engine::onStructureDeclaration( vframe_t *frame, Node * node ){
         ob_add_attribute( s, (char *)node->child(i)->value.m_identifier.c_str() );
     }
     /*
-     * ::defineType will take care of the structure attributes 
+     * ::defineType will take care of the structure attributes
 	 * to prevent it to be garbage collected (see ::onConstant).
      */
     ctx->defineType( s_name, s );
 
     return H_UNDEFINED;
+}
+
+Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
+	int        i, j, members( node->children() );
+	char      *classname = (char *)node->value.m_identifier.c_str();
+	Object    *c         = (Object *)gc_new_class();
+
+	for( i = 0; i < members; ++i ){
+		/*
+		 * Define an attribute
+		 */
+		if( node->child(i)->type() == H_NT_IDENTIFIER ){
+			ob_add_attribute( c, (char *)node->child(i)->value.m_identifier.c_str() );
+		}
+		/*
+		 * Define a method
+		 */
+		else if( node->child(i)->type() == H_NT_METHOD ){
+			ob_define_method( c, (char *)node->child(i)->value.m_method.c_str(), node->child(i) );
+		}
+		else{
+			hyb_throw( H_ET_GENERIC, "unexpected node type for class declaration" );
+		}
+	}
+	/*
+	 * ::defineType will take care of the class attributes
+	 * to prevent it to be garbage collected (see ::onConstant).
+	 */
+	ctx->defineType( classname, c );
 }
 
 Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
@@ -506,13 +544,13 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
     ctx->detrace();
 
     /* return function evaluation value */
-    return result;
+    return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
 }
 
-Object *Engine::onTypeCall( vframe_t *frame, Node *type ){
-    char      *type_name = (char *)type->value.m_call.c_str();
+Object *Engine::onNewType( vframe_t *frame, Node *type ){
+    char      *type_name = (char *)type->value.m_identifier.c_str();
     Object    *user_type = H_UNDEFINED,
-              *structure = H_UNDEFINED,
+              *newtype   = H_UNDEFINED,
               *object    = H_UNDEFINED;
     int        i, children( type->children() );
 
@@ -523,31 +561,84 @@ Object *Engine::onTypeCall( vframe_t *frame, Node *type ){
     if( (user_type = ctx->getType(type_name)) == H_UNDEFINED ){
         return H_UNDEFINED;
     }
+    newtype = ob_clone(user_type);
 
-    structure = ob_clone(user_type);
+	/*
+	 * It's ok to initialize less attributes that the structure/class
+	 * has (non ini'ed attributes are set to 0 by default), but
+	 * you can not set more attributes than the structure/class have.
+	 */
+	if( ob_is_struct(newtype) ){
+		if( children > ob_struct_ucast(newtype)->items ){
+			hyb_throw( H_ET_SYNTAX, "structure '%s' has %d attributes, initialized with %d",
+								 type_name,
+								 ob_struct_ucast(newtype)->items,
+								 children );
+		}
 
-    // init structure attributes
-    if( children > 0 ){
+		for( i = 0; i < children; ++i ){
+			object = exec( frame, type->child(i) );
+			ob_set_attribute( newtype, (char *)ob_struct_ucast(newtype)->names[i].c_str(), object );
+		}
+	}
+	else if( ob_is_class(newtype) ){
 		/*
-		 * It's ok to initialize less attributes that the structure 
-		 * has (non ini'ed attributes are set to 0 by default), but
-		 * you can not set more attributes than the structure have.
+		 * First of all, check if the user has declared an explicit
+		 * class constructor, in that case consider it instead of the
+		 * default "by arg" constructor.
 		 */
-        if( children > ob_struct_ucast(structure)->items ){
-            hyb_throw( H_ET_SYNTAX, "structure '%s' has %d attributes, initialized with %d",
-                                 type_name,
-                                 ob_struct_ucast(structure)->items,
-                                 children );
-        }
+		Node *ctor = ob_get_method( newtype, type_name );
+		if( ctor != H_UNDEFINED ){
+			if( children > ctor->callDefinedArgc() ){
+				hyb_throw( H_ET_SYNTAX, "class '%s' constructor requires %d arguments, called with %d",
+										 type_name,
+										 ctor->callDefinedArgc(),
+										 children );
+			}
 
-        for( i = 0; i < children; ++i ){
-            object = exec( frame, type->child(i) );
+			Node    *arg = H_UNDEFINED;
+			vframe_t stack;
+			Object  *value = H_UNDEFINED;
 
-            ob_set_attribute( structure, (char *)ob_struct_ucast(structure)->names[i].c_str(), object );
-        }
-    }
+			/*
+			 * Create the "me" reference to the class itself, used inside
+			 * methods for me->... calls.
+			 */
+			stack.insert( "me", newtype );
+			for( i = 0; i < children; ++i ){
+				arg   = type->child(i);
+				value = exec( frame, arg );
+				/*
+				 * Value references count is set to zero now, builtins
+				 * do not care about reference counting, so this object will
+				 * be safely freed after the function call by the gc.
+				 */
+				stack.insert( (char *)ctor->child(i)->value.m_identifier.c_str(), value );
+			}
 
-    return structure;
+			ctx->trace( type_name, &stack );
+
+			/* call the ctor */
+			exec( &stack, ctor->callBody() );
+
+			ctx->detrace();
+		}
+		else{
+			if( children > ob_class_ucast(newtype)->a_names.size() ){
+				hyb_throw( H_ET_SYNTAX, "class '%s' has %d attributes, initialized with %d",
+									 type_name,
+									 ob_class_ucast(newtype)->a_names.size(),
+									 children );
+			}
+
+			for( i = 0; i < children; ++i ){
+				object = exec( frame, type->child(i) );
+				ob_set_attribute( newtype, (char *)ob_class_ucast(newtype)->a_names[i].c_str(), object );
+			}
+		}
+	}
+
+    return newtype;
 }
 
 Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
@@ -601,6 +692,122 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
     return result;
 }
 
+Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
+	Object    *owner = H_UNDEFINED,
+			  *child = H_UNDEFINED;
+	NodeList  method_call( call->value.m_method_call );
+
+	if( method_call.size() == 0 ){
+		return H_UNDEFINED;
+	}
+
+	Node     *method;
+	int       calls(call->value.m_method_call.size());
+	string     child_id = (*method_call.begin())->value.m_identifier,
+			   owner_id = child_id;
+	NodeIterator i( method_call.begin() );
+
+	/*
+	 * Search for the identifier on the function frame.
+	 */
+	owner = frame->get( (char *)owner_id.c_str() );
+	if( owner == H_UNDEFINED && H_ADDRESS_OF(frame) != H_ADDRESS_OF(vm) ){
+		/*
+		 * Search it on the global frame if it's different from local frame.
+		 */
+		owner = vm->get( (char *)owner_id.c_str() );
+	}
+	/*
+	 * Nope :( not defined anywhere.
+	 */
+	if( owner == H_UNDEFINED ){
+		hyb_throw( H_ET_SYNTAX, "'%s' undeclared identifier", owner_id.c_str() );
+	}
+	/*
+	 * Loop from the second node (first one was used to initialize the first owner
+	 * of the chain).
+	 */
+	for( advance( i, 1 ); i != method_call.end(); i++ ){
+		child_id = (*i)->value.m_identifier;
+		/*
+		 * Try to find out if the child is an attribute or a method.
+		 */
+		if( (child = ob_get_attribute( owner, (char *)child_id.c_str() )) == H_UNDEFINED ){
+			/*
+			 * Owner is a class ?
+			 */
+			if( ob_is_class(owner) ){
+				/*
+				 * Get the method.
+				 */
+				method = ob_get_method( owner, (char *)child_id.c_str() );
+				break;
+			}
+			else{
+				hyb_throw( H_ET_SYNTAX, "'%s' is not a member of '%s'", child_id.c_str(), owner_id.c_str() );
+			}
+		}
+		/*
+		 * Update owner-child relationship and continue the loop.
+		 */
+		else{
+			owner    = child;
+			owner_id = child_id;
+		}
+	}
+	/*
+	 * Nothing found, neither an attribute nor a method!
+	 */
+	if( method == H_UNDEFINED ){
+		hyb_throw( H_ET_SYNTAX, "'%s' does not name a method neither an attribute", child_id.c_str() );
+	}
+
+	Node    *identifier           = H_UNDEFINED;
+	vframe_t stack;
+	Object  *value                = H_UNDEFINED,
+			*result               = H_UNDEFINED;
+
+	unsigned int j, children(call->children());
+
+	/*
+	 * The last child of a method is its body itself, so we compare
+	 * call children with method->children() - 1 to ignore the body.
+	 */
+	if( children != (method->children() - 1) ){
+		ctx->depool();
+		hyb_throw( H_ET_SYNTAX, "method '%s' requires %d parameters (called with %d)",
+								 child_id.c_str(),
+								 method->children() - 1,
+							 	 children );
+	}
+
+	/*
+	 * Create the "me" reference to the class itself, used inside
+	 * methods for me->... calls.
+	 */
+	stack.insert( "me", owner );
+	for( j = 0; j < children; ++j ){
+		identifier = call->child(j);
+		value = exec( frame, identifier );
+		/*
+		 * Value references count is set to zero now, builtins
+		 * do not care about reference counting, so this object will
+		 * be safely freed after the method call by the gc.
+		 */
+		stack.insert( (char *)method->child(j)->value.m_identifier.c_str(), value );
+	}
+
+	ctx->trace( (char *)child_id.c_str(), &stack );
+
+	/* call the method */
+	result = exec( &stack, method->callBody() );
+
+	ctx->detrace();
+
+	/* return method evaluation value */
+	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
+}
+
 Object *Engine::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
     Object *result = H_UNDEFINED;
 
@@ -608,13 +815,13 @@ Object *Engine::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*
     if( (result = onBuiltinFunctionCall( frame, call )) == H_UNDEFINED ){
         /* check for an user defined function */
         if( (result = onUserFunctionCall( frame, call, threaded )) == H_UNDEFINED ){
-            /* check for a structure constructor */
-            if( (result = onTypeCall( frame, call )) == H_UNDEFINED ){
-                /* finally check if the function is an extern identifier loaded by dll importing routines */
-                if( (result = onDllFunctionCall( frame, call, threaded )) == H_UNDEFINED ){
-                    hyb_throw( H_ET_SYNTAX, "'%s' undeclared function identifier", call->value.m_call.c_str() );
-                }
-            }
+			/* check if the function is an extern identifier loaded by dll importing routines */
+			if( (result = onDllFunctionCall( frame, call, threaded )) == H_UNDEFINED ){
+				/* finally check for a method */
+				if( (result = onMethodCall( frame, call )) == H_UNDEFINED ){
+					hyb_throw( H_ET_SYNTAX, "'%s' undeclared function identifier", call->value.m_call.c_str() );
+				}
+			}
         }
     }
 
@@ -905,31 +1112,97 @@ Object *Engine::onAssign( vframe_t *frame, Node *node ){
     Object *object     = H_UNDEFINED,
            *value      = H_UNDEFINED;
 
-	/*
-	 * If the first child node is not an attribute (therefore it's an identifier),
-	 * define it (or replace its value) onto the vm frame we are in.
-	 * If it's already defined, the ::add method will decrement the old value's
-	 * reference counter by 1 and replace it with the new value.
-	 */
-    if( node->child(0)->type() != H_NT_ATTRIBUTE ){
-        char   *identifier = (char *)node->child(0)->value.m_identifier.c_str();
+    /*
+     * If the first child is an identifier, we are just defining
+     * a new variable or assigning it a new value, nothing
+     * complicated about it.
+     */
+    if( node->child(0)->type() == H_NT_IDENTIFIER ){
+    	char   *identifier = (char *)node->child(0)->value.m_identifier.c_str();
 
-        value  = exec( frame, node->child(1) );
-        object = frame->add( identifier, value );
+		value  = exec( frame, node->child(1) );
+
+		object = frame->add( identifier, value );
+
+		return object;
     }
     /*
-	 * Structured types attributes are defined inside their owner space address.
-	 * In such cases, there's no need to define them onto the main vm frame,
-	 * but we assign them to the pseudo frame of the type.
-	 */
+     * If not, we evaluate the first node as a "owner->child->..." sequence,
+     * just like the onAttribute handler.
+     */
     else{
-        object = exec( frame, node->child(0) );
-        value  = exec( frame, node->child(1) );
+    	Object    *owner  = H_UNDEFINED,
+				  *child  = H_UNDEFINED;
+    	Node      *root   = node->child(0);
+		int        i, j, attributes(node->children());
+		char      *identifier = (char *)root->value.m_identifier.c_str(),
+				  *owner_id   = identifier,
+				  *child_id   = NULL;
 
-        ob_assign( object, value );
+		/*
+		 * Search for the identifier on the function frame.
+		 */
+		owner = frame->get( identifier );
+		if( owner == H_UNDEFINED && H_ADDRESS_OF(frame) != H_ADDRESS_OF(vm) ){
+			/*
+			 * Search it on the global frame if it's different from local frame.
+			 */
+			owner = vm->get( identifier );
+		}
+		/*
+		 * Nope :( not defined anywhere.
+		 */
+		if( owner == H_UNDEFINED ){
+			hyb_throw( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
+		}
+		/*
+		 * Ok, definetly it's defined "somewhere", but we don't know exactly where.
+		 * That could be the user types definition segments, who knows (the gc should),
+		 * anyway, check if it's REALLY a user defined type.
+		 */
+		else if( ob_is_struct(owner) == false && ob_is_class(owner) == false ){
+			hyb_throw( H_ET_SYNTAX, "'%s' does not name a structure nor a class", identifier );
+		}
+		/*
+		 * Loop each element of the members chain :
+		 *
+		 * foo->bar->moo->...->X
+		 *
+		 * Until last element 'X' of this chain is found.
+		 */
+		for( i = 0; i < attributes; ++i ){
+			child_id = (char *)root->child(i)->value.m_identifier.c_str();
+			child    = ob_get_attribute( owner, child_id );
+			/*
+			 * Something went wrong dude!
+			 */
+			if( child == H_UNDEFINED ){
+				hyb_throw( H_ET_SYNTAX, "'%s' is not a member of %s", child_id, owner_id );
+			}
+			/*
+			 * Ok, let's consider the next element and shift
+			 * relationships between owner and child pointers.
+			 */
+			if( ob_is_struct(child) || ob_is_class(child) ){
+				owner    = child;
+				owner_id = child_id;
+			}
+			/*
+			 * Hello Mr. 'X', you are the last element of the chain!
+			 */
+			else{
+				/*
+				 * Finally, evaluate the new value for the object and assign it
+				 * to the object itself.
+				 */
+				value = exec( frame, node->child(1) );
+				ob_set_attribute_reference( owner, child_id, value );
+				return owner;
+			}
+		}
+
+		return object;
     }
-
-    return object;
 }
 
 Object *Engine::onUminus( vframe_t *frame, Node *node ){
