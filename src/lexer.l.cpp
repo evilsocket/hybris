@@ -173,6 +173,10 @@ include          BEGIN(T_INCLUSION);
 "class"         return T_CLASS;
 "extends"		return T_EXTENDS;
 
+"public"		return T_PUBLIC;
+"private"		return T_PRIVATE;
+"protected"		return T_PROTECTED;
+
 "return"        return T_RETURN;
 
 "function"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*")" {

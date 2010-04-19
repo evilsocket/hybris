@@ -45,7 +45,7 @@ enum H_NODE_TYPE {
     H_NT_NEW	     = 12
 };
 
-enum H_ACCESS_SPECIFIER {
+enum access_t {
 	asPublic = 0,
 	asPrivate,
 	asProtected
@@ -92,7 +92,7 @@ class NodeValue {
         Node    *m_switch;
         Node    *m_default;
         string   m_function;
-        H_ACCESS_SPECIFIER m_access;
+        access_t m_access;
         string   m_method;
         string   m_call;
         NodeList m_method_call;
@@ -189,6 +189,7 @@ class IdentifierNode : public Node {
     public :
 
         IdentifierNode( char *identifier );
+        IdentifierNode( access_t access, char *identifier );
 };
 
 /* structure attribute expression */
@@ -232,8 +233,8 @@ class StructureNode : public Node {
 /* method declarations */
 class MethodNode : public Node {
 	public :
-		MethodNode( char *access, method_decl_t *declaration, int argc, ... );
-		MethodNode( const char *name, H_ACCESS_SPECIFIER access );
+		MethodNode( access_t access, method_decl_t *declaration, int argc, ... );
+		MethodNode( const char *name, access_t access );
 };
 
 /* class type definition */

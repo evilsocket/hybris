@@ -91,6 +91,7 @@ Node *Node::clone(){
 
         case H_NT_IDENTIFIER :
             clone = new IdentifierNode( (char *)value.m_identifier.c_str() );
+            clone->value.m_access = value.m_access;
         break;
 
         case H_NT_EXPRESSION   :
@@ -285,6 +286,11 @@ IdentifierNode::IdentifierNode( char *identifier ) : Node(H_NT_IDENTIFIER) {
     value.m_identifier = identifier;
 }
 
+IdentifierNode::IdentifierNode( access_t access, char *identifier ) : Node(H_NT_IDENTIFIER) {
+    value.m_access     = access;
+	value.m_identifier = identifier;
+}
+
 /* structure attribute */
 AttributeNode::AttributeNode( NodeList *attrlist ) : Node(H_NT_ATTRIBUTE) {
     if( attrlist != NULL ){
@@ -384,22 +390,9 @@ StructureNode::StructureNode( char *s_name, NodeList *attributes ) : Node(H_NT_S
 }
 
 /* methods */
-MethodNode::MethodNode( char *access, method_decl_t *declaration, int argc, ... ) : Node(H_NT_METHOD) {
+MethodNode::MethodNode( access_t access, method_decl_t *declaration, int argc, ... ) : Node(H_NT_METHOD) {
     value.m_method = declaration->method;
-	if( strcmp( access, "public" ) == 0 ){
-		value.m_access = asPublic;
-	}
-	else if( strcmp( access, "private" ) == 0 ){
-		value.m_access = asPrivate;
-	}
-	else if( strcmp( access, "protected" ) == 0 ){
-		value.m_access = asProtected;
-	}
-	else{
-		value.m_access = asPublic;
-	}
-
-	// printf( "new %d method (%s)\n", value.m_access, access );
+    value.m_access = access;
 
     va_list ap;
 	int i;
@@ -417,7 +410,7 @@ MethodNode::MethodNode( char *access, method_decl_t *declaration, int argc, ... 
 	va_end(ap);
 }
 
-MethodNode::MethodNode( const char *name, H_ACCESS_SPECIFIER access ) : Node(H_NT_METHOD) {
+MethodNode::MethodNode( const char *name, access_t access ) : Node(H_NT_METHOD) {
 	value.m_method = name;
 	value.m_access = access;
 }

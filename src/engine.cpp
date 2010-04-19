@@ -371,6 +371,13 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
 		 * Hello Mr. 'X', you are the last element of the chain!
 		 */
         else{
+        	/*
+        	 * TODO : Check for access specifiers for class attributes.
+        	 *
+        	 * if( ob_is_class(owner){
+        	 *     ...
+        	 * }
+        	 */
             return child;
         }
     }
@@ -611,6 +618,10 @@ Object *Engine::onNewType( vframe_t *frame, Node *type ){
 	}
 	else if( ob_is_class(newtype) ){
 		/*
+		 * Set specific class type name.
+		 */
+		((ClassObject *)newtype)->name = type_name;
+		/*
 		 * First of all, check if the user has declared an explicit
 		 * class constructor, in that case consider it instead of the
 		 * default "by arg" constructor.
@@ -767,6 +778,7 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 			if( ob_is_class(owner) ){
 				/*
 				 * Get the method.
+				 * TODO : Handle methods with the same name but different parameters.
 				 */
 				method = ob_get_method( owner, (char *)child_id.c_str() );
 				break;
@@ -790,6 +802,52 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 		hyb_throw( H_ET_SYNTAX, "'%s' does not name a method neither an attribute of '%s'", child_id.c_str(), owner_id.c_str() );
 	}
 
+	if( method->value.m_access != asPublic ){
+		/*
+		 * Search for the type name of the class that owns the method.
+		 * We're pretty sure that someone owns it, otherwise the method
+		 * pointer would be undefined and previous error would be triggered.
+		 */
+		string method_owner;
+		int k, tsz(vt->size() - 1);
+		for( k = tsz; k >= 0; --k ){
+			if( ob_is_class(vt->at(k)) && ob_get_method( vt->at(k), (char *)method->value.m_method.c_str() ) != H_UNDEFINED ){
+				method_owner = vt->label(k);
+			}
+		}
+		/*
+		 * The method is protected.
+		 */
+		if( method->value.m_access == asProtected ){
+			/*
+			 * Protected methods can be accessed only by derived classes.
+			 */
+			if( owner_id != "me" ){
+				hyb_throw( H_ET_SYNTAX, "Protected method '%s' can be accessed only by derived classes of '%s'", method->value.m_method.c_str(), method_owner.c_str() );
+			}
+		}
+		/*
+		 * The method is private, so only the owner can use it.
+		 */
+		else if( method->value.m_access == asPrivate ){
+			/*
+			 * Let's check if the class pointed by 'me' it's the owner of
+			 * the private method.
+			 */
+			if( owner_id == "me" ){
+				if( ((ClassObject *)owner)->name != method_owner ){
+					hyb_throw( H_ET_SYNTAX, "Private method '%s' can be accessed only within '%s' class", method->value.m_method.c_str(), method_owner.c_str() );
+				}
+			}
+			/*
+			 * No way dude, you called a private method!
+			 */
+			else{
+				hyb_throw( H_ET_SYNTAX, "Private method '%s' can be accessed only within '%s' class", method->value.m_method.c_str(), method_owner.c_str() );
+			}
+		}
+	}
+
 	Node    *identifier           = H_UNDEFINED;
 	vframe_t stack;
 	Object  *value                = H_UNDEFINED,
@@ -804,7 +862,7 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 	if( children != (method->children() - 1) ){
 		ctx->depool();
 		hyb_throw( H_ET_SYNTAX, "method '%s' requires %d parameters (called with %d)",
-								 child_id.c_str(),
+								 method->value.m_method.c_str(),
 								 method->children() - 1,
 							 	 children );
 	}
@@ -1137,20 +1195,22 @@ Object *Engine::onDote( vframe_t *frame, Node *node ){
 }
 
 Object *Engine::onAssign( vframe_t *frame, Node *node ){
-    Object *object     = H_UNDEFINED,
-           *value      = H_UNDEFINED;
+    Object *object = H_UNDEFINED,
+           *value  = H_UNDEFINED;
+    Node   *lexpr  = node->child(0);
 
     /*
      * If the first child is an identifier, we are just defining
      * a new variable or assigning it a new value, nothing
      * complicated about it.
      */
-    if( node->child(0)->type() == H_NT_IDENTIFIER ){
-    	char   *identifier = (char *)node->child(0)->value.m_identifier.c_str();
+    if( lexpr->type() == H_NT_IDENTIFIER ){
+    	if( lexpr->value.m_identifier == "me" ){
+    		hyb_throw( H_ET_SYNTAX, "'me' is a reserved word" );
+    	}
 
-		value  = exec( frame, node->child(1) );
-
-		object = frame->add( identifier, value );
+    	value  = exec( frame, node->child(1) );
+		object = frame->add( (char *)lexpr->value.m_identifier.c_str(), value );
 
 		return object;
     }
@@ -1161,7 +1221,7 @@ Object *Engine::onAssign( vframe_t *frame, Node *node ){
     else{
     	Object    *owner  = H_UNDEFINED,
 				  *child  = H_UNDEFINED;
-    	Node      *root   = node->child(0);
+    	Node      *root   = lexpr;
 		int        i, j, attributes(node->children());
 		char      *identifier = (char *)root->value.m_identifier.c_str(),
 				  *owner_id   = identifier,

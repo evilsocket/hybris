@@ -33,7 +33,9 @@ string Context::mk_trace( char *function, vframe_t *frame ){
                  i_end( size - 1 );
 
     for( i = 0; i < size; ++i ){
-        trace += " " + ob_svalue( frame->at(i) ) + (i < i_end ? "," : "");
+		if( strcmp( frame->label(i), "me" ) != 0 ){
+			trace += " " + ob_svalue( frame->at(i) ) + (i < i_end ? "," : "");
+		}
     }
     trace += " )";
 

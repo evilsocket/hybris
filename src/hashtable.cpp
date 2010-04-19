@@ -432,12 +432,8 @@ __force_inline static hash_item_t *Find(hash_table_t *ht, ulong key, ulong *piEm
       }
       /* item found */
 	  else {
-		/* must be occupied */
-		/** TODO: is this check really needed ? **/
-		//if( !KEY_CMP(ht, key, item->key) ) {
 		   ht->posLastFind = item;
 		   return item;               /* we found it! */
-		//}
 	  }
 
       iBucketFirst = ((iBucketFirst + JUMP((char *)(key), offset)) & (ht->cBuckets-1));

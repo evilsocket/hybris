@@ -894,6 +894,7 @@ DECLARE_TYPE(Class);
 typedef struct _ClassObject {
     BASE_OBJECT_HEADER;
     size_t           items;
+    string			 name;
     vector<string>   a_names;
     vector<Object *> a_values;
     vector<string>   m_names;

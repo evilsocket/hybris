@@ -33,6 +33,7 @@
 #define MK_NODE_LIST()            new NodeList()
 /* identifiers, attributes and constants */
 #define MK_IDENT_NODE(a)          new IdentifierNode(a)
+#define MK_ATTR_NODE(a,b)		  new IdentifierNode(a,b)
 #define MK_CONST_NODE(a)          new ConstantNode(a)
 #define MK_IDLST_NODE(a)          new AttributeNode(a)
 /* statements */
@@ -121,6 +122,8 @@ Context __context;
     NodeList *argv;
     /* not reduced node */
     Node *node;
+
+    access_t access;
 };
 
 %locations
@@ -188,6 +191,9 @@ Context __context;
 %token T_STRUCT
 %token T_CLASS
 %token T_EXTENDS
+%token T_PUBLIC
+%token T_PRIVATE
+%token T_PROTECTED
 
 %nonassoc T_IF_END
 %nonassoc T_SB_END
@@ -209,6 +215,7 @@ Context __context;
 %type <argv>   T_IDENT_LIST
 %type <argv>   T_METHOD_LIST
 %type <argv>   T_CLASS_MEMBERS
+%type <access> T_ACCESS
 %%
 
 program    : body           { __context.timer( HYB_TIMER_STOP ); }
@@ -229,20 +236,35 @@ T_CASE_LIST  : T_CASE expression ':' statements T_BREAK T_EOSTMT T_CASE_LIST { $
              | T_CASE expression ':' statements T_BREAK T_EOSTMT             { $$ = MK_NODE_LIST(); $$->tail( $2, $4 ); }
              | /* empty */                                                   { $$ = MK_NODE_LIST(); };
 
-T_ATTR_LIST  : T_IDENT ',' T_ATTR_LIST      { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
-             | T_IDENT T_EOSTMT T_ATTR_LIST { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
-             | /* empty */                 	{ $$ = MK_NODE_LIST(); };
+T_ACCESS : T_PUBLIC    { $$ = asPublic; }
+		 | T_PRIVATE   { $$ = asPrivate; }
+		 | T_PROTECTED { $$ = asProtected; }
+		 | /* empty */ {
+		    /*
+		     * Public specifier assumed as the default one if none is specified.
+		     * TODO : Implement 'static' capabilities.
+		     */
+			$$ = asPublic;
+		 }
 
-T_METHOD_LIST : T_METHOD_PROTOTYPE '{' statements '}' T_METHOD_LIST {
-				 $$ = MK_NODE($5);
-				 $$->head( MK_METHOD_NODE( "public", $1, $3 ) );
+T_ATTR_LIST  : T_ACCESS T_IDENT ',' T_ATTR_LIST      { $$ = MK_NODE($4);    $$->head( MK_ATTR_NODE($1,$2) ); }
+             | T_ACCESS T_IDENT T_EOSTMT T_ATTR_LIST { $$ = MK_NODE($4);    $$->head( MK_ATTR_NODE($1,$2) ); }
+             | /* empty */                 	         { $$ = MK_NODE_LIST(); };
+
+T_METHOD_LIST : T_ACCESS T_METHOD_PROTOTYPE '{' statements '}' T_METHOD_LIST {
+				 $$ = MK_NODE($6);
+				 $$->head( MK_METHOD_NODE( $1, $2, $4 ) );
 			 }
-		     | T_METHOD_PROTOTYPE '{' statements '}' {
+		     | T_ACCESS T_METHOD_PROTOTYPE '{' statements '}' {
 		    	 $$ = MK_NODE_LIST();
-		    	 $$->tail( MK_METHOD_NODE( "public", $1, $3 ) );
+		    	 $$->tail( MK_METHOD_NODE( $1, $2, $4 ) );
 		     };
 
 T_CLASS_MEMBERS : T_ATTR_LIST T_METHOD_LIST T_CLASS_MEMBERS {
+					/*
+					 * TODO : Something goes wrong here if an access specifier
+					 * is used just after T_ATTR_LIST
+					 */
 					$$ = MK_NODE($3);
 					for( NodeIterator i = $1->begin(); i != $1->end(); i++ ){
 						$$->tail( *i );
@@ -324,11 +346,11 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            | T_STRING                                         { $$ = MK_CONST_NODE($1); }
            /* identifiers and attributes */
            | T_IDENT                                          { $$ = MK_IDENT_NODE($1); }
-           | T_IDENT_CHAIN                                     { $$ = MK_IDLST_NODE($1);  }
+           | T_IDENT_CHAIN                                    { $$ = MK_IDLST_NODE($1);  }
            /* expression evaluation returns an identifier */
            | T_DOLLAR expression                              { $$ = MK_DOLLAR_NODE($2); }
            /* attribute declaration/assignation */
-           | T_IDENT_CHAIN T_ASSIGN expression                 { $$ = MK_ASSIGN_NODE( MK_IDLST_NODE($1), $3 ); }
+           | T_IDENT_CHAIN T_ASSIGN expression                { $$ = MK_ASSIGN_NODE( MK_IDLST_NODE($1), $3 ); }
 		   /* identifier declaration/assignation */
 		   | T_IDENT T_ASSIGN expression                      { $$ = MK_ASSIGN_NODE( MK_IDENT_NODE($1), $3 ); }
            /* a single subscript could be an expression itself */
