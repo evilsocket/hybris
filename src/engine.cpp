@@ -372,12 +372,52 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
 		 */
         else{
         	/*
-        	 * TODO : Check for access specifiers for class attributes.
-        	 *
-        	 * if( ob_is_class(owner){
-        	 *     ...
-        	 * }
+        	 * Check for access specifiers for class attributes.
         	 */
+        	if( ob_is_class(owner) ){
+        		/*
+        		 * Get attribute access descriptor.
+        		 */
+        		ClassObject *cobj = ob_class_ucast(owner);
+        		access_t     access;
+        		ClassObjectAccessIterator ai;
+				ClassObjectNameIterator   ni;
+
+				for( ni = cobj->a_names.begin(), ai = cobj->a_access.begin();
+					 ni != cobj->a_names.end();
+					 ni++, ai++ ){
+					if( (*ni) == child_id ){
+						access = (*ai);
+					}
+				}
+
+
+        		if( access != asPublic ){
+					/*
+					 * The attribute is protected.
+					 */
+					if( access == asProtected ){
+						/*
+						 * Protected attributes can be accessed only by derived classes.
+						 */
+						if( strcmp( owner_id, "me" ) != 0 ){
+							hyb_throw( H_ET_SYNTAX, "Protected attribute '%s' can be accessed only by derived classes of '%s'", child_id, cobj->name.c_str() );
+						}
+					}
+					/*
+					 * The attribute is private, so only the owner can use it.
+					 */
+					else if( access == asPrivate ){
+						/*
+						 * Let's check if the class pointed by 'me' it's the owner of
+						 * the private attribute.
+						 */
+						if( strcmp( owner_id, "me" ) != 0 ){
+							hyb_throw( H_ET_SYNTAX, "Private attribute '%s' can be accessed only within '%s' class", child_id, cobj->name.c_str() );
+						}
+					}
+				}
+			}
             return child;
         }
     }
@@ -434,7 +474,8 @@ Object *Engine::onStructureDeclaration( vframe_t *frame, Node * node ){
 Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 	int        i, j, members( node->children() );
 	char      *classname = (char *)node->value.m_identifier.c_str();
-	Object    *c         = (Object *)gc_new_class();
+	/* class prototypes are not garbage collected */
+	Object    *c         = (Object *)(new ClassObject());
 
 	for( i = 0; i < members; ++i ){
 		/*
@@ -442,6 +483,7 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 		 */
 		if( node->child(i)->type() == H_NT_IDENTIFIER ){
 			ob_add_attribute( c, (char *)node->child(i)->value.m_identifier.c_str() );
+			ob_class_ucast(c)->a_access.push_back( node->child(i)->value.m_access );
 		}
 		/*
 		 * Define a method
@@ -468,12 +510,16 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 			}
 
 			ClassObject 			 *cobj = ob_class_ucast(type);
+			ClassObjectAccessIterator ai;
 			ClassObjectNameIterator   ni;
 			ClassObjectValueIterator  vi;
 			ClassObjectMethodIterator mi;
 
-			for( ni = cobj->a_names.begin(), vi = cobj->a_values.begin(); ni != cobj->a_names.end(); ni++, vi++ ){
+			for( ni = cobj->a_names.begin(), vi = cobj->a_values.begin(), ai = cobj->a_access.begin();
+				 ni != cobj->a_names.end();
+				 ni++, vi++, ai++ ){
 				ob_set_attribute( c, (char *)(*ni).c_str(), (*vi) );
+				ob_class_ucast(c)->a_access.push_back( (*ai) );
 			}
 			for( ni = cobj->m_names.begin(), mi = cobj->m_values.begin(); ni != cobj->m_names.end(); ni++, mi++ ){
 				ob_define_method( c, (char *)(*ni).c_str(), (*mi) );
@@ -626,7 +672,7 @@ Object *Engine::onNewType( vframe_t *frame, Node *type ){
 		 * class constructor, in that case consider it instead of the
 		 * default "by arg" constructor.
 		 */
-		Node *ctor = ob_get_method( newtype, type_name );
+		Node *ctor = ob_get_method( newtype, type_name, children );
 		if( ctor != H_UNDEFINED ){
 			if( children > ctor->callDefinedArgc() ){
 				hyb_throw( H_ET_SYNTAX, "class '%s' constructor requires %d arguments, called with %d",
@@ -740,8 +786,10 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 		return H_UNDEFINED;
 	}
 
-	Node     *method;
-	int       calls(call->value.m_method_call.size());
+	Node     *method = H_UNDEFINED;
+	int       calls( call->value.m_method_call.size() ),
+			  argc( call->children() ),
+			  method_argc;
 	string    child_id = (*method_call.begin())->value.m_identifier,
 			  owner_id = child_id;
 	NodeIterator i( method_call.begin() );
@@ -776,11 +824,14 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 			 * Owner is a class ?
 			 */
 			if( ob_is_class(owner) ){
-				/*
-				 * Get the method.
-				 * TODO : Handle methods with the same name but different parameters.
-				 */
-				method = ob_get_method( owner, (char *)child_id.c_str() );
+				method = ob_get_method( owner, (char *)child_id.c_str(), argc );
+				if( method ){
+					/*
+					 * The last child of a method is its body itself, so we compare
+					 * call children with method->children() - 1 to ignore the body.
+					 */
+					method_argc = method->children() - 1;
+				}
 				break;
 			}
 			else{
@@ -852,19 +903,18 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 	vframe_t stack;
 	Object  *value                = H_UNDEFINED,
 			*result               = H_UNDEFINED;
-
-	unsigned int j, children(call->children());
+	unsigned int j;
 
 	/*
 	 * The last child of a method is its body itself, so we compare
 	 * call children with method->children() - 1 to ignore the body.
 	 */
-	if( children != (method->children() - 1) ){
+	if( argc != method_argc ){
 		ctx->depool();
 		hyb_throw( H_ET_SYNTAX, "method '%s' requires %d parameters (called with %d)",
 								 method->value.m_method.c_str(),
-								 method->children() - 1,
-							 	 children );
+								 method_argc,
+							 	 argc );
 	}
 
 	/*
@@ -872,7 +922,7 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 	 * methods for me->... calls.
 	 */
 	stack.insert( "me", owner );
-	for( j = 0; j < children; ++j ){
+	for( j = 0; j < argc; ++j ){
 		identifier = call->child(j);
 		value = exec( frame, identifier );
 		/*

@@ -719,9 +719,9 @@ void ob_define_method( Object *c, char *name, Node *code ){
 	}
 }
 
-Node *ob_get_method( Object *c, char *name ){
+Node *ob_get_method( Object *c, char *name, int argc /*= -1*/ ){
 	if( c->type->get_method != HYB_UNIMPLEMENTED_FUNCTION ){
-		return c->type->get_method( c, name );
+		return c->type->get_method( c, name, argc );
 	}
 	else{
 		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a class", c->type->name );

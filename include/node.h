@@ -45,11 +45,14 @@ enum H_NODE_TYPE {
     H_NT_NEW	     = 12
 };
 
-enum access_t {
-	asPublic = 0,
-	asPrivate,
-	asProtected
-};
+#ifndef H_ACCESS_SPECIFIER
+	enum access_t {
+		asPublic = 0,
+		asPrivate,
+		asProtected
+	};
+#	define H_ACCESS_SPECIFIER
+#endif
 
 /* pre declaration of class Node */
 class  Node;
@@ -189,6 +192,7 @@ class IdentifierNode : public Node {
     public :
 
         IdentifierNode( char *identifier );
+        IdentifierNode( access_t access, Node *i );
         IdentifierNode( access_t access, char *identifier );
 };
 

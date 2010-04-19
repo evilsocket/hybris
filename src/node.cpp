@@ -57,10 +57,6 @@ Node::~Node(){
         delete child;
     }
     clear();
-
-    if( value.m_constant != NULL ){
-        ob_free( value.m_constant );
-	}
 }
 
 void Node::addChild( Node *child ){
@@ -284,6 +280,13 @@ StatementNode::StatementNode( int statement, Node *sw, NodeList *caselist, Node 
 /* identifiers */
 IdentifierNode::IdentifierNode( char *identifier ) : Node(H_NT_IDENTIFIER) {
     value.m_identifier = identifier;
+}
+
+IdentifierNode::IdentifierNode( access_t access, Node *i ) : Node(H_NT_IDENTIFIER) {
+	assert( i->type() == H_NT_IDENTIFIER );
+
+	value.m_access     = access;
+	value.m_identifier = i->value.m_identifier;
 }
 
 IdentifierNode::IdentifierNode( access_t access, char *identifier ) : Node(H_NT_IDENTIFIER) {

@@ -69,6 +69,7 @@ typedef Object * (*function_t)( Context *, vmem_t * );
 #define map_argv(i)    ob_map_val( data->at(i) )
 #define matrix_argv(i) ob_matrix_val( data->at(i) )
 #define struct_argv(i) ob_struct_val( data->at(i) )
+#define class_argv(i)  ob_class_val( data->at(i) )
 
 /* macros to assert an object type */
 #define ob_type_assert(o,t)      if( !(o->type->code == t) ){ \

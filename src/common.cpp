@@ -41,6 +41,11 @@ void yyerror( char *error ){
     extern int yylineno;
     extern Context __context;
 
+    /*
+     * Make sure first character is uppercase.
+     */
+    error[0] = toupper( error[0] );
+
     fflush(stderr);
 	if( strchr( error, '\n' ) ){
 		fprintf( stderr, "[LINE %d] %s", yylineno, error );

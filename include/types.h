@@ -117,6 +117,14 @@ typedef struct _Object {
 }
 Object;
 
+#ifndef H_ACCESS_SPECIFIER
+	enum access_t {
+		asPublic = 0,
+		asPrivate,
+		asProtected
+	};
+#	define H_ACCESS_SPECIFIER
+#endif
 
 class Node;
 
@@ -163,7 +171,7 @@ typedef Object * (*ob_get_attribute_function_t) ( Object *, char * );
 typedef void     (*ob_set_attribute_function_t) ( Object *, char *, Object * );
 // functions to manage class methods
 typedef void     (*ob_define_method_function_t) ( Object *, char *, Node * );
-typedef Node   * (*ob_get_method_function_t)	( Object *, char * );
+typedef Node   * (*ob_get_method_function_t)	( Object *, char *, int );
 /*
  * Object type codes enumeration
  */
@@ -602,9 +610,9 @@ void    ob_set_attribute_reference( Object *s, char *a, Object *v );
  */
 void    ob_define_method( Object *c, char *name, Node *code );
 /*
- * Get the method 'name' from the 'c' class.
+ * Get the method 'name' from the 'c' class with 'argc' arguments.
  */
-Node   *ob_get_method( Object *c, char *name );
+Node   *ob_get_method( Object *c, char *name, int argc = -1 );
 
 /**
  * Types definition.
@@ -895,6 +903,7 @@ typedef struct _ClassObject {
     BASE_OBJECT_HEADER;
     size_t           items;
     string			 name;
+    vector<access_t> a_access;
     vector<string>   a_names;
     vector<Object *> a_values;
     vector<string>   m_names;
@@ -912,12 +921,14 @@ typedef struct _ClassObject {
 }
 ClassObject;
 
+typedef vector<access_t>::iterator ClassObjectAccessIterator;
 typedef vector<string>::iterator   ClassObjectNameIterator;
 typedef vector<Object *>::iterator ClassObjectValueIterator;
 typedef vector<Node *>::iterator   ClassObjectMethodIterator;
 
 #define ob_is_class(o)    ob_is_typeof(o,Class)
 #define ob_class_ucast(o) ((ClassObject *)(o))
+#define ob_class_val(o)   ((ClassObject *)o)
 
 #endif
 

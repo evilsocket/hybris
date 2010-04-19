@@ -19,6 +19,8 @@
 #include "common.h"
 #include "types.h"
 #include "node.h"
+#include "vmem.h"
+#include "context.h"
 
 /** generic function pointers **/
 void class_set_references( Object *me, int ref ){
@@ -35,18 +37,23 @@ void class_set_references( Object *me, int ref ){
 Object *class_clone( Object *me ){
     ClassObject *cclone = gc_new_class(),
                 *cme    = ob_class_ucast(me);
+    ClassObjectAccessIterator ai;
     ClassObjectNameIterator   ni;
     ClassObjectValueIterator  vi;
     ClassObjectMethodIterator mi;
 
-    for( ni = cme->a_names.begin(), vi = cme->a_values.begin(); ni != cme->a_names.end(); ni++, vi++ ){
+    for( ni = cme->a_names.begin(), vi = cme->a_values.begin(), ai = cme->a_access.begin();
+    	 ni != cme->a_names.end();
+    	 ni++, vi++, ai++ ){
     	ob_set_attribute( (Object *)cclone, (char *)(*ni).c_str(), (*vi) );
+    	cclone->a_access.push_back( (*ai) );
     }
     for( ni = cme->m_names.begin(), mi = cme->m_values.begin(); ni != cme->m_names.end(); ni++, mi++ ){
     	ob_define_method( (Object *)cclone, (char *)(*ni).c_str(), (*mi) );
     }
 
     cclone->items = cme->items;
+    cclone->name  = cme->name;
 
     return (Object *)cclone;
 }
@@ -56,9 +63,30 @@ size_t class_get_size( Object *me ){
 }
 
 void class_free( Object *me ){
-    ClassObjectValueIterator vi;
+	ClassObjectNameIterator   ni;
+    ClassObjectValueIterator  vi;
+    ClassObjectMethodIterator mi;
     ClassObject *cme = ob_class_ucast(me);
-    Object          *vitem;
+    Object      *vitem;
+
+    /*
+     * Check if the class has a destructors and call it.
+     */
+	for( ni = cme->m_names.begin(), mi = cme->m_values.begin(); ni != cme->m_names.end(); ni++, mi++ ){
+		if( *ni == "__expire" ){
+			Node *dtor = *mi;
+			vframe_t stack;
+			extern Context __context;
+
+			stack.insert( "me", me );
+
+			__context.trace( "__expire", &stack );
+
+			__context.engine->exec( &stack, dtor->callBody() );
+
+			__context.detrace();
+		}
+	}
 
     for( vi = cme->a_values.begin(); vi != cme->a_values.end(); vi++ ){
         vitem = *vi;
@@ -67,6 +95,7 @@ void class_free( Object *me ){
         }
     }
 
+    cme->a_access.clear();
     cme->a_names.clear();
     cme->a_values.clear();
     cme->m_names.clear();
@@ -176,16 +205,36 @@ void class_define_method( Object *me, char *name, Node *code ){
 	cme->items = cme->a_names.size() + cme->m_names.size();
 }
 
-Node *class_get_method( Object *me, char *name ){
+Node *class_get_method( Object *me, char *name, int argc ){
 	ClassObject *cme = ob_class_ucast(me);
+	Node *best_match = NULL;
+	int   best_match_argc, match_argc;
 
 	int i, sz( cme->m_names.size() );
 	for( i = 0; i < sz; ++i ){
 		if( cme->m_names[i] == string(name) ){
-			return cme->m_values[i];
+			if( argc < 0 ){
+				return cme->m_values[i];
+			}
+			else{
+				if( best_match == NULL ){
+					/*
+					 * The last child of a method is its body itself, so we compare
+					 * call children with method->children() - 1 to ignore the body.
+					 */
+					best_match 		= cme->m_values[i];
+					best_match_argc = best_match->children() - 1;
+				}
+				else{
+					match_argc = cme->m_values[i]->children() - 1;
+					if( match_argc != best_match_argc && match_argc == argc ){
+						return cme->m_values[i];
+					}
+				}
+			}
 		}
 	}
-	return NULL;
+	return best_match;
 }
 
 IMPLEMENT_TYPE(Class) {

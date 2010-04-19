@@ -23,6 +23,17 @@
 #include <getopt.h>
 
 #define YY_(s) (char *)s
+/*
+ * Make bison parsing errors more verbose rather than a
+ * idiot "syntax error" -.-
+ *
+ * A note to Bison developers :
+ * For God sake, why don't you guys document this macro in a
+ * more detailed way!
+ * I spent 2 days just to end up reversing the bison generated
+ * code to "find out" YYERROR_VERBOSE!!!
+ */
+#define YYERROR_VERBOSE 1
 
 /** macros to define parse tree **/
 /* get the node evaluation */
@@ -118,11 +129,11 @@ Context __context;
     function_decl_t *function;
     /* method prototype declaration */
     method_decl_t *method;
-    /* function call temp arg list */
-    NodeList *argv;
+    /* node list for multiple nodes on one statement */
+    NodeList *list;
     /* not reduced node */
     Node *node;
-
+    /* access specifiers */
     access_t access;
 };
 
@@ -208,14 +219,15 @@ Context __context;
 %left T_DOLLAR T_INC T_DEC T_MULE T_MUL T_DIVE T_DIV T_PLUSE T_PLUS T_MINUSE T_MINUS T_DOTE T_DOT
 
 %type <node>   statement expression statements
-%type <argv>   T_ARGV_LIST
-%type <argv>   T_CASE_LIST
-%type <argv>   T_ATTR_LIST
-%type <argv>   T_IDENT_CHAIN
-%type <argv>   T_IDENT_LIST
-%type <argv>   T_METHOD_LIST
-%type <argv>   T_CLASS_MEMBERS
-%type <access> T_ACCESS
+%type <list>   argumentList
+%type <list>   caseCascade
+%type <list>   attrList
+%type <list>   identChain
+%type <list>   identList
+%type <list>   methodList
+%type <list>   classMembers
+%type <list>   classExtensions
+%type <access> accessSpecifier
 %%
 
 program    : body           { __context.timer( HYB_TIMER_STOP ); }
@@ -227,77 +239,85 @@ body       : body statement { __context.timer( HYB_TIMER_START );
            | /* empty */ ;
 
 
-T_ARGV_LIST  : expression T_MAPS T_ARGV_LIST { $$ = MK_NODE($3);    $$->head($1); }
-             | expression ',' T_ARGV_LIST    { $$ = MK_NODE($3);    $$->head($1); }
-             | expression                    { $$ = MK_NODE_LIST(); $$->tail($1); }
-             | /* empty */                   { $$ = MK_NODE_LIST(); };
+argumentList : expression T_MAPS argumentList { $$ = MK_NODE($3);    $$->head($1); }
+             | expression ',' argumentList    { $$ = MK_NODE($3);    $$->head($1); }
+             | expression                     { $$ = MK_NODE_LIST(); $$->tail($1); }
+             | /* empty */                    { $$ = MK_NODE_LIST(); };
 
-T_CASE_LIST  : T_CASE expression ':' statements T_BREAK T_EOSTMT T_CASE_LIST { $$ = MK_NODE($7);    $$->head( $2, $4 ); }
+identChain : T_IDENT T_MAPS identChain { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
+		   | T_IDENT T_MAPS T_IDENT    { $$ = MK_NODE_LIST(); $$->tail( MK_IDENT_NODE($1), MK_IDENT_NODE($3) ); }
+
+caseCascade  : T_CASE expression ':' statements T_BREAK T_EOSTMT caseCascade { $$ = MK_NODE($7);    $$->head( $2, $4 ); }
              | T_CASE expression ':' statements T_BREAK T_EOSTMT             { $$ = MK_NODE_LIST(); $$->tail( $2, $4 ); }
              | /* empty */                                                   { $$ = MK_NODE_LIST(); };
 
-T_ACCESS : T_PUBLIC    { $$ = asPublic; }
-		 | T_PRIVATE   { $$ = asPrivate; }
-		 | T_PROTECTED { $$ = asProtected; }
-		 | /* empty */ {
-		    /*
-		     * Public specifier assumed as the default one if none is specified.
-		     * TODO : Implement 'static' capabilities.
-		     */
-			$$ = asPublic;
-		 }
+classExtensions : T_EXTENDS identList { $$ = MK_NODE($2); }
+			    | /* empty */	      { $$ = NULL;        };
 
-T_ATTR_LIST  : T_ACCESS T_IDENT ',' T_ATTR_LIST      { $$ = MK_NODE($4);    $$->head( MK_ATTR_NODE($1,$2) ); }
-             | T_ACCESS T_IDENT T_EOSTMT T_ATTR_LIST { $$ = MK_NODE($4);    $$->head( MK_ATTR_NODE($1,$2) ); }
-             | /* empty */                 	         { $$ = MK_NODE_LIST(); };
+accessSpecifier : T_PUBLIC    { $$ = asPublic;    }
+		        | T_PRIVATE   { $$ = asPrivate;   }
+		        | T_PROTECTED { $$ = asProtected; }
+		        | /* empty */ { $$ = asPublic;    };
 
-T_METHOD_LIST : T_ACCESS T_METHOD_PROTOTYPE '{' statements '}' T_METHOD_LIST {
+identList : T_IDENT ',' identList { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
+		  | T_IDENT ',' T_IDENT   { $$ = MK_NODE_LIST(); $$->tail( MK_IDENT_NODE($1), MK_IDENT_NODE($3) );   }
+		  | T_IDENT 			  { $$ = MK_NODE_LIST(); $$->head( MK_IDENT_NODE($1) ); }
+
+attrList  : accessSpecifier identList T_EOSTMT attrList {
+			  $$ = MK_NODE($4);
+			  for( NodeIterator i = $2->begin(); i != $2->end(); i++ ){
+				  $$->head( MK_ATTR_NODE( $1, *i ) );
+			  }
+			  delete $2;
+		  }
+		  | accessSpecifier identList T_EOSTMT {
+			  $$ = MK_NODE_LIST();
+			  for( NodeIterator i = $2->begin(); i != $2->end(); i++ ){
+				  $$->head( MK_ATTR_NODE( $1, *i ) );
+			  }
+			  delete $2;
+		  }
+		  | methodList { $$ = MK_NODE($1); }
+
+methodList : accessSpecifier T_METHOD_PROTOTYPE '{' statements '}' methodList {
 				 $$ = MK_NODE($6);
 				 $$->head( MK_METHOD_NODE( $1, $2, $4 ) );
-			 }
-		     | T_ACCESS T_METHOD_PROTOTYPE '{' statements '}' {
-		    	 $$ = MK_NODE_LIST();
-		    	 $$->tail( MK_METHOD_NODE( $1, $2, $4 ) );
-		     };
+		   }
+		   | accessSpecifier T_METHOD_PROTOTYPE '{' statements '}' {
+				 $$ = MK_NODE_LIST();
+				 $$->head( MK_METHOD_NODE( $1, $2, $4 ) );
+		   };
 
-T_CLASS_MEMBERS : T_ATTR_LIST T_METHOD_LIST T_CLASS_MEMBERS {
-					/*
-					 * TODO : Something goes wrong here if an access specifier
-					 * is used just after T_ATTR_LIST
-					 */
-					$$ = MK_NODE($3);
-					for( NodeIterator i = $1->begin(); i != $1->end(); i++ ){
-						$$->tail( *i );
-					}
-					for( NodeIterator j = $2->begin(); j != $2->end(); j++ ){
-						$$->tail( *j );
-					}
+classMembers : attrList methodList classMembers {
+				$$ = MK_NODE($3);
+				for( NodeIterator i = $1->begin(); i != $1->end(); i++ ){
+					$$->tail( *i );
 				}
-			    | T_METHOD_LIST T_ATTR_LIST T_CLASS_MEMBERS {
-			    	$$ = MK_NODE($3);
-			    	for( NodeIterator i = $1->begin(); i != $1->end(); i++ ){
-						$$->tail( *i );
-					}
-					for( NodeIterator j = $2->begin(); j != $2->end(); j++ ){
-						$$->tail( *j );
-					}
-			    }
-			    | T_ATTR_LIST {
-			    	$$ = MK_NODE($1);
-			    }
-			    | T_METHOD_LIST {
-			    	$$ = MK_NODE($1);
-			    }
-			    | {
-			    	$$ = MK_NODE_LIST();
-			    };
-
-T_IDENT_CHAIN : T_IDENT T_MAPS T_IDENT_CHAIN { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
-              | T_IDENT T_MAPS T_IDENT       { $$ = MK_NODE_LIST(); $$->tail( MK_IDENT_NODE($1), MK_IDENT_NODE($3) ); }
-
-T_IDENT_LIST : T_IDENT ',' T_IDENT_CHAIN { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
-			 | T_IDENT ',' T_IDENT       { $$ = MK_NODE_LIST(); $$->tail( MK_IDENT_NODE($1), MK_IDENT_NODE($3) );   }
-			 | T_IDENT 					 { $$ = MK_NODE_LIST(); $$->head( MK_IDENT_NODE($1) ); }
+				for( NodeIterator j = $2->begin(); j != $2->end(); j++ ){
+					$$->tail( *j );
+				}
+				delete $1;
+				delete $2;
+			 }
+			 | methodList attrList {
+				$$ = MK_NODE_LIST();
+				for( NodeIterator i = $1->begin(); i != $1->end(); i++ ){
+					$$->tail( *i );
+				}
+				for( NodeIterator j = $2->begin(); j != $2->end(); j++ ){
+					$$->tail( *j );
+				}
+				delete $1;
+				delete $2;
+			 }
+			 | methodList {
+				 $$ = MK_NODE($1);
+			 }
+			 | attrList {
+				 $$ = MK_NODE($1);
+			 }
+			 | /* empty */
+			 {  $$ = MK_NODE_LIST(); };
 
 statement  : T_EOSTMT                                                   { $$ = MK_EOSTMT_NODE( NULL, NULL ); }
 	   	   | expression                                                 { $$ = MK_NODE($1); }
@@ -317,10 +337,10 @@ statement  : T_EOSTMT                                                   { $$ = M
            | T_IF '(' expression ')' statement %prec T_IF_END           { $$ = MK_IF_NODE( $3, $5 ); }
            | T_IF '(' expression ')' statement T_ELSE statement         { $$ = MK_IF_ELSE_NODE( $3, $5, $7 ); }
            | T_SWITCH '(' expression ')' '{'
-                T_CASE_LIST
+                caseCascade
             '}' %prec T_SWITCH_END                                      { $$ = MK_SWITCH_NODE( $3, $6 ); }
            | T_SWITCH '(' expression ')' '{'
-                T_CASE_LIST
+                caseCascade
                 T_DEFAULT ':' statements
             '}'                                                         { $$ = MK_SWITCH_DEF_NODE( $3, $6, $9 ); }
            /* statement body */
@@ -328,13 +348,12 @@ statement  : T_EOSTMT                                                   { $$ = M
            /* function declaration */
            | T_FUNCTION_PROTOTYPE '{' statements '}'                    { $$ = MK_FUNCTION_NODE( $1, $3 ); }
            /* structure declaration */
-           | T_STRUCT T_IDENT '{' T_ATTR_LIST '}'                       { $$ = MK_STRUCT_NODE( $2, $4 ); }
-		   /* simple class declaration */
-           | T_CLASS T_IDENT '{' T_CLASS_MEMBERS '}' 					{ $$ = MK_CLASS_NODE( $2, NULL, $4 ); }
-           /* complex class declaration */
-           | T_CLASS T_IDENT T_EXTENDS T_IDENT_LIST '{' T_CLASS_MEMBERS '}' {
-        	   $$ = MK_CLASS_NODE( $2, $4, $6 );
-           }
+           | T_STRUCT T_IDENT '{' attrList '}'                       { $$ = MK_STRUCT_NODE( $2, $4 ); }
+		   /* class declaration */
+           | T_CLASS T_IDENT classExtensions '{' classMembers '}' {
+        	   $$ = MK_CLASS_NODE( $2, $3, $5 );
+           };
+
 
 statements : /* empty */          { $$ = MK_NODE(0);  }
            | statement            { $$ = MK_NODE($1); }
@@ -346,11 +365,11 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            | T_STRING                                         { $$ = MK_CONST_NODE($1); }
            /* identifiers and attributes */
            | T_IDENT                                          { $$ = MK_IDENT_NODE($1); }
-           | T_IDENT_CHAIN                                    { $$ = MK_IDLST_NODE($1);  }
+           | identChain                                       { $$ = MK_IDLST_NODE($1);  }
            /* expression evaluation returns an identifier */
            | T_DOLLAR expression                              { $$ = MK_DOLLAR_NODE($2); }
            /* attribute declaration/assignation */
-           | T_IDENT_CHAIN T_ASSIGN expression                { $$ = MK_ASSIGN_NODE( MK_IDLST_NODE($1), $3 ); }
+           | identChain T_ASSIGN expression                   { $$ = MK_ASSIGN_NODE( MK_IDLST_NODE($1), $3 ); }
 		   /* identifier declaration/assignation */
 		   | T_IDENT T_ASSIGN expression                      { $$ = MK_ASSIGN_NODE( MK_IDENT_NODE($1), $3 ); }
            /* a single subscript could be an expression itself */
@@ -398,11 +417,11 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            /* regex specific */
            | expression T_REGEX_OP expression                 { $$ = MK_PCRE_NODE( $1, $3 ); }
            /* structure or class creation */
-           | T_NEW T_IDENT '(' T_ARGV_LIST ')' %prec T_NEW_END { $$ = MK_NEW_NODE( $2, $4 ); }
+           | T_NEW T_IDENT '(' argumentList ')' %prec T_NEW_END { $$ = MK_NEW_NODE( $2, $4 ); }
            /* function call (consider two different cases due to hybris function calls */
-		   | T_IDENT      '(' T_ARGV_LIST ')' %prec T_CALL_END { $$ = MK_CALL_NODE( $1, $3 ); }
-		   | T_IDENT_CHAIN '(' T_ARGV_LIST ')' %prec T_CALL_END { $$ = MK_METHOD_CALL_NODE( $1, $3 ); }
-           | expression '(' T_ARGV_LIST ')'                    { $$ = MK_CALL_NODE( $1, $3 ); }
+		   | T_IDENT    '(' argumentList ')' %prec T_CALL_END { $$ = MK_CALL_NODE( $1, $3 ); }
+		   | identChain '(' argumentList ')' %prec T_CALL_END { $$ = MK_METHOD_CALL_NODE( $1, $3 ); }
+           | expression '(' argumentList ')'                    { $$ = MK_CALL_NODE( $1, $3 ); }
            /* ternary operator */
            | '(' expression '?' expression ':' expression ')' { $$ = MK_QUESTION_NODE( $2, $4, $6 ); }
            /* group expression */
@@ -449,11 +468,11 @@ int hyb_usage( char *argvz ){
 
 int main( int argc, char *argv[] ){
     static struct option options[] = {
-            {"gc",    1, 0, 'g' },
-            {"time",  0, 0, 't' },
-            {"trace", 0, 0, 's' },
-            {"help",  0, 0, 'h' },
-            {0, 0, 0, 0}
+            { "gc",    1, 0, 'g' },
+            { "time",  0, 0, 't' },
+            { "trace", 0, 0, 's' },
+            { "help",  0, 0, 'h' },
+            { 0, 0, 0, 0 }
     };
 
     int index = 0;

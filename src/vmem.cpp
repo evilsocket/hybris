@@ -38,9 +38,9 @@ Object *VirtualMemory::add( char *identifier, Object *object ){
     if( (old = get( identifier )) == H_UNDEFINED ){
     	if( object != H_UNDEFINED ){
             o = ob_clone(object);
+
             ob_set_references( o, +1 );
         }
-
         return insert( identifier, o );
     }
     /* else set the new value */

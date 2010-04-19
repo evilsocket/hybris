@@ -116,6 +116,7 @@ void Context::init( int argc, char *argv[] ){
     /* initialize misc constants */
     HYBRIS_DEFINE_CONSTANT( this, "true",  gc_new_integer(1) );
     HYBRIS_DEFINE_CONSTANT( this, "false", gc_new_integer(0) );
+
     /*
      * Define __FILE__ if we are not in stdin reading mode.
      */
@@ -140,6 +141,11 @@ void Context::release(){
         }
     unlock();
     #endif
+    /*
+     * gc_release must be called before anything else because it will
+     * need vmem, vtypes and so on to call classes destructors.
+     */
+    gc_release();
 
     delete engine;
 
@@ -160,7 +166,6 @@ void Context::release(){
     vmem.release();
     vcode.release();
     vtypes.release();
-    gc_release();
 }
 
 void Context::loadNamespace( string path ){
