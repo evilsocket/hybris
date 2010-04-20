@@ -39,33 +39,20 @@ thread_args_t;
 void * hyb_pthread_worker( void *arg ){
     thread_args_t *args = (thread_args_t *)arg;
     Context       *ctx  = args->ctx;
-    vmem_t        *data = args->data;
+    vmem_t        *data = args->data,
+				   stack;
 
     ctx->pool();
 
-    Node *call         = new Node(H_NT_CALL);
-    call->value.m_call = string_argv(0).c_str();
-
-	if( ob_argc() > 1 ){
+    if( ob_argc() > 1 ){
 		unsigned int i;
 		for( i = 1; i < ob_argc(); ++i ){
-			switch( ob_argv(i)->type->code ){
-				case otInteger : call->addChild( new ConstantNode( int_argv(i) ) );   break;
-				case otFloat   : call->addChild( new ConstantNode( float_argv(i) ) ); break;
-				case otChar    : call->addChild( new ConstantNode( char_argv(i) ) );   break;
-				case otString  : call->addChild( new ConstantNode( (char *)string_argv(i).c_str() ) ); break;
-				default :
-                    ctx->depool();
-                    hyb_throw( H_ET_GENERIC, "type %d not supported for pthread call", ob_argv(i)->type->name );
-			}
+			stack.push( ob_argv(i) );
 		}
 	}
 
-	Object *_return = ctx->engine->onFunctionCall( data, call, 1 );
-	delete call;
-    delete _return;
+    ctx->engine->onThreadedCall( string_argv(0), &stack );
 
-    args->data->release();
     delete args;
 
     ctx->depool();

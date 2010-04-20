@@ -569,6 +569,62 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
     return result;
 }
 
+Object *Engine::onThreadedCall( string function_name, vmem_t *argv ){
+	Node    *function             = H_UNDEFINED,
+			*identifier           = H_UNDEFINED;
+	vframe_t stack;
+	Object  *value                = H_UNDEFINED,
+			*result               = H_UNDEFINED;
+	Node    *body                 = H_UNDEFINED;
+
+	vector<string> identifiers;
+	unsigned int i(0), children;
+
+	/* search first in the code segment */
+	if( (function = vc->get((char *)function_name.c_str())) == H_UNDEFINED ){
+		hyb_throw( H_ET_SYNTAX, "'%s' undeclared user function identifier", function_name.c_str() );
+	}
+
+	body = function->child(0);
+	/* a function could be without arguments */
+	if( body->type() == H_NT_IDENTIFIER ){
+		children = function->children();
+		do{
+			identifier = body;
+			identifiers.push_back( identifier->value.m_identifier );
+			body = function->child(++i);
+		}while( body->type() == H_NT_IDENTIFIER && i < children );
+	}
+
+	if( identifiers.size() != argv->size() ){
+	   ctx->depool();
+	   hyb_throw( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
+						       function_name.c_str(),
+						       identifiers.size(),
+						       argv->size() );
+	}
+
+	children = argv->size();
+	for( i = 0; i < children; ++i  ){
+		/*
+		 * Value references count is set to zero now, builtins
+		 * do not care about reference counting, so this object will
+		 * be safely freed after the function call by the gc.
+		 */
+		stack.insert( (char *)identifiers[i].c_str(), argv->at(i) );
+	}
+
+	ctx->trace( (char *)function_name.c_str(), &stack );
+
+	/* call the function */
+	result = exec( &stack, body );
+
+	ctx->detrace();
+
+	/* return function evaluation value */
+	return result;
+}
+
 Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
     char    *callname             = (char *)call->value.m_call.c_str();
     Node    *function             = H_UNDEFINED,

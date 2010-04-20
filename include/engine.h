@@ -73,6 +73,10 @@ class Engine {
 		 * Node handler dispatcher.
 		 */
 		Object *exec( vframe_t *frame, Node *node );
+		/*
+		 * Special case to handle threaded function calls.
+		 */
+		Object *onThreadedCall( string function_name, vmem_t *argv );
         /*
          * Node handlers for each type of node (statement, expression, ...).
          *
