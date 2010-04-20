@@ -182,34 +182,22 @@ Node *Node::clone(){
 /* constants */
 ConstantNode::ConstantNode( long v ) : Node(H_NT_CONSTANT) {
     value.m_constant = (Object *)gc_new_integer(v);
-    #ifdef GC_SUPPORT
     value.m_constant->attributes |= H_OA_CONSTANT;
-    value.m_constant->attributes &= ~H_OA_GARBAGE;
-	#endif
 }
 
 ConstantNode::ConstantNode( double v ) : Node(H_NT_CONSTANT) {
     value.m_constant = (Object *)gc_new_float(v);
-    #ifdef GC_SUPPORT
     value.m_constant->attributes |= H_OA_CONSTANT;
-    value.m_constant->attributes &= ~H_OA_GARBAGE;
-	#endif
 }
 
 ConstantNode::ConstantNode( char v ) : Node(H_NT_CONSTANT) {
     value.m_constant = (Object *)gc_new_char(v);
-    #ifdef GC_SUPPORT
     value.m_constant->attributes |= H_OA_CONSTANT;
-    value.m_constant->attributes &= ~H_OA_GARBAGE;
-	#endif
 }
 
 ConstantNode::ConstantNode( char *v ) : Node(H_NT_CONSTANT) {
     value.m_constant = (Object *)gc_new_string(v);
-    #ifdef GC_SUPPORT
     value.m_constant->attributes |= H_OA_CONSTANT;
-    value.m_constant->attributes &= ~H_OA_GARBAGE;
-	#endif
 }
 
 /* expressions */

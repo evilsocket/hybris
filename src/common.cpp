@@ -50,6 +50,7 @@ void yyerror( char *error ){
 	if( strchr( error, '\n' ) ){
 		fprintf( stderr, "[LINE %d] %s", yylineno, error );
 		hyb_print_stacktrace();
+	    __context.unlock();
         __context.release();
     	exit(-1);
 	}
@@ -94,7 +95,7 @@ void hyb_throw( H_ERROR_TYPE type, const char *format, ... ){
     yyerror(error);
 
     if( fault ){
-        extern Context __context;
+    	extern Context __context;
         // print function stack trace
         hyb_print_stacktrace();
         // release the context

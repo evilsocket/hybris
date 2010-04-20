@@ -27,33 +27,40 @@ VirtualMemory::~VirtualMemory(){
 	/*
 	 * See note on ~HashMap()
 	 */
-	// release();
 }
 
 Object *VirtualMemory::add( char *identifier, Object *object ){
-    Object *o   = H_UNDEFINED,
-           *old = H_UNDEFINED;
+    Object *_new = H_UNDEFINED,
+           *_old = H_UNDEFINED;
 
-    /* if object does not exist yet, create a new one */
-    if( (old = get( identifier )) == H_UNDEFINED ){
-    	if( object != H_UNDEFINED ){
-            o = ob_clone(object);
+    if( object != H_UNDEFINED ){
+    	/*
+    	 * Only constants and referenced objects shall be cloned.
+    	 */
+    	if( (object->attributes & H_OA_CONSTANT) == H_OA_CONSTANT || object->ref > 0 ){
+    		_new = ob_clone(object);
+    	}
+    	/*
+    	 * Non constant and no references.
+    	 */
+    	else{
+    		_new = object;
+    	}
 
-            ob_set_references( o, +1 );
-        }
-        return insert( identifier, o );
+    	ob_set_references( _new, +1 );
+    }
+
+    /* if object does not exist yet, insert as a new one */
+    if( (_old = get( identifier )) == H_UNDEFINED ){
+        return insert( identifier, _new );
     }
     /* else set the new value */
     else{
-        o = ob_clone(object);
+        replace( identifier, _old, _new );
 
-        ob_set_references( o, +1 );
+        ob_free(_old);
 
-        replace( identifier, old, o );
-
-        ob_free(old);
-
-        return o;
+        return _new;
     }
 }
 

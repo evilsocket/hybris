@@ -582,6 +582,7 @@ Object *Engine::onThreadedCall( string function_name, vmem_t *argv ){
 
 	/* search first in the code segment */
 	if( (function = vc->get((char *)function_name.c_str())) == H_UNDEFINED ){
+		ctx->lock();
 		hyb_throw( H_ET_SYNTAX, "'%s' undeclared user function identifier", function_name.c_str() );
 	}
 
@@ -598,6 +599,7 @@ Object *Engine::onThreadedCall( string function_name, vmem_t *argv ){
 
 	if( identifiers.size() != argv->size() ){
 	   ctx->depool();
+	   ctx->lock();
 	   hyb_throw( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
 						       function_name.c_str(),
 						       identifiers.size(),

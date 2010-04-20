@@ -44,19 +44,8 @@ typedef unsigned char byte;
  *  Object memory attributes
  */
 #define H_OA_NONE     0 // 00000000
-#define H_OA_EXTERN   1 // 00000001
-#define H_OA_CONSTANT 2 // 00000010
-#define H_OA_GARBAGE  4 // 00000100
-/*
- * PCRE support constants.
- */
-#ifdef PCRE_SUPPORT
-#   define H_PCRE_MAX_MATCHES   300
+#define H_OA_CONSTANT 1 // 00000001
 
-#   define H_PCRE_BOOL_MATCH    0x0
-#   define H_PCRE_MULTI_MATCH   0x1
-#   define H_PCRE_REPLACE_MATCH 0x2
-#endif
 /*
  * This macro define an object header elements.
  * Should be used in EVERY type declaration at the beginning
@@ -73,7 +62,7 @@ typedef unsigned char byte;
  * Default object header initialization macro .
  */
 #define BASE_OBJECT_HEADER_INIT(t) ref(0), \
-                                   attributes(H_OA_GARBAGE), \
+                                   attributes(H_OA_NONE), \
                                    type(&t ## _Type)
 /*
  * This macro compare the object type structure pointer with a given
@@ -611,6 +600,9 @@ void    ob_set_attribute_reference( Object *s, char *a, Object *v );
 void    ob_define_method( Object *c, char *name, Node *code );
 /*
  * Get the method 'name' from the 'c' class with 'argc' arguments.
+ * If argc is not -1, the function will search for the "best match"
+ * among methods with the same name and returns it, otherwise will
+ * return the first method found.
  */
 Node   *ob_get_method( Object *c, char *name, int argc = -1 );
 
@@ -903,6 +895,9 @@ typedef struct _ClassObject {
     BASE_OBJECT_HEADER;
     size_t           items;
     string			 name;
+    /*
+     * TODO : Use vmem_t and vcode_t instead of vectors.
+     */
     vector<access_t> a_access;
     vector<string>   a_names;
     vector<Object *> a_values;
