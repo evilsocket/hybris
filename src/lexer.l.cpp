@@ -68,10 +68,25 @@ include          BEGIN(T_INCLUSION);
     }
     *ptr = 0x00;
 
-    string mod = yytext;
-    if( (yyin = fopen( mod.c_str(), "r" )) == NULL ){
-        /* attempt to load from default include path */
-        if( (yyin = fopen( (INC_PATH + mod).c_str(), "r" )) == NULL ){
+    string file = yytext;
+    /*
+     * First of all, try to include a file in the same directory
+     * of the script.
+     */
+    if( (yyin = fopen( file.c_str(), "r" )) == NULL ){
+        /*
+         * Attempt to load from default include path.
+         * In this case replace '.' with '/' so that :
+         *
+         * include std.io.network.Socket;
+         *
+         * would include :
+         *
+         * /usr/lib/hybris/include/std/io/network/Socket.hy
+         */
+    	string_replace( file, ".", "/" );
+
+        if( (yyin = fopen( (INC_PATH + file + ".hy").c_str(), "r" )) == NULL ){
             hyb_throw( H_ET_GENERIC, "Could not open '%s' for inclusion", yytext );
         }
     }
