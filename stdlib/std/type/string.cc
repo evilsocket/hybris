@@ -17,6 +17,7 @@
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <hybris.h>
+#include <algorithm>
 
 HYBRIS_DEFINE_FUNCTION(hstrlen);
 HYBRIS_DEFINE_FUNCTION(hstrfind);
@@ -57,12 +58,18 @@ HYBRIS_DEFINE_FUNCTION(hstrfind){
 }
 
 HYBRIS_DEFINE_FUNCTION(hsubstr){
-	if( ob_argc() != 3 ){
-		hyb_throw( H_ET_SYNTAX, "function 'substr' requires 3 parameters (called with %d)", ob_argc() );
+	if( ob_argc() < 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'substr' requires at least 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 
-	string sub = string_argv(0).substr( ob_ivalue( ob_argv(1) ), ob_ivalue( ob_argv(2) ) );
+	string sub;
+	if( ob_argc() == 2 ){
+		sub = string_argv(0).substr( ob_ivalue( ob_argv(1) ) );
+	}
+	else{
+		sub = string_argv(0).substr( ob_ivalue( ob_argv(1) ), ob_ivalue( ob_argv(2) ) );
+	}
 
 	return ob_dcast( gc_new_string( sub.c_str() ) );
 }
@@ -120,16 +127,11 @@ HYBRIS_DEFINE_FUNCTION(htrim){
 	ob_type_assert( ob_argv(0), otString );
 
 	string s = ob_string_val( ob_argv(0) );
-	int i = 0, len = s.length(), j = len - 1;
 
-	while( strchr( " \t\n\r\0\x0B", s[i] ) != NULL ){
-		i++;
-	}
-	while( strchr( " \t\n\r\0\x0B", s[j] ) != NULL ){
-		j--;
-	}
-
-	s = s.substr( i, len - i - (len - j) + 1 );
+	// trim from start
+	s.erase( s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))) );
+	// trim from end
+	s.erase( std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end() );
 
 	return (Object *)gc_new_string(s.c_str());
 }
