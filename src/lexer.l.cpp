@@ -110,12 +110,12 @@ include          BEGIN(T_INCLUSION);
     /*
      * Skip whitespaces.
      */
-    while( *sptr == ' ' && *sptr != ';' ){
+    while( strchr( " \r\n\t", *sptr ) && *sptr != ';' ){
     	sptr++;
     }
 
     for( ; *sptr != ';'; sptr++ ){
-		 if( *sptr != ' ' ){
+		 if( strchr( " \r\n\t", *sptr ) == NULL ){
 			 module += *sptr;
 		 }
     }
