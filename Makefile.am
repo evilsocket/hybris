@@ -156,6 +156,7 @@ install:
 	ln -sf $(PREFIX)/lib/lib$(TARGET).so.1.0 $(PREFIX)/lib/lib$(TARGET).so.1
 	ldconfig
 	cp -rf build/* /usr/lib/hybris/library/
+	cp -rf stdinc/* /usr/lib/hybris/include/
 
 uninstall:
 	rm -rf $(PREFIX)/bin/$(TARGET) 

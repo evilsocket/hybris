@@ -107,7 +107,7 @@ HYBRIS_DEFINE_FUNCTION(htypeof){
 	if( ob_argc() != 1 ){
 		hyb_throw( H_ET_SYNTAX, "function 'typeof' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	return ob_dcast( gc_new_string( ob_argv(0)->type->name ) );
+	return ob_dcast( gc_new_string( ob_typename( ob_argv(0) ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsizeof){
