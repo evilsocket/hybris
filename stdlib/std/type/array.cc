@@ -23,6 +23,8 @@ HYBRIS_DEFINE_FUNCTION(helements);
 HYBRIS_DEFINE_FUNCTION(hpop);
 HYBRIS_DEFINE_FUNCTION(hremove);
 HYBRIS_DEFINE_FUNCTION(hcontains);
+HYBRIS_DEFINE_FUNCTION(hjoin);
+
 
 HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "array", harray },
@@ -30,6 +32,7 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "pop", hpop },
 	{ "remove", hremove },
 	{ "contains", hcontains },
+	{ "join", hjoin },
 	{ "", NULL }
 };
 
@@ -79,7 +82,7 @@ HYBRIS_DEFINE_FUNCTION(hcontains){
            *find  = ob_argv(1);
 	unsigned int i;
 
-	for( i = 0; i < ob_vector_ucast(array)->items; i++ ){
+	for( i = 0; i < ob_vector_ucast(array)->items; ++i ){
 		if( ob_cmp( ob_vector_ucast(array)->value[i], find ) == 0 ){
 			return ob_dcast( gc_new_integer(i) );
 		}
@@ -88,3 +91,20 @@ HYBRIS_DEFINE_FUNCTION(hcontains){
 	return H_DEFAULT_ERROR;
 }
 
+HYBRIS_DEFINE_FUNCTION(hjoin){
+	if( ob_argc() != 2 ){
+		hyb_throw( H_ET_SYNTAX, "function 'join' requires 2 parameters (called with %d)", ob_argc() );
+	}
+	ob_type_assert( ob_argv(1), otVector );
+
+	Object *array = ob_argv(1);
+	string  glue  = ob_svalue( ob_argv(0) ),
+		    join;
+	unsigned int i, items(ob_vector_ucast(array)->items);
+
+	for( i = 0; i < items; ++i ){
+		join += ob_svalue(ob_vector_ucast(array)->value[i]) + ( i < items - 1 ? glue : "");
+	}
+
+	return (Object *)gc_new_string(join.c_str());
+}
