@@ -43,6 +43,12 @@ bool ob_is_type_in( Object *o, ... ){
 	return false;
 }
 
+const char *ob_typename( Object * o ){
+	if( o->type->type_name != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->type_name(o);
+	}
+}
+
 void ob_set_references( Object *o, int ref ){
     if( o->type->set_references != HYB_UNIMPLEMENTED_FUNCTION ){
         return o->type->set_references(o,ref);

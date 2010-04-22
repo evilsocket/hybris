@@ -23,6 +23,10 @@
 #include "context.h"
 
 /** generic function pointers **/
+const char *class_typename( Object *o ){
+	return ob_class_ucast(o)->name.c_str();
+}
+
 void class_set_references( Object *me, int ref ){
     ClassObjectValueIterator vi;
     ClassObject *cme = ob_class_ucast(me);
@@ -246,6 +250,7 @@ IMPLEMENT_TYPE(Class) {
     0,
 
 	/** generic function pointers **/
+    class_typename, // type_name
 	class_set_references, // set_references
 	class_clone, // clone
 	class_free, // free

@@ -20,6 +20,10 @@
 #include <math.h>
 
 /** generic function pointers **/
+const char *char_typename( Object *o ){
+	return o->type->name;
+}
+
 void char_set_references( Object *me, int ref ){
     me->ref += ref;
 }
@@ -420,6 +424,7 @@ IMPLEMENT_TYPE(Char) {
     sizeof(char),
 
 	/** generic function pointers **/
+    char_typename, // type_name
 	char_set_references, // set_references
 	char_clone, // clone
 	0, // free

@@ -120,8 +120,10 @@ class Node;
 /*
  * Type function pointers descriptors .
  */
+// get the type name of the object
+typedef const char *(*ob_typename_function_t)	( Object * );
 // used to set garbage collection attributes for an object
-typedef void     (*ob_set_references_function_t)( Object *o, int );
+typedef void     (*ob_set_references_function_t)( Object *, int );
 // free object inner buffer if any
 typedef void     (*ob_free_function_t)          ( Object * );
 // return the size of the object, or its items if it's a collection
@@ -206,6 +208,7 @@ typedef struct _object_type_t {
     size_t        size;
 
     /** generic function pointers **/
+    ob_typename_function_t      type_name;
     ob_set_references_function_t set_references;
     ob_unary_function_t         clone;
     ob_free_function_t          free;
@@ -302,6 +305,10 @@ object_type_t;
  * Return true if 'o' is of one of the types specified by arguments, otherwise false.
  */
 bool    ob_is_type_in( Object *o, ... );
+/*
+ * Return the type name of the object.
+ */
+const char *ob_typename( Object * o );
 /*
  * Increment the object references by 'ref' (i.e. ob_set_references(o,-1) will decrement them).
  */

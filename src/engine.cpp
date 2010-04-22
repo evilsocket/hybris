@@ -698,7 +698,7 @@ Object *Engine::onNewType( vframe_t *frame, Node *type ){
 	 * class constructors but without strict prototypes.
 	 */ 
     if( (user_type = ctx->getType(type_name)) == H_UNDEFINED ){
-        return H_UNDEFINED;
+    	hyb_throw( H_ET_SYNTAX, "'%s' undeclared type", type_name );
     }
     newtype = ob_clone(user_type);
 

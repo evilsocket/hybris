@@ -20,6 +20,10 @@
 #include "types.h"
 
 /** generic function pointers **/
+const char *struct_typename( Object *o ){
+	return o->type->name;
+}
+
 void struct_set_references( Object *me, int ref ){
     StructureObjectValueIterator vi;
     StructureObject *sme = ob_struct_ucast(me);
@@ -200,6 +204,7 @@ IMPLEMENT_TYPE(Structure) {
     0,
 
 	/** generic function pointers **/
+    struct_typename, // type_name
 	struct_set_references, // set_references
 	struct_clone, // clone
 	struct_free, // free

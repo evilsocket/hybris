@@ -33,6 +33,10 @@ int map_find( Object *m, Object *key ){
 }
 
 /** generic function pointers **/
+const char *map_typename( Object *o ){
+	return o->type->name;
+}
+
 void map_set_references( Object *me, int ref ){
     MapObjectIterator ki, vi;
     MapObject *mme = (MapObject *)me;
@@ -262,6 +266,7 @@ IMPLEMENT_TYPE(Map) {
     0,
 
 	/** generic function pointers **/
+    map_typename, // type_name
 	map_set_references, // set_references
 	map_clone, // clone
 	map_free, // free

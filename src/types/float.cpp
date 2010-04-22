@@ -20,6 +20,10 @@
 #include <math.h>
 
 /** generic function pointers **/
+const char *float_typename( Object *o ){
+	return o->type->name;
+}
+
 void float_set_references( Object *me, int ref ){
     me->ref += ref;
 }
@@ -387,6 +391,7 @@ IMPLEMENT_TYPE(Float) {
     sizeof(double),
 
 	/** generic function pointers **/
+    float_typename, // type_name
 	float_set_references, // set_references
 	float_clone, // clone
 	0, // free

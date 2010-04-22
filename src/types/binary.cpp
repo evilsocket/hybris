@@ -22,6 +22,10 @@
 #include <stdio.h>
 
 /** generic function pointers **/
+const char *binary_typename( Object *o ){
+	return o->type->name;
+}
+
 void binary_set_references( Object *me, int ref ){
     BinaryObjectIterator i;
     BinaryObject *bme = (BinaryObject *)me;
@@ -239,6 +243,7 @@ IMPLEMENT_TYPE(Binary) {
     0,
 
 	/** generic function pointers **/
+    binary_typename, // type_name
 	binary_set_references, // set_references
 	binary_clone, // clone
 	binary_free, // free

@@ -20,6 +20,10 @@
 #include "types.h"
 
 /** generic function pointers **/
+const char *matrix_typename( Object *o ){
+	return o->type->name;
+}
+
 void matrix_set_references( Object *me, int ref ){
     size_t x, y;
     MatrixObject *mme = ob_matrix_ucast(me);
@@ -393,6 +397,7 @@ IMPLEMENT_TYPE(Matrix) {
     0,
 
 	/** generic function pointers **/
+    matrix_typename, // type_name
 	matrix_set_references, // set_references
 	matrix_clone, // clone
 	matrix_free, // free

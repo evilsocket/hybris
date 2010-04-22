@@ -72,6 +72,10 @@ void string_parse( string& s ){
 }
 
 /** generic function pointers **/
+const char *string_typename( Object *o ){
+	return o->type->name;
+}
+
 void string_set_references( Object *me, int ref ){
     me->ref += ref;
 }
@@ -379,6 +383,7 @@ IMPLEMENT_TYPE(String) {
     0,
 
 	/** generic function pointers **/
+    string_typename, // type_name
 	string_set_references, // set_references
 	string_clone, // clone
 	0, // free

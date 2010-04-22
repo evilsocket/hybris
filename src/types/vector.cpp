@@ -19,6 +19,10 @@
 #include "common.h"
 #include "types.h"
 
+const char *vector_typename( Object *o ){
+	return o->type->name;
+}
+
 void vector_set_references( Object *me, int ref ){
     VectorObjectIterator i;
     VectorObject *vme = ob_vector_ucast(me);
@@ -238,6 +242,7 @@ IMPLEMENT_TYPE(Vector) {
     0,
 
 	/** generic function pointers **/
+    vector_typename, // type_name
 	vector_set_references, // set_references
 	vector_clone, // clone
 	vector_free, // free

@@ -20,6 +20,18 @@
 #include <math.h>
 
 /** generic function pointers **/
+const char *int_typename( Object *o ){
+	return o->type->name;
+}
+
+const char *alias_typename( Object *o ){
+	return o->type->name;
+}
+
+const char *extern_typename( Object *o ){
+	return o->type->name;
+}
+
 void int_set_references( Object *me, int ref ){
     me->ref += ref;
 }
@@ -438,6 +450,7 @@ IMPLEMENT_TYPE(Integer) {
     sizeof(long),
 
 	/** generic function pointers **/
+    int_typename, // type_name
 	int_set_references, // set_references
 	int_clone, // clone
 	0, // free
@@ -526,6 +539,7 @@ IMPLEMENT_TYPE(Alias) {
     sizeof(long),
 
 	/** generic function pointers **/
+    alias_typename, // type_name
 	int_set_references, // set_references
 	alias_clone, // clone
 	0, // free
@@ -614,6 +628,7 @@ IMPLEMENT_TYPE(Extern) {
     sizeof(long),
 
 	/** generic function pointers **/
+    extern_typename, // type_name
 	int_set_references, // set_references
 	extern_clone, // clone
 	0, // free
