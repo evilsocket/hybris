@@ -42,18 +42,10 @@ class ClientSocket extends Socket {
 	public method connect( host, port ){
 		me->host = host;
 		me->port = port;
-		if( me->sd ){
-			me->close();
-		}
-		me->sd = connect( me->host, me->port );
-		
-		return (me->sd != -1);
+		return me->connect();
 	}
 
 	public method connect(){
-		if( me->sd ){
-			me->close();
-		}
 		me->sd = connect( me->host, me->port );
 		
 		return (me->sd != -1);

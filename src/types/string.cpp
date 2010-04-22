@@ -135,13 +135,12 @@ Object *string_to_fd( Object *o, int fd, size_t size ){
 Object *string_from_fd( Object *o, int fd, size_t size ){
 	int rd = 0, n;
 	if( size ){
-		char *tmp = new char[size + 1];
-		memset( &tmp, 0x00, size + 1 );
-		rd = read( fd, &tmp, size );
+		char *tmp = (char *)alloca(size + 1);
+		memset( tmp, 0x00, size + 1 );
 
-		ob_string_ucast(o)->value = tmp;
-
-		delete[] tmp;
+		if( (rd = read( fd, tmp, size )) > 0 ){
+			ob_string_ucast(o)->value = tmp;
+		}
 	}
 	else{
 		byte c, n;

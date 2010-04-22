@@ -50,15 +50,20 @@ class Socket {
 		if( recv( me->sd, byte ) > 0 ){
 			return byte;
 		}
-		return -1;
+		else{
+			return -1;
+		}
 	}
  
 	public method read( size ){
-		byte = ' ';
+		byte   = ' ';
 		buffer = "";
 		for( i = 0; i < size; i++ ){
 			if( recv( me->sd, byte ) > 0 ){
 				buffer .= byte;
+			}
+			else{
+				return buffer;
 			}
 		}
 		return buffer;
@@ -70,6 +75,9 @@ class Socket {
 		do{
 			if( recv( me->sd, byte ) > 0 ){
 				line .= byte;
+			}
+			else{
+				return -1;
 			}
 		}
 		while( byte != '\n' && byte );
