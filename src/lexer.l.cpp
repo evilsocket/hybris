@@ -74,21 +74,26 @@ include          BEGIN(T_INCLUSION);
      * of the script.
      */
     if( (yyin = fopen( file.c_str(), "r" )) == NULL ){
-        /*
-         * Attempt to load from default include path.
-         * In this case replace '.' with '/' so that :
-         *
-         * include std.io.network.Socket;
-         *
-         * would include :
-         *
-         * /usr/lib/hybris/include/std/io/network/Socket.hy
-         */
-    	string_replace( file, ".", "/" );
+    	/*
+    	 * Secondly, try adding the .hy extension.
+    	 */
+    	if( (yyin = fopen( (file + ".hy").c_str(), "r" )) == NULL ){
+			/*
+			 * Try to load from default include path.
+			 * In this case replace '.' with '/' so that :
+			 *
+			 * include std.io.network.Socket;
+			 *
+			 * would include :
+			 *
+			 * /usr/lib/hybris/include/std/io/network/Socket.hy
+			 */
+			string_replace( file, ".", "/" );
 
-        if( (yyin = fopen( (INC_PATH + file + ".hy").c_str(), "r" )) == NULL ){
-            hyb_throw( H_ET_GENERIC, "Could not open '%s' for inclusion", yytext );
-        }
+			if( (yyin = fopen( (INC_PATH + file + ".hy").c_str(), "r" )) == NULL ){
+				hyb_throw( H_ET_GENERIC, "Could not open '%s' for inclusion", yytext );
+			}
+    	}
     }
 
     yypush_buffer_state( yy_create_buffer( yyin, YY_BUF_SIZE ) );
