@@ -104,11 +104,20 @@ include          BEGIN(T_INCLUSION);
 }
 
 "import"[ \n\t]+({identifier}?\.?\*?)*[ \n\t]*";" {
-    char *sptr;
+    char *sptr = yytext + strlen( "import " );;
     string module("");
 
-    for( sptr = yytext + strlen( "import " ); *sptr != ';'; sptr++ ){
-         module += *sptr;
+    /*
+     * Skip whitespaces.
+     */
+    while( *sptr == ' ' && *sptr != ';' ){
+    	sptr++;
+    }
+
+    for( ; *sptr != ';'; sptr++ ){
+		 if( *sptr != ' ' ){
+			 module += *sptr;
+		 }
     }
 
     yytext = sptr;
