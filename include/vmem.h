@@ -41,6 +41,10 @@ class VirtualMemory : public HashMap<Object> {
 		 */
 		bool 	break_state;
 		/*
+		 * Set to true when a next statement is found.
+		 */
+		bool 	next_state;
+		/*
 		 * Set to true when a return statement is found.
 		 */
 		bool 	return_state;

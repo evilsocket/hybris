@@ -25,6 +25,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define IS_WHITESPACE(c) strchr( " \r\n\t", (c) )
+
 void             yyerror(char *);
 // handle one line comments
 void             hyb_lex_skip_comment();
@@ -109,18 +111,18 @@ include          BEGIN(T_INCLUSION);
 }
 
 "import"[ \n\t]+({identifier}?\.?\*?)*[ \n\t]*";" {
-    char *sptr = yytext + strlen( "import " );;
+    char *sptr = yytext + strlen( "import " );
     string module("");
 
     /*
      * Skip whitespaces.
      */
-    while( strchr( " \r\n\t", *sptr ) && *sptr != ';' ){
+    while( IS_WHITESPACE(*sptr) && *sptr != ';' ){
     	sptr++;
     }
 
     for( ; *sptr != ';'; sptr++ ){
-		 if( strchr( " \r\n\t", *sptr ) == NULL ){
+		 if( !IS_WHITESPACE(*sptr) ){
 			 module += *sptr;
 		 }
     }
@@ -193,6 +195,7 @@ include          BEGIN(T_INCLUSION);
 "switch"        return T_SWITCH;
 "case"          return T_CASE;
 "break"         return T_BREAK;
+"next"			return T_NEXT;
 "default"       return T_DEFAULT;
 
 "new"			return T_NEW;
@@ -230,12 +233,6 @@ include          BEGIN(T_INCLUSION);
 
 %%
 
-
-
-int hyb_lex_isspace(char c){
-    return (strchr( " \r\n\t", c ) != NULL);
-}
-
 void hyb_lex_skip_comment(){
     char c, c1;
 
@@ -259,7 +256,7 @@ void hyb_lex_skip_line(){
     yylineno++;
 }
 
-char  hyb_lex_char( char delimiter ){
+char hyb_lex_char( char delimiter ){
     char ch;
 
 	ch = yyinput();
@@ -272,20 +269,20 @@ char  hyb_lex_char( char delimiter ){
 		yyinput();
 		switch(ch){
 			/* newline */
-			case 'n' : return '\n'; break;
+			case 'n'  : return '\n'; break;
 			/* carriage return */
-			case 'r' : return '\r'; break;
+			case 'r'  : return '\r'; break;
 			/* horizontal tab */
-			case 't' : return '\t'; break;
+			case 't'  : return '\t'; break;
 			/* vertical tab */
-			case 'v' : return '\v'; break;
+			case 'v'  : return '\v'; break;
 			/* audible bell */
-			case 'a' : return '\a'; break;
+			case 'a'  : return '\a'; break;
 			/* backspace */
-			case 'b' : return '\b'; break;
+			case 'b'  : return '\b'; break;
 			/* formfeed */
-			case 'f' : return '\f'; break;
-
+			case 'f'  : return '\f'; break;
+			/* ' */
 			case '\'' : return '\''; break;
 		}
 	}
@@ -319,9 +316,10 @@ function_decl_t *hyb_lex_function( char * text ){
     int  end = 0;
 
     memset( declaration->function, 0x00, 0xFF );
-    while( hyb_lex_isspace(*sptr) ){ sptr++; };
 
-    while( !hyb_lex_isspace(*sptr) && *sptr != '(' ){
+    while( IS_WHITESPACE(*sptr) ){ sptr++; };
+
+    while( !IS_WHITESPACE(*sptr) && *sptr != '(' ){
         *dptr = *sptr;
         sptr++;
         dptr++;
@@ -372,9 +370,10 @@ method_decl_t *hyb_lex_method( char * text ){
     int  end = 0;
 
     memset( declaration->method, 0x00, 0xFF );
-    while( hyb_lex_isspace(*sptr) ){ sptr++; };
 
-    while( !hyb_lex_isspace(*sptr) && *sptr != '(' ){
+    while( IS_WHITESPACE(*sptr) ){ sptr++; };
+
+    while( !IS_WHITESPACE(*sptr) && *sptr != '(' ){
         *dptr = *sptr;
         sptr++;
         dptr++;

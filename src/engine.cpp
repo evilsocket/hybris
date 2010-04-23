@@ -39,6 +39,13 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
         return H_UNDEFINED;
     }
     /*
+     * A next statement was found, so skip nodes execution
+     * until one of the loop handlers will reset the flag.
+     */
+    else if( frame->next_state ){
+    	return H_DEFAULT_RETURN;
+    }
+    /*
      * A return statement was succesfully executed, skip everything
      * now on until the frame will be destroyed and return appropriate
      * value.
@@ -127,6 +134,10 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                 /* break; */
                 case T_BREAK :
 					frame->break_state = true;
+                break;
+                /* next; */
+                case T_NEXT :
+                	frame->next_state = true;
                 break;
 
                 /* return */
@@ -1053,7 +1064,11 @@ Object *Engine::onDollar( vframe_t *frame, Node *node ){
 }
 
 Object *Engine::onReturn( vframe_t *frame, Node *node ){
-    frame->return_value     = exec( frame, node->child(0) );
+	/*
+	 * Set break and return state to make every loop and/or condition
+	 * statement to exit with this return value.
+	 */
+    frame->return_value = exec( frame, node->child(0) );
     frame->break_state  = true;
     frame->return_state = true;
 
@@ -1134,7 +1149,10 @@ Object *Engine::onWhile( vframe_t *frame, Node *node ){
     body      = node->child(1);
 
     while( ob_lvalue( (boolean = exec(  frame, condition )) ) ){
-        result = exec( frame, body );
+   		result = exec( frame, body );
+
+   		frame->next_state = false;
+
         if( frame->break_state ){
         	frame->break_state = false;
 			break;
@@ -1154,7 +1172,10 @@ Object *Engine::onDo( vframe_t *frame, Node *node ){
     body      = node->child(0);
     condition = node->child(1);
     do{
-        result = exec( frame, body );
+		result = exec( frame, body );
+
+		frame->next_state = false;
+
         if( frame->break_state ){
 			frame->break_state = false;
 			break;
@@ -1182,11 +1203,15 @@ Object *Engine::onFor( vframe_t *frame, Node *node ){
     for( init;
          ob_lvalue( (boolean = exec(  frame, condition )) );
          (inc   = exec(  frame, increment )) ){
-         result = exec( frame, body );
-         if( frame->break_state ){
-			frame->break_state = false;
+
+		result = exec( frame, body );
+
+		frame->next_state = false;
+
+        if( frame->break_state ){
+        	frame->break_state = false;
 			break;
-		 }
+		}
     }
 
     return result;
@@ -1206,7 +1231,11 @@ Object *Engine::onForeach( vframe_t *frame, Node *node ){
 
     for( i = 0; i < size; ++i ){
         frame->add( identifier, ob_vector_ucast(v)->value[i] );
+
         result = exec( frame, body );
+
+        frame->next_state = false;
+
         if( frame->break_state ){
 			frame->break_state = false;
 			break;
@@ -1233,7 +1262,11 @@ Object *Engine::onForeachm( vframe_t *frame, Node *node ){
     for( i = 0; i < size; ++i ){
         frame->add( key_identifier,   ob_map_ucast(map)->keys[i] );
         frame->add( value_identifier, ob_map_ucast(map)->values[i] );
+
         result = exec( frame, body );
+
+        frame->next_state = false;
+
         if( frame->break_state ){
 			frame->break_state = false;
 			break;

@@ -64,6 +64,7 @@
 /* expressions */
 #define MK_RETURN_NODE(a)         new ExpressionNode( T_RETURN, 1, a )
 #define MK_BREAK_NODE()		  	  new ExpressionNode( T_BREAK, 0 )
+#define MK_NEXT_NODE()		  	  new ExpressionNode( T_NEXT, 0 )
 #define MK_EOSTMT_NODE(a, b)      new ExpressionNode( T_EOSTMT, 2, a, b )
 #define MK_DOLLAR_NODE(a)		  new ExpressionNode( T_DOLLAR, 1, a )
 #define MK_ASSIGN_NODE(a, b)      new ExpressionNode( T_ASSIGN, 2, a, b )
@@ -191,6 +192,7 @@ Context __context;
 %token T_SWITCH
 %token T_CASE
 %token T_BREAK
+%token T_NEXT
 %token T_DEFAULT
 %token T_QUESTION
 %token T_DOLLAR
@@ -324,6 +326,7 @@ statement  : T_EOSTMT                                                   { $$ = M
 	   	   | expression                                                 { $$ = MK_NODE($1); }
            | expression T_EOSTMT                                        { $$ = MK_NODE($1); }
            | T_BREAK T_EOSTMT											{ $$ = MK_BREAK_NODE(); }
+           | T_NEXT T_EOSTMT											{ $$ = MK_NEXT_NODE(); }
            | T_RETURN expression T_EOSTMT                               { $$ = MK_RETURN_NODE( $2 ); }
            /* subscript operator special cases */
 		   | expression '[' ']' T_ASSIGN expression T_EOSTMT            { $$ = MK_SB_PUSH_NODE( $1, $5 ); }
@@ -548,9 +551,15 @@ int main( int argc, char *argv[] ){
 			break;
 
         	case 't':
+        		/*
+        		 * Enable execution time measurement.
+        		 */
         		__context.args.tm_timer   = 1;
         	break;
         	case 's':
+        		/*
+        		 * Enable stack trace printing upon error.
+        		 */
         		__context.args.stacktrace = 1;
         	break;
         	case 'h':
@@ -573,6 +582,11 @@ int main( int argc, char *argv[] ){
     __context.init( argc - (optind - 1), argv + (optind - 1) );
 
     extern FILE *yyin;
+    /*
+     * At this point, yyin could be a file handle if a source was specified
+     * or the stdin handle if not, in this case the interpreter will execute
+     * user input.
+     */
     yyin = __context.openFile();
 
     while( !feof(yyin) ){
@@ -581,7 +595,6 @@ int main( int argc, char *argv[] ){
 
     __context.closeFile();
     __context.release();
-
 
     return 0;
 }

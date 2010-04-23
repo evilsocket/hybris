@@ -19,10 +19,14 @@
 #include "vmem.h"
 #include "common.h"
 
-VirtualMemory::VirtualMemory() : HashMap<Object>() {
-	break_state  = false;
-	return_state = false;
-	return_value     = H_UNDEFINED;
+VirtualMemory::VirtualMemory() :
+	HashMap<Object>(),
+
+	break_state(false),
+	next_state(false),
+	return_state(false),
+	return_value(H_UNDEFINED) {
+
 }
 
 VirtualMemory::~VirtualMemory(){
