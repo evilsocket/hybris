@@ -22,6 +22,7 @@
 #include "config.h"
 #include <memory.h>
 #include <stdio.h>
+#include <assert.h>
 #ifdef MT_SUPPORT
 #	include <pthread.h>
 #endif

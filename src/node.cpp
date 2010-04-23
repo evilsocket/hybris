@@ -19,7 +19,6 @@
 #include "node.h"
 #include "vmem.h"
 #include "engine.h"
-#include <assert.h>
 
 NodeValue::NodeValue() :
     m_constant(NULL),

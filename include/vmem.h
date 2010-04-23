@@ -35,9 +35,19 @@
  */
 class VirtualMemory : public HashMap<Object> {
     public :
-
-		bool 	break_condition;
-		bool 	return_condition;
+		/*
+		 * Set to true when a break statement is found or
+		 * when a return statement is found inside a loop.
+		 */
+		bool 	break_state;
+		/*
+		 * Set to true when a return statement is found.
+		 */
+		bool 	return_state;
+		/*
+		 * If return_state == true, this will hold the value
+		 * to return.
+		 */
 		Object *return_value;
 
         VirtualMemory();

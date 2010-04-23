@@ -20,8 +20,8 @@
 #include "common.h"
 
 VirtualMemory::VirtualMemory() : HashMap<Object>() {
-	break_condition  = false;
-	return_condition = false;
+	break_state  = false;
+	return_state = false;
 	return_value     = H_UNDEFINED;
 }
 
@@ -74,7 +74,7 @@ VirtualMemory *VirtualMemory::clone(){
     for( i = 0; i < m_elements; ++i ){
         clone->add( (char *)label(i), at(i) );
     }
-	clone->break_condition = break_condition;
+	clone->break_state = break_state;
 
     return clone;
 }

@@ -32,15 +32,21 @@ Engine::~Engine(){
 }
 
 Object *Engine::exec( vframe_t *frame, Node *node ){
-    /* skip undefined/null nodes */
+    /*
+	 * Skip undefined/null nodes
+	 */
     if( node == H_UNDEFINED ){
         return H_UNDEFINED;
     }
-    else if( frame->return_condition ){
+    /*
+     * A return statement was succesfully executed, skip everything
+     * now on until the frame will be destroyed and return appropriate
+     * value.
+     */
+    else if( frame->return_state ){
+    	assert( frame->return_value != H_UNDEFINED );
     	return frame->return_value;
     }
-
-    Object *sreturn = H_UNDEFINED;
 
     switch(node->type()){
 
@@ -73,6 +79,13 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
 
         /* statements */
         case H_NT_STATEMENT :
+        	/*
+        	 * Call the garbage collection routine every new statement.
+        	 * If the routine would be called on expressions too, there would be a high
+        	 * risk of loosing tmp values such as evaluations, ecc.
+        	 */
+        	gc_collect();
+
             switch( node->value.m_statement ){
                 /* if( condition ) */
                 case T_IF     :
@@ -96,7 +109,7 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                 /* (condition ? expression : expression) */
                 case T_QUESTION :
                     return onQuestion( frame, node );
-
+				/* switch statement */
                 case T_SWITCH :
                     return onSwitch( frame, node );
             }
@@ -110,14 +123,10 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                     return onAssign( frame, node );
                 /* expression ; */
                 case T_EOSTMT  :
-                    sreturn = onEostmt( frame, node );
-                    /********************************************
-                     *          Do garbage collection.
-                     *********************************************/
-                    gc_collect();
-                    return sreturn;
+                    return onEostmt( frame, node );
+                /* break; */
                 case T_BREAK :
-					frame->break_condition = true;
+					frame->break_state = true;
                 break;
 
                 /* return */
@@ -1045,8 +1054,8 @@ Object *Engine::onDollar( vframe_t *frame, Node *node ){
 
 Object *Engine::onReturn( vframe_t *frame, Node *node ){
     frame->return_value     = exec( frame, node->child(0) );
-    frame->break_condition  = true;
-    frame->return_condition = true;
+    frame->break_state  = true;
+    frame->return_state = true;
 
     return frame->return_value;
 }
@@ -1126,8 +1135,8 @@ Object *Engine::onWhile( vframe_t *frame, Node *node ){
 
     while( ob_lvalue( (boolean = exec(  frame, condition )) ) ){
         result = exec( frame, body );
-        if( frame->break_condition ){
-        	frame->break_condition = false;
+        if( frame->break_state ){
+        	frame->break_state = false;
 			break;
         }
     }
@@ -1146,8 +1155,8 @@ Object *Engine::onDo( vframe_t *frame, Node *node ){
     condition = node->child(1);
     do{
         result = exec( frame, body );
-        if( frame->break_condition ){
-			frame->break_condition = false;
+        if( frame->break_state ){
+			frame->break_state = false;
 			break;
 		}
     }
@@ -1174,8 +1183,8 @@ Object *Engine::onFor( vframe_t *frame, Node *node ){
          ob_lvalue( (boolean = exec(  frame, condition )) );
          (inc   = exec(  frame, increment )) ){
          result = exec( frame, body );
-         if( frame->break_condition ){
-			frame->break_condition = false;
+         if( frame->break_state ){
+			frame->break_state = false;
 			break;
 		 }
     }
@@ -1198,8 +1207,8 @@ Object *Engine::onForeach( vframe_t *frame, Node *node ){
     for( i = 0; i < size; ++i ){
         frame->add( identifier, ob_vector_ucast(v)->value[i] );
         result = exec( frame, body );
-        if( frame->break_condition ){
-			frame->break_condition = false;
+        if( frame->break_state ){
+			frame->break_state = false;
 			break;
 		}
     }
@@ -1225,8 +1234,8 @@ Object *Engine::onForeachm( vframe_t *frame, Node *node ){
         frame->add( key_identifier,   ob_map_ucast(map)->keys[i] );
         frame->add( value_identifier, ob_map_ucast(map)->values[i] );
         result = exec( frame, body );
-        if( frame->break_condition ){
-			frame->break_condition = false;
+        if( frame->break_state ){
+			frame->break_state = false;
 			break;
 		}
     }
