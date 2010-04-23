@@ -209,6 +209,11 @@ include          BEGIN(T_INCLUSION);
 "private"		return T_PRIVATE;
 "protected"		return T_PROTECTED;
 
+"throw"			return T_THROW;
+"try"			return T_TRY;
+"catch"			return T_CATCH;
+"finally"		return T_FINALLY;
+
 "return"        return T_RETURN;
 
 "function"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*")" {

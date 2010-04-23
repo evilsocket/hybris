@@ -49,10 +49,19 @@ class VirtualMemory : public HashMap<Object> {
 		 */
 		bool 	return_state;
 		/*
+		 * Set to true when an exception is thrown.
+		 */
+		bool    exception_state;
+		/*
 		 * If return_state == true, this will hold the value
 		 * to return.
 		 */
 		Object *return_value;
+		/*
+		 * If exception_state == true, this will hold the exception
+		 * data.
+		 */
+		Object *exception_value;
 
         VirtualMemory();
         ~VirtualMemory();

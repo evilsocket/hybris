@@ -33,26 +33,27 @@ Engine::~Engine(){
 
 Object *Engine::exec( vframe_t *frame, Node *node ){
     /*
-	 * Skip undefined/null nodes
+	 * An exception has been thrown, wait for a try-catch statement or,
+	 * when the frame will be deleted (vframe_t class destructor), exit
+	 * with a non handled exception.
 	 */
-    if( node == H_UNDEFINED ){
-        return H_UNDEFINED;
-    }
+	if( frame->exception_state ){
+		return frame->exception_value;
+	}
+    /*
+	 * A return statement was succesfully executed, skip everything
+	 * now on until the frame will be destroyed and return appropriate
+	 * value.
+	 */
+	else if( frame->return_state ){
+		return frame->return_value;
+	}
     /*
      * A next statement was found, so skip nodes execution
      * until one of the loop handlers will reset the flag.
      */
     else if( frame->next_state ){
     	return H_DEFAULT_RETURN;
-    }
-    /*
-     * A return statement was succesfully executed, skip everything
-     * now on until the frame will be destroyed and return appropriate
-     * value.
-     */
-    else if( frame->return_state ){
-    	assert( frame->return_value != H_UNDEFINED );
-    	return frame->return_value;
     }
 
     switch( node->type() ){
@@ -117,6 +118,12 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
 				/* switch statement */
                 case T_SWITCH :
                     return onSwitch( frame, node );
+                /* throw expression; */
+                case T_THROW :
+					return onThrow( frame, node );
+				/* try-catch statement */
+                case T_TRY :
+                	return onTryCatch( frame, node );
             }
         break;
 
@@ -700,6 +707,16 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
 
     ctx->detrace();
 
+	/*
+	 * Check for unhandled exceptions and put them on the root
+	 * memory frame.
+	 */
+	if( stack.exception_state == true ){
+		stack.exception_state  = false;
+		frame->exception_state = true;
+		frame->exception_value = stack.exception_value;
+	}
+
     /* return function evaluation value */
     return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
 }
@@ -783,6 +800,16 @@ Object *Engine::onNewType( vframe_t *frame, Node *type ){
 			exec( &stack, ctor->callBody() );
 
 			ctx->detrace();
+
+			/*
+			 * Check for unhandled exceptions and put them on the root
+			 * memory frame.
+			 */
+			if( stack.exception_state == true ){
+				stack.exception_state  = false;
+				frame->exception_state = true;
+				frame->exception_value = stack.exception_value;
+			}
 		}
 		else{
 			if( children > ob_class_ucast(newtype)->c_attributes.size() ){
@@ -1015,6 +1042,16 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 	result = exec( &stack, method->callBody() );
 
 	ctx->detrace();
+
+	/*
+	 * Check for unhandled exceptions and put them on the root
+	 * memory frame.
+	 */
+	if( stack.exception_state == true ){
+		stack.exception_state  = false;
+		frame->exception_state = true;
+		frame->exception_value = stack.exception_value;
+	}
 
 	/* return method evaluation value */
 	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
@@ -1330,6 +1367,35 @@ Object *Engine::onSwitch( vframe_t *frame, Node *node){
     }
 
     return result;
+}
+
+Object *Engine::onThrow( vframe_t *frame, Node *node ){
+	frame->exception_value = exec( frame, node->child(0) );
+	frame->exception_state = true;
+
+	return frame->exception_value;
+}
+
+Object *Engine::onTryCatch( vframe_t *frame, Node *node ){
+	Node *main_body    = node->child(0),
+		 *ex_ident     = node->child(1),
+		 *catch_body   = node->child(2),
+		 *finally_body = node->child(3);
+
+	exec( frame, main_body );
+
+	if( frame->exception_state ){
+		assert( frame->exception_value != H_UNDEFINED );
+		frame->add( (char *)ex_ident->value.m_identifier.c_str(), frame->exception_value );
+		frame->exception_state = false;
+		exec( frame, catch_body );
+	}
+
+	if( finally_body != NULL ){
+		exec( frame, finally_body );
+	}
+
+	return H_DEFAULT_RETURN;
 }
 
 Object *Engine::onEostmt( vframe_t *frame, Node *node ){

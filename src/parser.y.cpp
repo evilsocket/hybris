@@ -57,6 +57,8 @@
 #define MK_IF_ELSE_NODE(a, b, c)  new StatementNode( T_IF, 3, a, b, c )
 #define MK_SWITCH_NODE(a, b)      new StatementNode( T_SWITCH, a, b )
 #define MK_SWITCH_DEF_NODE(a,b,c) new StatementNode( T_SWITCH, a, b, c )
+#define MK_THROW_NODE(a)		  new StatementNode( T_THROW, 1, a )
+#define MK_TRYCATCH_NODE(a,b,c,d) new StatementNode( T_TRY, 4, a, b, c, d )
 #define MK_FUNCTION_NODE(a, b)    new FunctionNode( a, 1, b )
 #define MK_STRUCT_NODE(a, b)      new StructureNode( a, b )
 #define MK_CLASS_NODE(a, b, c)    new ClassNode( a, b, c )
@@ -208,6 +210,10 @@ Context __context;
 %token T_PUBLIC
 %token T_PRIVATE
 %token T_PROTECTED
+%token T_THROW
+%token T_TRY
+%token T_CATCH
+%token T_FINALLY
 
 %nonassoc T_IF_END
 %nonassoc T_SB_END
@@ -230,6 +236,7 @@ Context __context;
 %type <list>   methodList
 %type <list>   classMembers
 %type <list>   classExtensions
+%type <node>   finallyBlock
 %type <access> accessSpecifier
 %%
 
@@ -256,6 +263,9 @@ caseCascade  : T_CASE expression ':' statements T_BREAK T_EOSTMT caseCascade { $
 
 classExtensions : T_EXTENDS identList { $$ = MK_NODE($2); }
 			    | /* empty */	      { $$ = NULL;        };
+
+finallyBlock	: T_FINALLY '{' statements '}' { $$ = MK_NODE($3); }
+				| /* empty */			       { $$ = NULL; }
 
 accessSpecifier : T_PUBLIC    { $$ = asPublic;    }
 		        | T_PRIVATE   { $$ = asPrivate;   }
@@ -328,6 +338,7 @@ statement  : T_EOSTMT                                                   { $$ = M
            | T_BREAK T_EOSTMT											{ $$ = MK_BREAK_NODE(); }
            | T_NEXT T_EOSTMT											{ $$ = MK_NEXT_NODE(); }
            | T_RETURN expression T_EOSTMT                               { $$ = MK_RETURN_NODE( $2 ); }
+           | T_THROW expression T_EOSTMT								{ $$ = MK_THROW_NODE( $2 ); }
            /* subscript operator special cases */
 		   | expression '[' ']' T_ASSIGN expression T_EOSTMT            { $$ = MK_SB_PUSH_NODE( $1, $5 ); }
            | expression '[' expression ']' T_ASSIGN expression T_EOSTMT { $$ = MK_SB_SET_NODE( $1, $3, $6 ); }
@@ -357,6 +368,10 @@ statement  : T_EOSTMT                                                   { $$ = M
 		   /* class declaration */
            | T_CLASS T_IDENT classExtensions '{' classMembers '}' {
         	   $$ = MK_CLASS_NODE( $2, $3, $5 );
+           }
+           /* exception handling */
+           | T_TRY '{' statements '}' T_CATCH '(' T_IDENT ')' '{' statements '}' finallyBlock {
+        	   $$ = MK_TRYCATCH_NODE( $3, MK_IDENT_NODE($7), $10, $12 );
            };
 
 

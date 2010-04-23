@@ -97,6 +97,8 @@ class Engine {
         Object *onSubscriptAdd( vframe_t *, Node * );
         Object *onSubscriptGet( vframe_t *, Node * );
         Object *onSubscriptSet( vframe_t *, Node * );
+        Object *onThrow( vframe_t *, Node * );
+        Object *onTryCatch( vframe_t *, Node * );
         Object *onWhile( vframe_t *, Node * );
         Object *onDo( vframe_t *, Node * );
         Object *onFor( vframe_t *, Node * );

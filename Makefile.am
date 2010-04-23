@@ -97,7 +97,7 @@ all: src/lexer.cpp src/parser.cpp lib hybris stdlib
 
 lib: $(LOBJECTS)	
 	@printf "\x1b[33;01m@ Creating lib$(TARGET).so.1.0 ..."
-	@$(CXX) -shared -Wl,-soname,libhybris.so.1 -o lib$(TARGET).so.1.0 $(LIBOBJ) 2> hybris.tmp.log || touch hybris.tmp.errors
+	@$(CXX) -shared -Wl,-soname,libhybris.so.1 -o lib$(TARGET).so.1.0 $(LIBOBJ) $(STDLIB_LFLAGS) 2> hybris.tmp.log || touch hybris.tmp.errors
 	@$(CHECK_FOR_ERRORS)
 	@ln -sf lib$(TARGET).so.1.0 lib$(TARGET).so
 	@ln -sf lib$(TARGET).so.1.0 lib$(TARGET).so.1
@@ -132,7 +132,7 @@ src/parser.cpp: src/parser.y.cpp
 
 src/lexer.cpp: src/lexer.l.cpp
 	@printf "\x1b[33;01m@ Creating $@ ... "
-	@flex -o $@ $? 2> /dev/null
+	@flex -o$@ $? 2> /dev/null
 	@$(CHECK_FOR_ERRORS)
 
 clean:

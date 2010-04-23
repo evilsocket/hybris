@@ -142,6 +142,19 @@ void Context::release(){
     unlock();
     #endif
     /*
+     * Handle unhandled exceptions in the main memory frame.
+     */
+    if( vmem.exception_state == true ){
+    	vmem.exception_state = false;
+    	assert( vmem.exception_value != NULL );
+    	if( vmem.exception_value->type->svalue ){
+    		fprintf( stderr, "\033[22;31mERROR : Unhandled exception : %s\n\033[00m", ob_svalue(vmem.exception_value).c_str() );
+    	}
+    	else{
+    		fprintf( stderr, "\033[22;31mERROR : Unhandled '%s' exception .\n\033[00m", ob_typename(vmem.exception_value) );
+    	}
+    }
+    /*
      * gc_release must be called before anything else because it will
      * need vmem, vtypes and so on to call classes destructors.
      */
