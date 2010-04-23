@@ -280,6 +280,8 @@ IMPLEMENT_TYPE(Structure) {
 	0, // cl_set_reference
 
 	/** structure operators **/
+	0, // attribute_access
+	0, // set_attribute_access
     struct_add_attribute, // add_attribute
     struct_get_attribute, // get_attribute
     struct_set_attribute, // set_attribute

@@ -28,38 +28,53 @@ const char *class_typename( Object *o ){
 }
 
 void class_set_references( Object *me, int ref ){
-    ClassObjectValueIterator vi;
+    ClassObjectAttributeIterator ai;
     ClassObject *cme = ob_class_ucast(me);
 
     me->ref += ref;
 
-    for( vi = cme->a_values.begin(); vi != cme->a_values.end(); vi++ ){
-        ob_set_references( *vi, ref );
+    for( ai = cme->c_attributes.begin(); ai != cme->c_attributes.end(); ai++ ){
+        ob_set_references( (*ai)->value->value, ref );
     }
 }
 
 Object *class_clone( Object *me ){
     ClassObject *cclone = gc_new_class(),
                 *cme    = ob_class_ucast(me);
-    ClassObjectAccessIterator ai;
-    ClassObjectNameIterator   ni;
-    ClassObjectValueIterator  vi;
-    ClassObjectMethodIterator mi;
+    ClassObjectAttributeIterator ai;
+    ClassObjectMethodIterator    mi;
+    ClassObjectMethodVariationsIterator mvi;
 
-    for( ni = cme->a_names.begin(), vi = cme->a_values.begin(), ai = cme->a_access.begin();
-    	 ni != cme->a_names.end();
-    	 ni++, vi++, ai++ ){
-    	ob_set_attribute( (Object *)cclone, (char *)(*ni).c_str(), (*vi) );
-    	cclone->a_access.push_back( (*ai) );
+    vector<Node *>				 method_variations;
+
+    for( ai = cme->c_attributes.begin(); ai != cme->c_attributes.end(); ai++ ){
+    	cclone->c_attributes.insert( (char *)(*ai)->value->name.c_str(),
+									 new class_attribute_t(
+									   (*ai)->value->name,
+									   (*ai)->value->access,
+									   ob_clone((*ai)->value->value)
+							       )
+								 );
     }
-    for( ni = cme->m_names.begin(), mi = cme->m_values.begin(); ni != cme->m_names.end(); ni++, mi++ ){
-    	ob_define_method( (Object *)cclone, (char *)(*ni).c_str(), (*mi) );
+
+    for( mi = cme->c_methods.begin(); mi != cme->c_methods.end(); mi++ ){
+    	method_variations.clear();
+    	for( mvi = (*mi)->value->method.begin(); mvi != (*mi)->value->method.end(); mvi++ ){
+    		method_variations.push_back( (*mvi)->clone() );
+    	}
+
+    	cclone->c_methods.insert( (char *)(*mi)->value->name.c_str(),
+								  new class_method_t(
+									(*mi)->value->name,
+									method_variations
+								  )
+							    );
     }
 
     cclone->items = cme->items;
     cclone->name  = cme->name;
 
-    return (Object *)cclone;
+    return (Object *)(cclone);
 }
 
 size_t class_get_size( Object *me ){
@@ -67,18 +82,19 @@ size_t class_get_size( Object *me ){
 }
 
 void class_free( Object *me ){
-	ClassObjectNameIterator   ni;
-    ClassObjectValueIterator  vi;
-    ClassObjectMethodIterator mi;
+    ClassObjectAttributeIterator ai;
+    ClassObjectMethodIterator    mi;
+    ClassObjectMethodVariationsIterator mvi;
     ClassObject *cme = ob_class_ucast(me);
-    Object      *vitem;
+    class_method_t *method;
+    class_attribute_t *attribute;
 
     /*
      * Check if the class has a destructors and call it.
      */
-	for( ni = cme->m_names.begin(), mi = cme->m_values.begin(); ni != cme->m_names.end(); ni++, mi++ ){
-		if( *ni == "__expire" ){
-			Node *dtor = *mi;
+    if( (method = cme->c_methods.find( "__expire" )) ){
+		for( mvi = method->method.begin(); mvi != method->method.end(); mvi++ ){
+			Node *dtor = (*mvi);
 			vframe_t stack;
 			extern Context __context;
 
@@ -90,20 +106,27 @@ void class_free( Object *me ){
 
 			__context.detrace();
 		}
-	}
-
-    for( vi = cme->a_values.begin(); vi != cme->a_values.end(); vi++ ){
-        vitem = *vi;
-        if( vitem ){
-            ob_free(vitem);
-        }
     }
+	/*
+	 * Delete c_methods structure pointers.
+	 */
+	for( mi = cme->c_methods.begin(); mi != cme->c_methods.end(); mi++ ){
+		method = (*mi)->value;
+		delete method;
+	}
+	cme->c_methods.clear();
+	/*
+	 * Delete c_attributes structure pointers and decrement values references.
+	 */
+	for( ai = cme->c_attributes.begin(); ai != cme->c_attributes.end(); ai++ ){
+		attribute = (*ai)->value;
+		if( attribute->value ){
+			ob_free( attribute->value );
+		}
+		delete attribute;
+	}
+	cme->c_attributes.clear();
 
-    cme->a_access.clear();
-    cme->a_names.clear();
-    cme->a_values.clear();
-    cme->m_names.clear();
-    cme->m_values.clear();
     cme->items = 0;
 }
 
@@ -125,25 +148,24 @@ string class_svalue( Object *me ){
 
 void class_print( Object *me, int tabs ){
 	ClassObject *cme = ob_class_ucast(me);
-	ClassObjectNameIterator   ni;
-	ClassObjectValueIterator  vi;
-	ClassObjectMethodIterator mi;
+	ClassObjectAttributeIterator ai;
+	ClassObjectMethodIterator 	 mi;
 	int j;
 
 	for( j = 0; j < tabs; ++j ){
 		printf( "\t" );
 	}
 	printf( "class {\n" );
-	for( ni = cme->a_names.begin(), vi = cme->a_values.begin(); ni != cme->a_names.end(); ni++, vi++ ){
+	for( ai = cme->c_attributes.begin(); ai != cme->c_attributes.end(); ai++ ){
 		for( j = 0; j < tabs + 1; ++j ) printf( "\t" );
-		printf( "%s %s -> ", (*vi)->type->name, (*ni).c_str() );
-		ob_print( *vi, tabs + 1 );
+		printf( "%s %s -> ", (*ai)->value->value->type->name, (*ai)->value->name.c_str() );
+		ob_print( (*ai)->value->value, tabs + 1 );
 		printf( "\n" );
 	}
 	printf( "\n" );
-	for( ni = cme->m_names.begin(), mi = cme->m_values.begin(); ni != cme->m_names.end(); ni++, mi++ ){
+	for( mi = cme->c_methods.begin(); mi != cme->c_methods.end(); mi++ ){
 		for( j = 0; j < tabs + 1; ++j ) printf( "\t" );
-		printf( "method %s { ... }\n", (*ni).c_str() );
+		printf( "method %s { ... }\n", (*mi)->value->name.c_str() );
 	}
 	for( j = 0; j < tabs; ++j ) printf( "\t" );
 	printf( "}\n" );
@@ -161,40 +183,71 @@ Object *class_assign( Object *me, Object *op ){
 }
 
 /** structure operators **/
+access_t class_attribute_access( Object *me, char *name ){
+	ClassObject *cme = ob_class_ucast(me);
+	class_attribute_t *attribute;
+
+	if( (attribute = cme->c_attributes.find(name)) != NULL ){
+		return attribute->access;
+	}
+
+	return asPublic;
+}
+
+void class_set_attribute_access( Object *me, char *name, access_t a ){
+	ClassObject *cme = ob_class_ucast(me);
+	class_attribute_t *attribute;
+
+	if( (attribute = cme->c_attributes.find(name)) != NULL ){
+		attribute->access = a;
+	}
+}
+
 void class_add_attribute( Object *me, char *name ){
     ClassObject *cme = ob_class_ucast(me);
 
-    cme->a_names.push_back( name );
-    cme->a_values.push_back( (Object *)gc_new_integer(0) );
-    cme->items = cme->a_names.size() + cme->m_names.size();
+    cme->c_attributes.insert( name,
+							  new class_attribute_t(
+									  name,
+									  asPublic,
+									  (Object *)gc_new_integer(0)
+							  )
+							);
+    cme->items++;
 }
 
 Object *class_get_attribute( Object *me, char *name ){
     ClassObject *cme = ob_class_ucast(me);
+    class_attribute_t *attribute;
 
-    int i, sz( cme->a_names.size() );
-    for( i = 0; i < sz; ++i ){
-        if( cme->a_names[i] == string(name) ){
-            return cme->a_values[i];
-        }
-    }
+	if( (attribute = cme->c_attributes.find(name)) != NULL ){
+		return attribute->value;
+	}
+
     return NULL;
 }
 
 void class_set_attribute_reference( Object *me, char *name, Object *value ){
     ClassObject *cme = ob_class_ucast(me);
-    int i, sz( cme->a_names.size() );
+    class_attribute_t *attribute;
 
-    for( i = 0; i < sz; ++i ){
-        if( cme->a_names[i] == string(name) ){
-            cme->a_values[i] = ob_assign( cme->a_values[i], value );
-            return;
-        }
-    }
-
-    cme->a_names.push_back( name );
-    cme->a_values.push_back( value );
-    cme->items = cme->a_names.size() + cme->m_names.size();
+	if( (attribute = cme->c_attributes.find(name)) != NULL ){
+		/*
+		 * Set the new value, ob_assign will decrement old value
+		 * reference counter.
+		 */
+		attribute->value = ob_assign( attribute->value, value );
+	}
+	else{
+		cme->c_attributes.insert( name,
+								  new class_attribute_t(
+										  name,
+										  asPublic,
+										  value
+								  )
+								);
+		cme->items++;
+	}
 }
 
 void class_set_attribute( Object *me, char *name, Object *value ){
@@ -203,42 +256,66 @@ void class_set_attribute( Object *me, char *name, Object *value ){
 
 void class_define_method( Object *me, char *name, Node *code ){
 	ClassObject *cme = ob_class_ucast(me);
-
-	cme->m_names.push_back( name );
-	cme->m_values.push_back( code->clone() );
-	cme->items = cme->a_names.size() + cme->m_names.size();
+	class_method_t *method;
+	/*
+	 * Check if there's already a method with that name, in this case
+	 * push the node to the variations vector.
+	 */
+	if( (method = cme->c_methods.find(name)) ){
+		method->method.push_back( code->clone() );
+	}
+	/*
+	 * Otherwise define a new method.
+	 */
+	else{
+		cme->c_methods.insert( name, new class_method_t( name, code->clone() ) );
+	}
+	/*
+	 * In both cases increment item counter.
+	 */
+	cme->items++;
 }
 
 Node *class_get_method( Object *me, char *name, int argc ){
 	ClassObject *cme = ob_class_ucast(me);
-	Node *best_match = NULL;
-	int   best_match_argc, match_argc;
+	class_method_t *method;
 
-	int i, sz( cme->m_names.size() );
-	for( i = 0; i < sz; ++i ){
-		if( cme->m_names[i] == string(name) ){
-			if( argc < 0 ){
-				return cme->m_values[i];
+	if( (method = cme->c_methods.find(name)) ){
+		/*
+		 * If no parameters number is specified, return the first method found.
+		 */
+		if( argc < 0 ){
+			return (*method->method.begin());
+		}
+		/*
+		 * Otherwise, find the best match.
+		 */
+		ClassObjectMethodVariationsIterator mvi;
+		Node *best_match = NULL;
+		int   best_match_argc, match_argc;
+
+		for( mvi = method->method.begin(); mvi != method->method.end(); mvi++ ){
+			/*
+			 * The last child of a method is its body itself, so we compare
+			 * call children with method->children() - 1 to ignore the body.
+			 */
+			if( best_match == NULL ){
+				best_match 		= *mvi;
+				best_match_argc = best_match->children() - 1;
 			}
 			else{
-				if( best_match == NULL ){
-					/*
-					 * The last child of a method is its body itself, so we compare
-					 * call children with method->children() - 1 to ignore the body.
-					 */
-					best_match 		= cme->m_values[i];
-					best_match_argc = best_match->children() - 1;
-				}
-				else{
-					match_argc = cme->m_values[i]->children() - 1;
-					if( match_argc != best_match_argc && match_argc == argc ){
-						return cme->m_values[i];
-					}
+				match_argc = (*mvi)->children() - 1;
+				if( match_argc != best_match_argc && match_argc == argc ){
+					return (*mvi);
 				}
 			}
 		}
+
+		return best_match;
 	}
-	return best_match;
+	else{
+		return NULL;
+	}
 }
 
 IMPLEMENT_TYPE(Class) {
@@ -326,6 +403,8 @@ IMPLEMENT_TYPE(Class) {
 	0, // cl_set_reference
 
 	/** structure operators **/
+	class_attribute_access, // attribute_access
+	class_set_attribute_access, // set_attribute_access
     class_add_attribute, // add_attribute
     class_get_attribute, // get_attribute
     class_set_attribute, // set_attribute

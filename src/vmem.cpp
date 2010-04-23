@@ -78,7 +78,10 @@ VirtualMemory *VirtualMemory::clone(){
     for( i = 0; i < m_elements; ++i ){
         clone->add( (char *)label(i), at(i) );
     }
-	clone->break_state = break_state;
+	clone->break_state  = break_state;
+	clone->next_state   = next_state;
+	clone->return_state = return_state;
+	clone->return_value = return_value;
 
     return clone;
 }

@@ -55,8 +55,7 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
     	return frame->return_value;
     }
 
-    switch(node->type()){
-
+    switch( node->type() ){
         /* identifier */
         case H_NT_IDENTIFIER :
             return onIdentifier( frame, node );
@@ -77,14 +76,13 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
             return onFunctionCall( frame, node );
         case H_NT_METHOD_CALL :
         	return onMethodCall( frame, node );
-
         /* struct type declaration */
         case H_NT_STRUCT :
             return onStructureDeclaration( frame, node );
         case H_NT_CLASS :
 			return onClassDeclaration( frame, node );
 
-        /* statements */
+		/* statements */
         case H_NT_STATEMENT :
         	/*
         	 * Call the garbage collection routine every new statement.
@@ -139,7 +137,6 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                 case T_NEXT :
                 	frame->next_state = true;
                 break;
-
                 /* return */
                 case T_RETURN :
                     return onReturn( frame, node );
@@ -406,18 +403,7 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
         		 * Get attribute access descriptor.
         		 */
         		ClassObject *cobj = ob_class_ucast(owner);
-        		access_t     access;
-        		ClassObjectAccessIterator ai;
-				ClassObjectNameIterator   ni;
-
-				for( ni = cobj->a_names.begin(), ai = cobj->a_access.begin();
-					 ni != cobj->a_names.end();
-					 ni++, ai++ ){
-					if( (*ni) == child_id ){
-						access = (*ai);
-					}
-				}
-
+        		access_t access   = ob_attribute_access( owner, child_id );
 
         		if( access != asPublic ){
 					/*
@@ -500,7 +486,8 @@ Object *Engine::onStructureDeclaration( vframe_t *frame, Node * node ){
 
 Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 	int        i, j, members( node->children() );
-	char      *classname = (char *)node->value.m_identifier.c_str();
+	char      *classname = (char *)node->value.m_identifier.c_str(),
+			  *attrname;
 	/* class prototypes are not garbage collected */
 	Object    *c         = (Object *)(new ClassObject());
 
@@ -509,8 +496,10 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 		 * Define an attribute
 		 */
 		if( node->child(i)->type() == H_NT_IDENTIFIER ){
-			ob_add_attribute( c, (char *)node->child(i)->value.m_identifier.c_str() );
-			ob_class_ucast(c)->a_access.push_back( node->child(i)->value.m_access );
+			attrname = (char *)node->child(i)->value.m_identifier.c_str();
+
+			ob_add_attribute( c, attrname );
+			ob_set_attribute_access( c, attrname, node->child(i)->value.m_access );
 		}
 		/*
 		 * Define a method
@@ -536,20 +525,22 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 				hyb_throw( H_ET_SYNTAX, "couldn't extend from '%s' type", type->type->name );
 			}
 
-			ClassObject 			 *cobj = ob_class_ucast(type);
-			ClassObjectAccessIterator ai;
-			ClassObjectNameIterator   ni;
-			ClassObjectValueIterator  vi;
-			ClassObjectMethodIterator mi;
+			ClassObject 			   		   *cobj = ob_class_ucast(type);
+			ClassObjectAttributeIterator 		ai;
+			ClassObjectMethodIterator 	 		mi;
+			ClassObjectMethodVariationsIterator mvi;
 
-			for( ni = cobj->a_names.begin(), vi = cobj->a_values.begin(), ai = cobj->a_access.begin();
-				 ni != cobj->a_names.end();
-				 ni++, vi++, ai++ ){
-				ob_set_attribute( c, (char *)(*ni).c_str(), (*vi) );
-				ob_class_ucast(c)->a_access.push_back( (*ai) );
+			for( ai = cobj->c_attributes.begin(); ai != cobj->c_attributes.end(); ai++ ){
+				attrname = (char *)(*ai)->label.c_str();
+
+				ob_set_attribute( c, attrname, (*ai)->value->value );
+				ob_set_attribute_access( c, attrname, (*ai)->value->access );
 			}
-			for( ni = cobj->m_names.begin(), mi = cobj->m_values.begin(); ni != cobj->m_names.end(); ni++, mi++ ){
-				ob_define_method( c, (char *)(*ni).c_str(), (*mi) );
+
+			for( mi = cobj->c_methods.begin(); mi != cobj->c_methods.end(); mi++ ){
+				for( mvi = (*mi)->value->method.begin(); mvi != (*mi)->value->method.end(); mvi++ ){
+					ob_define_method( c, (char *)(*mi)->label.c_str(), *mvi );
+				}
 			}
 		}
 	}
@@ -794,16 +785,16 @@ Object *Engine::onNewType( vframe_t *frame, Node *type ){
 			ctx->detrace();
 		}
 		else{
-			if( children > ob_class_ucast(newtype)->a_names.size() ){
+			if( children > ob_class_ucast(newtype)->c_attributes.size() ){
 				hyb_throw( H_ET_SYNTAX, "class '%s' has %d attributes, initialized with %d",
 									 type_name,
-									 ob_class_ucast(newtype)->a_names.size(),
+									 ob_class_ucast(newtype)->c_attributes.size(),
 									 children );
 			}
 
 			for( i = 0; i < children; ++i ){
 				object = exec( frame, type->child(i) );
-				ob_set_attribute( newtype, (char *)ob_class_ucast(newtype)->a_names[i].c_str(), object );
+				ob_set_attribute( newtype, (char *)ob_class_ucast(newtype)->c_attributes.at(i)->name.c_str(), object );
 			}
 		}
 	}

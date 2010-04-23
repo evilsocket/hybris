@@ -20,6 +20,7 @@
 #	define _HOBJECT_H_
 
 #include "gc.h"
+#include "hashmap.h"
 #include <stdarg.h>
 #include <string>
 #include <vector>
@@ -157,6 +158,8 @@ typedef Object * (*ob_binary_function_t)        ( Object *, Object * );
 // {a}<operator{b} '=' {c}
 typedef Object * (*ob_ternary_function_t)       ( Object *, Object *, Object * );
 // functions to manage structure and class attributes
+typedef access_t (*ob_attribute_access_function_t) ( Object *, char * );
+typedef void     (*ob_set_attribute_access_function_t) ( Object *, char *, access_t );
 typedef void     (*ob_add_attribute_function_t) ( Object *, char * );
 typedef Object * (*ob_get_attribute_function_t) ( Object *, char * );
 typedef void     (*ob_set_attribute_function_t) ( Object *, char *, Object * );
@@ -284,6 +287,8 @@ typedef struct _object_type_t {
     ob_ternary_function_t       cl_set_reference;
 
     /** structure and class operators **/
+    ob_attribute_access_function_t attribute_access;
+    ob_set_attribute_access_function_t set_attribute_access;
     ob_add_attribute_function_t add_attribute;
     ob_get_attribute_function_t get_attribute;
     ob_set_attribute_function_t set_attribute;
@@ -583,6 +588,14 @@ Object *ob_cl_set( Object *a, Object *b, Object *c );
  * increment 'c' reference counter.
  */
 Object *ob_cl_set_reference( Object *a, Object *b, Object *c );
+/*
+ * Return the access level for a given attribute.
+ */
+access_t ob_attribute_access( Object *o, char * a );
+/*
+ * Set the access level for a given attribute.
+ */
+void     ob_set_attribute_access( Object *o, char *name, access_t a );
 /*
  * Define a new attribute 'a' for the structure 's'.
  */
@@ -898,35 +911,58 @@ typedef vector<Object *>::iterator StructureObjectValueIterator;
 
 DECLARE_TYPE(Class);
 
+typedef struct _class_attribute_t {
+	string	 name;
+	access_t access;
+	Object  *value;
+
+	_class_attribute_t( string n, access_t a, Object *v ) :
+		name(n),
+		access(a),
+		value(v){
+
+	}
+}
+class_attribute_t;
+
+typedef struct _class_method_t {
+	string		   name;
+	/*
+	 * A class could have more methods with the same name but
+	 * different parameters, so we have to hold a vector of Nodes.
+	 */
+	vector<Node *> method;
+
+	_class_method_t( string n, Node *m ) :
+		name(n) {
+		method.push_back(m);
+	}
+
+	_class_method_t( string n, vector<Node *>& mv ) :
+		name(n),
+		method(mv) {
+
+	}
+}
+class_method_t;
+
 typedef struct _ClassObject {
     BASE_OBJECT_HEADER;
     size_t           items;
     string			 name;
-    /*
-     * TODO : Use vmem_t and vcode_t instead of vectors.
-     */
-    vector<access_t> a_access;
-    vector<string>   a_names;
-    vector<Object *> a_values;
-    vector<string>   m_names;
-    vector<Node *>   m_values;
+
+    HashMap<class_attribute_t> c_attributes;
+    HashMap<class_method_t>	   c_methods;
 
     _ClassObject() : items(0), BASE_OBJECT_HEADER_INIT(Class) {
-        // define to test space reservation optimization
-        #ifdef RESERVED_VECTORS_SPACE
-			a_names.reserve( RESERVE_VECTORS_SPACE );
-            a_values.reserve( RESERVE_VECTORS_SPACE );
-            m_names.reserve( RESERVE_VECTORS_SPACE );
-            m_values.reserve( RESERVE_VECTORS_SPACE );
-        #endif
+
     }
 }
 ClassObject;
 
-typedef vector<access_t>::iterator ClassObjectAccessIterator;
-typedef vector<string>::iterator   ClassObjectNameIterator;
-typedef vector<Object *>::iterator ClassObjectValueIterator;
-typedef vector<Node *>::iterator   ClassObjectMethodIterator;
+typedef HashMap<class_attribute_t>::iterator ClassObjectAttributeIterator;
+typedef HashMap<class_method_t>::iterator	 ClassObjectMethodIterator;
+typedef vector<Node *>::iterator	 		 ClassObjectMethodVariationsIterator;
 
 #define ob_is_class(o)    ob_is_typeof(o,Class)
 #define ob_class_ucast(o) ((ClassObject *)(o))

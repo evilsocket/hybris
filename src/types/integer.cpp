@@ -524,10 +524,14 @@ IMPLEMENT_TYPE(Integer) {
 	int_cl_at, // cl_at
 
 	/** structure operators **/
+	0, // attribute_access
+	0, // set_attribute_access
     0, // add_attribute;
     0, // get_attribute;
     0, // set_attribute;
-    0  // set_attribute_reference;
+    0, // set_attribute_reference
+    0, // define_method
+    0  // get_method
 };
 
 IMPLEMENT_TYPE(Alias) {
@@ -613,10 +617,14 @@ IMPLEMENT_TYPE(Alias) {
 	int_cl_at, // cl_at
 
     /** structure operators **/
+	0, // attribute_access
+	0, // set_attribute_access
     0, // add_attribute;
     0, // get_attribute;
     0, // set_attribute;
-    0  // set_attribute_reference;
+    0, // set_attribute_reference;
+    0, // define_method
+    0  // get_method
 };
 
 IMPLEMENT_TYPE(Extern) {
@@ -704,6 +712,8 @@ IMPLEMENT_TYPE(Extern) {
 	0, // cl_set_reference
 
     /** structure operators **/
+	0, // attribute_access
+	0, // set_attribute_access
     0, // add_attribute;
     0, // get_attribute;
     0, // set_attribute;

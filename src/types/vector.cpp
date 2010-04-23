@@ -318,6 +318,8 @@ IMPLEMENT_TYPE(Vector) {
 	vector_cl_set_reference, // cl_set_reference
 
 	/** structure operators **/
+	0, // attribute_access
+	0, // set_attribute_access
     0, // add_attribute;
     0, // get_attribute;
     0, // set_attribute;

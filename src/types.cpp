@@ -679,6 +679,21 @@ Object *ob_cl_set_reference( Object *a, Object *b, Object *c ){
 	}
 }
 
+access_t ob_attribute_access( Object *o, char * a ){
+	if( o->type->attribute_access != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->attribute_access(o,a);
+	}
+	else{
+		return asPublic;
+	}
+}
+
+void ob_set_attribute_access( Object *o, char *name, access_t a ){
+	if( o->type->set_attribute_access != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->set_attribute_access(o,name,a);
+	}
+}
+
 void ob_add_attribute( Object *s, char *a ){
     if( s->type->add_attribute != HYB_UNIMPLEMENTED_FUNCTION ){
 		return s->type->add_attribute(s,a);
