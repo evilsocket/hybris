@@ -36,6 +36,10 @@
 class VirtualMemory : public HashMap<Object> {
     public :
 
+		bool 	break_condition;
+		bool 	return_condition;
+		Object *return_value;
+
         VirtualMemory();
         ~VirtualMemory();
 

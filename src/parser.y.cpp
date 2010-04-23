@@ -63,6 +63,7 @@
 #define MK_METHOD_NODE(a, b, c)   new MethodNode( a, b, 1, c )
 /* expressions */
 #define MK_RETURN_NODE(a)         new ExpressionNode( T_RETURN, 1, a )
+#define MK_BREAK_NODE()		  	  new ExpressionNode( T_BREAK, 0 )
 #define MK_EOSTMT_NODE(a, b)      new ExpressionNode( T_EOSTMT, 2, a, b )
 #define MK_DOLLAR_NODE(a)		  new ExpressionNode( T_DOLLAR, 1, a )
 #define MK_ASSIGN_NODE(a, b)      new ExpressionNode( T_ASSIGN, 2, a, b )
@@ -322,6 +323,7 @@ classMembers : attrList methodList classMembers {
 statement  : T_EOSTMT                                                   { $$ = MK_EOSTMT_NODE( NULL, NULL ); }
 	   	   | expression                                                 { $$ = MK_NODE($1); }
            | expression T_EOSTMT                                        { $$ = MK_NODE($1); }
+           | T_BREAK T_EOSTMT											{ $$ = MK_BREAK_NODE(); }
            | T_RETURN expression T_EOSTMT                               { $$ = MK_RETURN_NODE( $2 ); }
            /* subscript operator special cases */
 		   | expression '[' ']' T_ASSIGN expression T_EOSTMT            { $$ = MK_SB_PUSH_NODE( $1, $5 ); }

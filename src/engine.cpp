@@ -36,6 +36,9 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
     if( node == H_UNDEFINED ){
         return H_UNDEFINED;
     }
+    else if( frame->return_condition ){
+    	return frame->return_value;
+    }
 
     Object *sreturn = H_UNDEFINED;
 
@@ -113,6 +116,10 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                      *********************************************/
                     gc_collect();
                     return sreturn;
+                case T_BREAK :
+					frame->break_condition = true;
+                break;
+
                 /* return */
                 case T_RETURN :
                     return onReturn( frame, node );
@@ -245,7 +252,7 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
             }
     }
 
-    return H_UNDEFINED;
+    return H_DEFAULT_RETURN;
 }
 
 Node * Engine::findEntryPoint( vframe_t *frame, Node *call ){
@@ -1037,7 +1044,11 @@ Object *Engine::onDollar( vframe_t *frame, Node *node ){
 }
 
 Object *Engine::onReturn( vframe_t *frame, Node *node ){
-    return exec(  frame, node->child(0) );
+    frame->return_value     = exec( frame, node->child(0) );
+    frame->break_condition  = true;
+    frame->return_condition = true;
+
+    return frame->return_value;
 }
 
 Object *Engine::onRange( vframe_t *frame, Node *node ){
@@ -1115,9 +1126,13 @@ Object *Engine::onWhile( vframe_t *frame, Node *node ){
 
     while( ob_lvalue( (boolean = exec(  frame, condition )) ) ){
         result = exec( frame, body );
+        if( frame->break_condition ){
+        	frame->break_condition = false;
+			break;
+        }
     }
 
-    return H_UNDEFINED;
+    return result;
 }
 
 Object *Engine::onDo( vframe_t *frame, Node *node ){
@@ -1131,10 +1146,14 @@ Object *Engine::onDo( vframe_t *frame, Node *node ){
     condition = node->child(1);
     do{
         result = exec( frame, body );
+        if( frame->break_condition ){
+			frame->break_condition = false;
+			break;
+		}
     }
     while( ob_lvalue( (boolean = exec(  frame, condition )) ) );
 
-    return H_UNDEFINED;
+    return result;
 }
 
 Object *Engine::onFor( vframe_t *frame, Node *node ){
@@ -1153,11 +1172,15 @@ Object *Engine::onFor( vframe_t *frame, Node *node ){
     body      = node->child(3);
     for( init;
          ob_lvalue( (boolean = exec(  frame, condition )) );
-         (inc     = exec(  frame, increment )) ){
+         (inc   = exec(  frame, increment )) ){
          result = exec( frame, body );
+         if( frame->break_condition ){
+			frame->break_condition = false;
+			break;
+		 }
     }
 
-    return H_UNDEFINED;
+    return result;
 }
 
 Object *Engine::onForeach( vframe_t *frame, Node *node ){
@@ -1175,9 +1198,13 @@ Object *Engine::onForeach( vframe_t *frame, Node *node ){
     for( i = 0; i < size; ++i ){
         frame->add( identifier, ob_vector_ucast(v)->value[i] );
         result = exec( frame, body );
+        if( frame->break_condition ){
+			frame->break_condition = false;
+			break;
+		}
     }
 
-    return H_UNDEFINED;
+    return result;
 }
 
 Object *Engine::onForeachm( vframe_t *frame, Node *node ){
@@ -1197,10 +1224,14 @@ Object *Engine::onForeachm( vframe_t *frame, Node *node ){
     for( i = 0; i < size; ++i ){
         frame->add( key_identifier,   ob_map_ucast(map)->keys[i] );
         frame->add( value_identifier, ob_map_ucast(map)->values[i] );
-        result = exec(  frame, body );
+        result = exec( frame, body );
+        if( frame->break_condition ){
+			frame->break_condition = false;
+			break;
+		}
     }
 
-    return H_UNDEFINED;
+    return result;
 }
 
 Object *Engine::onIf( vframe_t *frame, Node *node ){
