@@ -1874,10 +1874,16 @@ Object *Engine::onXor( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_bw_xor( a, b );
 
-    return c;
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_bw_xor( a, b );
+
+		return c;
+    }
+    else{
+    	return onOperatorCall( frame, a, "^", 1, node->child(1) );
+    }
 }
 
 Object *Engine::onXore( vframe_t *frame, Node *node ){
@@ -1885,11 +1891,17 @@ Object *Engine::onXore( vframe_t *frame, Node *node ){
            *b = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
 
-    ob_bw_inplace_xor( a, b );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
 
-    return a;
+		ob_bw_inplace_xor( a, b );
+
+		return a;
+    }
+    else{
+		return onOperatorCall( frame, a, "^=", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onAnd( vframe_t *frame, Node *node ){
@@ -1898,10 +1910,16 @@ Object *Engine::onAnd( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_bw_and( a, b );
 
-    return c;
+	if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_bw_and( a, b );
+
+		return c;
+	}
+	else{
+		return onOperatorCall( frame, a, "&", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onAnde( vframe_t *frame, Node *node ){
@@ -1909,11 +1927,16 @@ Object *Engine::onAnde( vframe_t *frame, Node *node ){
            *b = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
 
-    ob_bw_inplace_and( a, b );
+		ob_bw_inplace_and( a, b );
 
-    return a;
+		return a;
+    }
+    else{
+		return onOperatorCall( frame, a, "&=", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onOr( vframe_t *frame, Node *node ){
@@ -1922,10 +1945,16 @@ Object *Engine::onOr( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_bw_or( a, b );
 
-    return c;
+	if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_bw_or( a, b );
+
+		return c;
+	}
+	else{
+		return onOperatorCall( frame, a, "|", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onOre( vframe_t *frame, Node *node ){
@@ -1933,11 +1962,16 @@ Object *Engine::onOre( vframe_t *frame, Node *node ){
            *b = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
 
-    ob_bw_inplace_or( a, b );
+		ob_bw_inplace_or( a, b );
 
-    return a;
+		return a;
+    }
+    else{
+		return onOperatorCall( frame, a, "|=", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onShiftl( vframe_t *frame, Node *node ){
@@ -1946,10 +1980,15 @@ Object *Engine::onShiftl( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_bw_lshift( a, b );
+	if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_bw_lshift( a, b );
 
-    return c;
+		return c;
+	}
+	else{
+		return onOperatorCall( frame, a, "<<", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onShiftle( vframe_t *frame, Node *node ){
@@ -1957,11 +1996,16 @@ Object *Engine::onShiftle( vframe_t *frame, Node *node ){
            *b = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
 
-    ob_bw_inplace_lshift( a, b );
+		ob_bw_inplace_lshift( a, b );
 
-    return a;
+		return a;
+    }
+    else{
+		return onOperatorCall( frame, a, "<<=", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onShiftr( vframe_t *frame, Node *node ){
@@ -1970,10 +2014,15 @@ Object *Engine::onShiftr( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_bw_rshift( a, b );
+	if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_bw_rshift( a, b );
 
-    return c;
+		return c;
+	}
+	else{
+		return onOperatorCall( frame, a, ">>", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onShiftre( vframe_t *frame, Node *node ){
@@ -1981,11 +2030,16 @@ Object *Engine::onShiftre( vframe_t *frame, Node *node ){
            *b = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
 
-    ob_bw_inplace_rshift( a, b );
+		ob_bw_inplace_rshift( a, b );
 
-    return a;
+		return a;
+    }
+    else{
+		return onOperatorCall( frame, a, ">>=", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onFact( vframe_t *frame, Node *node ){
@@ -2002,20 +2056,30 @@ Object *Engine::onNot( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED,
            *r = H_UNDEFINED;
 
-    o = exec(  frame, node->child(0) );
-    r = ob_bw_not(o);
+    o = exec( frame, node->child(0) );
+    if( ob_is_class(o) == false ){
+    	r = ob_bw_not(o);
 
-    return r;
+    	return r;
+    }
+    else{
+    	return onOperatorCall( frame, o, "~", 0 );
+    }
 }
 
 Object *Engine::onLnot( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED,
            *r = H_UNDEFINED;
 
-    o = exec(  frame, node->child(0) );
-    r = ob_l_not(o);
+    o = exec( frame, node->child(0) );
+    if( ob_is_class(o) == false ){
+		r = ob_l_not(o);
 
-    return r;
+		return r;
+    }
+	else{
+		return onOperatorCall( frame, o, "!", 0 );
+	}
 }
 
 Object *Engine::onLess( vframe_t *frame, Node *node ){
@@ -2024,10 +2088,15 @@ Object *Engine::onLess( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_l_less( a, b );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_l_less( a, b );
 
-    return c;
+		return c;
+	}
+	else{
+		return onOperatorCall( frame, a, "<", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onGreater( vframe_t *frame, Node *node ){
@@ -2036,10 +2105,15 @@ Object *Engine::onGreater( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_l_greater( a, b );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_l_greater( a, b );
 
-    return c;
+		return c;
+	}
+	else{
+		return onOperatorCall( frame, a, ">", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onGe( vframe_t *frame, Node *node ){
@@ -2048,10 +2122,15 @@ Object *Engine::onGe( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_l_greater_or_same( a, b );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_l_greater_or_same( a, b );
 
-    return c;
+		return c;
+	}
+	else{
+		return onOperatorCall( frame, a, ">=", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onLe( vframe_t *frame, Node *node ){
@@ -2060,10 +2139,15 @@ Object *Engine::onLe( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_l_less_or_same( a, b );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_l_less_or_same( a, b );
 
-    return c;
+		return c;
+	}
+	else{
+		return onOperatorCall( frame, a, "<=", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onNe( vframe_t *frame, Node *node ){
@@ -2072,10 +2156,15 @@ Object *Engine::onNe( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_l_diff( a, b );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_l_diff( a, b );
 
-    return c;
+		return c;
+	}
+	else{
+		return onOperatorCall( frame, a, "!=", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onEq( vframe_t *frame, Node *node ){
@@ -2084,10 +2173,15 @@ Object *Engine::onEq( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_l_same( a, b );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_l_same( a, b );
 
-    return c;
+		return c;
+	}
+	else{
+		return onOperatorCall( frame, a, "==", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onLand( vframe_t *frame, Node *node ){
@@ -2096,10 +2190,15 @@ Object *Engine::onLand( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_l_and( a, b );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_l_and( a, b );
 
-    return c;
+		return c;
+	}
+	else{
+		return onOperatorCall( frame, a, "&&", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onLor( vframe_t *frame, Node *node ){
@@ -2108,8 +2207,13 @@ Object *Engine::onLor( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_l_or( a, b );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_l_or( a, b );
 
-    return c;
+		return c;
+	}
+	else{
+		return onOperatorCall( frame, a, "||", 1, node->child(1) );
+	}
 }

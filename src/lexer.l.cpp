@@ -341,7 +341,12 @@ function_decl_t *hyb_lex_function( char * text ){
     declaration->argc = 0;
     sptr++;
     dptr = var;
-    while( end == 0 && *dptr ){
+
+    while( IS_WHITESPACE(*sptr) || *sptr == '(' ){
+		sptr++;
+	}
+
+    while( end == 0 ){
         switch( *sptr ){
             /* skip whitespaces */
             case '\r' :
@@ -396,7 +401,11 @@ method_decl_t *hyb_lex_method( char * text ){
     sptr++;
     dptr = var;
 
-    while( end == 0 && *dptr ){
+    while( IS_WHITESPACE(*sptr) || *sptr == '(' ){
+		sptr++;
+	}
+
+    while( end == 0 ){
         switch( *sptr ){
             /* skip whitespaces */
             case '\r' :
@@ -461,7 +470,12 @@ method_decl_t *hyb_lex_operator( char * text ){
     declaration->argc = 0;
     sptr++;
     dptr = var;
-    while( end == 0 && *dptr ){
+
+    while( IS_WHITESPACE(*sptr) || *sptr == '(' ){
+		sptr++;
+	}
+
+    while( end == 0 ){
         switch( *sptr ){
             /* skip whitespaces */
             case '\r' :
@@ -484,10 +498,6 @@ method_decl_t *hyb_lex_operator( char * text ){
                 }
                 end = 1;
                 break;
-
-            case '(' :
-
-            break;
 
             /* still in variable name declaration */
             default :
