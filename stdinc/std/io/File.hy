@@ -43,10 +43,7 @@ class File {
 	}
 	
 	public method close(){
-		if( me->file ){	
-			fclose( me->file );
-			me->file = 0;	
-		}
+		fclose( me->file );
 	}
 	
 	public method readLine(){
@@ -113,7 +110,7 @@ class File {
 	}
 
 	public method readType ( type ){
-		if ( me->isBynari() == -1 ) {
+		if ( me->isBinary() == -1 ) {
 			return -1;
 		}
 		if ( fread (me->file, type ) > 0 ) {
@@ -122,6 +119,10 @@ class File {
 		else {
 			return -1;
 		}
+	}
+
+	operator >> ( object ){
+		return me->readType(object);
 	}
 
 	public method readType ( type, bytes ){
@@ -154,6 +155,10 @@ class File {
 	
 	public method write( data ){
 		return fwrite( me->file, data );
+	}
+
+	operator << ( object ){
+		return me->write(object);
 	}
 
 	public method write ( data, bytes ){
