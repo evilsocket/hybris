@@ -21,8 +21,7 @@ import std.io.file;
 
 class File {
 	
-	protected file;
-	protected fileName;
+	protected file, fileName;
 
 	public method File ( file_name, mode){
 		me->file = fopen ( file_name, mode);
