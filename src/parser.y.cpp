@@ -438,10 +438,10 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            | expression T_REGEX_OP expression                 { $$ = MK_PCRE_NODE( $1, $3 ); }
            /* structure or class creation */
            | T_NEW T_IDENT '(' argumentList ')' %prec T_NEW_END { $$ = MK_NEW_NODE( $2, $4 ); }
-           /* function call (consider two different cases due to hybris function calls */
+           /* function or method call (consider two different cases due to hybris function calls */
 		   | T_IDENT    '(' argumentList ')' %prec T_CALL_END { $$ = MK_CALL_NODE( $1, $3 ); }
 		   | identChain '(' argumentList ')' %prec T_CALL_END { $$ = MK_METHOD_CALL_NODE( $1, $3 ); }
-           | expression '(' argumentList ')'                    { $$ = MK_CALL_NODE( $1, $3 ); }
+           | expression '(' argumentList ')'                  { $$ = MK_CALL_NODE( $1, $3 ); }
            /* ternary operator */
            | '(' expression '?' expression ':' expression ')' { $$ = MK_QUESTION_NODE( $2, $4, $6 ); }
            /* group expression */

@@ -40,6 +40,8 @@ char             hyb_lex_char( char delimiter );
 function_decl_t *hyb_lex_function( char * text );
 // handle method prototypes declarations
 method_decl_t   *hyb_lex_method( char * text );
+// handle operator overloading declaration
+method_decl_t   *hyb_lex_operator( char *text );
 
 extern int     yylineno;
 extern Context __context;
@@ -54,6 +56,7 @@ extern Context __context;
 exponent   [eE][-+]?[0-9]+
 spaces     [ \n\t]+
 identifier [a-zA-Z\_][a-zA-Z0-9\_]*
+operators  "[]"|"[]="|"[]<"|".."|"+"|"+="|"-"|"-="|"/"|"/="|"*"|"*="|"%"|"%="|"++"|"--"|"^"|"^="|"~"|"&"|"&="|"|"|"|="|"<<"|"<<="|">>"|"!"|"<"|">"|">="|"<="|"=="|"!="|"&&"|"||"|"~="
 %%
 
 [ \t]+ ;
@@ -222,7 +225,12 @@ include          BEGIN(T_INCLUSION);
 }
 
 "method"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*")" {
-	yylval.method   = hyb_lex_method(yytext);
+	yylval.method = hyb_lex_method(yytext);
+	return T_METHOD_PROTOTYPE;
+}
+
+"operator"[ \n\t]+{operators}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*")" {
+	yylval.method = hyb_lex_operator(yytext);
 	return T_METHOD_PROTOTYPE;
 }
 
@@ -333,7 +341,7 @@ function_decl_t *hyb_lex_function( char * text ){
     declaration->argc = 0;
     sptr++;
     dptr = var;
-    while( end == 0 ){
+    while( end == 0 && *dptr ){
         switch( *sptr ){
             /* skip whitespaces */
             case '\r' :
@@ -387,7 +395,8 @@ method_decl_t *hyb_lex_method( char * text ){
     declaration->argc = 0;
     sptr++;
     dptr = var;
-    while( end == 0 ){
+
+    while( end == 0 && *dptr ){
         switch( *sptr ){
             /* skip whitespaces */
             case '\r' :
@@ -401,7 +410,7 @@ method_decl_t *hyb_lex_method( char * text ){
                 declaration->argc++;
                 dptr = var;
                 break;
-                /* end of function declaration, end last parameter without comma */
+            /* end of function declaration, end last parameter without comma */
             case ')' :
                 if( var[0] != 0x00 ){
                     strcpy( declaration->argv[declaration->argc], var );
@@ -410,13 +419,87 @@ method_decl_t *hyb_lex_method( char * text ){
                 }
                 end = 1;
                 break;
-                /* still in variable name declaration */
+
+            /* still in variable name declaration */
             default :
                 *dptr = *sptr;
                 dptr++;
         }
         sptr++;
     }
+
+    return declaration;
+}
+
+method_decl_t *hyb_lex_operator( char * text ){
+	method_decl_t *declaration = new method_decl_t;
+    char *sptr = text + strlen( "operator " ),
+         *dptr,
+         op[0xFF] = {0},
+         var[0xFF] = {0};
+    int  end = 0;
+
+    memset( declaration->method, 0x00, 0xFF );
+
+    while( IS_WHITESPACE(*sptr) ){ sptr++; };
+
+    dptr = op;
+    /*
+     * Mangle operator name.
+     */
+    strcpy( dptr, "__op@" );
+    dptr += strlen("__op@");
+
+    while( !IS_WHITESPACE(*sptr) && *sptr != '(' ){
+        *dptr = *sptr;
+        sptr++;
+        dptr++;
+    }
+
+    strcpy( declaration->method, op );
+
+    declaration->argc = 0;
+    sptr++;
+    dptr = var;
+    while( end == 0 && *dptr ){
+        switch( *sptr ){
+            /* skip whitespaces */
+            case '\r' :
+            case '\n' :
+            case '\t' :
+            case ' '  : break;
+            /* end of variable name declaration */
+            case ',' :
+                strcpy( declaration->argv[declaration->argc], var );
+                memset( var, 0x00, 0xFF );
+                declaration->argc++;
+                dptr = var;
+                break;
+            /* end of operator declaration, end last parameter without comma */
+            case ')' :
+                if( var[0] != 0x00 ){
+                    strcpy( declaration->argv[declaration->argc], var );
+                    memset( var, 0x00, 0xFF );
+                    declaration->argc++;
+                }
+                end = 1;
+                break;
+
+            case '(' :
+
+            break;
+
+            /* still in variable name declaration */
+            default :
+                *dptr = *sptr;
+                dptr++;
+        }
+        sptr++;
+    }
+
+    /*
+     * TODO: Check 'op' for right arguments number.
+     */
 
     return declaration;
 }

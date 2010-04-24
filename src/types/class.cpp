@@ -143,7 +143,7 @@ bool class_lvalue( Object *me ){
 }
 
 string class_svalue( Object *me ){
-    return string( "<class>" );
+    return "<" + ob_class_ucast(me)->name + ">";
 }
 
 void class_print( Object *me, int tabs ){
@@ -165,7 +165,12 @@ void class_print( Object *me, int tabs ){
 	printf( "\n" );
 	for( mi = cme->c_methods.begin(); mi != cme->c_methods.end(); mi++ ){
 		for( j = 0; j < tabs + 1; ++j ) printf( "\t" );
-		printf( "method %s { ... }\n", (*mi)->value->name.c_str() );
+		if( (*mi)->value->name.find("__op@") == 0 ){
+			printf( "operator %s { ... }\n", (*mi)->value->name.c_str() + strlen("__op@") );
+		}
+		else{
+			printf( "method %s { ... }\n", (*mi)->value->name.c_str() );
+		}
 	}
 	for( j = 0; j < tabs; ++j ) printf( "\t" );
 	printf( "}\n" );
@@ -314,7 +319,13 @@ Node *class_get_method( Object *me, char *name, int argc ){
 		return best_match;
 	}
 	else{
-		return NULL;
+		/*
+		 * Try with overloaded operators.
+		 */
+		char mangled_op_name[0xFF] = {0};
+		sprintf( mangled_op_name, "__op@%s", name );
+
+		return class_get_method( me, mangled_op_name, argc );
 	}
 }
 

@@ -64,6 +64,10 @@ class Engine {
          * Handle method call.
          */
         Object *onMethodCall( vframe_t *, Node * );
+        /*
+         * Handle overloaded operator call.
+         */
+        Object *onOperatorCall( vframe_t *, Object *, const char *, int argc, ... );
 
     public  :
 

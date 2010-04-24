@@ -448,12 +448,12 @@ Object *Engine::onConstant( vframe_t *frame, Node *node ){
 	/*
 	 * Constants are obviously not evaluated every time, just
 	 * the first time when the parser is traveling around the
-	 * syntaxy tree and founds out a constant.
+	 * syntax tree and finds out a constant.
 	 * For this reason, constants do NOT go out of scope, out
 	 * of references, out of fuel, out-what-u-like-most.
 	 * If the garbage collector detects an object to be a constant,
 	 * (the object->attributes bitmask is set to H_OT_CONSTANT), it
-	 * simply skip it in the loop.
+	 * simply skips it in the loop.
 	 */
     return node->value.m_constant;
 }
@@ -1057,21 +1057,96 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
 }
 
+Object *Engine::onOperatorCall( vframe_t *frame, Object *owner, const char *op_name, int argc, ... ){
+	char     op_mangled_name[0xFF] = {0};
+	Node    *op = H_UNDEFINED;
+	Node    *identifier           = H_UNDEFINED;
+	vframe_t stack;
+	Object  *value                = H_UNDEFINED,
+			*result               = H_UNDEFINED;
+	unsigned int i, op_argc;
+	va_list ap;
+
+	sprintf( op_mangled_name, "__op@%s", op_name );
+
+	if( (op = ob_get_method( owner, op_mangled_name, argc )) == H_UNDEFINED ){
+		hyb_throw( H_ET_SYNTAX, "class does not overload '%s' operator", op_name );
+	}
+
+	op_argc = op->children() - 1;
+
+	/*
+	 * The last child of a method is its body itself, so we compare
+	 * call children with method->children() - 1 to ignore the body.
+	 */
+	if( argc != op_argc ){
+		ctx->depool();
+		hyb_throw( H_ET_SYNTAX, "operator '%s' requires %d parameters (called with %d)",
+								 op_name,
+								 op_argc,
+								 argc );
+	}
+
+	/*
+	 * Create the "me" reference to the class itself, used inside
+	 * methods for me->... calls.
+	 */
+	stack.insert( "me", owner );
+	va_start( ap, argc );
+	for( i = 0; i < argc; ++i ){
+		identifier = va_arg( ap, Node * );
+		value = exec( frame, identifier );
+		/*
+		 * Value references count is set to zero now, builtins
+		 * do not care about reference counting, so this object will
+		 * be safely freed after the method call by the gc.
+		 */
+		stack.insert( (char *)op->child(i)->value.m_identifier.c_str(), value );
+	}
+	va_end(ap);
+
+	ctx->trace( (char *)op_name, &stack );
+
+	/* call the operator */
+	result = exec( &stack, op->callBody() );
+
+	ctx->detrace();
+
+	/*
+	 * Check for unhandled exceptions and put them on the root
+	 * memory frame.
+	 */
+	if( stack.exception_state == true ){
+		stack.exception_state  = false;
+		frame->exception_state = true;
+		frame->exception_value = stack.exception_value;
+	}
+
+	/* return method evaluation value */
+	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
+}
+
 Object *Engine::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
     Object *result = H_UNDEFINED;
 
     /* check if function is a builtin function */
-    if( (result = onBuiltinFunctionCall( frame, call )) == H_UNDEFINED ){
-        /* check for an user defined function */
-        if( (result = onUserFunctionCall( frame, call, threaded )) == H_UNDEFINED ){
-			/* check if the function is an extern identifier loaded by dll importing routines */
-			if( (result = onDllFunctionCall( frame, call, threaded )) == H_UNDEFINED ){
-				/* finally check for a method */
-				if( (result = onMethodCall( frame, call )) == H_UNDEFINED ){
-					hyb_throw( H_ET_SYNTAX, "'%s' undeclared function identifier", call->value.m_call.c_str() );
-				}
-			}
-        }
+    if( (result = onBuiltinFunctionCall( frame, call )) != H_UNDEFINED ){
+    	return result;
+    }
+    /* check for an user defined function */
+    else if( (result = onUserFunctionCall( frame, call, threaded )) != H_UNDEFINED ){
+    	return result;
+    }
+    /* check if the function is an extern identifier loaded by dll importing routines */
+    else if( (result = onDllFunctionCall( frame, call, threaded )) != H_UNDEFINED ){
+    	return result;
+    }
+    /* check for a method */
+    else if( (result = onMethodCall( frame, call )) != H_UNDEFINED ){
+    	return result;
+    }
+    else{
+    	hyb_throw( H_ET_SYNTAX, "'%s' undeclared function identifier", call->value.m_call.c_str() );
     }
 
     return result;
@@ -1109,10 +1184,16 @@ Object *Engine::onRange( vframe_t *frame, Node *node ){
            *to    = H_UNDEFINED;
 
     from  = exec( frame, node->child(0) );
-    to    = exec( frame, node->child(1) );
-    range = ob_range( from, to );
 
-    return range;
+    if( ob_is_class(from) == false ){
+    	to    = exec( frame, node->child(1) );
+		range = ob_range( from, to );
+
+		return range;
+    }
+    else{
+    	return onOperatorCall( frame, from, "..", 1, node->child(1) );
+    }
 }
 
 Object *Engine::onSubscriptAdd( vframe_t *frame, Node *node ){
@@ -1121,10 +1202,16 @@ Object *Engine::onSubscriptAdd( vframe_t *frame, Node *node ){
            *res    = H_UNDEFINED;
 
     array  = exec( frame, node->child(0) );
-    object = exec( frame, node->child(1) );
-    res    = ob_cl_push( array, object );
 
-    return res;
+    if( ob_is_class(array) == false ){
+		object = exec( frame, node->child(1) );
+		res    = ob_cl_push( array, object );
+
+		return res;
+    }
+    else{
+    	return onOperatorCall( frame, array, "[]=", 1, node->child(1) );
+    }
 }
 
 Object *Engine::onSubscriptGet( vframe_t *frame, Node *node ){
@@ -1134,22 +1221,36 @@ Object *Engine::onSubscriptGet( vframe_t *frame, Node *node ){
            *result     = H_UNDEFINED;
 
     if( node->children() == 3 ){
-        identifier    = exec( frame, node->child(0) );
-        array         = exec( frame, node->child(1) );
-        index         = exec( frame, node->child(2) );
+		array = exec( frame, node->child(1) );
+	}
+	else{
+		array = exec( frame, node->child(0) );
+	}
 
-        ob_assign( identifier,
-                    ob_cl_at( array, index )
-                  );
-        result        = identifier;
+    if( ob_is_class(array) == false ){
+    	if( node->children() == 3 ){
+			identifier = exec( frame, node->child(0) );
+			index      = exec( frame, node->child(2) );
+
+			ob_assign( identifier,
+						ob_cl_at( array, index )
+					  );
+			result = identifier;
+		}
+		else{
+			index  = exec( frame, node->child(1) );
+			result = ob_cl_at( array, index );
+		}
+
+		return result;
     }
     else{
-        array  = exec( frame, node->child(0) );
-        index  = exec( frame, node->child(1) );
-        result = ob_cl_at( array, index );
+    	return onOperatorCall( frame,
+							  array,
+							   "[]",
+							   1,
+							   node->child( ( node->children() == 3 ? 2 : 1 ) ) );
     }
-
-    return result;
 }
 
 Object *Engine::onSubscriptSet( vframe_t *frame, Node *node ){
@@ -1157,13 +1258,19 @@ Object *Engine::onSubscriptSet( vframe_t *frame, Node *node ){
            *index  = H_UNDEFINED,
            *object = H_UNDEFINED;
 
-    array  = exec( frame, node->child(0) );
-    index  = exec( frame, node->child(1) );
-    object = exec( frame, node->child(2) );
+    array = exec( frame, node->child(0) );
 
-    ob_cl_set( array, index, object );
+    if( ob_is_class(array) == false ){
+    	index  = exec( frame, node->child(1) );
+    	object = exec( frame, node->child(2) );
 
-    return array;
+    	ob_cl_set( array, index, object );
+
+    	return array;
+    }
+    else{
+    	return onOperatorCall( frame, array, "[]<", 2, node->child(1), node->child(2) );
+    }
 }
 
 Object *Engine::onWhile( vframe_t *frame, Node *node ){
@@ -1559,10 +1666,16 @@ Object *Engine::onPlus( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_add( a, b );
 
-    return c;
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_add( a, b );
+
+		return c;
+    }
+    else{
+    	return onOperatorCall( frame, a, "+", 1, node->child(1) );
+    }
 }
 
 Object *Engine::onPluse( vframe_t *frame, Node *node ){
@@ -1570,11 +1683,17 @@ Object *Engine::onPluse( vframe_t *frame, Node *node ){
            *b = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
 
-    ob_inplace_add( a, b );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
 
-    return a;
+		ob_inplace_add( a, b );
+
+		return a;
+    }
+    else{
+    	return onOperatorCall( frame, a, "+=", 1, node->child(1) );
+    }
 }
 
 Object *Engine::onMinus( vframe_t *frame, Node *node ){
@@ -1583,10 +1702,16 @@ Object *Engine::onMinus( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_sub( a, b );
 
-    return c;
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_sub( a, b );
+
+		return c;
+    }
+    else{
+    	return onOperatorCall( frame, a, "-", 1, node->child(1) );
+    }
 }
 
 Object *Engine::onMinuse( vframe_t *frame, Node *node ){
@@ -1594,11 +1719,17 @@ Object *Engine::onMinuse( vframe_t *frame, Node *node ){
            *b = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
 
-    ob_inplace_sub( a, b );
+	if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
 
-    return a;
+		ob_inplace_sub( a, b );
+
+		return a;
+	}
+	else{
+		return onOperatorCall( frame, a, "-=", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onMul( vframe_t *frame, Node *node ){
@@ -1607,10 +1738,16 @@ Object *Engine::onMul( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_mul( a, b );
 
-    return c;
+	if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_mul( a, b );
+
+		return c;
+	}
+	else{
+		return onOperatorCall( frame, a, "*", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onMule( vframe_t *frame, Node *node ){
@@ -1618,11 +1755,17 @@ Object *Engine::onMule( vframe_t *frame, Node *node ){
            *b = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
 
-    ob_inplace_mul( a, b );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
 
-    return a;
+		ob_inplace_mul( a, b );
+
+		return a;
+	}
+	else{
+		return onOperatorCall( frame, a, "*=", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onDiv( vframe_t *frame, Node *node ){
@@ -1631,10 +1774,16 @@ Object *Engine::onDiv( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_div( a, b );
 
-    return c;
+	if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_div( a, b );
+
+		return c;
+	}
+	else{
+		return onOperatorCall( frame, a, "/", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onDive( vframe_t *frame, Node *node ){
@@ -1642,11 +1791,17 @@ Object *Engine::onDive( vframe_t *frame, Node *node ){
            *b = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
 
-    ob_inplace_div( a, b );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
 
-    return a;
+		ob_inplace_div( a, b );
+
+		return a;
+	}
+	else{
+		return onOperatorCall( frame, a, "/=", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onMod( vframe_t *frame, Node *node ){
@@ -1655,10 +1810,16 @@ Object *Engine::onMod( vframe_t *frame, Node *node ){
            *c = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
-    c = ob_mod( a, b );
 
-    return c;
+	if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
+		c = ob_mod( a, b );
+
+		return c;
+	}
+	else{
+		return onOperatorCall( frame, a, "%", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onMode( vframe_t *frame, Node *node ){
@@ -1666,11 +1827,17 @@ Object *Engine::onMode( vframe_t *frame, Node *node ){
            *b = H_UNDEFINED;
 
     a = exec( frame, node->child(0) );
-    b = exec( frame, node->child(1) );
 
-    ob_inplace_mod( a, b );
+    if( ob_is_class(a) == false ){
+		b = exec( frame, node->child(1) );
 
-    return a;
+		ob_inplace_mod( a, b );
+
+		return a;
+	}
+	else{
+		return onOperatorCall( frame, a, "%=", 1, node->child(1) );
+	}
 }
 
 Object *Engine::onInc( vframe_t *frame, Node *node ){
@@ -1678,9 +1845,13 @@ Object *Engine::onInc( vframe_t *frame, Node *node ){
 
     o = exec( frame, node->child(0) );
 
-    ob_increment(o);
-
-    return o;
+    if( ob_is_class(o) == false ){
+		ob_increment(o);
+		return o;
+    }
+    else{
+    	return onOperatorCall( frame, o, "++", 0 );
+    }
 }
 
 Object *Engine::onDec( vframe_t *frame, Node *node ){
@@ -1688,9 +1859,13 @@ Object *Engine::onDec( vframe_t *frame, Node *node ){
 
     o = exec( frame, node->child(0) );
 
-    ob_decrement(o);
-
-    return o;
+    if( ob_is_class(o) == false ){
+		ob_decrement(o);
+		return o;
+	}
+	else{
+		return onOperatorCall( frame, o, "--", 0 );
+	}
 }
 
 Object *Engine::onXor( vframe_t *frame, Node *node ){
