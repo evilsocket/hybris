@@ -1070,7 +1070,7 @@ Object *Engine::onOperatorCall( vframe_t *frame, Object *owner, const char *op_n
 	sprintf( op_mangled_name, "__op@%s", op_name );
 
 	if( (op = ob_get_method( owner, op_mangled_name, argc )) == H_UNDEFINED ){
-		hyb_throw( H_ET_SYNTAX, "class does not overload '%s' operator", op_name );
+		hyb_throw( H_ET_SYNTAX, "class %s does not overload '%s' operator", ob_typename(owner), op_name );
 	}
 
 	op_argc = op->children() - 1;
@@ -1653,11 +1653,17 @@ Object *Engine::onRegex( vframe_t *frame, Node *node ){
            *regexp = H_UNDEFINED,
            *result = H_UNDEFINED;
 
-    o      = exec(  frame, node->child(0) );
-    regexp = exec(  frame, node->child(1) );
-    result = ob_apply_regexp( o, regexp );
+    o = exec(  frame, node->child(0) );
 
-    return result;
+    if( ob_is_class(o) == false ){
+		regexp = exec(  frame, node->child(1) );
+		result = ob_apply_regexp( o, regexp );
+
+		return result;
+    }
+    else{
+    	return onOperatorCall( frame, o, "~=", 1, node->child(1) );
+    }
 }
 
 Object *Engine::onPlus( vframe_t *frame, Node *node ){

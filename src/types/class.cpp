@@ -284,8 +284,11 @@ void class_define_method( Object *me, char *name, Node *code ){
 Node *class_get_method( Object *me, char *name, int argc ){
 	ClassObject *cme = ob_class_ucast(me);
 	class_method_t *method;
+	char mangled_op_name[0xFF] = {0};
 
-	if( (method = cme->c_methods.find(name)) ){
+	sprintf( mangled_op_name, "__op@%s", name );
+
+	if( (method = cme->c_methods.find(name)) || (method = cme->c_methods.find(mangled_op_name)) ){
 		/*
 		 * If no parameters number is specified, return the first method found.
 		 */
@@ -319,13 +322,7 @@ Node *class_get_method( Object *me, char *name, int argc ){
 		return best_match;
 	}
 	else{
-		/*
-		 * Try with overloaded operators.
-		 */
-		char mangled_op_name[0xFF] = {0};
-		sprintf( mangled_op_name, "__op@%s", name );
-
-		return class_get_method( me, mangled_op_name, argc );
+		return NULL;
 	}
 }
 
