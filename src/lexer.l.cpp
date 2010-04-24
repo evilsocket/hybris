@@ -24,6 +24,14 @@
 #include "context.h"
 #include <stdio.h>
 #include <string.h>
+#include <string>
+#include <vector>
+#include <pcre.h>
+
+using std::vector;
+using std::string;
+
+typedef vector<string> matches_t;
 
 #define IS_WHITESPACE(c) strchr( " \r\n\t", (c) )
 
@@ -36,6 +44,8 @@ void             hyb_lex_skip_line();
 void             hyb_lex_string( char delimiter, char *buffer );
 // handle char constants
 char             hyb_lex_char( char delimiter );
+// extract tokens from a string give a regular expression
+matches_t 		 hyb_pcre_matches( string pattern, char *subject );
 // handle function prototypes declarations
 function_decl_t *hyb_lex_function( char * text );
 // handle method prototypes declarations
@@ -321,191 +331,102 @@ void hyb_lex_string( char delimiter, char *buffer ){
     *ptr = 0x00;
 }
 
-function_decl_t *hyb_lex_function( char * text ){
-    function_decl_t *declaration = new function_decl_t;
-    char *sptr = text + strlen( "function " ),
-         *dptr = declaration->function,
-         var[0xFF] = {0};
-    int  end = 0;
+matches_t hyb_pcre_matches( string pattern, char *subject ){
+	int    		 i, ccount, rc,
+				*offsets, offset = 0,
+				 eoffset;
+	const char  *error;
+	pcre 		*compiled;
+	matches_t    matches;
 
-    memset( declaration->function, 0x00, 0xFF );
+	compiled = pcre_compile( pattern.c_str(), PCRE_CASELESS|PCRE_MULTILINE, &error, &eoffset, 0 );
+	rc 		 = pcre_fullinfo( compiled, 0, PCRE_INFO_CAPTURECOUNT, &ccount );
 
-    while( IS_WHITESPACE(*sptr) ){ sptr++; };
+	offsets = new int[ 3 * (ccount + 1) ];
 
-    while( !IS_WHITESPACE(*sptr) && *sptr != '(' ){
-        *dptr = *sptr;
-        sptr++;
-        dptr++;
-    }
-
-    declaration->argc = 0;
-    sptr++;
-    dptr = var;
-
-    while( IS_WHITESPACE(*sptr) || *sptr == '(' ){
-		sptr++;
+	while( (rc = pcre_exec( compiled, 0, subject, strlen(subject), offset, 0, offsets, 3 * (ccount + 1) )) > 0 ){
+		const char *data;
+		for( i = 1; i < rc; ++i ){
+			pcre_get_substring( subject, offsets, rc, i, &data );
+			matches.push_back(data);
+		}
+		offset = offsets[1];
 	}
 
-    while( end == 0 ){
-        switch( *sptr ){
-            /* skip whitespaces */
-            case '\r' :
-            case '\n' :
-            case '\t' :
-            case ' '  : break;
-            /* end of variable name declaration */
-            case ',' :
-                strcpy( declaration->argv[declaration->argc], var );
-                memset( var, 0x00, 0xFF );
-                declaration->argc++;
-                dptr = var;
-                break;
-                /* end of function declaration, end last parameter without comma */
-            case ')' :
-                if( var[0] != 0x00 ){
-                    strcpy( declaration->argv[declaration->argc], var );
-                    memset( var, 0x00, 0xFF );
-                    declaration->argc++;
-                }
-                end = 1;
-                break;
-                /* still in variable name declaration */
-            default :
-                *dptr = *sptr;
-                dptr++;
-        }
-        sptr++;
-    }
+	delete[] offsets;
 
-    return declaration;
+	return matches;
+}
+
+function_decl_t *hyb_lex_function( char * text ){
+    function_decl_t *declaration = new function_decl_t;
+    string			 identifier  = "[a-zA-Z_][a-zA-Z0-9_]*",
+					 pattern     = "function[\\s]+("+identifier+")[\\s]*\\(([^\\)]*)\\)";
+	matches_t 		 tokens;
+	int 			 i;
+
+	tokens = hyb_pcre_matches( pattern, text );
+
+	strcpy( declaration->function, tokens[0].c_str() );
+
+	pattern = "("+identifier+")";
+
+	tokens = hyb_pcre_matches( pattern, (char *)tokens[1].c_str() );
+
+	declaration->argc = tokens.size();
+	for( i = 0; i < declaration->argc; ++i ){
+		strcpy( declaration->argv[i], tokens[i].c_str() );
+	}
+
+	return declaration;
 }
 
 method_decl_t *hyb_lex_method( char * text ){
-	method_decl_t *declaration = new method_decl_t;
-    char *sptr = text + strlen( "method " ),
-         *dptr = declaration->method,
-         var[0xFF] = {0};
-    int  end = 0;
+	method_decl_t   *declaration = new method_decl_t;
+	string			 identifier  = "[a-zA-Z_][a-zA-Z0-9_]*",
+					 pattern     = "method[\\s]+("+identifier+")[\\s]*\\(([^\\)]*)\\)";
+	matches_t 		 tokens;
+	int 			 i;
 
-    memset( declaration->method, 0x00, 0xFF );
+	tokens = hyb_pcre_matches( pattern, text );
 
-    while( IS_WHITESPACE(*sptr) ){ sptr++; };
+	strcpy( declaration->method, tokens[0].c_str() );
 
-    while( !IS_WHITESPACE(*sptr) && *sptr != '(' ){
-        *dptr = *sptr;
-        sptr++;
-        dptr++;
-    }
+	pattern = "("+identifier+")";
 
-    declaration->argc = 0;
-    sptr++;
-    dptr = var;
+	tokens = hyb_pcre_matches( pattern, (char *)tokens[1].c_str() );
 
-    while( IS_WHITESPACE(*sptr) || *sptr == '(' ){
-		sptr++;
+	declaration->argc = tokens.size();
+	for( i = 0; i < declaration->argc; ++i ){
+		strcpy( declaration->argv[i], tokens[i].c_str() );
 	}
 
-    while( end == 0 ){
-        switch( *sptr ){
-            /* skip whitespaces */
-            case '\r' :
-            case '\n' :
-            case '\t' :
-            case ' '  : break;
-            /* end of variable name declaration */
-            case ',' :
-                strcpy( declaration->argv[declaration->argc], var );
-                memset( var, 0x00, 0xFF );
-                declaration->argc++;
-                dptr = var;
-                break;
-            /* end of function declaration, end last parameter without comma */
-            case ')' :
-                if( var[0] != 0x00 ){
-                    strcpy( declaration->argv[declaration->argc], var );
-                    memset( var, 0x00, 0xFF );
-                    declaration->argc++;
-                }
-                end = 1;
-                break;
-
-            /* still in variable name declaration */
-            default :
-                *dptr = *sptr;
-                dptr++;
-        }
-        sptr++;
-    }
-
-    return declaration;
+	return declaration;
 }
 
 method_decl_t *hyb_lex_operator( char * text ){
-	method_decl_t *declaration = new method_decl_t;
-    char *sptr = text + strlen( "operator " ),
-         *dptr,
-         op[0xFF] = {0},
-         var[0xFF] = {0};
-    int  end = 0;
+	method_decl_t   *declaration = new method_decl_t;
+	string			 identifier  = "[a-zA-Z_][a-zA-Z0-9_]*",
+					 operators   = "[\\[\\]=\\<\\.\\+\\-\\/\\*\\%\\^\\~\\&\\|\\>\\!]+",
+					 pattern     = "operator[\\s]+("+operators+")[\\s]*\\(([^\\)]*)\\)";
+	matches_t 		 tokens;
+	int 			 i;
 
-    memset( declaration->method, 0x00, 0xFF );
+	tokens = hyb_pcre_matches( pattern, text );
 
-    while( IS_WHITESPACE(*sptr) ){ sptr++; };
+	/*
+	 * Mangle operator name.
+	 */
+	strcpy( declaration->method, ("__op@" + tokens[0]).c_str() );
 
-    dptr = op;
-    /*
-     * Mangle operator name.
-     */
-    strcpy( dptr, "__op@" );
-    dptr += strlen("__op@");
+	pattern = "("+identifier+")";
 
-    while( !IS_WHITESPACE(*sptr) && *sptr != '(' ){
-        *dptr = *sptr;
-        sptr++;
-        dptr++;
-    }
+	tokens = hyb_pcre_matches( pattern, (char *)tokens[1].c_str() );
 
-    strcpy( declaration->method, op );
-
-    declaration->argc = 0;
-    sptr++;
-    dptr = var;
-
-    while( IS_WHITESPACE(*sptr) || *sptr == '(' ){
-		sptr++;
+	declaration->argc = tokens.size();
+	for( i = 0; i < declaration->argc; ++i ){
+		strcpy( declaration->argv[i], tokens[i].c_str() );
 	}
-
-    while( end == 0 ){
-        switch( *sptr ){
-            /* skip whitespaces */
-            case '\r' :
-            case '\n' :
-            case '\t' :
-            case ' '  : break;
-            /* end of variable name declaration */
-            case ',' :
-                strcpy( declaration->argv[declaration->argc], var );
-                memset( var, 0x00, 0xFF );
-                declaration->argc++;
-                dptr = var;
-                break;
-            /* end of operator declaration, end last parameter without comma */
-            case ')' :
-                if( var[0] != 0x00 ){
-                    strcpy( declaration->argv[declaration->argc], var );
-                    memset( var, 0x00, 0xFF );
-                    declaration->argc++;
-                }
-                end = 1;
-                break;
-
-            /* still in variable name declaration */
-            default :
-                *dptr = *sptr;
-                dptr++;
-        }
-        sptr++;
-    }
 
     /*
      * TODO: Check 'op' for right arguments number.
