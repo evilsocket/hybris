@@ -78,7 +78,7 @@ HYBRIS_DEFINE_FUNCTION(hfseek){
 	}
 	ob_type_assert( ob_argv(0), otInteger );
 	ob_type_assert( ob_argv(1), otInteger );
-	ob_type_assert( ob_argv(3), otInteger );
+	ob_type_assert( ob_argv(2), otInteger );
 
 	return ob_dcast( gc_new_integer( fseek( (FILE *)int_argv(0), int_argv(1), int_argv(2) ) ) );
 }
