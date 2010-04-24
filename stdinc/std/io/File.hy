@@ -31,6 +31,10 @@ class File {
 		me->file = file;
 	}
 
+	private method __expire() {
+		me->close();
+	}
+	
 	public method close (){
 		fclose( file );
 	}
