@@ -18,15 +18,22 @@
 */
 
 import std.io.file;
+import std.type.string;
 
 class File {
 	
-	protected file, fileName;
+	protected file, fileName, mode;
 
-	public method File ( file_name, mode){
-		me->file = fopen ( file_name, mode);
+	public method File( fileName, mode){
+		me->fileName = fileName;
+		me->mode = mode;
+		me->file = fopen ( me->fileName, me->mode);
 	}
 
+	private method isBinary(){
+		return strfind( me->mode, "b");
+	}
+	
 	public method File ( file ){
 		me->file = file;
 	}
@@ -35,32 +42,39 @@ class File {
 		me->close();
 	}
 	
-	public method close (){
-		fclose( file );
+	public method close(){
+		if( me->file ){	
+			fclose( me->file );
+			me->file = 0;	
+		}
 	}
 	
-	public method readLine (){
+	public method readLine(){
 		return line = fgets( me->file );
 	}
 
-	public method getFileName (){
-		return fileName;
+	public method getFileName(){
+		return me->fileName;
 	}
 
-	public method getSize (){
-		return fsize(fileName);
+	public method getSize(){
+		return fsize( me->fileName );
+	}
+
+	public method getPosition(){
+		return ftell( me->file );
 	}
 	
-	public method readAll (){
+	public method readAll(){
 		text = "";
 		line = "";
-		while ( ( line = fgets(fp) ) != 0 ){
+		while ( ( line = fgets(me->file) ) != 0 ){
 			text .= line;
 		}
 		return text;
 	}
 
-	public method read (){
+	public method read(){
 		byte = ' ';
 		if ( fread( me->file, byte) > 0 ) {
 			return byte;
@@ -70,7 +84,7 @@ class File {
 		}
 	}
 
-	public method read ( bytes ) {
+	public method read( bytes ) {
 		word = "";
 		byte = ' ';
 		if ( fread( me->file, byte, bytes) > 0 ) {
@@ -83,7 +97,7 @@ class File {
 	}
 
 	public method read ( seek, seekType ){
-		if ( me->seek() == 0 ) {
+		if ( me->seek( seek, seekType) == 0 ) {
 			return -1;
 		}
 
@@ -91,15 +105,67 @@ class File {
 	}
 
 	public method read ( bytes, seek, seekType ){
-		if ( me->seek() == 0 ) {
+		if ( me->seek( seek, seekType) == 0 ) {
 			return -1;
 		}
 
 		return  me->read( bytes );
 	}
-	public method seek ( position, mode ){
-		return fseek( fp, position, mode );
+
+	public method readType ( type ){
+		if ( me->isBynari() == -1 ) {
+			return -1;
+		}
+		if ( fread (me->file, type ) > 0 ) {
+			return type;
+		} 
+		else {
+			return -1;
+		}
 	}
 
+	public method readType ( type, bytes ){
+		if ( me->isBinary() == -1 ) {
+			return -1;
+		}
+		if ( fread (me->file, type, bytes ) > 0){
+			return type;
+		}
+		else {
+			return -1;
+		}
+	}
+
+	public method readType ( type, seek, seekType ){
+		if ( ( me->isBinary() == -1 ) | ( me->seek( seek, seekType) == 0 ) ) {
+			return -1;
+		}
+
+		return me->readType( type );
+	}
 	
+	public method  readType(  type, bytes, seek, seekType){
+		if ( ( me->isBinary() == -1 ) | ( me->seek( seek, seekType) == 0 ) ) {
+			return -1;
+		}
+
+		return me->readType( type, bytes );
+	}
+	
+	public method write( data ){
+		return fwrite( me->file, data );
+	}
+
+	public method write ( data, bytes ){
+		return fwrite( me->file, data, bytes);
+	}
+	
+	public method seek( pos, mode ){
+		return fseek( me->file, pos, mode );
+	}
+
+	public method merge ( fileName ){
+		text = file ( fileName );
+		return me->write ( me->file, text );
+	}
 }
