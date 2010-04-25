@@ -20,25 +20,29 @@
 #include <errno.h>
 
 HYBRIS_DEFINE_FUNCTION(hpthread_create);
+HYBRIS_DEFINE_FUNCTION(hpthread_create_argv);
 HYBRIS_DEFINE_FUNCTION(hpthread_exit);
 HYBRIS_DEFINE_FUNCTION(hpthread_join);
+HYBRIS_DEFINE_FUNCTION(hpthread_kill);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "pthread_create", hpthread_create },
+	{ "pthread_create_argv", hpthread_create_argv },
 	{ "pthread_exit", hpthread_exit },
 	{ "pthread_join", hpthread_join },
+	{ "pthread_kill", hpthread_kill },
 	{ "", NULL }
 };
 
 typedef struct {
-    vmem_t  *data;
-    VM *vmachine;
+    vmem_t *data;
+    VM 	   *vmachine;
 }
 thread_args_t;
 
 void * hyb_pthread_worker( void *arg ){
     thread_args_t *args = (thread_args_t *)arg;
-    VM       *vmachine  = args->vmachine;
+    VM      	  *vmachine  = args->vmachine;
     vmem_t        *data = args->data,
 				   stack;
 
@@ -99,6 +103,51 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
     }
 }
 
+HYBRIS_DEFINE_FUNCTION(hpthread_create_argv){
+	if( ob_argc() != 2 ){
+		hyb_error( H_ET_SYNTAX, "function 'pthread_create_argv' requires 2 parameters (called with %d)", ob_argc() );
+	}
+	ob_type_assert( ob_argv(0), otString );
+	ob_type_assert( ob_argv(1), otVector );
+
+    pthread_t tid;
+    int       i, code, argc( ob_get_size( ob_argv(1) ) );
+    thread_args_t *args = new thread_args_t;
+
+    args->data 	   = new vmem_t;
+    args->vmachine = vmachine;
+
+	args->data->push( ob_argv(0) );
+    for( i = 0; i < argc; ++i ){
+    	args->data->push( ((VectorObject *)ob_argv(1))->value[i] );
+    }
+
+    if( (code = pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args )) == 0 ){
+    	return ob_dcast( gc_new_integer(tid) );
+    }
+    else{
+    	switch( code ){
+			case EAGAIN :
+				hyb_error( H_ET_WARNING, "The system lacked the necessary resources to create another thread, or the system-imposed "
+										 "limit on the total number of threads in a process PTHREAD_THREADS_MAX would be exceeded" );
+			break;
+
+			case EINVAL :
+				hyb_error( H_ET_WARNING, "Invalid attribute value for pthread_create" );
+			break;
+
+			case EPERM  :
+				hyb_error( H_ET_WARNING, "The caller does not have appropriate permission to set the required scheduling parameters or scheduling policy" );
+			break;
+
+			default :
+				hyb_error( H_ET_WARNING, "Unknown system error while creating the thread" );
+    	}
+
+    	return H_DEFAULT_ERROR;
+    }
+}
+
 HYBRIS_DEFINE_FUNCTION(hpthread_exit){
     vmachine->depool();
 
@@ -124,5 +173,15 @@ HYBRIS_DEFINE_FUNCTION(hpthread_join){
     else{
     	return H_DEFAULT_ERROR;
     }
+}
+
+HYBRIS_DEFINE_FUNCTION(hpthread_kill){
+	if( ob_argc() != 2 ){
+		hyb_error( H_ET_SYNTAX, "function 'pthread_kill' requires 2 parameters (called with %d)", ob_argc() );
+	}
+	ob_type_assert( ob_argv(0), otInteger );
+	ob_type_assert( ob_argv(1), otInteger );
+
+	return (Object *)gc_new_integer( pthread_kill( int_argv(0), int_argv(1) ) );
 }
 
