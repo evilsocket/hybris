@@ -1,7 +1,7 @@
 /*
  * This file is part of the Hybris programming language.
  *
- * Copyleft of Francesco Morucci aka merlok <merlok@ihteam.net>
+ * Copyleft of Simone Margaritelli aka evilsocket <evilsocket@gmail.com>
  *
  * Hybris is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,33 +19,57 @@
 import std.os.process;
 include std.io.File;
 
-import std.os.process;
-
-class Process {
+class Pipe extends File {
 	protected pname, pargs;
 	
-	public method Process( name, args ){
+	public method Pipe( name, args, mode ){
+		me->File(0)
+		me->fileName = name;
 		me->pname    = name;
 		me->pargs    = args;
+		me->mode     = mode;
 	}
 
-	public method Process(){
+	public method Pipe( name, mode ){
+		me->Pipe( name, "", mode );
+	}
+
+	public method Pipe(){
 		me->Pipe("","");
 	}
 
+	public method close (){
+		if( me->file ){
+			pclose( me->file );	
+			me->file = null;		
+		}
+	}
+
+	private method __expire() {
+		me->close();
+	}
+
 	public method setProcessName( name ){
+		me->close();
 		me->pname = name;
 	}
 
 	public method setProcessArgs( args ){
+		me->close();
 		me->pargs = args;
 	}
 
-	public method exec(){
-		if( me->pname == "" ){
+	public method setProcessMode( mdoe ){
+		me->close();
+		me->mode = mode;
+	}
+
+	public method open(){
+		if( (me->pname == "") || (me->mode == "") ){
 			return false;		
 		}
+		me->file = popen( me->pname." ".me->pargs, me->mode );
 
-		return exec( me->pname." ".me->pargs );
+		return (me->file != 0);
 	}
-}		
+}	
