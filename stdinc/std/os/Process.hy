@@ -19,76 +19,81 @@
 import std.os.process;
 include std.io.File;
 
-class Process {
-	protected pd, execName, arg;
+class Process extends File {
+	protected execName, arg;
 	protected isPipe;
 	
 	public method Process ( execName, arg ){
+		me->File(0)
+		me->fileName = execName;
 		me->execName = execName;
-		me->arg = arg;
-		me->isPipe = -1;
+		me->arg      = arg;
+		me->isPipe   = false;
 	}
+
 	public method Process ( execName ){
-		me->execName = execName;
-		me->arg = "";
-		me->isPipe = -1;
+		me->Process( execName, "" );
 	}
+
 	public method Process (){
-		me->execName = "";
-		me->arg = "";
-		me->isPipe = -1;
+		me->Process("");
 	}
+
 	public method close (){
-		if ( me->isPipe != -1 ){
-			pclose( me->pd );
-			me->isPipe = -1;
+		if ( me->isPipe ){
+			pclose( me->file );
+			me->isPipe = false;
 		}
 	}
+
 	private method __expire() {
 		me->close();
 	}
+
 	public method setexecName ( execName ){
 		me->close();
 		me->execName = execName;
 	}
+
 	public method setArg ( arg ){
 		me->close();
 		me->execName = arg;
 	}
+
 	private method _exec( execName, arg ){
 		if ( execName == "" ) {
-			return -1;
+			return false;
 		}
-		me->isPipe = -1;
+		me->isPipe = false;
 		exec( execName." ".arg );
 	}
+
 	public method exec(){
 		me->_exec( me->execName, me->arg );
 	}
+
 	public method exec ( execName, arg ){
 		me->_exec( execName, arg );
 	}
+
 	private method _pipeOpen( execName, arg, mode ){
 		if ( ( execName == "") | ( mode == "") ) {
-			return -1;
+			return false;
 		}
-		me->pd = popen( execName." ".arg, mode );
-		me->isPipe = 1;
+		me->mode   = mode;
+		me->file   = popen( execName." ".arg, mode );
+		me->isPipe = true;
 	}
+
 	public method pipeOpen ( mode ){
 		me->_pipeOpen( me->execName, me->arg, mode);
 	}
+
 	public method pipeOpen ( execName, mode ){
 		me->_pipeOpen( execName, me->arg, mode );
 	}
+
 	public method pipeOpen ( execName, arg, mode ){
 		me->_pipeOpen( execName, arg, mode );
-	}
-	public method readAll (){
-		if ( me->isPipe == -1) {
-			return -1;
-		}
-		pipe = new File( me->pd );
-		return pipe->readAll();
 	}
 }			

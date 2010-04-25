@@ -24,7 +24,7 @@ class File {
 	
 	protected file, fileName, mode;
 
-	public method File( fileName, mode){
+	public method File( fileName, mode ){
 		me->fileName = fileName;
 		me->mode = mode;
 		me->file = fopen ( me->fileName, me->mode);
