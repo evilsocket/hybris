@@ -129,7 +129,7 @@ include          BEGIN(T_INCLUSION);
      * Nothing found :(
      */
     else {
-    	hyb_error( H_ET_GREATER_EQNERIC, "Could not open '%s' for inclusion", yytext );
+    	hyb_error( H_ET_GENERIC, "Could not open '%s' for inclusion", yytext );
     }
 
     __hyb_line_stack.push_back(yylineno);
@@ -235,10 +235,10 @@ include          BEGIN(T_INCLUSION);
 "switch"        return T_SWITCH;
 "case"          return T_CASE;
 "break"         return T_BREAK;
-"next"			return T_NOT_SAMEXT;
+"next"			return T_NEXT;
 "default"       return T_DEFAULT;
 
-"new"			return T_NOT_SAMEW;
+"new"			return T_NEW;
 
 "struct"        return T_STRUCT;
 

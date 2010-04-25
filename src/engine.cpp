@@ -70,7 +70,7 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
         case H_NT_FUNCTION   :
             return onFunctionDeclaration( frame, node );
         /* structure or class creation */
-        case H_NT_NOT_SAMEW :
+        case H_NT_NEW :
             return onNewOperator( frame, node );
         /* function call */
         case H_NT_CALL       :
@@ -117,7 +117,7 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
 					frame->state._break = true;
 				break;
 				/* next; */
-				case T_NOT_SAMEXT :
+				case T_NEXT :
 					frame->state._next = true;
 				break;
 				/* return */
@@ -515,7 +515,7 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 			ob_define_method( c, (char *)node->child(i)->value.m_method.c_str(), node->child(i) );
 		}
 		else{
-			hyb_error( H_ET_GREATER_EQNERIC, "unexpected node type for class declaration" );
+			hyb_error( H_ET_GENERIC, "unexpected node type for class declaration" );
 		}
 	}
 	/*

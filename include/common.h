@@ -71,7 +71,7 @@ h_args_t;
  */
 enum H_ERROR_TYPE {
     H_ET_WARNING = 0,
-    H_ET_GREATER_EQNERIC,
+    H_ET_GENERIC,
     H_ET_SYNTAX
 };
 /*

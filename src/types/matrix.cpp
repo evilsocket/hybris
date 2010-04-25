@@ -374,7 +374,7 @@ Object *matrix_cl_at( Object *me, Object *i ){
 
     #ifdef BOUNDS_CHECK
     if( idx >= mme->columns ){
-        hyb_error( H_ET_GREATER_EQNERIC, "index out of bounds" );
+        hyb_error( H_ET_GENERIC, "index out of bounds" );
     }
     #endif
 

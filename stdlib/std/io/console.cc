@@ -161,7 +161,7 @@ HYBRIS_DEFINE_FUNCTION(hprintf){
 	}
 
 	if( ffi_prep_cif( &cif, FFI_DEFAULT_ABI, argc, &ffi_type_ulong, args_t ) != FFI_OK ){
-		hyb_error( H_ET_GREATER_EQNERIC, "ffi_prep_cif failed" );
+		hyb_error( H_ET_GENERIC, "ffi_prep_cif failed" );
 	}
 
 	ffi_call( &cif, FFI_FN(function), &ul_ret, args_v );

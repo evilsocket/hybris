@@ -94,7 +94,7 @@ void hyb_error( H_ERROR_TYPE type, const char *format, ... ){
             sprintf( error, "\033[01;33mWARNING : %s .\033[00m", message );
         break;
         // generic error (file not found, module not found, ecc)
-        case H_ET_GREATER_EQNERIC :
+        case H_ET_GENERIC :
             sprintf( error, "\033[22;31mERROR : %s .\033[00m", message );
         break;
         // same as generic one but for syntax specific errors with line number printing

@@ -54,7 +54,7 @@
 #define MK_FOREACH_NODE(a,b,c)    new StatementNode( T_FOREACH, 3, MK_IDENT_NODE(a), b, c )
 #define MK_FOREACHM_NODE(a,b,c,d) new StatementNode( T_FOREACHM, 4, MK_IDENT_NODE(a), MK_IDENT_NODE(b), c, d )
 #define MK_BREAK_NODE()		  	  new StatementNode( T_BREAK, 0 )
-#define MK_NEXT_NODE()		  	  new StatementNode( T_NOT_SAMEXT, 0 )
+#define MK_NEXT_NODE()		  	  new StatementNode( T_NEXT, 0 )
 #define MK_RETURN_NODE(a)         new StatementNode( T_RETURN, 1, a )
 #define MK_IF_NODE(a, b)          new StatementNode( T_IF, 2, a, b )
 #define MK_IF_ELSE_NODE(a, b, c)  new StatementNode( T_IF, 3, a, b, c )
@@ -170,7 +170,7 @@ VM __hyb_vm;
 %token T_SWITCH
 %token T_CASE
 %token T_BREAK
-%token T_NOT_SAMEXT
+%token T_NEXT
 %token T_DEFAULT
 %token T_QUESTION
 %token T_DOLLAR
@@ -179,7 +179,7 @@ VM __hyb_vm;
 %token T_OBJ
 %token T_RETURN
 %token T_CALL
-%token T_NOT_SAMEW
+%token T_NEW
 %token T_STRUCT
 %token T_CLASS
 %token T_EXTENDS
@@ -197,7 +197,7 @@ VM __hyb_vm;
 %nonassoc T_CALL_END
 %nonassoc T_ELSE
 %nonassoc T_DOT_END
-%nonassoc T_NOT_SAMEW_END
+%nonassoc T_NEW_END
 
 %left T_L_NOT T_L_AND T_L_OR
 %left T_LESS T_GREATER T_SAME T_NOT_SAME T_LESS_EQ T_GREATER_EQ
@@ -322,7 +322,7 @@ statement  : T_EOSTMT                                                   { $$ = M
 	   	   | expression                                                 { $$ = MK_NODE($1); }
            | expression T_EOSTMT                                        { $$ = MK_NODE($1); }
            | T_BREAK T_EOSTMT											{ $$ = MK_BREAK_NODE(); }
-           | T_NOT_SAMEXT T_EOSTMT											{ $$ = MK_NEXT_NODE(); }
+           | T_NEXT T_EOSTMT											{ $$ = MK_NEXT_NODE(); }
            | T_RETURN expression T_EOSTMT                               { $$ = MK_RETURN_NODE( $2 ); }
            | T_THROW expression T_EOSTMT								{ $$ = MK_THROW_NODE( $2 ); }
            /* subscript operator special cases */
@@ -423,7 +423,7 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            /* regex specific */
            | expression T_REGEX_OP expression                 { $$ = MK_PCRE_NODE( $1, $3 ); }
            /* structure or class creation */
-           | T_NOT_SAMEW T_IDENT '(' argumentList ')' %prec T_NOT_SAMEW_END { $$ = MK_NEW_NODE( $2, $4 ); }
+           | T_NEW T_IDENT '(' argumentList ')' %prec T_NEW_END { $$ = MK_NEW_NODE( $2, $4 ); }
            /* function or method call (consider two different cases due to hybris function calls */
 		   | T_IDENT    '(' argumentList ')' %prec T_CALL_END { $$ = MK_CALL_NODE( $1, $3 ); }
 		   | identChain '(' argumentList ')' %prec T_CALL_END { $$ = MK_METHOD_CALL_NODE( $1, $3 ); }
@@ -507,13 +507,13 @@ int main( int argc, char *argv[] ){
 				 * Check for valid integer values.
 				 */
 				if( gc_threshold == 0 ){
-					hyb_error( H_ET_GREATER_EQNERIC, "Invalid memory size %s given.", optarg );
+					hyb_error( H_ET_GENERIC, "Invalid memory size %s given.", optarg );
 				}
 				/*
 				 * Check for a valid multiplier.
 				 */
 				else if( multiplier != 0x00 && strchr( "kKmM", multiplier ) == 0 ){
-					hyb_error( H_ET_GREATER_EQNERIC, "Invalid multiplier %c given.", multiplier );
+					hyb_error( H_ET_GENERIC, "Invalid multiplier %c given.", multiplier );
 				}
 				/*
 				 * Perform multiplication if multiplier was specified (multiplier != 0x00)
@@ -533,7 +533,7 @@ int main( int argc, char *argv[] ){
 				 * Check for integer overflow.
 				 */
 				if( gc_threshold <= 0 ){
-					hyb_error( H_ET_GREATER_EQNERIC, "Memory limit is too high." );
+					hyb_error( H_ET_GENERIC, "Memory limit is too high." );
 				}
 				/*
 				 * Done, let's pass it to the context structure.

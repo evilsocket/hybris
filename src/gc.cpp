@@ -115,7 +115,7 @@ struct _Object *gc_track( struct _Object *o, size_t size ){
          * macros, therefore, if its pointer is null, most of it there was a memory
          * allocation problem.
          */
-        hyb_error( H_ET_GREATER_EQNERIC, "out of memory" );
+        hyb_error( H_ET_GENERIC, "out of memory" );
     }
 
     gc_lock();

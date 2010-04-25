@@ -159,7 +159,7 @@ Node *Node::clone(){
 			}
         break;
 
-        case H_NT_NOT_SAMEW :
+        case H_NT_NEW :
         	clone = new NewNode( (char *)value.m_identifier.c_str(), NULL );
         	for( i = 0; i < sz; ++i ){
 				if( child(i) ){
@@ -356,7 +356,7 @@ CallNode::CallNode( Node *alias, NodeList *argv ) :  Node(H_NT_CALL) {
 }
 
 /* structure or class creation */
-NewNode::NewNode( char *type, NodeList *argv ) : Node(H_NT_NOT_SAMEW){
+NewNode::NewNode( char *type, NodeList *argv ) : Node(H_NT_NEW){
 	value.m_identifier = type;
 	if( argv != NULL ){
 		reserve( argv->size() );

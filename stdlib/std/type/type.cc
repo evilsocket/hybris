@@ -264,7 +264,7 @@ Object *xmlNode2Object( xmlNode *node ){
 		return ob_dcast( structure );
 	}
 	else{
-		hyb_error( H_ET_GREATER_EQNERIC, "'%s' invalid xml object type", node->name );
+		hyb_error( H_ET_GENERIC, "'%s' invalid xml object type", node->name );
 	}
 }
 
@@ -335,7 +335,7 @@ string Object2Xml( Object *o, unsigned int tabs = 0 ){
 		break;
 
 		default :
-            hyb_error( H_ET_GREATER_EQNERIC, "could not convert %s type to xml", o->type->name );
+            hyb_error( H_ET_GENERIC, "could not convert %s type to xml", o->type->name );
 	}
 
 	return xml.str();
@@ -361,7 +361,7 @@ HYBRIS_DEFINE_FUNCTION(hfromxml){
 
 	doc = xmlReadMemory( normalized.c_str(), normalized.size(), NULL, NULL, 0 );
 	if( doc == NULL ){
-		hyb_error( H_ET_GREATER_EQNERIC, "could not parse xml object" );
+		hyb_error( H_ET_GENERIC, "could not parse xml object" );
 	}
 
 	Object *object = xmlNode2Object( xmlDocGetRootElement(doc) );
