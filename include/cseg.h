@@ -21,16 +21,16 @@
 
 #include "node.h"
 #include "hashmap.h"
-#include "vmem.h"
+#include "mseg.h"
 
 /*
  * This class represent user defined functions.
  */
-class VirtualCode : public HashMap<Node> {
+class CodeSegment : public HashMap<Node> {
     public :
 
-        VirtualCode();
-        ~VirtualCode();
+        CodeSegment();
+        ~CodeSegment();
 
         __force_inline Node *get( char *identifier ){
         	return find(identifier);
@@ -42,6 +42,6 @@ class VirtualCode : public HashMap<Node> {
 };
 
 /* post type definitions */
-typedef VirtualCode vcode_t;
+typedef CodeSegment vcode_t;
 
 #endif

@@ -21,7 +21,7 @@
 
 #include "hybris.h"
 
-class Context;
+class VM;
 
 /*
  * Tnis is the main class that will execute the script tree.
@@ -31,7 +31,7 @@ class Engine {
 		/*
 		 * Main context.
 		 */
-        Context *ctx;
+        VM *vmachine;
         /*
          * Memory segment.
          */
@@ -67,7 +67,7 @@ class Engine {
 
     public  :
 
-        Engine( Context *context );
+        Engine( VM *context );
         ~Engine();
         /*
 		 * Node handler dispatcher.

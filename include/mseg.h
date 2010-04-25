@@ -81,15 +81,15 @@ vframe_state_t;
  * This class represent a memory segment where constants
  * and variables are defined.
  */
-class VirtualMemory : public HashMap<Object> {
+class MemorySegment : public HashMap<Object> {
     public :
 		/*
 		 * Virtual memory frame state.
 		 */
 		vframe_state_t state;
 
-		VirtualMemory();
-        ~VirtualMemory();
+		MemorySegment();
+        ~MemorySegment();
 
         __force_inline Object *get( char *identifier ){
         	return find(identifier);
@@ -103,7 +103,7 @@ class VirtualMemory : public HashMap<Object> {
         	return o;
         }
 
-        VirtualMemory *clone();
+        MemorySegment *clone();
 
         __force_inline void release(){
         	clear();
@@ -111,7 +111,7 @@ class VirtualMemory : public HashMap<Object> {
 };
 
 /* post type definitions */
-typedef VirtualMemory vmem_t;
-typedef VirtualMemory vframe_t;
+typedef MemorySegment vmem_t;
+typedef MemorySegment vframe_t;
 
 #endif

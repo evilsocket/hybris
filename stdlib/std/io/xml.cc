@@ -31,10 +31,10 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 
 static Object *__xmlNode_type = H_UNDEFINED;
 
-extern "C" void hybris_module_init( Context * ctx ){
+extern "C" void hybris_module_init( VM * vmachine ){
     char *xmlNode_attributes[] = { "name", "attributes", "data", "children" };
 
-    __xmlNode_type = HYBRIS_DEFINE_STRUCTURE( ctx, "xmlNode", 4, xmlNode_attributes );
+    __xmlNode_type = HYBRIS_DEFINE_STRUCTURE( vmachine, "xmlNode", 4, xmlNode_attributes );
 }
 
 int xml_isinvalid( char *str ){

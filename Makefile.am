@@ -19,7 +19,7 @@ CHECK_FOR_ERRORS=if test -e hybris.tmp.errors; \
 				 else printf "\x1b[32;01m OK\n\x1b[0m"; \
 				 fi && rm -f hybris.tmp.errors hybris.tmp.log
 				 
-LIBOBJ=src/context.lo \
+LIBOBJ=src/vm.lo \
        src/gc.lo \
 	   src/common.lo \
 	   src/engine.lo \
@@ -36,18 +36,18 @@ LIBOBJ=src/context.lo \
 	   src/types/class.lo \
 	   src/types/vector.lo \
 	   src/hashtable.lo \
-	   src/vmem.lo \
-	   src/vcode.lo \
+	   src/mseg.lo \
+	   src/cseg.lo \
 	   src/parser.lo \
 	   src/lexer.lo
 
 SOURCES=src/common.cpp \
 		src/gc.cpp \
 		src/lexer.cpp \
-		src/context.cpp \
+		src/vm.cpp \
 		src/hashtable.cpp \
-		src/vmem.cpp \
-		src/vcode.cpp \
+		src/mseg.cpp \
+		src/cseg.cpp \
 		src/node.cpp \
 		src/types.cpp \
 		src/types/binary.cpp \

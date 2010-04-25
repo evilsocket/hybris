@@ -18,20 +18,20 @@
 */
 #include "hybris.h"
 #include "common.h"
-#include "vmem.h"
-#include "context.h"
+#include "mseg.h"
+#include "vm.h"
 #include <time.h>
 #include <sys/time.h>
 
 
 void hyb_print_stacktrace( int force /* = 0 */ ){
-    extern Context __context;
+    extern VM __hyb_vm;
 
-    if( (__context.args.stacktrace && __context.stack_trace.size()) || force ){
-        int tail = __context.stack_trace.size() - 1;
+    if( (__hyb_vm.args.stacktrace && __hyb_vm.stack_trace.size()) || force ){
+        int tail = __hyb_vm.stack_trace.size() - 1;
         printf( "\nSTACK TRACE :\n\n" );
         for( int i = tail; i >= 0; i-- ){
-            printf( "\t%.3d : %s\n", i, __context.stack_trace[i].c_str() );
+            printf( "\t%.3d : %s\n", i, __hyb_vm.stack_trace[i].c_str() );
         }
         printf( "\n" );
     }
@@ -39,7 +39,7 @@ void hyb_print_stacktrace( int force /* = 0 */ ){
 
 void yyerror( char *error ){
     extern int yylineno;
-    extern Context __context;
+    extern VM __hyb_vm;
 
     /*
      * Make sure first character is uppercase.
@@ -47,26 +47,46 @@ void yyerror( char *error ){
     error[0] = toupper( error[0] );
 
     fflush(stderr);
-	if( strchr( error, '\n' ) ){
-		fprintf( stderr, "[LINE %d] %s", yylineno, error );
-		hyb_print_stacktrace();
-	    __context.unlock();
-        __context.release();
-    	exit(-1);
+
+    /*
+     * Print line number only for syntax errors.
+     */
+    if( strstr( error, "Syntax error : " ) ){
+    	fprintf( stderr, "[LINE %d] %s .%s", yylineno, error, strchr( error, '\n' ) ? "" : "\n" );
+    }
+    else{
+    	fprintf( stderr, "%s .%s", yylineno, error, strchr( error, '\n' ) ? "" : "\n" );
+    }
+
+    __hyb_vm.lock();
+
+	/*
+	 * If the error was triggered by a SIGSEGV signal, force
+	 * the stack trace to printed.
+	 */
+	if( strstr( error, "SIGSEGV Signal Catched" ) ){
+		hyb_print_stacktrace(1);
 	}
+	/*
+	 * Otherwise, print it only if cmd line arguments are configured
+	 * to do so.
+	 */
 	else{
-		fprintf( stderr, "[LINE %d] %s .\n", yylineno, error );
 		hyb_print_stacktrace();
-        __context.release();
-    	exit(-1);
 	}
+
+	__hyb_vm.closeFile();
+	__hyb_vm.release();
+
+	__hyb_vm.unlock();
+
+	exit(-1);
 }
 
 void hyb_error( H_ERROR_TYPE type, const char *format, ... ){
     char message[0xFF] = {0},
          error[0xFF] = {0};
     va_list ap;
-    bool fault(false);
     extern int yylineno;
 
     va_start( ap, format );
@@ -74,36 +94,22 @@ void hyb_error( H_ERROR_TYPE type, const char *format, ... ){
     va_end(ap);
 
     switch( type ){
-        // simple warning, only print message and continue
+        // simple warning
         case H_ET_WARNING :
             sprintf( error, "\033[01;33mWARNING : %s .\n\033[00m", message );
-            yyerror(error);
         break;
-        // generic error (file not found, module not found, ecc), print, release and exit
+        // generic error (file not found, module not found, ecc)
         case H_ET_GENERIC :
             sprintf( error, "\033[22;31mERROR : %s .\n\033[00m", message );
-            fault = true;
         break;
-        // syntax error, same as generic one but print line number
+        // same as generic one but for syntax specific errors with line number printing
         case H_ET_SYNTAX  :
             sprintf( error, "\033[22;31mSyntax error : %s .\n\033[00m", message );
-            fault = true;
         break;
     }
 
-
 	// print error message
 	yyerror(error);
-
-	if( fault ){
-		extern Context __context;
-		// print function stack trace
-		hyb_print_stacktrace();
-		// release the context
-		__context.release();
-		// exit
-		exit(-1);
-	}
 }
 
 int hyb_file_exists( char *filename ){

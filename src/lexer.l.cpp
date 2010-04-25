@@ -21,7 +21,7 @@
 #include "node.h"
 #include "common.h"
 #include "parser.hpp"
-#include "context.h"
+#include "vm.h"
 #include <stdio.h>
 #include <string.h>
 #include <string>
@@ -68,7 +68,7 @@ vector<string> __hyb_file_stack;
 vector<int>	   __hyb_line_stack;
 
 extern int     yylineno;
-extern Context __context;
+extern VM __hyb_vm;
 
 %}
 
@@ -169,7 +169,7 @@ include          BEGIN(T_INCLUSION);
 
     yytext = sptr;
 
-    __context.loadModule( (char *)module.c_str() );
+    __hyb_vm.loadModule( (char *)module.c_str() );
 }
 
 "#"             { hyb_lex_skip_line();    }
@@ -378,7 +378,7 @@ matches_t hyb_pcre_matches( string pattern, char *subject ){
 	pcre 		*compiled;
 	matches_t    matches;
 
-	compiled = __context.pcre_compile( pattern, PCRE_CASELESS|PCRE_MULTILINE, &error, &eoffset );
+	compiled = __hyb_vm.pcre_compile( pattern, PCRE_CASELESS|PCRE_MULTILINE, &error, &eoffset );
 	rc 		 = pcre_fullinfo( compiled, 0, PCRE_INFO_CAPTURECOUNT, &ccount );
 
 	offsets = new int[ 3 * (ccount + 1) ];

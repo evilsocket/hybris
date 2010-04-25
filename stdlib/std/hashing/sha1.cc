@@ -52,19 +52,19 @@ sha1_context;
     (b)[(i) + 3] = (unsigned char) ( (n)       );       \
 }
 
-void sha1_starts( sha1_context *ctx )
+void sha1_starts( sha1_context *vmachine )
 {
-    ctx->total[0] = 0;
-    ctx->total[1] = 0;
+    vmachine->total[0] = 0;
+    vmachine->total[1] = 0;
 
-    ctx->state[0] = 0x67452301;
-    ctx->state[1] = 0xEFCDAB89;
-    ctx->state[2] = 0x98BADCFE;
-    ctx->state[3] = 0x10325476;
-    ctx->state[4] = 0xC3D2E1F0;
+    vmachine->state[0] = 0x67452301;
+    vmachine->state[1] = 0xEFCDAB89;
+    vmachine->state[2] = 0x98BADCFE;
+    vmachine->state[3] = 0x10325476;
+    vmachine->state[4] = 0xC3D2E1F0;
 }
 
-static void sha1_process( sha1_context *ctx, const unsigned char data[64] )
+static void sha1_process( sha1_context *vmachine, const unsigned char data[64] )
 {
     unsigned long temp, W[16], A, B, C, D, E;
 
@@ -99,11 +99,11 @@ static void sha1_process( sha1_context *ctx, const unsigned char data[64] )
     e += S(a,5) + F(b,c,d) + K + x; b = S(b,30);        \
 }
 
-    A = ctx->state[0];
-    B = ctx->state[1];
-    C = ctx->state[2];
-    D = ctx->state[3];
-    E = ctx->state[4];
+    A = vmachine->state[0];
+    B = vmachine->state[1];
+    C = vmachine->state[2];
+    D = vmachine->state[3];
+    E = vmachine->state[4];
 
 #define F(x,y,z) (z ^ (x & (y ^ z)))
 #define K 0x5A827999
@@ -213,14 +213,14 @@ static void sha1_process( sha1_context *ctx, const unsigned char data[64] )
 #undef K
 #undef F
 
-    ctx->state[0] += A;
-    ctx->state[1] += B;
-    ctx->state[2] += C;
-    ctx->state[3] += D;
-    ctx->state[4] += E;
+    vmachine->state[0] += A;
+    vmachine->state[1] += B;
+    vmachine->state[2] += C;
+    vmachine->state[3] += D;
+    vmachine->state[4] += E;
 }
 
-void sha1_update( sha1_context *ctx, const unsigned char *input, int ilen )
+void sha1_update( sha1_context *vmachine, const unsigned char *input, int ilen )
 {
     int fill;
     unsigned long left;
@@ -228,20 +228,20 @@ void sha1_update( sha1_context *ctx, const unsigned char *input, int ilen )
     if( ilen <= 0 )
         return;
 
-    left = ctx->total[0] & 0x3F;
+    left = vmachine->total[0] & 0x3F;
     fill = 64 - left;
 
-    ctx->total[0] += ilen;
-    ctx->total[0] &= 0xFFFFFFFF;
+    vmachine->total[0] += ilen;
+    vmachine->total[0] &= 0xFFFFFFFF;
 
-    if( ctx->total[0] < (unsigned long) ilen )
-        ctx->total[1]++;
+    if( vmachine->total[0] < (unsigned long) ilen )
+        vmachine->total[1]++;
 
     if( left && ilen >= fill )
     {
-        memcpy( (void *) (ctx->buffer + left),
+        memcpy( (void *) (vmachine->buffer + left),
                 (void *) input, fill );
-        sha1_process( ctx, ctx->buffer );
+        sha1_process( vmachine, vmachine->buffer );
         input += fill;
         ilen  -= fill;
         left = 0;
@@ -249,14 +249,14 @@ void sha1_update( sha1_context *ctx, const unsigned char *input, int ilen )
 
     while( ilen >= 64 )
     {
-        sha1_process( ctx, input );
+        sha1_process( vmachine, input );
         input += 64;
         ilen  -= 64;
     }
 
     if( ilen > 0 )
     {
-        memcpy( (void *) (ctx->buffer + left),
+        memcpy( (void *) (vmachine->buffer + left),
                 (void *) input, ilen );
     }
 }
@@ -269,30 +269,30 @@ static const unsigned char sha1_padding[64] =
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-void sha1_finish( sha1_context *ctx, unsigned char output[20] )
+void sha1_finish( sha1_context *vmachine, unsigned char output[20] )
 {
     unsigned long last, padn;
     unsigned long high, low;
     unsigned char msglen[8];
 
-    high = ( ctx->total[0] >> 29 )
-         | ( ctx->total[1] <<  3 );
-    low  = ( ctx->total[0] <<  3 );
+    high = ( vmachine->total[0] >> 29 )
+         | ( vmachine->total[1] <<  3 );
+    low  = ( vmachine->total[0] <<  3 );
 
     PUT_ULONG_BE( high, msglen, 0 );
     PUT_ULONG_BE( low,  msglen, 4 );
 
-    last = ctx->total[0] & 0x3F;
+    last = vmachine->total[0] & 0x3F;
     padn = ( last < 56 ) ? ( 56 - last ) : ( 120 - last );
 
-    sha1_update( ctx, (unsigned char *) sha1_padding, padn );
-    sha1_update( ctx, msglen, 8 );
+    sha1_update( vmachine, (unsigned char *) sha1_padding, padn );
+    sha1_update( vmachine, msglen, 8 );
 
-    PUT_ULONG_BE( ctx->state[0], output,  0 );
-    PUT_ULONG_BE( ctx->state[1], output,  4 );
-    PUT_ULONG_BE( ctx->state[2], output,  8 );
-    PUT_ULONG_BE( ctx->state[3], output, 12 );
-    PUT_ULONG_BE( ctx->state[4], output, 16 );
+    PUT_ULONG_BE( vmachine->state[0], output,  0 );
+    PUT_ULONG_BE( vmachine->state[1], output,  4 );
+    PUT_ULONG_BE( vmachine->state[2], output,  8 );
+    PUT_ULONG_BE( vmachine->state[3], output, 12 );
+    PUT_ULONG_BE( vmachine->state[4], output, 16 );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsha1){
@@ -306,11 +306,11 @@ HYBRIS_DEFINE_FUNCTION(hsha1){
 	unsigned char hash[20] = {0};
 	char		  hex[3]   = {0};
 	unsigned int  i, size( str.size() );
-	sha1_context  sha1_ctx;
+	sha1_context  sha1_vmachine;
 
-	sha1_starts( &sha1_ctx );
-    sha1_update( &sha1_ctx, (const unsigned char *)str.c_str(), size );
-    sha1_finish( &sha1_ctx, hash );
+	sha1_starts( &sha1_vmachine );
+    sha1_update( &sha1_vmachine, (const unsigned char *)str.c_str(), size );
+    sha1_finish( &sha1_vmachine, hash );
 
     for( i = 0; i < 20; ++i ){
 		sprintf( hex, "%.2x", hash[i] );

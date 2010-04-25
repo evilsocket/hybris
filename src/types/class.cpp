@@ -19,8 +19,8 @@
 #include "common.h"
 #include "types.h"
 #include "node.h"
-#include "vmem.h"
-#include "context.h"
+#include "mseg.h"
+#include "vm.h"
 
 /** helpers **/
 Object *class_call_overloaded_operator( Object *me, const char *op_name, int argc, ... ){
@@ -31,7 +31,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	Object  *result               = H_UNDEFINED;
 	unsigned int i, op_argc;
 	va_list ap;
-	extern Context __context;
+	extern VM __hyb_vm;
 
 	sprintf( op_mangled_name, "__op@%s", op_name );
 
@@ -46,7 +46,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	 * call children with method->children() - 1 to ignore the body.
 	 */
 	if( argc != op_argc ){
-		__context.depool();
+		__hyb_vm.depool();
 		hyb_error( H_ET_SYNTAX, "operator '%s' requires %d parameters (called with %d)",
 								 op_name,
 								 op_argc,
@@ -72,16 +72,16 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	/*
 	 * Save current frame.
 	 */
-	frame = __context.vframe;
+	frame = __hyb_vm.vframe;
 
-	__context.trace( (char *)op_name, &stack );
-	__context.setCurrentFrame( &stack );
+	__hyb_vm.trace( (char *)op_name, &stack );
+	__hyb_vm.setCurrentFrame( &stack );
 
 	/* call the operator */
-	result = __context.engine->exec( &stack, op->callBody() );
+	result = __hyb_vm.engine->exec( &stack, op->callBody() );
 
-	__context.setCurrentFrame( frame );
-	__context.detrace();
+	__hyb_vm.setCurrentFrame( frame );
+	__hyb_vm.detrace();
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
@@ -89,8 +89,8 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	 */
 	if( stack.state._exception == true ){
 		stack.state._exception = false;
-		__context.vframe->state._exception = true;
-		__context.vframe->state.value 	   = stack.state.value;
+		__hyb_vm.vframe->state._exception = true;
+		__hyb_vm.vframe->state.value 	   = stack.state.value;
 	}
 
 	/* return method evaluation value */
@@ -171,15 +171,15 @@ void class_free( Object *me ){
 		for( mvi = method->method.begin(); mvi != method->method.end(); mvi++ ){
 			Node *dtor = (*mvi);
 			vframe_t stack;
-			extern Context __context;
+			extern VM __hyb_vm;
 
 			stack.insert( "me", me );
 
-			__context.trace( "__expire", &stack );
+			__hyb_vm.trace( "__expire", &stack );
 
-			__context.engine->exec( &stack, dtor->callBody() );
+			__hyb_vm.engine->exec( &stack, dtor->callBody() );
 
-			__context.detrace();
+			__hyb_vm.detrace();
 		}
     }
 	/*

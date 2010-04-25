@@ -45,17 +45,17 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "", NULL }
 };
 
-extern "C" void hybris_module_init( Context * ctx ){
-    HYBRIS_DEFINE_CONSTANT( ctx, "SEEK_SET", gc_new_integer(SEEK_SET) );
-    HYBRIS_DEFINE_CONSTANT( ctx, "SEEK_CUR", gc_new_integer(SEEK_CUR) );
-    HYBRIS_DEFINE_CONSTANT( ctx, "SEEK_END", gc_new_integer(SEEK_END) );
-    HYBRIS_DEFINE_CONSTANT( ctx, "DT_BLK",   gc_new_integer(DT_BLK)  );
-    HYBRIS_DEFINE_CONSTANT( ctx, "DT_CHR",   gc_new_integer(DT_CHR)  );
-    HYBRIS_DEFINE_CONSTANT( ctx, "DT_DIR",   gc_new_integer(DT_DIR)  );
-    HYBRIS_DEFINE_CONSTANT( ctx, "DT_FIFO",  gc_new_integer(DT_FIFO) );
-    HYBRIS_DEFINE_CONSTANT( ctx, "DT_LNK",   gc_new_integer(DT_LNK)  );
-    HYBRIS_DEFINE_CONSTANT( ctx, "DT_REG",   gc_new_integer(DT_REG)  );
-    HYBRIS_DEFINE_CONSTANT( ctx, "DT_SOCK",  gc_new_integer(DT_SOCK) );
+extern "C" void hybris_module_init( VM * vmachine ){
+    HYBRIS_DEFINE_CONSTANT( vmachine, "SEEK_SET", gc_new_integer(SEEK_SET) );
+    HYBRIS_DEFINE_CONSTANT( vmachine, "SEEK_CUR", gc_new_integer(SEEK_CUR) );
+    HYBRIS_DEFINE_CONSTANT( vmachine, "SEEK_END", gc_new_integer(SEEK_END) );
+    HYBRIS_DEFINE_CONSTANT( vmachine, "DT_BLK",   gc_new_integer(DT_BLK)  );
+    HYBRIS_DEFINE_CONSTANT( vmachine, "DT_CHR",   gc_new_integer(DT_CHR)  );
+    HYBRIS_DEFINE_CONSTANT( vmachine, "DT_DIR",   gc_new_integer(DT_DIR)  );
+    HYBRIS_DEFINE_CONSTANT( vmachine, "DT_FIFO",  gc_new_integer(DT_FIFO) );
+    HYBRIS_DEFINE_CONSTANT( vmachine, "DT_LNK",   gc_new_integer(DT_LNK)  );
+    HYBRIS_DEFINE_CONSTANT( vmachine, "DT_REG",   gc_new_integer(DT_REG)  );
+    HYBRIS_DEFINE_CONSTANT( vmachine, "DT_SOCK",  gc_new_integer(DT_SOCK) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfopen){

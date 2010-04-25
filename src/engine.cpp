@@ -20,8 +20,8 @@
 #include "parser.hpp"
 
 
-Engine::Engine( Context *context ) :
-    ctx(context),
+Engine::Engine( VM *context ) :
+    vmachine(context),
     vm(&context->vmem),
     vc(&context->vcode),
     vt(&context->vtypes) {
@@ -465,7 +465,7 @@ Object *Engine::onFunctionDeclaration( vframe_t *frame, Node *node ){
     if( vc->get(function_name) != H_UNDEFINED ){
         hyb_error( H_ET_SYNTAX, "function '%s' already defined", function_name );
     }
-    else if( ctx->getFunction( function_name ) != H_UNDEFINED ){
+    else if( vmachine->getFunction( function_name ) != H_UNDEFINED ){
         hyb_error( H_ET_SYNTAX, "function '%s' already defined as a language function", function_name );
     }
     /* add the function to the code segment */
@@ -486,7 +486,7 @@ Object *Engine::onStructureDeclaration( vframe_t *frame, Node * node ){
      * ::defineType will take care of the structure attributes
 	 * to prevent it to be garbage collected (see ::onConstant).
      */
-    ctx->defineType( s_name, s );
+    vmachine->defineType( s_name, s );
 
     return H_UNDEFINED;
 }
@@ -524,7 +524,7 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 	ClassNode *cnode = (ClassNode *)node;
 	if( cnode->m_extends.size() > 0 ){
 		for( NodeList::iterator ni = cnode->m_extends.begin(); ni != cnode->m_extends.end(); ni++ ){
-			Object *type = ctx->getType( (char *)(*ni)->value.m_identifier.c_str() );
+			Object *type = vmachine->getType( (char *)(*ni)->value.m_identifier.c_str() );
 			if( type == H_UNDEFINED ){
 				hyb_error( H_ET_SYNTAX, "'%s' undeclared class type", (*ni)->value.m_identifier.c_str() );
 			}
@@ -556,7 +556,7 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 	 * ::defineType will take care of the class attributes
 	 * to prevent it to be garbage collected (see ::onConstant).
 	 */
-	ctx->defineType( classname, c );
+	vmachine->defineType( classname, c );
 }
 
 Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
@@ -568,7 +568,7 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
     Object      *value  = H_UNDEFINED,
                 *result = H_UNDEFINED;
 
-    if( (function = ctx->getFunction( callname )) == H_UNDEFINED ){
+    if( (function = vmachine->getFunction( callname )) == H_UNDEFINED ){
         return H_UNDEFINED;
     }
     /* do object assignment */
@@ -583,12 +583,12 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
 		stack.push( value );
     }
 
-    ctx->trace( callname, &stack );
-    ctx->setCurrentFrame( &stack );
+    vmachine->trace( callname, &stack );
+    vmachine->setCurrentFrame( &stack );
     /* call the function */
-    result = function( ctx, &stack );
-    ctx->setCurrentFrame( frame );
-    ctx->detrace();
+    result = function( vmachine, &stack );
+    vmachine->setCurrentFrame( frame );
+    vmachine->detrace();
 
     /* return function evaluation value */
     return result;
@@ -607,7 +607,7 @@ Object *Engine::onThreadedCall( string function_name, vframe_t *frame, vmem_t *a
 
 	/* search first in the code segment */
 	if( (function = vc->get((char *)function_name.c_str())) == H_UNDEFINED ){
-		ctx->lock();
+		vmachine->lock();
 		hyb_error( H_ET_SYNTAX, "'%s' undeclared user function identifier", function_name.c_str() );
 	}
 
@@ -623,8 +623,8 @@ Object *Engine::onThreadedCall( string function_name, vframe_t *frame, vmem_t *a
 	}
 
 	if( identifiers.size() != argv->size() ){
-	   ctx->depool();
-	   ctx->lock();
+	   vmachine->depool();
+	   vmachine->lock();
 	   hyb_error( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
 						       function_name.c_str(),
 						       identifiers.size(),
@@ -641,14 +641,14 @@ Object *Engine::onThreadedCall( string function_name, vframe_t *frame, vmem_t *a
 		stack.insert( (char *)identifiers[i].c_str(), argv->at(i) );
 	}
 
-	ctx->trace( (char *)function_name.c_str(), &stack );
-	ctx->setCurrentFrame( &stack );
+	vmachine->trace( (char *)function_name.c_str(), &stack );
+	vmachine->setCurrentFrame( &stack );
 
 	/* call the function */
 	result = exec( &stack, body );
 
-	ctx->setCurrentFrame( frame );
-	ctx->detrace();
+	vmachine->setCurrentFrame( frame );
+	vmachine->detrace();
 
 	/* return function evaluation value */
 	return result;
@@ -683,7 +683,7 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
 
     if( identifiers.size() != call->children() ){
         if( threaded ){
-           ctx->depool();
+           vmachine->depool();
         }
         hyb_error( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
                              function->value.m_function.c_str(),
@@ -702,14 +702,14 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
         stack.insert( (char *)identifiers[i].c_str(), value );
     }
 
-    ctx->trace( callname, &stack );
-    ctx->setCurrentFrame( &stack );
+    vmachine->trace( callname, &stack );
+    vmachine->setCurrentFrame( &stack );
 
     /* call the function */
     result = exec( &stack, body );
 
-    ctx->setCurrentFrame( frame );
-    ctx->detrace();
+    vmachine->setCurrentFrame( frame );
+    vmachine->detrace();
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
@@ -736,7 +736,7 @@ Object *Engine::onNewOperator( vframe_t *frame, Node *type ){
 	 * Search for the used defined type calls, most like C++
 	 * class constructors but without strict prototypes.
 	 */ 
-    if( (user_type = ctx->getType(type_name)) == H_UNDEFINED ){
+    if( (user_type = vmachine->getType(type_name)) == H_UNDEFINED ){
     	hyb_error( H_ET_SYNTAX, "'%s' undeclared type", type_name );
     }
     newtype = ob_clone(user_type);
@@ -798,14 +798,14 @@ Object *Engine::onNewOperator( vframe_t *frame, Node *type ){
 				stack.insert( (char *)ctor->child(i)->value.m_identifier.c_str(), value );
 			}
 
-			ctx->trace( type_name, &stack );
-			ctx->setCurrentFrame( &stack );
+			vmachine->trace( type_name, &stack );
+			vmachine->setCurrentFrame( &stack );
 
 			/* call the ctor */
 			exec( &stack, ctor->callBody() );
 
-			ctx->setCurrentFrame( frame );
-			ctx->detrace();
+			vmachine->setCurrentFrame( frame );
+			vmachine->detrace();
 
 			/*
 			 * Check for unhandled exceptions and put them on the root
@@ -847,17 +847,17 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
      * We assume that dll module is already loaded, otherwise there shouldn't be
      * any onDllFunctionCall call .
      */
-    function_t dllcall = ctx->getFunction( "dllcall" );
+    function_t dllcall = vmachine->getFunction( "dllcall" );
 
     if( (fn_pointer = frame->get( callname )) == H_UNDEFINED ){
         if( threaded ){
-            ctx->depool();
+            vmachine->depool();
         }
         return H_UNDEFINED;
     }
     else if( ob_is_extern(fn_pointer) == false ){
         if( threaded ){
-            ctx->depool();
+            vmachine->depool();
         }
         return H_UNDEFINED;
     }
@@ -875,14 +875,14 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
         stack.push( value );
     }
 
-    ctx->trace( callname, &stack );
-    ctx->setCurrentFrame( &stack );
+    vmachine->trace( callname, &stack );
+    vmachine->setCurrentFrame( &stack );
 
     /* call the function */
-    result = dllcall( ctx, &stack );
+    result = dllcall( vmachine, &stack );
 
-    ctx->setCurrentFrame( frame );
-    ctx->detrace();
+    vmachine->setCurrentFrame( frame );
+    vmachine->detrace();
 
     /* return function evaluation value */
     return result;
@@ -1021,7 +1021,7 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 	 * call children with method->children() - 1 to ignore the body.
 	 */
 	if( argc != method_argc ){
-		ctx->depool();
+		vmachine->depool();
 		hyb_error( H_ET_SYNTAX, "method '%s' requires %d parameters (called with %d)",
 								 method->value.m_method.c_str(),
 								 method_argc,
@@ -1044,14 +1044,14 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 		stack.insert( (char *)method->child(j)->value.m_identifier.c_str(), value );
 	}
 
-	ctx->trace( (char *)child_id.c_str(), &stack );
-	ctx->setCurrentFrame( &stack );
+	vmachine->trace( (char *)child_id.c_str(), &stack );
+	vmachine->setCurrentFrame( &stack );
 
 	/* call the method */
 	result = exec( &stack, method->callBody() );
 
-	ctx->setCurrentFrame( frame );
-	ctx->detrace();
+	vmachine->setCurrentFrame( frame );
+	vmachine->detrace();
 
 	/*
 	 * Check for unhandled exceptions and put them on the root

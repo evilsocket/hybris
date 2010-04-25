@@ -36,8 +36,8 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 HYBRIS_DEFINE_FUNCTION(hvar_names){
 	unsigned int i;
 	VectorObject *array = gc_new_vector();
-	for( i = 0; i < ctx->vmem.size(); ++i ){
-		ob_cl_push_reference( ob_dcast(array), ob_dcast( gc_new_string(ctx->vmem.label(i)) ) );
+	for( i = 0; i < vmachine->vmem.size(); ++i ){
+		ob_cl_push_reference( ob_dcast(array), ob_dcast( gc_new_string(vmachine->vmem.label(i)) ) );
 	}
 	return ob_dcast(array);
 }
@@ -45,8 +45,8 @@ HYBRIS_DEFINE_FUNCTION(hvar_names){
 HYBRIS_DEFINE_FUNCTION(hvar_values){
 	unsigned int i;
 	VectorObject *array = gc_new_vector();
-	for( i = 0; i < ctx->vmem.size(); ++i ){
-		ob_cl_push( ob_dcast(array), ctx->vmem.at(i) );
+	for( i = 0; i < vmachine->vmem.size(); ++i ){
+		ob_cl_push( ob_dcast(array), vmachine->vmem.at(i) );
 	}
 	return ob_dcast(array);
 }
@@ -54,18 +54,18 @@ HYBRIS_DEFINE_FUNCTION(hvar_values){
 HYBRIS_DEFINE_FUNCTION(huser_functions){
 	unsigned int i;
 	VectorObject *array = gc_new_vector();
-	for( i = 0; i < ctx->vcode.size(); ++i ){
-		ob_cl_push_reference( ob_dcast(array), ob_dcast( gc_new_string(ctx->vcode.label(i)) ) );
+	for( i = 0; i < vmachine->vcode.size(); ++i ){
+		ob_cl_push_reference( ob_dcast(array), ob_dcast( gc_new_string(vmachine->vcode.label(i)) ) );
 	}
 	return ob_dcast(array);
 }
 
 HYBRIS_DEFINE_FUNCTION(hdyn_functions){
-    unsigned int i, j, mods = ctx->modules.size(), dyns;
+    unsigned int i, j, mods = vmachine->modules.size(), dyns;
 
     Object *map = ob_dcast( gc_new_map() );
     for( i = 0; i < mods; ++i ){
-        module_t *mod = ctx->modules[i];
+        module_t *mod = vmachine->modules[i];
         Object   *dyn = ob_dcast( gc_new_vector() );
         dyns          = mod->functions.size();
         for( j = 0; j < dyns; ++j ){
@@ -100,7 +100,7 @@ HYBRIS_DEFINE_FUNCTION(hcall){
 		}
 	}
 
-	Object *_return = ctx->engine->onFunctionCall( data, call, 0 );
+	Object *_return = vmachine->engine->onFunctionCall( data, call, 0 );
 	delete call;
 
 	return _return;

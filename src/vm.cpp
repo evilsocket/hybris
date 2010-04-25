@@ -16,17 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "context.h"
+#include "vm.h"
 
-void Context::signal_handler( int signo ){
+void VM::signal_handler( int signo ){
     if( signo == SIGSEGV ){
-        extern Context __context;
-        __context.args.stacktrace = 1;
         hyb_error( H_ET_GENERIC, "SIGSEGV Signal Catched" );
     }
 }
 
-string Context::mk_trace( char *function, vframe_t *frame ){
+string VM::mk_trace( char *function, vframe_t *frame ){
     string trace( function + string("(") );
     unsigned int i,
                  size( frame->size() ),
@@ -42,7 +40,7 @@ string Context::mk_trace( char *function, vframe_t *frame ){
     return trace;
 }
 
-void Context::str_split( string& str, string delimiters, vector<string>& tokens ){
+void VM::str_split( string& str, string delimiters, vector<string>& tokens ){
     string::size_type lastPos = str.find_first_not_of(delimiters, 0);
     string::size_type pos     = str.find_first_of(delimiters, lastPos);
 
@@ -54,13 +52,13 @@ void Context::str_split( string& str, string delimiters, vector<string>& tokens 
 }
 
 
-Context::Context(){
+VM::VM(){
     memset( &args, 0x00, sizeof(h_args_t) );
     fp 	   = NULL;
     vframe = &vmem;
 }
 
-FILE *Context::openFile(){
+FILE *VM::openFile(){
 	extern vector<string> __hyb_file_stack;
 	extern vector<int>	  __hyb_line_stack;
 
@@ -79,13 +77,13 @@ FILE *Context::openFile(){
     return fp;
 }
 
-void Context::closeFile(){
+void VM::closeFile(){
     if( args.source[0] != 0x00 ){
         fclose(fp);
     }
 }
 
-int Context::chdir(){
+int VM::chdir(){
 	/* compute source path and chdir to it */
 	char *ptr = strrchr( args.source, '/' );
 	if( ptr != NULL ){
@@ -97,7 +95,7 @@ int Context::chdir(){
 	return 0;
 }
 
-void Context::init( int argc, char *argv[] ){
+void VM::init( int argc, char *argv[] ){
     int i;
     char name[0xFF] = {0};
 
@@ -110,7 +108,7 @@ void Context::init( int argc, char *argv[] ){
     th_mutex = PTHREAD_MUTEX_INITIALIZER;
     #endif
     /* set signal handler */
-    signal( SIGSEGV, Context::signal_handler );
+    signal( SIGSEGV, VM::signal_handler );
 
     if( args.gc_threshold > 0 ){
     	gc_set_threshold(args.gc_threshold);
@@ -132,7 +130,7 @@ void Context::init( int argc, char *argv[] ){
     HYBRIS_DEFINE_CONSTANT( this, "__INC_PATH__", gc_new_string(INC_PATH) );
 }
 
-void Context::release(){
+void VM::release(){
     #ifdef MT_SUPPORT
     lock();
         if( th_pool.size() > 0 ){
@@ -185,7 +183,7 @@ void Context::release(){
     vtypes.release();
 }
 
-void Context::loadNamespace( string path ){
+void VM::loadNamespace( string path ){
     DIR           *dir;
     struct dirent *ent;
 
@@ -210,7 +208,7 @@ void Context::loadNamespace( string path ){
     closedir(dir);
 }
 
-void Context::loadModule( string path, string name ){
+void VM::loadModule( string path, string name ){
     /* check that the module isn't already loaded */
     unsigned int i, sz(modules.size());
     for( i = 0; i < sz; ++i ){
@@ -260,7 +258,7 @@ void Context::loadModule( string path, string name ){
     modules.push_back(hmod);
 }
 
-void Context::loadModule( char *module ){
+void VM::loadModule( char *module ){
     /* translate dotted module name to module path */
     string         name(module),
                    path(LIB_PATH),

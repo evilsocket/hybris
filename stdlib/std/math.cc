@@ -62,39 +62,39 @@ HYBRIS_EXPORTED_FUNCTIONS() {
     { "", NULL }
 };
 
-extern "C" void hybris_module_init( Context * ctx ){
+extern "C" void hybris_module_init( VM * vmachine ){
 	#if defined __USE_BSD || defined __USE_XOPEN
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_E",        gc_new_float(M_E) );        /* e */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_LOG2E",    gc_new_float(M_LOG2E) );    /* log_2 e */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_LOG10E",   gc_new_float(M_LOG10E) );   /* log_10 e */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_LN2",      gc_new_float(M_LN2) );      /* log_e 2 */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_LN10",     gc_new_float(M_LN10) );     /* log_e 10 */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_PI",       gc_new_float(M_PI) );       /* pi */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_PI_2",     gc_new_float(M_PI_2) );     /* pi/2 */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_PI_4",     gc_new_float(M_PI_4) );     /* pi/4 */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_1_PI",     gc_new_float(M_1_PI) );     /* 1/pi */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_2_PI",     gc_new_float(M_2_PI) );     /* 2/pi */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_2_SQRTPI", gc_new_float(M_2_SQRTPI) ); /* 2/sqrt(pi) */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_SQRT2",    gc_new_float(M_SQRT2) );    /* sqrt(2) */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_SQRT1_2",  gc_new_float(M_SQRT1_2) );  /* 1/sqrt(2) */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_E",        gc_new_float(M_E) );        /* e */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_LOG2E",    gc_new_float(M_LOG2E) );    /* log_2 e */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_LOG10E",   gc_new_float(M_LOG10E) );   /* log_10 e */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_LN2",      gc_new_float(M_LN2) );      /* log_e 2 */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_LN10",     gc_new_float(M_LN10) );     /* log_e 10 */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_PI",       gc_new_float(M_PI) );       /* pi */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_PI_2",     gc_new_float(M_PI_2) );     /* pi/2 */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_PI_4",     gc_new_float(M_PI_4) );     /* pi/4 */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_1_PI",     gc_new_float(M_1_PI) );     /* 1/pi */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_2_PI",     gc_new_float(M_2_PI) );     /* 2/pi */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_2_SQRTPI", gc_new_float(M_2_SQRTPI) ); /* 2/sqrt(pi) */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_SQRT2",    gc_new_float(M_SQRT2) );    /* sqrt(2) */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_SQRT1_2",  gc_new_float(M_SQRT1_2) );  /* 1/sqrt(2) */
 	#endif
 	/* The above constants are not adequate for computation using `long double's.
 	   Therefore we provide as an extension constants with similar names as a
 	   GNU extension.  Provide enough digits for the 128-bit IEEE quad.  */
 	#ifdef __USE_GNU
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_El",        gc_new_float(M_El) );        /* e */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_LOG2El",    gc_new_float(M_LOG2El) );    /* log_2 e */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_LOG10El",   gc_new_float(M_LOG10El) );   /* log_10 e */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_LN2l",      gc_new_float(M_LN2l) );      /* log_e 2 */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_LN10l",     gc_new_float(M_LN10l) );     /* log_e 10 */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_PIl",       gc_new_float(M_PIl) );       /* pi */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_PI_2l",     gc_new_float(M_PI_2l) );     /* pi/2 */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_PI_4l",     gc_new_float(M_PI_4l) );     /* pi/4 */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_1_PIl",     gc_new_float(M_1_PIl) );     /* 1/pi */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_2_PIl",     gc_new_float(M_2_PIl) );     /* 2/pi */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_2_SQRTPIl", gc_new_float(M_2_SQRTPIl) ); /* 2/sqrt(pi) */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_SQRT2l",    gc_new_float(M_SQRT2l) );    /* sqrt(2) */
-	HYBRIS_DEFINE_CONSTANT( ctx, "M_SQRT1_2l",  gc_new_float(M_SQRT1_2l) );  /* 1/sqrt(2) */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_El",        gc_new_float(M_El) );        /* e */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_LOG2El",    gc_new_float(M_LOG2El) );    /* log_2 e */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_LOG10El",   gc_new_float(M_LOG10El) );   /* log_10 e */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_LN2l",      gc_new_float(M_LN2l) );      /* log_e 2 */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_LN10l",     gc_new_float(M_LN10l) );     /* log_e 10 */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_PIl",       gc_new_float(M_PIl) );       /* pi */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_PI_2l",     gc_new_float(M_PI_2l) );     /* pi/2 */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_PI_4l",     gc_new_float(M_PI_4l) );     /* pi/4 */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_1_PIl",     gc_new_float(M_1_PIl) );     /* 1/pi */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_2_PIl",     gc_new_float(M_2_PIl) );     /* 2/pi */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_2_SQRTPIl", gc_new_float(M_2_SQRTPIl) ); /* 2/sqrt(pi) */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_SQRT2l",    gc_new_float(M_SQRT2l) );    /* sqrt(2) */
+	HYBRIS_DEFINE_CONSTANT( vmachine, "M_SQRT1_2l",  gc_new_float(M_SQRT1_2l) );  /* 1/sqrt(2) */
 	#endif
 }
 

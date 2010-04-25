@@ -16,19 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "vcode.h"
+#include "cseg.h"
 
-VirtualCode::VirtualCode() : HashMap<Node>() {
+CodeSegment::CodeSegment() : HashMap<Node>() {
     #ifdef MEM_DEBUG
     printf( "[MEM DEBUG] !!! Virtual code table initialized .\n" );
     #endif
 }
 
-VirtualCode::~VirtualCode(){
+CodeSegment::~CodeSegment(){
     release();
 }
 
-Node *VirtualCode::add( char *identifier, Node *node ){
+Node *CodeSegment::add( char *identifier, Node *node ){
     char *function_name = (char *)node->value.m_function.c_str();
 
     /* if object does not exist yet, create a new one */
@@ -43,7 +43,7 @@ Node *VirtualCode::add( char *identifier, Node *node ){
     return node;
 }
 
-void VirtualCode::release(){
+void CodeSegment::release(){
     unsigned int i;
 
     #ifdef MEM_DEBUG

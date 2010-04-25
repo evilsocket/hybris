@@ -16,14 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "vmem.h"
+#include "mseg.h"
 #include "common.h"
 
-VirtualMemory::VirtualMemory() : HashMap<Object>() {
+MemorySegment::MemorySegment() : HashMap<Object>() {
 
 }
 
-VirtualMemory::~VirtualMemory(){
+MemorySegment::~MemorySegment(){
 	/*
 	 * See note on ~HashMap()
 	 */
@@ -43,7 +43,7 @@ VirtualMemory::~VirtualMemory(){
 	}
 }
 
-Object *VirtualMemory::add( char *identifier, Object *object ){
+Object *MemorySegment::add( char *identifier, Object *object ){
     Object *_new = H_UNDEFINED,
            *_old = H_UNDEFINED;
 
@@ -78,10 +78,10 @@ Object *VirtualMemory::add( char *identifier, Object *object ){
     }
 }
 
-VirtualMemory *VirtualMemory::clone(){
+MemorySegment *MemorySegment::clone(){
     unsigned int i;
 
-    VirtualMemory *clone = new VirtualMemory;
+    MemorySegment *clone = new MemorySegment;
 
     for( i = 0; i < m_elements; ++i ){
         clone->add( (char *)label(i), at(i) );

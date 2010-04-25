@@ -25,8 +25,8 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include "types.h"
-#include "vmem.h"
-#include "vcode.h"
+#include "mseg.h"
+#include "cseg.h"
 #include "engine.h"
 
 using std::string;
@@ -34,22 +34,22 @@ using std::vector;
 
 typedef vector<string> vstr_t;
 
-/* pre declaration of class Context */
-class Context;
+/* pre declaration of class VM */
+class VM;
 /* pre declaration of class Engine */
 class Engine;
 
 /* initializer function pointer prototype */
-typedef void     (*initializer_t)( Context * );
+typedef void     (*initializer_t)( VM * );
 /* function pointer prototype */
-typedef Object * (*function_t)( Context *, vmem_t * );
+typedef Object * (*function_t)( VM *, vmem_t * );
 
 /* macro to declare a hybris function */
-#define HYBRIS_DEFINE_FUNCTION(name) Object *name( Context *ctx, vmem_t *data )
+#define HYBRIS_DEFINE_FUNCTION(name) Object *name( VM *vmachine, vmem_t *data )
 /* macro to define a constant value */
-#define HYBRIS_DEFINE_CONSTANT( ctx, name, value ) ctx->vmem.addConstant( (char *)name, (Object *)value )
+#define HYBRIS_DEFINE_CONSTANT( vmachine, name, value ) vmachine->vmem.addConstant( (char *)name, (Object *)value )
 /* macro to define a new structure type given its name and its attribute names */
-#define HYBRIS_DEFINE_STRUCTURE( ctx, name, n, attrs ) ctx->defineStructure( name, n, attrs )
+#define HYBRIS_DEFINE_STRUCTURE( vmachine, name, n, attrs ) vmachine->defineStructure( name, n, attrs )
 /* macro to define module exported functions structure */
 #define HYBRIS_EXPORTED_FUNCTIONS() extern "C" named_function_t hybris_module_functions[] =
 
@@ -106,12 +106,12 @@ typedef struct _module_t {
 module_t;
 
 /* module initializer function pointer prototype */
-typedef void (*initializer_t)( Context * );
+typedef void (*initializer_t)( VM * );
 
 typedef vector<module_t *>        h_modules_t;
 typedef HashMap<named_function_t> h_mcache_t;
 
-class Context {
+class VM {
     private :
 		/*
 		 * The main SIGSEGV handler to print the stack trace.
@@ -199,7 +199,7 @@ class Context {
         Engine        *engine;
 
 
-        Context();
+        VM();
         /*
          * Open the file given in 'args' structure by main, otherwise
          * return the stdin handler.

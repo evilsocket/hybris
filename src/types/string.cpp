@@ -18,7 +18,7 @@
 */
 #include "common.h"
 #include "types.h"
-#include "context.h"
+#include "vm.h"
 #include <math.h>
 #include <stdio.h>
 #include <pcre.h>
@@ -240,9 +240,9 @@ void string_parse_pcre( string& raw, string& regex, int& opts ){
     string       pattern("^/(.*?)/([i|m|s|x|U]*)$"),
 				 sopts;
     pcre 		*compiled;
-    extern Context __context;
+    extern VM __hyb_vm;
 
-    compiled = __context.pcre_compile( pattern, 0, &error, &eoffset );
+    compiled = __hyb_vm.pcre_compile( pattern, 0, &error, &eoffset );
     rc 		 = pcre_fullinfo( compiled, 0, PCRE_INFO_CAPTURECOUNT, &ccount );
     offsets  = new int[ 3 * (ccount + 1) ];
     rc 		 = pcre_exec( compiled, 0, raw.c_str(), raw.length(), 0, 0, offsets, 3 * (ccount + 1) );
@@ -281,12 +281,12 @@ Object * string_regexp( Object *me, Object *r ){
 	const char  *error;
 	pcre 		*compiled;
 	Object      *_pcre_return;
-	extern Context __context;
+	extern VM __hyb_vm;
 
 
 	string_parse_pcre( rawreg, pattern, opts );
 
-	compiled = __context.pcre_compile( pattern, opts, &error, &eoffset );
+	compiled = __hyb_vm.pcre_compile( pattern, opts, &error, &eoffset );
 	if( !compiled ){
 		hyb_error( H_ET_GENERIC, "error during regex evaluation at offset %d (%s)", eoffset, error );
     }
