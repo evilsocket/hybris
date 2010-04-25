@@ -110,7 +110,10 @@ include          BEGIN(T_INCLUSION);
 			}
     	}
     }
-
+    /*
+     * TODO : Do file pre-parsing for thinngs like __LINE__, __FILE__
+     * and so on.
+     */
     yypush_buffer_state( yy_create_buffer( yyin, YY_BUF_SIZE ) );
 
     BEGIN(INITIAL);

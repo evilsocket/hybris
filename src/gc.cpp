@@ -152,7 +152,10 @@ void gc_collect(){
      * Execute garbage collection loop only if used memory has reaced the
      * threshold.
      */
-    if( __gc.usage >= __gc.threshold ){
+    if( __gc.usage >= __gc.threshold && !__gc.collecting ){
+    	gc_lock();
+    	__gc.collecting = 1;
+
 		#ifdef MEM_DEBUG
 			printf( "[MEM DEBUG] GC quota (%d bytes) reached with %d bytes, collecting ...\n", __gc.threshold, __gc.usage );
 		#endif
@@ -166,35 +169,16 @@ void gc_collect(){
 				/*
 				 * Skip objects that are still referenced somewhere.
 				 */
-				gc_lock();
 				if( o->ref <= 0 ){
 					/**
 					 * Finally execute garbage collection
 					 */
 					gc_free( item );
 				}
-				#ifdef MEM_DEBUG
-				else{
-					printf( "[MEM DEBUG] Skipping %p [%s] [%d bytes] [%d references].\n",
-							item->pobj,
-							item->pobj->type->name,
-							ob_get_size(item->pobj),
-							item->pobj->ref );
-				}
-				#endif
-				gc_unlock();
 			}
-			#ifdef MEM_DEBUG
-			else{
-				printf( "[MEM DEBUG] Skipping constant %p [%s] [%d bytes] [%d references].\n",
-						item->pobj,
-						item->pobj->type->name,
-						ob_get_size(item->pobj),
-						item->pobj->ref );
-			}
-			#endif
-
         }
+		__gc.collecting = 0;
+		gc_unlock();
     }
 }
 

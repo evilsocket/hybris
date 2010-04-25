@@ -62,6 +62,10 @@ Context::Context(){
 FILE *Context::openFile(){
     if( args.source[0] != 0x00 ){
         fp = fopen( args.source, "r" );
+        /*
+         * TODO : Do file pre-parsing for thinngs like __LINE__, __FILE__
+         * and so on.
+         */
         this->chdir();
     }
     else{

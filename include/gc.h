@@ -79,11 +79,12 @@ gc_item_t;
 /*
  * Main gc structure, kind of the "head" of the pool.
  *
- * pool_*    : Tracked objects list head and tail pointers .
- * items	 : Number of items in the pool.
- * usage	 : Global memory usage, in bytes.
- * threshold : If usage >= this, the gc is triggered.
- * mutex     : Mutex to lock the pool while collecting.
+ * pool_*     : Tracked objects list head and tail pointers .
+ * items	  : Number of items in the pool.
+ * usage	  : Global memory usage, in bytes.
+ * threshold  : If usage >= this, the gc is triggered.
+ * collecting : 1 if the gc is collecting, otherwise 0.
+ * mutex      : Mutex to lock the pool while collecting.
  */
 typedef struct _gc {
 	gc_item_t 	   *pool_head;
@@ -91,6 +92,7 @@ typedef struct _gc {
     size_t     		items;
     size_t     		usage;
     size_t     	 	threshold;
+    size_t			collecting;
 	#ifdef MT_SUPPORT
 	pthread_mutex_t mutex;
 	#endif
@@ -99,7 +101,8 @@ typedef struct _gc {
     		pool_tail(NULL),
 			items(0),
 			usage(0),
-			threshold(GC_DEFAULT_MEMORY_THRESHOLD)
+			threshold(GC_DEFAULT_MEMORY_THRESHOLD),
+			collecting(0)
 			#ifdef MT_SUPPORT
 			,mutex(PTHREAD_MUTEX_INITIALIZER)
 			#endif

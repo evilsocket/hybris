@@ -279,7 +279,9 @@ Object * string_regexp( Object *me, Object *r ){
 				 eoffset;
 	const char  *error;
 	pcre 		*compiled;
+	Object      *_pcre_return;
 	extern Context __context;
+
 
 	string_parse_pcre( rawreg, pattern, opts );
 
@@ -292,22 +294,28 @@ Object * string_regexp( Object *me, Object *r ){
 
 	offsets = new int[ 3 * (ccount + 1) ];
 
-	VectorObject *matches = gc_new_vector();
+	if( ccount > 0 ){
+		_pcre_return = (Object *)gc_new_vector();
 
-	while( (rc = pcre_exec( compiled, 0, subject.c_str(), subject.length(), offset, 0, offsets, 3 * (ccount + 1) )) > 0 ){
-		const char *data;
-		for( i = 1; i < rc; ++i ){
-			pcre_get_substring( subject.c_str(), offsets, rc, i, &data );
-			ob_cl_push_reference( (Object *)matches,
-								  (Object *)gc_new_string(data)
-								);
+		while( (rc = pcre_exec( compiled, 0, subject.c_str(), subject.length(), offset, 0, offsets, 3 * (ccount + 1) )) > 0 ){
+			const char *data;
+			for( i = 1; i < rc; ++i ){
+				pcre_get_substring( subject.c_str(), offsets, rc, i, &data );
+				ob_cl_push_reference( _pcre_return,
+									  (Object *)gc_new_string(data)
+									);
+			}
+			offset = offsets[1];
 		}
-		offset = offsets[1];
+	}
+	else{
+		rc = pcre_exec( compiled, 0, subject.c_str(), subject.length(), offset, 0, offsets, 3 * (ccount + 1) );
+		_pcre_return = (Object *)gc_new_integer( rc >= 0 );
 	}
 
 	delete[] offsets;
 
-	return (Object *)matches;
+	return _pcre_return;
 }
 
 /** arithmetic operators **/
