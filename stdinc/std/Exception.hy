@@ -19,10 +19,16 @@
 import std.io.console;
 
 class Exception {
-	protected message;
+	protected file, line, message;
+	
+	public method Exception( file, line, message ){
+		me->file    = file;
+		me->line    = line;
+		me->message = message;
+	}	
 
 	public method Exception( message ){
-		me->message = message;
+		me->Exception( 0, 0, message );
 	}
 	
 	public method message(){
@@ -30,7 +36,12 @@ class Exception {
 	}
 
 	public method print(){
-		println( me->message );
+		if( me->file ){
+			println( "[".me->file.":".me->line."] ".me->message );
+		}
+		else{
+			println( me->message );	
+		}
 	}
 }
 

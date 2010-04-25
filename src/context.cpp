@@ -60,15 +60,19 @@ Context::Context(){
 }
 
 FILE *Context::openFile(){
+	extern vector<string> __hyb_file_stack;
+	extern vector<int>	  __hyb_line_stack;
+
     if( args.source[0] != 0x00 ){
+    	__hyb_file_stack.push_back(args.source);
+    	__hyb_line_stack.push_back(0);
+
         fp = fopen( args.source, "r" );
-        /*
-         * TODO : Do file pre-parsing for thinngs like __LINE__, __FILE__
-         * and so on.
-         */
         this->chdir();
     }
     else{
+    	__hyb_file_stack.push_back("<standard input>");
+
         fp = stdin;
     }
     return fp;
@@ -121,12 +125,7 @@ void Context::init( int argc, char *argv[] ){
     HYBRIS_DEFINE_CONSTANT( this, "true",  gc_new_integer(1) );
     HYBRIS_DEFINE_CONSTANT( this, "false", gc_new_integer(0) );
     HYBRIS_DEFINE_CONSTANT( this, "null",  gc_new_integer(0) );
-    /*
-     * Define __FILE__ if we are not in stdin reading mode.
-     */
-    if( argc >= 2 ){
-    	HYBRIS_DEFINE_CONSTANT( this, "__FILE__",     gc_new_string(argv[1]) );
-    }
+
     HYBRIS_DEFINE_CONSTANT( this, "__VERSION__",  gc_new_string(VERSION) );
     HYBRIS_DEFINE_CONSTANT( this, "__LIB_PATH__", gc_new_string(LIB_PATH) );
     HYBRIS_DEFINE_CONSTANT( this, "__INC_PATH__", gc_new_string(INC_PATH) );

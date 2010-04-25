@@ -70,11 +70,11 @@ Object *VirtualMemory::add( char *identifier, Object *object ){
     }
     /* else set the new value */
     else{
-        replace( identifier, _old, _new );
+		replace( identifier, _old, _new );
 
-        ob_free(_old);
+		ob_free(_old);
 
-        return _new;
+		return _new;
     }
 }
 

@@ -452,19 +452,9 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
 int hyb_banner(){
     printf( "Hybris %s (built: %s %s)\n"
             "Released under GPL v3.0 by %s\n"
-            "Compiled with :\n"
-            "\tLibrary path      : %s\n"
-            "\tInclude path      : %s\n"
-            #ifdef MEM_DEBUG
-            "\tMemory Debug      : ON\n"
-            #endif
-            #ifdef GC_SUPPORT
-            "\tGarbage collector : ON\n"
-            #endif
-            #ifdef BOUNDS_CHECK
-            "\tBoundaries check  : ON\n"
-            #endif
-            ,
+            "* Compiled with :\n"
+            " - Import path  : %s\n"
+            " - Include path : %s\n",
             VERSION,
             __DATE__,
             __TIME__,

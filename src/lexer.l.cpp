@@ -35,6 +35,8 @@ typedef vector<string> matches_t;
 
 #define IS_WHITESPACE(c) strchr( " \r\n\t", (c) )
 
+#define INC_LINE_NO() __hyb_line_stack.back() = ++yylineno
+
 void             yyerror(char *);
 // handle one line comments
 void             hyb_lex_skip_comment();
@@ -52,6 +54,14 @@ function_decl_t *hyb_lex_function( char * text );
 method_decl_t   *hyb_lex_method( char * text );
 // handle operator overloading declaration
 method_decl_t   *hyb_lex_operator( char *text );
+/*
+ * A stack container for files being parsed.
+ */
+vector<string> __hyb_file_stack;
+/*
+ * A stack container for correct line numbering upon inclusion.
+ */
+vector<int>	   __hyb_line_stack;
 
 extern int     yylineno;
 extern Context __context;
@@ -70,7 +80,7 @@ operators  "[]"|"[]="|"[]<"|".."|"+"|"+="|"-"|"-="|"/"|"/="|"*"|"*="|"%"|"%="|"+
 %%
 
 [ \t]+ ;
-[\n]             { yylineno++; }
+[\n]             { INC_LINE_NO(); }
 
 include          BEGIN(T_INCLUSION);
 
@@ -84,41 +94,52 @@ include          BEGIN(T_INCLUSION);
     *ptr = 0x00;
 
     string file = yytext;
-    /*
-     * First of all, try to include a file in the same directory
-     * of the script.
-     */
-    if( (yyin = fopen( file.c_str(), "r" )) == NULL ){
-    	/*
-    	 * Secondly, try adding the .hy extension.
-    	 */
-    	if( (yyin = fopen( (file + ".hy").c_str(), "r" )) == NULL ){
-			/*
-			 * Try to load from default include path.
-			 * In this case replace '.' with '/' so that :
-			 *
-			 * include std.io.network.Socket;
-			 *
-			 * would include :
-			 *
-			 * /usr/lib/hybris/include/std/io/network/Socket.hy
-			 */
-			string_replace( file, ".", "/" );
 
-			if( (yyin = fopen( (INC_PATH + file + ".hy").c_str(), "r" )) == NULL ){
-				hyb_throw( H_ET_GENERIC, "Could not open '%s' for inclusion", yytext );
-			}
-    	}
+    /*
+	 * First of all, try to include a file in the same directory
+	 * of the script.
+	 */
+    if( (yyin = fopen( file.c_str(), "r" )) != NULL ){
+    	__hyb_file_stack.push_back(file);
     }
     /*
-     * TODO : Do file pre-parsing for thinngs like __LINE__, __FILE__
-     * and so on.
-     */
+	 * Secondly, try adding the .hy extension.
+	 */
+    else if( (yyin = fopen( (file + ".hy").c_str(), "r" )) != NULL ){
+    	__hyb_file_stack.push_back((file + ".hy"));
+    }
+    else {
+    	/*
+		 * Try to load from default include path.
+		 * In this case replace '.' with '/' so that :
+		 *
+		 * include std.io.network.Socket;
+		 *
+		 * would include :
+		 *
+		 * /usr/lib/hybris/include/std/io/network/Socket.hy
+		 */
+    	string_replace( file, ".", "/" );
+
+    	if( (yyin = fopen( (INC_PATH + file + ".hy").c_str(), "r" )) != NULL ){
+    		__hyb_file_stack.push_back((INC_PATH + file + ".hy"));
+    	}
+		else{
+			hyb_throw( H_ET_GENERIC, "Could not open '%s' for inclusion", yytext );
+		}
+    }
+
+    __hyb_line_stack.push_back(yylineno);
+    yylineno = 0;
     yypush_buffer_state( yy_create_buffer( yyin, YY_BUF_SIZE ) );
 
     BEGIN(INITIAL);
 }
 <<EOF>> {
+	__hyb_file_stack.pop_back();
+	__hyb_line_stack.pop_back();
+	yylineno = __hyb_line_stack.back();
+
     yypop_buffer_state();
 
     if( !YY_CURRENT_BUFFER ){
@@ -247,6 +268,16 @@ include          BEGIN(T_INCLUSION);
 	return T_METHOD_PROTOTYPE;
 }
 
+"__FILE__" {
+	strcpy( yylval.string, __hyb_file_stack.back().c_str() );
+	return T_STRING;
+}
+
+"__LINE__" {
+	yylval.integer = __hyb_line_stack.back();
+	return T_INTEGER;
+}
+
 {identifier}                           { strncpy( yylval.identifier, yytext, 0xFF ); return T_IDENT; }
 
 -?[0-9]+                               { yylval.integer = atol(yytext);         return T_INTEGER; }
@@ -265,12 +296,12 @@ void hyb_lex_skip_comment(){
 loop:
     while ((c = yyinput()) != '*' && c != 0){
         if( c == '\n' ){
-            yylineno++;
+        	INC_LINE_NO();
         }
     }
 
     if ((c1 = yyinput()) != '/' && c != 0){
-        if( c1 == '\n' ){ yylineno++; }
+        if( c1 == '\n' ){ INC_LINE_NO(); }
         unput(c1);
         goto loop;
     }
@@ -279,7 +310,7 @@ loop:
 void hyb_lex_skip_line(){
     char c;
     while( (c = yyinput()) != '\n' && c != EOF );
-    yylineno++;
+    INC_LINE_NO();
 }
 
 char hyb_lex_char( char delimiter ){
@@ -430,10 +461,6 @@ method_decl_t *hyb_lex_operator( char * text ){
 	for( i = 0; i < declaration->argc; ++i ){
 		strcpy( declaration->argv[i], tokens[i].c_str() );
 	}
-
-    /*
-     * TODO: Check 'op' for right arguments number.
-     */
 
     return declaration;
 }

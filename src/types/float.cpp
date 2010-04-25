@@ -113,11 +113,11 @@ void float_print( Object *me, int tabs ){
     for( int i = 0; i < tabs; ++i ){
         printf( "\t" );
     }
-    printf( "%Lf", ob_float_ucast(me)->value );
+    printf( "%f", ob_float_ucast(me)->value );
 }
 
 void float_scanf( Object *me ){
-    scanf( "%Lf", &ob_float_ucast(me)->value );
+    scanf( "%f", &ob_float_ucast(me)->value );
 }
 
 Object * float_to_string( Object *me ){
