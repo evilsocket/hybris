@@ -37,22 +37,22 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
 	 * when the frame will be deleted (vframe_t class destructor), exit
 	 * with a non handled exception.
 	 */
-	if( frame->exception_state ){
-		return frame->exception_value;
+	if( frame->state._exception ){
+		return frame->state.value;
 	}
     /*
 	 * A return statement was succesfully executed, skip everything
 	 * now on until the frame will be destroyed and return appropriate
 	 * value.
 	 */
-	else if( frame->return_state ){
-		return frame->return_value;
+	else if( frame->state._return ){
+		return frame->state.value;
 	}
     /*
      * A next statement was found, so skip nodes execution
      * until one of the loop handlers will reset the flag.
      */
-    else if( frame->next_state ){
+    else if( frame->state._next ){
     	return H_DEFAULT_RETURN;
     }
 
@@ -71,7 +71,7 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
             return onFunctionDeclaration( frame, node );
         /* structure or class creation */
         case H_NT_NEW :
-            return onNewType( frame, node );
+            return onNewOperator( frame, node );
         /* function call */
         case H_NT_CALL       :
             return onFunctionCall( frame, node );
@@ -80,6 +80,7 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
         /* struct type declaration */
         case H_NT_STRUCT :
             return onStructureDeclaration( frame, node );
+        /* class type declaration */
         case H_NT_CLASS :
 			return onClassDeclaration( frame, node );
 
@@ -110,8 +111,18 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                     return onForeach( frame, node );
                 /* foreach( label -> item of map ) */
                 case T_FOREACHM :
-                    return onForeachm( frame, node );
-                break;
+                    return onForeachMapping( frame, node );
+				/* break; */
+				case T_BREAK :
+					frame->state._break = true;
+				break;
+				/* next; */
+				case T_NEXT :
+					frame->state._next = true;
+				break;
+				/* return */
+				case T_RETURN :
+					return onReturn( frame, node );
                 /* (condition ? expression : expression) */
                 case T_QUESTION :
                     return onQuestion( frame, node );
@@ -136,17 +147,6 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                 /* expression ; */
                 case T_EOSTMT  :
                     return onEostmt( frame, node );
-                /* break; */
-                case T_BREAK :
-					frame->break_state = true;
-                break;
-                /* next; */
-                case T_NEXT :
-                	frame->next_state = true;
-                break;
-                /* return */
-                case T_RETURN :
-                    return onReturn( frame, node );
                 /* $ */
                 case T_DOLLAR :
                     return onDollar( frame, node );
@@ -167,7 +167,7 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                     return onDot( frame, node );
                 /* expression .= expression */
                 case T_DOTE   :
-                    return onDote( frame, node );
+                    return onInplaceDot( frame, node );
                 /* -expression */
                 case T_UMINUS :
                     return onUminus( frame, node );
@@ -179,31 +179,31 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                     return onPlus( frame, node );
                 /* expression += expression */
                 case T_PLUSE   :
-                    return onPluse( frame, node );
+                    return onInplacePlus( frame, node );
                 /* expression - expression */
                 case T_MINUS    :
                     return onMinus( frame, node );
                 /* expression -= expression */
                 case T_MINUSE   :
-                    return onMinuse( frame, node );
+                    return onInplaceMinus( frame, node );
                 /* expression * expression */
                 case T_MUL	:
                     return onMul( frame, node );
                 /* expression *= expression */
                 case T_MULE	:
-                    return onMule( frame, node );
+                    return onInplaceMul( frame, node );
                 /* expression / expression */
                 case T_DIV    :
                     return onDiv( frame, node );
                 /* expression /= expression */
                 case T_DIVE   :
-                    return onDive( frame, node );
+                    return onInplaceDiv( frame, node );
                 /* expression % expression */
                 case T_MOD    :
                     return onMod( frame, node );
                 /* expression %= expression */
                 case T_MODE   :
-                    return onMode( frame, node );
+                    return onInplaceMod( frame, node );
                 /* expression++ */
                 case T_INC    :
                     return onInc( frame, node );
@@ -215,31 +215,31 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                     return onXor( frame, node );
                 /* expression ^= expression */
                 case T_XORE   :
-                    return onXore( frame, node );
+                    return onInplaceXor( frame, node );
                 /* expression & expression */
                 case T_AND    :
                     return onAnd( frame, node );
                 /* expression &= expression */
                 case T_ANDE   :
-                    return onAnde( frame, node );
+                    return onInplaceAnd( frame, node );
                 /* expression | expression */
                 case T_OR     :
                     return onOr( frame, node );
                 /* expression |= expression */
                 case T_ORE    :
-                    return onOre( frame, node );
+                    return onInplaceOr( frame, node );
                 /* expression << expression */
                 case T_SHIFTL  :
                     return onShiftl( frame, node );
                 /* expression <<= expression */
                 case T_SHIFTLE :
-                    return onShiftle( frame, node );
+                    return onInplaceShiftl( frame, node );
                 /* expression >> expression */
                 case T_SHIFTR  :
                     return onShiftr( frame, node );
                 /* expression >>= expression */
                 case T_SHIFTRE :
-                    return onShiftre( frame, node );
+                    return onInplaceShiftr( frame, node );
                 /* expression! */
                 case T_FACT :
                     return onFact( frame, node );
@@ -711,17 +711,17 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
 	 * Check for unhandled exceptions and put them on the root
 	 * memory frame.
 	 */
-	if( stack.exception_state == true ){
-		stack.exception_state  = false;
-		frame->exception_state = true;
-		frame->exception_value = stack.exception_value;
+	if( stack.state._exception == true ){
+		stack.state._exception  = false;
+		frame->state._exception = true;
+		frame->state.value = stack.state.value;
 	}
 
     /* return function evaluation value */
     return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
 }
 
-Object *Engine::onNewType( vframe_t *frame, Node *type ){
+Object *Engine::onNewOperator( vframe_t *frame, Node *type ){
     char      *type_name = (char *)type->value.m_identifier.c_str();
     Object    *user_type = H_UNDEFINED,
               *newtype   = H_UNDEFINED,
@@ -805,10 +805,10 @@ Object *Engine::onNewType( vframe_t *frame, Node *type ){
 			 * Check for unhandled exceptions and put them on the root
 			 * memory frame.
 			 */
-			if( stack.exception_state == true ){
-				stack.exception_state  = false;
-				frame->exception_state = true;
-				frame->exception_value = stack.exception_value;
+			if( stack.state._exception == true ){
+				stack.state._exception  = false;
+				frame->state._exception = true;
+				frame->state.value = stack.state.value;
 			}
 		}
 		else{
@@ -1047,10 +1047,10 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 	 * Check for unhandled exceptions and put them on the root
 	 * memory frame.
 	 */
-	if( stack.exception_state == true ){
-		stack.exception_state  = false;
-		frame->exception_state = true;
-		frame->exception_value = stack.exception_value;
+	if( stack.state._exception == true ){
+		stack.state._exception  = false;
+		frame->state._exception = true;
+		frame->state.value = stack.state.value;
 	}
 
 	/* return method evaluation value */
@@ -1116,10 +1116,10 @@ Object *Engine::onOperatorCall( vframe_t *frame, Object *owner, const char *op_n
 	 * Check for unhandled exceptions and put them on the root
 	 * memory frame.
 	 */
-	if( stack.exception_state == true ){
-		stack.exception_state  = false;
-		frame->exception_state = true;
-		frame->exception_value = stack.exception_value;
+	if( stack.state._exception == true ){
+		stack.state._exception  = false;
+		frame->state._exception = true;
+		frame->state.value = stack.state.value;
 	}
 
 	/* return method evaluation value */
@@ -1171,11 +1171,11 @@ Object *Engine::onReturn( vframe_t *frame, Node *node ){
 	 * Set break and return state to make every loop and/or condition
 	 * statement to exit with this return value.
 	 */
-    frame->return_value = exec( frame, node->child(0) );
-    frame->break_state  = true;
-    frame->return_state = true;
+    frame->state.value   = exec( frame, node->child(0) );
+    frame->state._break  = true;
+    frame->state._return = true;
 
-    return frame->return_value;
+    return frame->state.value;
 }
 
 Object *Engine::onRange( vframe_t *frame, Node *node ){
@@ -1286,10 +1286,10 @@ Object *Engine::onWhile( vframe_t *frame, Node *node ){
     while( ob_lvalue( (boolean = exec(  frame, condition )) ) ){
    		result = exec( frame, body );
 
-   		frame->next_state = false;
+   		frame->state._next = false;
 
-        if( frame->break_state ){
-        	frame->break_state = false;
+        if( frame->state._break ){
+        	frame->state._break = false;
 			break;
         }
     }
@@ -1309,10 +1309,10 @@ Object *Engine::onDo( vframe_t *frame, Node *node ){
     do{
 		result = exec( frame, body );
 
-		frame->next_state = false;
+		frame->state._next = false;
 
-        if( frame->break_state ){
-			frame->break_state = false;
+        if( frame->state._break ){
+			frame->state._break = false;
 			break;
 		}
     }
@@ -1341,10 +1341,10 @@ Object *Engine::onFor( vframe_t *frame, Node *node ){
 
 		result = exec( frame, body );
 
-		frame->next_state = false;
+		frame->state._next = false;
 
-        if( frame->break_state ){
-        	frame->break_state = false;
+        if( frame->state._break ){
+        	frame->state._break = false;
 			break;
 		}
     }
@@ -1369,10 +1369,10 @@ Object *Engine::onForeach( vframe_t *frame, Node *node ){
 
         result = exec( frame, body );
 
-        frame->next_state = false;
+        frame->state._next = false;
 
-        if( frame->break_state ){
-			frame->break_state = false;
+        if( frame->state._break ){
+			frame->state._break = false;
 			break;
 		}
     }
@@ -1380,7 +1380,7 @@ Object *Engine::onForeach( vframe_t *frame, Node *node ){
     return result;
 }
 
-Object *Engine::onForeachm( vframe_t *frame, Node *node ){
+Object *Engine::onForeachMapping( vframe_t *frame, Node *node ){
     int     i, size;
     Node   *body;
     Object *map    = H_UNDEFINED,
@@ -1400,10 +1400,10 @@ Object *Engine::onForeachm( vframe_t *frame, Node *node ){
 
         result = exec( frame, body );
 
-        frame->next_state = false;
+        frame->state._next = false;
 
-        if( frame->break_state ){
-			frame->break_state = false;
+        if( frame->state._break ){
+			frame->state._break = false;
 			break;
 		}
     }
@@ -1477,10 +1477,10 @@ Object *Engine::onSwitch( vframe_t *frame, Node *node){
 }
 
 Object *Engine::onThrow( vframe_t *frame, Node *node ){
-	frame->exception_value = exec( frame, node->child(0) );
-	frame->exception_state = true;
+	frame->state.value = exec( frame, node->child(0) );
+	frame->state._exception = true;
 
-	return frame->exception_value;
+	return frame->state.value;
 }
 
 Object *Engine::onTryCatch( vframe_t *frame, Node *node ){
@@ -1491,10 +1491,10 @@ Object *Engine::onTryCatch( vframe_t *frame, Node *node ){
 
 	exec( frame, main_body );
 
-	if( frame->exception_state ){
-		assert( frame->exception_value != H_UNDEFINED );
-		frame->add( (char *)ex_ident->value.m_identifier.c_str(), frame->exception_value );
-		frame->exception_state = false;
+	if( frame->state._exception ){
+		assert( frame->state.value != H_UNDEFINED );
+		frame->add( (char *)ex_ident->value.m_identifier.c_str(), frame->state.value );
+		frame->state._exception = false;
 		exec( frame, catch_body );
 	}
 
@@ -1527,7 +1527,7 @@ Object *Engine::onDot( vframe_t *frame, Node *node ){
     return result;
 }
 
-Object *Engine::onDote( vframe_t *frame, Node *node ){
+Object *Engine::onInplaceDot( vframe_t *frame, Node *node ){
     Object *a      = H_UNDEFINED,
            *b      = H_UNDEFINED,
            *result = H_UNDEFINED;
@@ -1684,7 +1684,7 @@ Object *Engine::onPlus( vframe_t *frame, Node *node ){
     }
 }
 
-Object *Engine::onPluse( vframe_t *frame, Node *node ){
+Object *Engine::onInplacePlus( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -1720,7 +1720,7 @@ Object *Engine::onMinus( vframe_t *frame, Node *node ){
     }
 }
 
-Object *Engine::onMinuse( vframe_t *frame, Node *node ){
+Object *Engine::onInplaceMinus( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -1756,7 +1756,7 @@ Object *Engine::onMul( vframe_t *frame, Node *node ){
 	}
 }
 
-Object *Engine::onMule( vframe_t *frame, Node *node ){
+Object *Engine::onInplaceMul( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -1792,7 +1792,7 @@ Object *Engine::onDiv( vframe_t *frame, Node *node ){
 	}
 }
 
-Object *Engine::onDive( vframe_t *frame, Node *node ){
+Object *Engine::onInplaceDiv( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -1828,7 +1828,7 @@ Object *Engine::onMod( vframe_t *frame, Node *node ){
 	}
 }
 
-Object *Engine::onMode( vframe_t *frame, Node *node ){
+Object *Engine::onInplaceMod( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -1892,7 +1892,7 @@ Object *Engine::onXor( vframe_t *frame, Node *node ){
     }
 }
 
-Object *Engine::onXore( vframe_t *frame, Node *node ){
+Object *Engine::onInplaceXor( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -1928,7 +1928,7 @@ Object *Engine::onAnd( vframe_t *frame, Node *node ){
 	}
 }
 
-Object *Engine::onAnde( vframe_t *frame, Node *node ){
+Object *Engine::onInplaceAnd( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -1963,7 +1963,7 @@ Object *Engine::onOr( vframe_t *frame, Node *node ){
 	}
 }
 
-Object *Engine::onOre( vframe_t *frame, Node *node ){
+Object *Engine::onInplaceOr( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -1997,7 +1997,7 @@ Object *Engine::onShiftl( vframe_t *frame, Node *node ){
 	}
 }
 
-Object *Engine::onShiftle( vframe_t *frame, Node *node ){
+Object *Engine::onInplaceShiftl( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -2031,7 +2031,7 @@ Object *Engine::onShiftr( vframe_t *frame, Node *node ){
 	}
 }
 
-Object *Engine::onShiftre( vframe_t *frame, Node *node ){
+Object *Engine::onInplaceShiftr( vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 

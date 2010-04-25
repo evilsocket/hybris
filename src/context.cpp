@@ -144,14 +144,14 @@ void Context::release(){
     /*
      * Handle unhandled exceptions in the main memory frame.
      */
-    if( vmem.exception_state == true ){
-    	vmem.exception_state = false;
-    	assert( vmem.exception_value != NULL );
-    	if( vmem.exception_value->type->svalue ){
-    		fprintf( stderr, "\033[22;31mERROR : Unhandled exception : %s\n\033[00m", ob_svalue(vmem.exception_value).c_str() );
+    if( vmem.state._exception == true ){
+    	vmem.state._exception = false;
+    	assert( vmem.state.value != NULL );
+    	if( vmem.state.value->type->svalue ){
+    		fprintf( stderr, "\033[22;31mERROR : Unhandled exception : %s\n\033[00m", ob_svalue(vmem.state.value).c_str() );
     	}
     	else{
-    		fprintf( stderr, "\033[22;31mERROR : Unhandled '%s' exception .\n\033[00m", ob_typename(vmem.exception_value) );
+    		fprintf( stderr, "\033[22;31mERROR : Unhandled '%s' exception .\n\033[00m", ob_typename(vmem.state.value) );
     	}
     }
     /*

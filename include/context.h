@@ -191,11 +191,13 @@ class Context {
         h_mcache_t	   mcache;
         /* dynamically loaded modules */
         h_modules_t    modules;
+        /* compiled regular expressions cache */
+        HashMap<pcre>  pcre_cache;
         /* code execution engine */
         Engine        *engine;
 
-        Context();
 
+        Context();
         /*
          * Open the file given in 'args' structure by main, otherwise
          * return the stdin handler.
@@ -330,6 +332,21 @@ class Context {
         __force_inline Object * getType( char *name ){
             return vtypes.find(name);
         }
+        /*
+         * Compile a regular expression and put it in a global cache.
+         */
+		__force_inline pcre *pcre_compile( string& pattern, int opts, const char **perror, int *poffset ){
+			pcre *compiled;
+			if( (compiled = pcre_cache.find((char *)pattern.c_str())) == NULL ){
+				compiled = ::pcre_compile( pattern.c_str(), opts, perror, poffset, 0 );
+				if( compiled ){
+					lock();
+						pcre_cache.insert( (char *)pattern.c_str(), compiled );
+					unlock();
+				}
+			}
+			return compiled;
+		}
 };
 
 #endif

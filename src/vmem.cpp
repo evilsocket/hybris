@@ -19,15 +19,7 @@
 #include "vmem.h"
 #include "common.h"
 
-VirtualMemory::VirtualMemory() :
-	HashMap<Object>(),
-
-	break_state(false),
-	next_state(false),
-	return_state(false),
-	exception_state(false),
-	return_value(H_UNDEFINED),
-	exception_value(H_UNDEFINED) {
+VirtualMemory::VirtualMemory() : HashMap<Object>() {
 
 }
 
@@ -35,17 +27,18 @@ VirtualMemory::~VirtualMemory(){
 	/*
 	 * See note on ~HashMap()
 	 */
+
 	/*
 	 * Handle non managed exceptions.
 	 */
-	if( exception_state == true ){
-		exception_state = false;
-		assert( exception_value != NULL );
-		if( exception_value->type->svalue ){
-			hyb_throw( H_ET_GENERIC, "Unhandled exception : %s", ob_svalue(exception_value).c_str() );
+	if( state._exception == true ){
+		state._exception = false;
+		assert( state.value != NULL );
+		if( state.value->type->svalue ){
+			hyb_throw( H_ET_GENERIC, "Unhandled exception : %s", ob_svalue(state.value).c_str() );
 		}
 		else{
-			hyb_throw( H_ET_GENERIC, "Unhandled '%s' exception", ob_typename(exception_value) );
+			hyb_throw( H_ET_GENERIC, "Unhandled '%s' exception", ob_typename(state.value) );
 		}
 	}
 }
@@ -93,12 +86,8 @@ VirtualMemory *VirtualMemory::clone(){
     for( i = 0; i < m_elements; ++i ){
         clone->add( (char *)label(i), at(i) );
     }
-	clone->break_state     = break_state;
-	clone->next_state      = next_state;
-	clone->return_state    = return_state;
-	clone->exception_state = exception_state;
-	clone->return_value    = return_value;
-	clone->exception_value = exception_value;
+
+	clone->state.assign(state);
 
     return clone;
 }

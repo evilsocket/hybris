@@ -87,6 +87,10 @@ class Engine {
          * The handler will recieve the current memory frame and the node
          * to execute or reduce.
          */
+
+		/*
+		 * Special nodes.
+		 */
         Object *onIdentifier( vframe_t *, Node * );
         Object *onAttribute( vframe_t *, Node * );
         Object *onConstant( vframe_t *, Node * );
@@ -94,53 +98,63 @@ class Engine {
         Object *onStructureDeclaration( vframe_t *, Node * );
         Object *onClassDeclaration( vframe_t *, Node * );
         Object *onFunctionCall( vframe_t *, Node *, int threaded = 0 );
-        Object *onNewType( vframe_t *, Node * );
-        Object *onDollar( vframe_t *, Node * );
+        Object *onNewOperator( vframe_t *, Node * );
+        /*
+         * Statements.
+         */
         Object *onReturn( vframe_t *, Node * );
+        Object *onThrow( vframe_t *, Node * );
+		Object *onTryCatch( vframe_t *, Node * );
+		Object *onWhile( vframe_t *, Node * );
+		Object *onDo( vframe_t *, Node * );
+		Object *onFor( vframe_t *, Node * );
+		Object *onForeach( vframe_t *, Node * );
+		Object *onForeachMapping( vframe_t *, Node * );
+		Object *onIf( vframe_t *, Node * );
+		Object *onQuestion( vframe_t *, Node * );
+		Object *onSwitch( vframe_t *, Node * );
+		/*
+		 * Expressions / Operators.
+		 */
+		/* misc */
+        Object *onDollar( vframe_t *, Node * );
         Object *onRange( vframe_t *, Node * );
         Object *onSubscriptAdd( vframe_t *, Node * );
         Object *onSubscriptGet( vframe_t *, Node * );
         Object *onSubscriptSet( vframe_t *, Node * );
-        Object *onThrow( vframe_t *, Node * );
-        Object *onTryCatch( vframe_t *, Node * );
-        Object *onWhile( vframe_t *, Node * );
-        Object *onDo( vframe_t *, Node * );
-        Object *onFor( vframe_t *, Node * );
-        Object *onForeach( vframe_t *, Node * );
-        Object *onForeachm( vframe_t *, Node * );
-        Object *onIf( vframe_t *, Node * );
-        Object *onQuestion( vframe_t *, Node * );
-        Object *onSwitch( vframe_t *, Node * );
         Object *onEostmt( vframe_t *, Node * );
         Object *onDot( vframe_t *, Node * );
-        Object *onDote( vframe_t *, Node * );
+        Object *onInplaceDot( vframe_t *, Node * );
+        /* arithmetic */
         Object *onAssign( vframe_t *, Node * );
         Object *onUminus( vframe_t *, Node * );
         Object *onRegex( vframe_t *, Node * );
         Object *onPlus( vframe_t *, Node * );
-        Object *onPluse( vframe_t *, Node * );
+        Object *onInplacePlus( vframe_t *, Node * );
         Object *onMinus( vframe_t *, Node * );
-        Object *onMinuse( vframe_t *, Node * );
+        Object *onInplaceMinus( vframe_t *, Node * );
         Object *onMul( vframe_t *, Node * );
-        Object *onMule( vframe_t *, Node * );
+        Object *onInplaceMul( vframe_t *, Node * );
         Object *onDiv( vframe_t *, Node * );
-        Object *onDive( vframe_t *, Node * );
+        Object *onInplaceDiv( vframe_t *, Node * );
         Object *onMod( vframe_t *, Node * );
-        Object *onMode( vframe_t *, Node * );
+        Object *onInplaceMod( vframe_t *, Node * );
         Object *onInc( vframe_t *, Node * );
         Object *onDec( vframe_t *, Node * );
-        Object *onXor( vframe_t *, Node * );
-        Object *onXore( vframe_t *, Node * );
-        Object *onAnd( vframe_t *, Node * );
-        Object *onAnde( vframe_t *, Node * );
-        Object *onOr( vframe_t *, Node * );
-        Object *onOre( vframe_t *, Node * );
-        Object *onShiftl( vframe_t *, Node * );
-        Object *onShiftle( vframe_t *, Node * );
-        Object *onShiftr( vframe_t *, Node * );
-        Object *onShiftre( vframe_t *, Node * );
         Object *onFact( vframe_t *, Node * );
+        /* bitwise */
+        Object *onXor( vframe_t *, Node * );
+        Object *onInplaceXor( vframe_t *, Node * );
+        Object *onAnd( vframe_t *, Node * );
+        Object *onInplaceAnd( vframe_t *, Node * );
+        Object *onOr( vframe_t *, Node * );
+        Object *onInplaceOr( vframe_t *, Node * );
+        Object *onShiftl( vframe_t *, Node * );
+        Object *onInplaceShiftl( vframe_t *, Node * );
+        Object *onShiftr( vframe_t *, Node * );
+        Object *onInplaceShiftr( vframe_t *, Node * );
         Object *onNot( vframe_t *, Node * );
+        /* logic */
         Object *onLnot( vframe_t *, Node * );
         Object *onLess( vframe_t *, Node * );
         Object *onGreater( vframe_t *, Node * );

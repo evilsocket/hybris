@@ -339,7 +339,7 @@ matches_t hyb_pcre_matches( string pattern, char *subject ){
 	pcre 		*compiled;
 	matches_t    matches;
 
-	compiled = pcre_compile( pattern.c_str(), PCRE_CASELESS|PCRE_MULTILINE, &error, &eoffset, 0 );
+	compiled = __context.pcre_compile( pattern, PCRE_CASELESS|PCRE_MULTILINE, &error, &eoffset );
 	rc 		 = pcre_fullinfo( compiled, 0, PCRE_INFO_CAPTURECOUNT, &ccount );
 
 	offsets = new int[ 3 * (ccount + 1) ];

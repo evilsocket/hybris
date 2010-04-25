@@ -30,40 +30,65 @@
 #define H_UNDEFINED          NULL
 
 /*
+ * This structure holds the state of a memory frame.
+ * Only the exception state is cloned up to higher frame
+ * until someone catches it or the program ends.
+ */
+typedef struct _vframe_state {
+	/*
+	 * Set to true when a break statement is found or
+	 * when a return statement is found inside a loop.
+	 */
+	bool 	_break;
+	/*
+	 * Set to true when a next statement is found.
+	 */
+	bool 	_next;
+	/*
+	 * Set to true when a return statement is found.
+	 */
+	bool 	_return;
+	/*
+	 * Set to true when an exception is thrown.
+	 */
+	bool    _exception;
+	/*
+	 * This will hold the exception or return data.
+	 */
+	Object *value;
+
+	_vframe_state()
+		: _break(false),
+		  _next(false),
+		  _return(false),
+		  _exception(false),
+		  value(NULL)
+	{
+
+	}
+
+	__force_inline void assign( struct _vframe_state& s ){
+		_break     = s._break;
+		_next      = s._next;
+		_return    = s._return;
+		_exception = s._exception;
+		value      = s.value;
+	}
+}
+vframe_state_t;
+
+/*
  * This class represent a memory segment where constants
  * and variables are defined.
  */
 class VirtualMemory : public HashMap<Object> {
     public :
 		/*
-		 * Set to true when a break statement is found or
-		 * when a return statement is found inside a loop.
+		 * Virtual memory frame state.
 		 */
-		bool 	break_state;
-		/*
-		 * Set to true when a next statement is found.
-		 */
-		bool 	next_state;
-		/*
-		 * Set to true when a return statement is found.
-		 */
-		bool 	return_state;
-		/*
-		 * Set to true when an exception is thrown.
-		 */
-		bool    exception_state;
-		/*
-		 * If return_state == true, this will hold the value
-		 * to return.
-		 */
-		Object *return_value;
-		/*
-		 * If exception_state == true, this will hold the exception
-		 * data.
-		 */
-		Object *exception_value;
+		vframe_state_t state;
 
-        VirtualMemory();
+		VirtualMemory();
         ~VirtualMemory();
 
         __force_inline Object *get( char *identifier ){
