@@ -83,7 +83,7 @@ void yyerror( char *error );
  * if type == H_ET_WARNING the process will continue, otherwise
  * the process will be hard killed.
  */
-void  hyb_throw( H_ERROR_TYPE type, const char *format, ... );
+void  hyb_error( H_ERROR_TYPE type, const char *format, ... );
 /*
  * Print the call stack trace.
  */

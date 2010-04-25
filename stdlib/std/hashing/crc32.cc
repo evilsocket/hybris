@@ -94,7 +94,7 @@ static unsigned long crc_table[] = {
 
 HYBRIS_DEFINE_FUNCTION(hcrc32){
     if( ob_argc() != 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'crc32' requires 1 parameter (called with %d)", ob_argc() );
+        hyb_error( H_ET_SYNTAX, "function 'crc32' requires 1 parameter (called with %d)", ob_argc() );
     }
     ob_type_assert( ob_argv(0), otString );
 

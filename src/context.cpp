@@ -22,7 +22,7 @@ void Context::signal_handler( int signo ){
     if( signo == SIGSEGV ){
         extern Context __context;
         __context.args.stacktrace = 1;
-        hyb_throw( H_ET_GENERIC, "SIGSEGV Signal Catched" );
+        hyb_error( H_ET_GENERIC, "SIGSEGV Signal Catched" );
     }
 }
 
@@ -56,7 +56,8 @@ void Context::str_split( string& str, string delimiters, vector<string>& tokens 
 
 Context::Context(){
     memset( &args, 0x00, sizeof(h_args_t) );
-    fp = NULL;
+    fp 	   = NULL;
+    vframe = &vmem;
 }
 
 FILE *Context::openFile(){
@@ -71,7 +72,7 @@ FILE *Context::openFile(){
         this->chdir();
     }
     else{
-    	__hyb_file_stack.push_back("<standard input>");
+    	__hyb_file_stack.push_back("<stdin>");
 
         fp = stdin;
     }
@@ -189,7 +190,7 @@ void Context::loadNamespace( string path ){
     struct dirent *ent;
 
     if( (dir = opendir(path.c_str())) == NULL ) {
-        hyb_throw( H_ET_GENERIC, "could not open directory '%s' for reading", path.c_str() );
+        hyb_error( H_ET_GENERIC, "could not open directory '%s' for reading", path.c_str() );
     }
 
     while( (ent = readdir(dir)) != NULL ){
@@ -223,10 +224,10 @@ void Context::loadModule( string path, string name ){
     if( !hmodule ){
         char *error = dlerror();
         if( error == NULL ){
-            hyb_throw( H_ET_WARNING, "module '%s' could not be loaded", path.c_str() );
+            hyb_error( H_ET_WARNING, "module '%s' could not be loaded", path.c_str() );
         }
         else{
-            hyb_throw( H_ET_WARNING, "%s", error );
+            hyb_error( H_ET_WARNING, "%s", error );
         }
         return;
     }
@@ -240,7 +241,7 @@ void Context::loadModule( string path, string name ){
     named_function_t *functions = (named_function_t *)dlsym( hmodule, "hybris_module_functions" );
     if(!functions){
         dlclose(hmodule);
-        hyb_throw( H_ET_WARNING, "could not find module '%s' functions pointer", path.c_str() );
+        hyb_error( H_ET_WARNING, "could not find module '%s' functions pointer", path.c_str() );
         return;
     }
 
@@ -278,7 +279,7 @@ void Context::loadModule( char *module ){
             if( group == "*" ){
                 /* '*' not allowed as first namespace */
                 if( i == 0 ){
-                    hyb_throw( H_ET_SYNTAX, "Could not use '*' as main namespace" );
+                    hyb_error( H_ET_SYNTAX, "Could not use '*' as main namespace" );
                 }
                 return loadNamespace( path );
             }

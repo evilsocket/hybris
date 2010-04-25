@@ -19,7 +19,7 @@
 #include "common.h"
 #include "gc.h"
 
-extern void hyb_throw( H_ERROR_TYPE type, const char *format, ... );
+extern void hyb_error( H_ERROR_TYPE type, const char *format, ... );
 
 /*
  * The main garbage collector global structure.
@@ -115,7 +115,7 @@ struct _Object *gc_track( struct _Object *o, size_t size ){
          * macros, therefore, if its pointer is null, most of it there was a memory
          * allocation problem.
          */
-        hyb_throw( H_ET_GENERIC, "out of memory" );
+        hyb_error( H_ET_GENERIC, "out of memory" );
     }
 
     gc_lock();

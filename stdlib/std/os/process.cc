@@ -46,7 +46,7 @@ HYBRIS_DEFINE_FUNCTION(hexec){
         _return = ob_dcast( gc_new_integer( system( string_argv(0).c_str() ) ) );
     }
 	else{
-		hyb_throw( H_ET_SYNTAX, "function 'exec' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'exec' requires 1 parameter (called with %d)", ob_argc() );
 	}
     return _return;
 }
@@ -61,7 +61,7 @@ HYBRIS_DEFINE_FUNCTION(hgetpid){
 
 HYBRIS_DEFINE_FUNCTION(hwait){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'wait' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'wait' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otInteger );
 
@@ -76,7 +76,7 @@ HYBRIS_DEFINE_FUNCTION(hpopen){
         return  ob_dcast( PTR_TO_INT_OBJ( popen( string_argv(0).c_str(), string_argv(1).c_str() ) ) );
     }
 	else{
-		hyb_throw( H_ET_SYNTAX, "function 'popen' requires 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'popen' requires 2 parameters (called with %d)", ob_argc() );
 	}
 }
 

@@ -467,21 +467,21 @@ int hyb_usage( char *argvz ){
     hyb_banner();
     printf( "\nUsage: %s <options> <file>\n\n"
     		"Where <options> is one or more among followring values :\n"
-    		"\t-h (--help)  : Print this menu and exit.\n"
-    		"\t-g (--gc)    : Set the garbage collection memory threshold, expressend in bytes, \n"
-    		"\t               kilobytes (with K postfix) or megabytes (with M postfix).\n"
-    		"\t               i.e. -g 10K or -g 1024 or --gc=100M\n"
-            "\t-t (--time)  : Compute execution time and print it to stdout.\n"
-            "\t-s (--trace) : Enable stack trace report on errors .\n\n", argvz );
+    		"\t-h (--help)    : Print this menu and exit.\n"
+    		"\t-g (--gc)      : Set the garbage collection memory threshold, expressend in bytes, \n"
+    		"\t                 kilobytes (with K postfix) or megabytes (with M postfix).\n"
+    		"\t                 i.e. -g 10K or -g 1024 or --gc=100M\n"
+            "\t-t (--time)    : Compute execution time and print it to stdout.\n"
+            "\t-s (--trace)   : Enable stack trace report on errors .\n\n", argvz );
     return 0;
 }
 
 int main( int argc, char *argv[] ){
     static struct option options[] = {
-            { "gc",    1, 0, 'g' },
-            { "time",  0, 0, 't' },
-            { "trace", 0, 0, 's' },
-            { "help",  0, 0, 'h' },
+            { "gc",      1, 0, 'g' },
+            { "time",    0, 0, 't' },
+            { "trace",   0, 0, 's' },
+            { "help",    0, 0, 'h' },
             { 0, 0, 0, 0 }
     };
 
@@ -521,13 +521,13 @@ int main( int argc, char *argv[] ){
 				 * Check for valid integer values.
 				 */
 				if( gc_threshold == 0 ){
-					hyb_throw( H_ET_GENERIC, "Invalid memory size %s given.", optarg );
+					hyb_error( H_ET_GENERIC, "Invalid memory size %s given.", optarg );
 				}
 				/*
 				 * Check for a valid multiplier.
 				 */
 				else if( multiplier != 0x00 && strchr( "kKmM", multiplier ) == 0 ){
-					hyb_throw( H_ET_GENERIC, "Invalid multiplier %c given.", multiplier );
+					hyb_error( H_ET_GENERIC, "Invalid multiplier %c given.", multiplier );
 				}
 				/*
 				 * Perform multiplication if multiplier was specified (multiplier != 0x00)
@@ -547,7 +547,7 @@ int main( int argc, char *argv[] ){
 				 * Check for integer overflow.
 				 */
 				if( gc_threshold <= 0 ){
-					hyb_throw( H_ET_GENERIC, "Memory limit is too high." );
+					hyb_error( H_ET_GENERIC, "Memory limit is too high." );
 				}
 				/*
 				 * Done, let's pass it to the context structure.

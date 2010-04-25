@@ -23,14 +23,15 @@
 #include <stdio.h>
 #include <pcre.h>
 
-extern void hyb_throw( H_ERROR_TYPE type, const char *format, ... );
+extern void hyb_error( H_ERROR_TYPE type, const char *format, ... );
 
 /** helpers **/
-void string_replace( string &source, const string find, string replace ) {
-    size_t j;
-    for( ; (j = source.find( find )) != string::npos; ){
+size_t string_replace( string &source, const string find, string replace ) {
+    size_t j, count(0);
+    for( ; (j = source.find( find )) != string::npos; count++ ){
         source.replace( j, find.length(), replace );
     }
+    return count;
 }
 
 void string_parse( string& s ){
@@ -287,7 +288,7 @@ Object * string_regexp( Object *me, Object *r ){
 
 	compiled = __context.pcre_compile( pattern, opts, &error, &eoffset );
 	if( !compiled ){
-		hyb_throw( H_ET_GENERIC, "error during regex evaluation at offset %d (%s)", eoffset, error );
+		hyb_error( H_ET_GENERIC, "error during regex evaluation at offset %d (%s)", eoffset, error );
     }
 
 	rc = pcre_fullinfo( compiled, 0, PCRE_INFO_CAPTURECOUNT, &ccount );
@@ -363,7 +364,7 @@ Object *string_cl_at( Object *me, Object *i ){
     size_t idx = ob_ivalue(i);
     #ifdef BOUNDS_CHECK
     if( idx >= ob_string_ucast(me)->items ){
-        hyb_throw( H_ET_GENERIC, "index out of bounds" );
+        hyb_error( H_ET_GENERIC, "index out of bounds" );
     }
     #endif
     char chr = ob_string_ucast(me)->value[idx];
@@ -375,7 +376,7 @@ Object *string_cl_set( Object *me, Object *i, Object *v ){
     size_t idx = ob_ivalue(i);
     #ifdef BOUNDS_CHECK
     if( idx >= ob_string_ucast(me)->items ){
-        hyb_throw( H_ET_GENERIC, "index out of bounds" );
+        hyb_error( H_ET_GENERIC, "index out of bounds" );
     }
     #endif
 

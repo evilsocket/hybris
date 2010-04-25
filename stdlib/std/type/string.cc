@@ -38,7 +38,7 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 
 HYBRIS_DEFINE_FUNCTION(hstrlen){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'strlen' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'strlen' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 
@@ -47,7 +47,7 @@ HYBRIS_DEFINE_FUNCTION(hstrlen){
 
 HYBRIS_DEFINE_FUNCTION(hstrfind){
 	if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'strfind' requires 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'strfind' requires 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 	ob_type_assert( ob_argv(1), otString );
@@ -59,7 +59,7 @@ HYBRIS_DEFINE_FUNCTION(hstrfind){
 
 HYBRIS_DEFINE_FUNCTION(hsubstr){
 	if( ob_argc() < 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'substr' requires at least 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'substr' requires at least 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 
@@ -76,7 +76,7 @@ HYBRIS_DEFINE_FUNCTION(hsubstr){
 
 HYBRIS_DEFINE_FUNCTION(hstrreplace){
 	if( ob_argc() != 3 ){
-		hyb_throw( H_ET_SYNTAX, "function 'strreplace' requires 3 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'strreplace' requires 3 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 	ob_type_assert( ob_argv(1), otString );
@@ -96,7 +96,7 @@ HYBRIS_DEFINE_FUNCTION(hstrreplace){
 
 HYBRIS_DEFINE_FUNCTION(hstrsplit){
 	if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'strsplit' requires 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'strsplit' requires 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 	ob_types_assert( ob_argv(1), otString, otChar );
@@ -122,7 +122,7 @@ HYBRIS_DEFINE_FUNCTION(hstrsplit){
 
 HYBRIS_DEFINE_FUNCTION(htrim){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'trim' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'trim' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 

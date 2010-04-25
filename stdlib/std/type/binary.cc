@@ -29,7 +29,7 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 
 HYBRIS_DEFINE_FUNCTION(hbinary){
     if( ob_argc() < 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'binary' requires at least 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'binary' requires at least 1 parameter (called with %d)", ob_argc() );
 	}
 	vector<unsigned char> stream;
 	unsigned int          i;
@@ -53,7 +53,7 @@ void do_simple_packing( vector<byte>& stream, Object *o, size_t size ){
 	size_t i;
 
 	if( size > ob_get_size(o) ){
-		hyb_throw( H_ET_SYNTAX, "could not pack more bytes than the object owns (trying to pack type '%s' of %d bytes to %d bytes)", o->type->name, ob_get_size(o), size );
+		hyb_error( H_ET_SYNTAX, "could not pack more bytes than the object owns (trying to pack type '%s' of %d bytes to %d bytes)", o->type->name, ob_get_size(o), size );
 	}
 
 	buffer = ob_serialize( o, size );
@@ -65,7 +65,7 @@ void do_simple_packing( vector<byte>& stream, Object *o, size_t size ){
 
 HYBRIS_DEFINE_FUNCTION(hpack){
 	if( ob_argc() < 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'pack' requires at least 2 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'pack' requires at least 2 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(1), otInteger );
 
@@ -83,7 +83,7 @@ HYBRIS_DEFINE_FUNCTION(hpack){
 		break;
 		case otVector  :
 			if( (ob_argc() - 1) != ob_get_size(o) ){
-				hyb_throw( H_ET_SYNTAX, "not enough parameters to pack an array of %d elements (given %d)", ob_get_size(o), ob_argc() );
+				hyb_error( H_ET_SYNTAX, "not enough parameters to pack an array of %d elements (given %d)", ob_get_size(o), ob_argc() );
 			}
 			for( i = 1, j = 0; i < ob_argc(); ++i, ++j ){
 				ob_type_assert( ob_argv(i), otInteger );
@@ -92,7 +92,7 @@ HYBRIS_DEFINE_FUNCTION(hpack){
 		break;
 		case otStructure :
 			if( (ob_argc() - 1) != ob_get_size(o) ){
-				hyb_throw( H_ET_SYNTAX, "not enough parameters to pack a structure with %d attributes (given %d)", ob_get_size(o), ob_argc() );
+				hyb_error( H_ET_SYNTAX, "not enough parameters to pack a structure with %d attributes (given %d)", ob_get_size(o), ob_argc() );
 			}
 			for( i = 1, j = 0; i < ob_argc(); ++i, ++j ){
 				ob_type_assert( ob_argv(i), otInteger );
@@ -101,7 +101,7 @@ HYBRIS_DEFINE_FUNCTION(hpack){
 		break;
 
 		default:
-			hyb_throw( H_ET_SYNTAX, "unsupported %s type in pack function", o->type->name );
+			hyb_error( H_ET_SYNTAX, "unsupported %s type in pack function", o->type->name );
 	}
 
 	return ob_dcast( gc_new_binary(stream) );

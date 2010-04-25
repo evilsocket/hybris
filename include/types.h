@@ -716,9 +716,9 @@ CharObject;
 
 DECLARE_TYPE(String);
 
-void string_parse( string& s );
-void string_replace( string &source, const string find, string replace );
-void string_parse_pcre( string& raw, string& regex, int& opts );
+void   string_parse( string& s );
+size_t string_replace( string &source, const string find, string replace );
+void   string_parse_pcre( string& raw, string& regex, int& opts );
 
 typedef struct _StringObject {
     BASE_OBJECT_HEADER;

@@ -35,7 +35,11 @@ typedef vector<string> matches_t;
 
 #define IS_WHITESPACE(c) strchr( " \r\n\t", (c) )
 
-#define INC_LINE_NO() __hyb_line_stack.back() = ++yylineno
+#define INC_LINE_NO() if( __hyb_line_stack.size() ) __hyb_line_stack.back() = ++yylineno
+
+#define LEX_NEXT()	   yyinput()
+#define LEX_FETCH(c)   (c = LEX_NEXT())
+#define LEX_UNFETCH(c) unput(c)
 
 void             yyerror(char *);
 // handle one line comments
@@ -108,29 +112,28 @@ include          BEGIN(T_INCLUSION);
     else if( (yyin = fopen( (file + ".hy").c_str(), "r" )) != NULL ){
     	__hyb_file_stack.push_back((file + ".hy"));
     }
+    /*
+	 * Try to load from default include path.
+	 * In this case replace '.' with '/' so that :
+	 *
+	 * include std.io.network.Socket;
+	 *
+	 * would include :
+	 *
+	 * /usr/lib/hybris/include/std/io/network/Socket.hy
+	 */
+    else if( string_replace( file, ".", "/" ) && (yyin = fopen( (INC_PATH + file + ".hy").c_str(), "r" )) != NULL ){
+    	__hyb_file_stack.push_back((INC_PATH + file + ".hy"));
+    }
+    /*
+     * Nothing found :(
+     */
     else {
-    	/*
-		 * Try to load from default include path.
-		 * In this case replace '.' with '/' so that :
-		 *
-		 * include std.io.network.Socket;
-		 *
-		 * would include :
-		 *
-		 * /usr/lib/hybris/include/std/io/network/Socket.hy
-		 */
-    	string_replace( file, ".", "/" );
-
-    	if( (yyin = fopen( (INC_PATH + file + ".hy").c_str(), "r" )) != NULL ){
-    		__hyb_file_stack.push_back((INC_PATH + file + ".hy"));
-    	}
-		else{
-			hyb_throw( H_ET_GENERIC, "Could not open '%s' for inclusion", yytext );
-		}
+    	hyb_error( H_ET_GENERIC, "Could not open '%s' for inclusion", yytext );
     }
 
     __hyb_line_stack.push_back(yylineno);
-    yylineno = 0;
+    yylineno = 1;
     yypush_buffer_state( yy_create_buffer( yyin, YY_BUF_SIZE ) );
 
     BEGIN(INITIAL);
@@ -286,7 +289,7 @@ include          BEGIN(T_INCLUSION);
 "'"                                    { yylval.byte    = hyb_lex_char('\'');   return T_CHAR; }
 "\""                                   { hyb_lex_string( '"', yylval.string );  return T_STRING; }
 
-. { hyb_throw( H_ET_SYNTAX, "Unexpected token '%s'", yytext ); }
+. { hyb_error( H_ET_SYNTAX, "Unexpected token '%s'", yytext ); }
 
 %%
 
@@ -294,36 +297,38 @@ void hyb_lex_skip_comment(){
     char c, c1;
 
 loop:
-    while ((c = yyinput()) != '*' && c != 0){
+    while( LEX_FETCH(c) != '*' && c != 0 ){
         if( c == '\n' ){
         	INC_LINE_NO();
         }
     }
 
-    if ((c1 = yyinput()) != '/' && c != 0){
+    if( LEX_FETCH(c1) != '/' && c != 0){
         if( c1 == '\n' ){ INC_LINE_NO(); }
-        unput(c1);
+        LEX_UNFETCH(c1);
         goto loop;
     }
 }
 
 void hyb_lex_skip_line(){
     char c;
-    while( (c = yyinput()) != '\n' && c != EOF );
+
+    while( LEX_FETCH(c) != '\n' && c != EOF );
+
     INC_LINE_NO();
 }
 
 char hyb_lex_char( char delimiter ){
     char ch;
 
-	ch = yyinput();
+    LEX_FETCH(ch);
 	if( ch != '\\' ){
-		yyinput();
+		LEX_NEXT();
 		return ch;
 	}
 	else{
-		ch = yyinput();
-		yyinput();
+		LEX_FETCH(ch);
+		LEX_NEXT();
 		switch(ch){
 			/* newline */
 			case 'n'  : return '\n'; break;
@@ -355,7 +360,7 @@ void hyb_lex_string( char delimiter, char *buffer ){
 
 	for(;;){
 		/* break on non-escaped delimiter */
-		if( (c = yyinput()) == delimiter && prev != '\\' ){
+		if( LEX_FETCH(c) == delimiter && prev != '\\' ){
 			break;
 		}
 		else{

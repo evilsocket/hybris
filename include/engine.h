@@ -64,10 +64,6 @@ class Engine {
          * Handle method call.
          */
         Object *onMethodCall( vframe_t *, Node * );
-        /*
-         * Handle overloaded operator call.
-         */
-        Object *onOperatorCall( vframe_t *, Object *, const char *, int argc, ... );
 
     public  :
 
@@ -80,7 +76,7 @@ class Engine {
 		/*
 		 * Special case to handle threaded function calls.
 		 */
-		Object *onThreadedCall( string function_name, vmem_t *argv );
+		Object *onThreadedCall( string function_name, vframe_t *frame, vmem_t *argv );
         /*
          * Node handlers for each type of node (statement, expression, ...).
          *
@@ -129,10 +125,10 @@ class Engine {
         Object *onAssign( vframe_t *, Node * );
         Object *onUminus( vframe_t *, Node * );
         Object *onRegex( vframe_t *, Node * );
-        Object *onPlus( vframe_t *, Node * );
-        Object *onInplacePlus( vframe_t *, Node * );
-        Object *onMinus( vframe_t *, Node * );
-        Object *onInplaceMinus( vframe_t *, Node * );
+        Object *onAdd( vframe_t *, Node * );
+        Object *onInplaceAdd( vframe_t *, Node * );
+        Object *onSub( vframe_t *, Node * );
+        Object *onInplaceSub( vframe_t *, Node * );
         Object *onMul( vframe_t *, Node * );
         Object *onInplaceMul( vframe_t *, Node * );
         Object *onDiv( vframe_t *, Node * );

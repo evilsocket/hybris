@@ -28,7 +28,7 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 
 HYBRIS_DEFINE_FUNCTION(hpcre_replace){
 	if( ob_argc() != 3 ){
-		hyb_throw( H_ET_SYNTAX, "function 'pcre_replace' requires 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'pcre_replace' requires 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 	ob_type_assert( ob_argv(1), otString );
@@ -49,7 +49,7 @@ HYBRIS_DEFINE_FUNCTION(hpcre_replace){
 
 	compiled = pcre_compile( pattern.c_str(), opts, &error, &eoffset, 0 );
 	if( !compiled ){
-		hyb_throw( H_ET_GENERIC, "error during regex evaluation at offset %d (%s)", eoffset, error );
+		hyb_error( H_ET_GENERIC, "error during regex evaluation at offset %d (%s)", eoffset, error );
 	}
 
 	rc = pcre_fullinfo( compiled, 0, PCRE_INFO_CAPTURECOUNT, &ccount );

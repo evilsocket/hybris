@@ -297,7 +297,7 @@ void sha1_finish( sha1_context *ctx, unsigned char output[20] )
 
 HYBRIS_DEFINE_FUNCTION(hsha1){
     if( ob_argc() != 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'sha1' requires 1 parameter (called with %d)", ob_argc() );
+        hyb_error( H_ET_SYNTAX, "function 'sha1' requires 1 parameter (called with %d)", ob_argc() );
     }
     ob_type_assert( ob_argv(0), otString );
 

@@ -22,6 +22,81 @@
 #include "vmem.h"
 #include "context.h"
 
+/** helpers **/
+Object *class_call_overloaded_operator( Object *me, const char *op_name, int argc, ... ){
+	char     op_mangled_name[0xFF] = {0};
+	Node    *op = H_UNDEFINED;
+	vframe_t stack,
+			*frame;
+	Object  *result               = H_UNDEFINED;
+	unsigned int i, op_argc;
+	va_list ap;
+	extern Context __context;
+
+	sprintf( op_mangled_name, "__op@%s", op_name );
+
+	if( (op = ob_get_method( me, op_mangled_name, argc )) == H_UNDEFINED ){
+		hyb_error( H_ET_SYNTAX, "class %s does not overload '%s' operator", ob_typename(me), op_name );
+	}
+
+	op_argc = op->children() - 1;
+
+	/*
+	 * The last child of a method is its body itself, so we compare
+	 * call children with method->children() - 1 to ignore the body.
+	 */
+	if( argc != op_argc ){
+		__context.depool();
+		hyb_error( H_ET_SYNTAX, "operator '%s' requires %d parameters (called with %d)",
+								 op_name,
+								 op_argc,
+								 argc );
+	}
+
+	/*
+	 * Create the "me" reference to the class itself, used inside
+	 * methods for me->... calls.
+	 */
+	stack.insert( "me", me );
+	va_start( ap, argc );
+	for( i = 0; i < argc; ++i ){
+		/*
+		 * Value references count is set to zero now, builtins
+		 * do not care about reference counting, so this object will
+		 * be safely freed after the method call by the gc.
+		 */
+		stack.insert( (char *)op->child(i)->value.m_identifier.c_str(), va_arg( ap, Object * ) );
+	}
+	va_end(ap);
+
+	/*
+	 * Save current frame.
+	 */
+	frame = __context.vframe;
+
+	__context.trace( (char *)op_name, &stack );
+	__context.setCurrentFrame( &stack );
+
+	/* call the operator */
+	result = __context.engine->exec( &stack, op->callBody() );
+
+	__context.setCurrentFrame( frame );
+	__context.detrace();
+
+	/*
+	 * Check for unhandled exceptions and put them on the root
+	 * memory frame.
+	 */
+	if( stack.state._exception == true ){
+		stack.state._exception = false;
+		__context.vframe->state._exception = true;
+		__context.vframe->state.value 	   = stack.state.value;
+	}
+
+	/* return method evaluation value */
+	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
+}
+
 /** generic function pointers **/
 const char *class_typename( Object *o ){
 	return ob_class_ucast(o)->name.c_str();
@@ -176,6 +251,14 @@ void class_print( Object *me, int tabs ){
 	printf( "}\n" );
 }
 
+Object *class_range( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "..", 1, op );
+}
+
+Object *class_regexp( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "~=", 1, op );
+}
+
 /** arithmetic operators **/
 Object *class_assign( Object *me, Object *op ){
     class_free(me);
@@ -187,7 +270,150 @@ Object *class_assign( Object *me, Object *op ){
     return (me = clone);
 }
 
-/** structure operators **/
+Object *class_increment( Object *me ){
+	return class_call_overloaded_operator( me, "++", 0 );
+}
+
+Object *class_decrement( Object *me ){
+	return class_call_overloaded_operator( me, "--", 0 );
+}
+
+Object *class_add( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "+", 1, op );
+}
+
+Object *class_sub( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "-", 1, op );
+}
+
+Object *class_mul( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "*", 1, op );
+}
+
+Object *class_div( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "/", 1, op );
+}
+
+Object *class_mod( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "%", 1, op );
+}
+
+Object *class_inplace_add( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "+=", 1, op );
+}
+
+Object *class_inplace_sub( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "-=", 1, op );
+}
+
+Object *class_inplace_mul( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "*=", 1, op );
+}
+
+Object *class_inplace_div( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "/=", 1, op );
+}
+
+Object *class_inplace_mod( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "%=", 1, op );
+}
+
+/** bitwise operators **/
+Object *class_bw_and( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "&", 1, op );
+}
+
+Object *class_bw_or( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "|", 1, op );
+}
+
+Object *class_bw_not( Object *me ){
+	return class_call_overloaded_operator( me, "~", 0 );
+}
+
+Object *class_bw_xor( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "^", 1, op );
+}
+
+Object *class_bw_lshift( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "<<", 1, op );
+}
+
+Object *class_bw_rshift( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, ">>", 1, op );
+}
+
+Object *class_bw_inplace_and( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "&=", 1, op );
+}
+
+Object *class_bw_inplace_or( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "|=", 1, op );
+}
+
+Object *class_bw_inplace_xor( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "^=", 1, op );
+}
+
+Object *class_bw_inplace_lshift( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "<<=", 1, op );
+}
+
+Object *class_bw_inplace_rshift( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, ">>=", 1, op );
+}
+
+/** logic operators **/
+Object *class_l_not( Object *me ){
+	return class_call_overloaded_operator( me, "!", 0 );
+}
+
+Object *class_l_same( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "==", 1, op );
+}
+
+Object *class_l_diff( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "!=", 1, op );
+}
+
+Object *class_l_less( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "<", 1, op );
+}
+
+Object *class_l_greater( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, ">", 1, op );
+}
+
+Object *class_l_less_or_same( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "<=", 1, op );
+}
+
+Object *class_l_greater_or_same( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, ">=", 1, op );
+}
+
+Object *class_l_or( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "||", 1, op );
+}
+
+Object *class_l_and( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "&&", 1, op );
+}
+
+/* collection operators */
+Object *class_cl_push( Object *me, Object *op ){
+	return class_call_overloaded_operator( me, "[]=", 1, op );
+}
+
+Object *class_cl_at( Object *me, Object *index ){
+	return class_call_overloaded_operator( me, "[]", 1, index );
+}
+
+Object *class_cl_set( Object *me, Object *index, Object *op ){
+	return class_call_overloaded_operator( me, "[]<", 2, index, op );
+}
+
+/** class operators **/
 access_t class_attribute_access( Object *me, char *name ){
 	ClassObject *cme = ob_class_ucast(me);
 	class_attribute_t *attribute;
@@ -355,59 +581,59 @@ IMPLEMENT_TYPE(Class) {
 	0, // to_int
 	0, // from_int
 	0, // from_float
-	0, // range
-	0, // regexp
+	class_range, // range
+	class_regexp, // regexp
 
 	/** arithmetic operators **/
 	class_assign, // assign
     0, // factorial
-    0, // increment
-    0, // decrement
+    class_increment, // increment
+    class_decrement, // decrement
     0, // minus
-    0, // add
-    0, // sub
-    0, // mul
-    0, // div
-    0, // mod
-    0, // inplace_add
-    0, // inplace_sub
-    0, // inplace_mul
-    0, // inplace_div
-    0, // inplace_mod
+    class_add, // add
+    class_sub, // sub
+    class_mul, // mul
+    class_div, // div
+    class_mod, // mod
+    class_inplace_add, // inplace_add
+    class_inplace_sub, // inplace_sub
+    class_inplace_mul, // inplace_mul
+    class_inplace_div, // inplace_div
+    class_inplace_mod, // inplace_mod
 
 	/** bitwise operators **/
-	0, // bw_and
-    0, // bw_or
-    0, // bw_not
-    0, // bw_xor
-    0, // bw_lshift
-    0, // bw_rshift
-    0, // bw_inplace_and
-    0, // bw_inplace_or
-    0, // bw_inplace_xor
-    0, // bw_inplace_lshift
-    0, // bw_inplace_rshift
+	class_bw_and, // bw_and
+    class_bw_or, // bw_or
+    class_bw_not, // bw_not
+    class_bw_xor, // bw_xor
+    class_bw_lshift, // bw_lshift
+    class_bw_rshift, // bw_rshift
+    class_bw_inplace_and, // bw_inplace_and
+    class_bw_inplace_or, // bw_inplace_or
+    class_bw_inplace_xor, // bw_inplace_xor
+    class_bw_inplace_lshift, // bw_inplace_lshift
+    class_bw_inplace_rshift, // bw_inplace_rshift
 
 	/** logic operators **/
-    0, // l_not
-    0, // l_same
-    0, // l_diff
-    0, // l_less
-    0, // l_greater
-    0, // l_less_or_same
-    0, // l_greater_or_same
-    0, // l_or
-    0, // l_and
+    class_l_not, // l_not
+    class_l_same, // l_same
+    class_l_diff, // l_diff
+    class_l_less, // l_less
+    class_l_greater, // l_greater
+    class_l_less_or_same, // l_less_or_same
+    class_l_greater_or_same, // l_greater_or_same
+    class_l_or, // l_or
+    class_l_and, // l_and
 
 	/** collection operators **/
 	0, // cl_concat
 	0, // cl_inplace_concat
-	0, // cl_push
+	class_cl_push, // cl_push
 	0, // cl_push_reference
 	0, // cl_pop
 	0, // cl_remove
-	0, // cl_at
-	0, // cl_set
+	class_cl_at, // cl_at
+	class_cl_set, // cl_set
 	0, // cl_set_reference
 
 	/** structure operators **/

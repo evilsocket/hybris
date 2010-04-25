@@ -79,7 +79,7 @@ HYBRIS_DEFINE_FUNCTION(hdyn_functions){
 
 HYBRIS_DEFINE_FUNCTION(hcall){
 	if( ob_argc() < 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'call' requires at least 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'call' requires at least 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 
@@ -95,7 +95,7 @@ HYBRIS_DEFINE_FUNCTION(hcall){
 				case otString  : call->addChild( new ConstantNode( (char *)string_argv(i).c_str() ) ); break;
 
 				default :
-                    hyb_throw( H_ET_GENERIC, "type %s not supported for reflected call", ob_argv(i)->type->name );
+                    hyb_error( H_ET_GENERIC, "type %s not supported for reflected call", ob_argv(i)->type->name );
 			}
 		}
 	}

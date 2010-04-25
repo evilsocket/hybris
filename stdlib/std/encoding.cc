@@ -48,7 +48,7 @@ __force_inline bool is_base64(unsigned char c) {
 HYBRIS_DEFINE_FUNCTION(hurlencode){
     Object *_return;
     if( ob_argc() != 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'urlencode' requires 1 parameter (called with %d)", ob_argc() );
+        hyb_error( H_ET_SYNTAX, "function 'urlencode' requires 1 parameter (called with %d)", ob_argc() );
     }
     ob_type_assert( ob_argv(0), otString );
 
@@ -82,7 +82,7 @@ HYBRIS_DEFINE_FUNCTION(hurlencode){
 HYBRIS_DEFINE_FUNCTION(hurldecode){
     Object *_return;
     if( ob_argc() != 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'urldecode' requires 1 parameter (called with %d)", ob_argc() );
+        hyb_error( H_ET_SYNTAX, "function 'urldecode' requires 1 parameter (called with %d)", ob_argc() );
     }
     ob_type_assert( ob_argv(0), otString );
 
@@ -117,7 +117,7 @@ HYBRIS_DEFINE_FUNCTION(hurldecode){
 
 HYBRIS_DEFINE_FUNCTION(hbase64encode) {
     if( ob_argc() != 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'base64encode' requires 1 parameter (called with %d)", ob_argc() );
+        hyb_error( H_ET_SYNTAX, "function 'base64encode' requires 1 parameter (called with %d)", ob_argc() );
     }
     ob_type_assert( ob_argv(0), otString );
 
@@ -168,7 +168,7 @@ HYBRIS_DEFINE_FUNCTION(hbase64encode) {
 
 HYBRIS_DEFINE_FUNCTION(hbase64decode) {
     if( ob_argc() != 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'base64decode' requires 1 parameter (called with %d)", ob_argc() );
+        hyb_error( H_ET_SYNTAX, "function 'base64decode' requires 1 parameter (called with %d)", ob_argc() );
     }
     ob_type_assert( ob_argv(0), otString );
 

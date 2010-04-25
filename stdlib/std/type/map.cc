@@ -37,7 +37,7 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 
 HYBRIS_DEFINE_FUNCTION(hmap){
 	if( (ob_argc() % 2) != 0 ){
-		hyb_throw( H_ET_SYNTAX, "function 'map' requires an even number of parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'map' requires an even number of parameters (called with %d)", ob_argc() );
 	}
 	unsigned int i;
 	Object *map = ob_dcast( gc_new_map() );
@@ -49,7 +49,7 @@ HYBRIS_DEFINE_FUNCTION(hmap){
 
 HYBRIS_DEFINE_FUNCTION(hmapelements){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'mapelements' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'mapelements' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otMap );
 
@@ -58,7 +58,7 @@ HYBRIS_DEFINE_FUNCTION(hmapelements){
 
 HYBRIS_DEFINE_FUNCTION(hmappop){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'mappop' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'mappop' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otMap );
 
@@ -67,7 +67,7 @@ HYBRIS_DEFINE_FUNCTION(hmappop){
 
 HYBRIS_DEFINE_FUNCTION(hunmap){
 	if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'unmap' requires 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'unmap' requires 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otMap );
 
@@ -76,7 +76,7 @@ HYBRIS_DEFINE_FUNCTION(hunmap){
 
 HYBRIS_DEFINE_FUNCTION(hismapped){
 	if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'ismapped' requires 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'ismapped' requires 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otMap );
 
@@ -95,7 +95,7 @@ HYBRIS_DEFINE_FUNCTION(hismapped){
 
 HYBRIS_DEFINE_FUNCTION(hhaskey){
 	if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'haskey' requires 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'haskey' requires 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otMap );
 

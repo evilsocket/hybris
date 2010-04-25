@@ -73,10 +73,10 @@ typedef Object * (*function_t)( Context *, vmem_t * );
 
 /* macros to assert an object type */
 #define ob_type_assert(o,t)      if( !(o->type->code == t) ){ \
-                                     hyb_throw( H_ET_SYNTAX, "'%s' is not a valid variable type", o->type->name ); \
+                                     hyb_error( H_ET_SYNTAX, "'%s' is not a valid variable type", o->type->name ); \
                                   }
 #define ob_types_assert(o,t1,t2) if( !(o->type->code == t1) && !(o->type->code == t2) ){ \
-                                     hyb_throw( H_ET_SYNTAX, "'%s' is not a valid variable type", o->type->name ); \
+                                     hyb_error( H_ET_SYNTAX, "'%s' is not a valid variable type", o->type->name ); \
                                   }
 
 #define HYB_TIMER_START 1
@@ -181,6 +181,8 @@ class Context {
         vector<string> stack_trace;
         /* data segment */
         vmem_t         vmem;
+        /* active memory frame pointer */
+        vmem_t		  *vframe;
         /* code segment */
         vcode_t        vcode;
         /* type definitions segment (structs and classes) */
@@ -227,6 +229,15 @@ class Context {
                 stack_trace.pop_back();
             unlock();
         }
+        /*
+		 * Update active memory frame pointer.
+		 */
+        __force_inline void setCurrentFrame( vframe_t *frame ){
+        	lock();
+        		vframe = frame;
+        	unlock();
+        }
+
         /*
          * Compute execution time and print it.
          */

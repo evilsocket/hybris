@@ -48,7 +48,7 @@ static size_t http_append_callback( void *ptr, size_t size, size_t nmemb, void *
 
 HYBRIS_DEFINE_FUNCTION(hhttp_get){
 	if( ob_argc() < 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'http_get' requires at least 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'http_get' requires at least 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 	ob_type_assert( ob_argv(1), otString );
@@ -136,7 +136,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 
 HYBRIS_DEFINE_FUNCTION(hhttp_post){
 	if( ob_argc() < 3 ){
-		hyb_throw( H_ET_SYNTAX, "function 'http_post' requires at least 3 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'http_post' requires at least 3 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 	ob_type_assert( ob_argv(1), otString );
@@ -242,7 +242,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 
 HYBRIS_DEFINE_FUNCTION(hhttp){
     if( ob_argc() < 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'http' requires at least 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'http' requires at least 1 parameter (called with %d)", ob_argc() );
 	}
     ob_type_assert( ob_argv(0), otInteger );
 
@@ -251,10 +251,10 @@ HYBRIS_DEFINE_FUNCTION(hhttp){
            i;
 
     if( method == HTTP_GET && ob_argc() < 3 ){
-        hyb_throw( H_ET_SYNTAX, "function 'http' requires at least 2 parameters if method=GET (called with %d)", ob_argc() );
+        hyb_error( H_ET_SYNTAX, "function 'http' requires at least 2 parameters if method=GET (called with %d)", ob_argc() );
     }
     else if( method == HTTP_POST && ob_argc() < 4 ){
-        hyb_throw( H_ET_SYNTAX, "function 'http' requires at least 3 parameters if method=POST (called with %d)", ob_argc() );
+        hyb_error( H_ET_SYNTAX, "function 'http' requires at least 3 parameters if method=POST (called with %d)", ob_argc() );
     }
 
     for( i = 1; i < ob_argc(); ++i ){
@@ -268,6 +268,6 @@ HYBRIS_DEFINE_FUNCTION(hhttp){
         return hhttp_post( ctx, &hdata );
     }
     else{
-        hyb_throw( H_ET_SYNTAX, "function 'http', unknown method" );
+        hyb_error( H_ET_SYNTAX, "function 'http', unknown method" );
     }
 }

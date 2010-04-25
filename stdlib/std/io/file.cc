@@ -67,14 +67,14 @@ HYBRIS_DEFINE_FUNCTION(hfopen){
         _return = ob_dcast( PTR_TO_INT_OBJ( fopen( string_argv(0).c_str(), string_argv(1).c_str() ) ) );
     }
 	else{
-		hyb_throw( H_ET_SYNTAX, "function 'fopen' requires 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'fopen' requires 2 parameters (called with %d)", ob_argc() );
 	}
     return _return;
 }
 
 HYBRIS_DEFINE_FUNCTION(hfseek){
 	if( ob_argc() != 3 ){
-		hyb_throw( H_ET_SYNTAX, "function 'fseek' requires 3 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'fseek' requires 3 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otInteger );
 	ob_type_assert( ob_argv(1), otInteger );
@@ -89,7 +89,7 @@ HYBRIS_DEFINE_FUNCTION(hfseek){
 
 HYBRIS_DEFINE_FUNCTION(hftell){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'ftell' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'ftell' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otInteger );
 
@@ -102,7 +102,7 @@ HYBRIS_DEFINE_FUNCTION(hftell){
 
 HYBRIS_DEFINE_FUNCTION(hfsize){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'fsize' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'fsize' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otString );
 	int size = 0, pos;
@@ -123,7 +123,7 @@ HYBRIS_DEFINE_FUNCTION(hfsize){
 	else{
 		fp = fopen( string_argv(0).c_str(), "r" );
 		if( fp == NULL ){
-			hyb_throw( H_ET_GENERIC, "'%s' no such file or directory", string_argv(0).c_str() );
+			hyb_error( H_ET_GENERIC, "'%s' no such file or directory", string_argv(0).c_str() );
 		}
 		fseek( fp, 0, SEEK_END );
 		size = ftell( fp );
@@ -135,7 +135,7 @@ HYBRIS_DEFINE_FUNCTION(hfsize){
 
 HYBRIS_DEFINE_FUNCTION(hfread){
 	if( ob_argc() < 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'fread' requires 2 or 3 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'fread' requires 2 or 3 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otInteger );
 
@@ -158,7 +158,7 @@ HYBRIS_DEFINE_FUNCTION(hfread){
 
 HYBRIS_DEFINE_FUNCTION(hfwrite){
 	if( ob_argc() < 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'fwrite' requires 2 or 3 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'fwrite' requires 2 or 3 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otInteger );
 
@@ -181,7 +181,7 @@ HYBRIS_DEFINE_FUNCTION(hfwrite){
 
 HYBRIS_DEFINE_FUNCTION(hfgets){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'fgets' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'fgets' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otInteger );
 
@@ -212,13 +212,13 @@ HYBRIS_DEFINE_FUNCTION(hfclose){
 
 HYBRIS_DEFINE_FUNCTION(hfile){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'file' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'file' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 
 	FILE *fp = fopen( string_argv(0).c_str(), "rt" );
 	if( !fp ){
-		hyb_throw( H_ET_GENERIC, "could not open '%s' for reading", string_argv(0).c_str() );
+		hyb_error( H_ET_GENERIC, "could not open '%s' for reading", string_argv(0).c_str() );
 	}
 
 	string buffer;
@@ -245,7 +245,7 @@ void readdir_recurse( char *root, char *dir, VectorObject *vector ){
 	}
 
     if( (dirh = opendir(path)) == NULL ) {
-        hyb_throw( H_ET_GENERIC, "could not open directory '%s' for reading", path );
+        hyb_error( H_ET_GENERIC, "could not open directory '%s' for reading", path );
     }
 
     while( (ent = readdir(dirh)) != NULL ){
@@ -272,7 +272,7 @@ void readdir_recurse( char *root, char *dir, VectorObject *vector ){
 
 HYBRIS_DEFINE_FUNCTION(hreaddir){
     if( ob_argc() < 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'readdir' requires at least 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'readdir' requires at least 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 
@@ -280,7 +280,7 @@ HYBRIS_DEFINE_FUNCTION(hreaddir){
     struct dirent *ent;
 
     if( (dir = opendir( string_argv(0).c_str() )) == NULL ) {
-        hyb_throw( H_ET_GENERIC, "could not open directory '%s' for reading", string_argv(0).c_str() );
+        hyb_error( H_ET_GENERIC, "could not open directory '%s' for reading", string_argv(0).c_str() );
     }
 
     VectorObject *files 	= gc_new_vector();

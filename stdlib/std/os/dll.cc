@@ -88,13 +88,13 @@ static void ctype_convert( Object *o, dll_arg_t *pa ) {
         pa->value.p = (void *)binary_serialize(o);
 	}
 	else{
-        hyb_throw( H_ET_SYNTAX, "could not use '%s' type for dllcall function", o->type->name );
+        hyb_error( H_ET_SYNTAX, "could not use '%s' type for dllcall function", o->type->name );
 	}
 }
 
 HYBRIS_DEFINE_FUNCTION(hdllopen){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'dllopen' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'dllopen' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 
@@ -103,7 +103,7 @@ HYBRIS_DEFINE_FUNCTION(hdllopen){
 
 HYBRIS_DEFINE_FUNCTION(hdlllink){
     if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'dlllink' requires 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'dlllink' requires 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otInteger );
 	ob_type_assert( ob_argv(1), otString );
@@ -115,10 +115,10 @@ HYBRIS_DEFINE_FUNCTION(hdlllink){
 
 HYBRIS_DEFINE_FUNCTION(hdllcall){
     if( ob_argc() < 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'dllcall' requires at least 1 parameter (called with %d)", ob_argc() );
+        hyb_error( H_ET_SYNTAX, "function 'dllcall' requires at least 1 parameter (called with %d)", ob_argc() );
     }
     else if( ob_argc() > CALL_MAX_ARGS + 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'dllcall' supports at max %d parameters (called with %d)", CALL_MAX_ARGS, ob_argc() );
+        hyb_error( H_ET_SYNTAX, "function 'dllcall' supports at max %d parameters (called with %d)", CALL_MAX_ARGS, ob_argc() );
     }
 
     ob_type_assert( ob_argv(0), otExtern );
@@ -157,7 +157,7 @@ HYBRIS_DEFINE_FUNCTION(hdllcall){
 	}
 
     if( ffi_prep_cif( &cif, FFI_DEFAULT_ABI, argc, &ffi_type_ulong, args_t ) != FFI_OK ){
-        hyb_throw( H_ET_GENERIC, "ffi_prep_cif failed" );
+        hyb_error( H_ET_GENERIC, "ffi_prep_cif failed" );
     }
 
     ffi_call( &cif, FFI_FN(function), &ul_ret, args_v );
@@ -174,7 +174,7 @@ HYBRIS_DEFINE_FUNCTION(hdllcall){
 
 HYBRIS_DEFINE_FUNCTION(hdllclose){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'dllclose' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'dllclose' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otInteger );
 

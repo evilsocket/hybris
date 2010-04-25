@@ -100,7 +100,7 @@ extern "C" void hybris_module_init( Context * ctx ){
 
 HYBRIS_DEFINE_FUNCTION(hacos){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'acos' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'acos' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
@@ -114,7 +114,7 @@ HYBRIS_DEFINE_FUNCTION(hacos){
 
 HYBRIS_DEFINE_FUNCTION(hasin){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'asin' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'asin' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
@@ -128,7 +128,7 @@ HYBRIS_DEFINE_FUNCTION(hasin){
 
 HYBRIS_DEFINE_FUNCTION(hatan){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'atan' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'atan' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
@@ -142,7 +142,7 @@ HYBRIS_DEFINE_FUNCTION(hatan){
 
 HYBRIS_DEFINE_FUNCTION(hatan2){
     if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'atan2' requires 2 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'atan2' requires 2 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
     ob_types_assert( ob_argv(1), otInteger, otFloat );
@@ -166,7 +166,7 @@ HYBRIS_DEFINE_FUNCTION(hatan2){
 
 HYBRIS_DEFINE_FUNCTION(hceil){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'ceil' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'ceil' requires 1 parameter (called with %d)", ob_argc() );
 	}
 
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
@@ -181,7 +181,7 @@ HYBRIS_DEFINE_FUNCTION(hceil){
 
 HYBRIS_DEFINE_FUNCTION(hcos){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'cos' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'cos' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
@@ -195,7 +195,7 @@ HYBRIS_DEFINE_FUNCTION(hcos){
 
 HYBRIS_DEFINE_FUNCTION(hcosh){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'cosh' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'cosh' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
@@ -209,7 +209,7 @@ HYBRIS_DEFINE_FUNCTION(hcosh){
 
 HYBRIS_DEFINE_FUNCTION(hexp){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'exp' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'exp' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
@@ -223,7 +223,7 @@ HYBRIS_DEFINE_FUNCTION(hexp){
 
 HYBRIS_DEFINE_FUNCTION(hfabs){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'fabs' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'fabs' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
@@ -237,7 +237,7 @@ HYBRIS_DEFINE_FUNCTION(hfabs){
 
 HYBRIS_DEFINE_FUNCTION(hfloor){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'floor' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'floor' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
@@ -251,7 +251,7 @@ HYBRIS_DEFINE_FUNCTION(hfloor){
 
 HYBRIS_DEFINE_FUNCTION(hfmod){
     if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'fmod' requires 2 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'fmod' requires 2 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
     ob_types_assert( ob_argv(1), otInteger, otFloat );
@@ -275,7 +275,7 @@ HYBRIS_DEFINE_FUNCTION(hfmod){
 
 HYBRIS_DEFINE_FUNCTION(hlog){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'hlog' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'hlog' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
@@ -289,7 +289,7 @@ HYBRIS_DEFINE_FUNCTION(hlog){
 
 HYBRIS_DEFINE_FUNCTION(hlog10){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'log10' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'log10' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
@@ -303,7 +303,7 @@ HYBRIS_DEFINE_FUNCTION(hlog10){
 
 HYBRIS_DEFINE_FUNCTION(hpow){
     if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'pow' requires 2 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'pow' requires 2 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
     ob_types_assert( ob_argv(1), otInteger, otFloat );
@@ -327,7 +327,7 @@ HYBRIS_DEFINE_FUNCTION(hpow){
 
 HYBRIS_DEFINE_FUNCTION(hsin){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'sin' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'sin' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
@@ -341,7 +341,7 @@ HYBRIS_DEFINE_FUNCTION(hsin){
 
 HYBRIS_DEFINE_FUNCTION(hsinh){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'sinh' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'sinh' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
@@ -355,7 +355,7 @@ HYBRIS_DEFINE_FUNCTION(hsinh){
 
 HYBRIS_DEFINE_FUNCTION(hsqrt){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'sqrt' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'sqrt' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
@@ -369,7 +369,7 @@ HYBRIS_DEFINE_FUNCTION(hsqrt){
 
 HYBRIS_DEFINE_FUNCTION(htan){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'tan' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'tan' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
 
@@ -383,7 +383,7 @@ HYBRIS_DEFINE_FUNCTION(htan){
 
 HYBRIS_DEFINE_FUNCTION(htanh){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'tanh' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'tanh' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_types_assert( ob_argv(0), otInteger, otFloat );
 

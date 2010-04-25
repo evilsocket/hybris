@@ -62,7 +62,7 @@ void yyerror( char *error ){
 	}
 }
 
-void hyb_throw( H_ERROR_TYPE type, const char *format, ... ){
+void hyb_error( H_ERROR_TYPE type, const char *format, ... ){
     char message[0xFF] = {0},
          error[0xFF] = {0};
     va_list ap;
@@ -91,18 +91,19 @@ void hyb_throw( H_ERROR_TYPE type, const char *format, ... ){
         break;
     }
 
-    // print error message
-    yyerror(error);
 
-    if( fault ){
-    	extern Context __context;
-        // print function stack trace
-        hyb_print_stacktrace();
-        // release the context
-        __context.release();
-        // exit
-        exit(-1);
-    }
+	// print error message
+	yyerror(error);
+
+	if( fault ){
+		extern Context __context;
+		// print function stack trace
+		hyb_print_stacktrace();
+		// release the context
+		__context.release();
+		// exit
+		exit(-1);
+	}
 }
 
 int hyb_file_exists( char *filename ){

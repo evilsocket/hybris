@@ -24,7 +24,7 @@
 IntegerObject __default_return_value(0);
 IntegerObject __default_error_value(-1);
 
-extern void hyb_throw( H_ERROR_TYPE type, const char *format, ... );
+extern void hyb_error( H_ERROR_TYPE type, const char *format, ... );
 
 bool ob_is_type_in( Object *o, ... ){
     va_list        ap;
@@ -60,7 +60,7 @@ Object* ob_clone( Object *o ){
         return o->type->clone(o);
     }
     else{
-        hyb_throw( H_ET_SYNTAX, "couldn't copy the object type '%s'", o->type->name );
+        hyb_error( H_ET_SYNTAX, "couldn't copy the object type '%s'", o->type->name );
     }
 }
 
@@ -98,35 +98,35 @@ byte * ob_serialize( Object *o, size_t size ){
 	if( o->type->serialize != HYB_UNIMPLEMENTED_FUNCTION ){
 		return o->type->serialize(o,size);
 	}
-	hyb_throw( H_ET_SYNTAX, "couldn't serialize '%s'", o->type->name );
+	hyb_error( H_ET_SYNTAX, "couldn't serialize '%s'", o->type->name );
 }
 
 Object *ob_deserialize( Object *o, byte *buffer, size_t size ){
 	if( o->type->deserialize != HYB_UNIMPLEMENTED_FUNCTION ){
 		return o->type->deserialize(o,buffer,size);
 	}
-	hyb_throw( H_ET_SYNTAX, "couldn't deserialize '%s'", o->type->name );
+	hyb_error( H_ET_SYNTAX, "couldn't deserialize '%s'", o->type->name );
 }
 
 Object *ob_to_fd( Object *o, int fd, size_t size ){
 	if( o->type->to_fd != HYB_UNIMPLEMENTED_FUNCTION ){
 		return o->type->to_fd(o,fd,size);
 	}
-	hyb_throw( H_ET_SYNTAX, "couldn't write object '%s' to file descriptor", o->type->name );
+	hyb_error( H_ET_SYNTAX, "couldn't write object '%s' to file descriptor", o->type->name );
 }
 
 Object *ob_from_fd( Object *o, int fd, size_t size ){
 	if( o->type->from_fd != HYB_UNIMPLEMENTED_FUNCTION ){
 		return o->type->from_fd(o,fd,size);
 	}
-	hyb_throw( H_ET_SYNTAX, "couldn't read object '%s' from file descriptor", o->type->name );
+	hyb_error( H_ET_SYNTAX, "couldn't read object '%s' from file descriptor", o->type->name );
 }
 
 int ob_cmp( Object *o, Object * cmp ){
     if( o->type->cmp != HYB_UNIMPLEMENTED_FUNCTION ){
         return o->type->cmp(o,cmp);
     }
-    hyb_throw( H_ET_SYNTAX, "couldn't compare '%s' object with '%s' object", o->type->name, cmp->type->name );
+    hyb_error( H_ET_SYNTAX, "couldn't compare '%s' object with '%s' object", o->type->name, cmp->type->name );
 }
 
 long ob_ivalue( Object * o ){
@@ -140,7 +140,7 @@ long ob_ivalue( Object * o ){
         return (long)o->type->lvalue(o);
     }
     else{
-        hyb_throw( H_ET_SYNTAX, "couldn't get the integer value of type '%s'", o->type->name );
+        hyb_error( H_ET_SYNTAX, "couldn't get the integer value of type '%s'", o->type->name );
     }
     return 0;
 }
@@ -159,7 +159,7 @@ double ob_fvalue( Object *o ){
         return (double)o->type->lvalue(o);
     }
     else{
-        hyb_throw( H_ET_SYNTAX, "couldn't get the float value of type '%s'", o->type->name );
+        hyb_error( H_ET_SYNTAX, "couldn't get the float value of type '%s'", o->type->name );
     }
     return 0.0;
 }
@@ -169,7 +169,7 @@ bool ob_lvalue( Object *o ){
         return o->type->lvalue(o);
     }
     else{
-        hyb_throw( H_ET_SYNTAX, "couldn't get the logical value of the object type '%s'", o->type->name );
+        hyb_error( H_ET_SYNTAX, "couldn't get the logical value of the object type '%s'", o->type->name );
     }
 }
 
@@ -178,7 +178,7 @@ string ob_svalue( Object *o ){
         return o->type->svalue(o);
     }
     else{
-        hyb_throw( H_ET_SYNTAX, "couldn't get the string rapresentation of the object type '%s'", o->type->name );
+        hyb_error( H_ET_SYNTAX, "couldn't get the string rapresentation of the object type '%s'", o->type->name );
     }
 }
 
@@ -187,7 +187,7 @@ void ob_print( Object *o, int tabs /* = 0 */){
         return o->type->print(o,tabs);
     }
     else{
-        hyb_throw( H_ET_SYNTAX, "couldn't print the object type '%s'", o->type->name );
+        hyb_error( H_ET_SYNTAX, "couldn't print the object type '%s'", o->type->name );
     }
 }
 
@@ -196,7 +196,7 @@ void ob_input( Object *o ){
         return o->type->scanf(o);
     }
     else{
-        hyb_throw( H_ET_SYNTAX, "couldn't read the object type '%s' from stdin", o->type->name );
+        hyb_error( H_ET_SYNTAX, "couldn't read the object type '%s' from stdin", o->type->name );
     }
 }
 
@@ -205,7 +205,7 @@ Object *ob_to_string( Object *o ){
 		return o->type->to_string(o);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "couldn't convert object type '%s' to string", o->type->name );
+		hyb_error( H_ET_SYNTAX, "couldn't convert object type '%s' to string", o->type->name );
 	}
 }
 
@@ -214,7 +214,7 @@ Object *ob_to_int( Object *o ){
 		return o->type->to_int(o);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "couldn't convert object type '%s' to int", o->type->name );
+		hyb_error( H_ET_SYNTAX, "couldn't convert object type '%s' to int", o->type->name );
 	}
 }
 
@@ -223,7 +223,7 @@ Object *ob_from_int( Object *o ){
 		return o->type->from_int(o);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "couldn't convert object type '%s' from int", o->type->name );
+		hyb_error( H_ET_SYNTAX, "couldn't convert object type '%s' from int", o->type->name );
 	}
 }
 
@@ -232,7 +232,7 @@ Object *ob_from_float( Object *o ){
 		return o->type->from_float(o);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "couldn't convert object type '%s' from float", o->type->name );
+		hyb_error( H_ET_SYNTAX, "couldn't convert object type '%s' from float", o->type->name );
 	}
 }
 
@@ -247,20 +247,20 @@ Object *ob_range( Object *a, Object *b ){
 	 * ...
 	 */
 	if( ob_is_type_in( a, &Char_Type, &Integer_Type, NULL ) == false ){
-        hyb_throw( H_ET_SYNTAX, "invalid type '%s' for left operand of '..'", a->type->name );
+        hyb_error( H_ET_SYNTAX, "invalid type '%s' for left operand of '..'", a->type->name );
     }
     else if( ob_is_type_in( b, &Char_Type, &Integer_Type, NULL ) == false ){
-        hyb_throw( H_ET_SYNTAX, "invalid type %s for right operand '..'", a->type->name );
+        hyb_error( H_ET_SYNTAX, "invalid type %s for right operand '..'", a->type->name );
     }
     else if( ob_same_type(a,b) == false ){
-		hyb_throw( H_ET_SYNTAX, "types must be the same for '..' operator" );
+		hyb_error( H_ET_SYNTAX, "types must be the same for '..' operator" );
 	}
 
 	if( a->type->range != HYB_UNIMPLEMENTED_FUNCTION ){
 		return a->type->range(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '..' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '..' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -269,7 +269,7 @@ Object *ob_apply_regexp( Object *a, Object *b ){
 		return a->type->regexp(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '~=' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '~=' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -282,7 +282,7 @@ Object *ob_assign( Object *a, Object *b ){
 		return a->type->assign(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '=' for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '=' for object type '%s'", a->type->name );
 	}
 }
 
@@ -291,7 +291,7 @@ Object *ob_factorial( Object *o ){
 		return o->type->factorial(o);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '!' operator for object type '%s'", o->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '!' operator for object type '%s'", o->type->name );
 	}
 }
 
@@ -300,7 +300,7 @@ Object *ob_increment( Object *o ){
 		return o->type->increment(o);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '++' operator for object type '%s'", o->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '++' operator for object type '%s'", o->type->name );
 	}
 }
 
@@ -309,7 +309,7 @@ Object *ob_decrement( Object *o ){
 		return o->type->decrement(o);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '--' operator for object type '%s'", o->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '--' operator for object type '%s'", o->type->name );
 	}
 }
 
@@ -318,7 +318,7 @@ Object *ob_uminus( Object *o ){
 		return o->type->minus(o);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '-' operator for object type '%s'", o->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '-' operator for object type '%s'", o->type->name );
 	}
 }
 
@@ -327,7 +327,7 @@ Object *ob_add( Object *a, Object *b ){
 		return a->type->add(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '+' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '+' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -336,7 +336,7 @@ Object *ob_sub( Object *a, Object *b ){
 		return a->type->sub(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '-' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '-' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -345,7 +345,7 @@ Object *ob_mul( Object *a, Object *b ){
 		return a->type->mul(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '*' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '*' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -354,7 +354,7 @@ Object *ob_div( Object *a, Object *b ){
 		return a->type->div(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '/' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '/' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -363,7 +363,7 @@ Object *ob_mod( Object *a, Object *b ){
 		return a->type->mod(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '%' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '%' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -372,7 +372,7 @@ Object *ob_inplace_add( Object *a, Object *b ){
 		return a->type->inplace_add(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '+=' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '+=' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -381,7 +381,7 @@ Object *ob_inplace_sub( Object *a, Object *b ){
 		return a->type->inplace_sub(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '-=' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '-=' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -390,7 +390,7 @@ Object *ob_inplace_mul( Object *a, Object *b ){
 		return a->type->inplace_mul(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '*=' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '*=' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -399,7 +399,7 @@ Object *ob_inplace_div( Object *a, Object *b ){
 		return a->type->inplace_div(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '/=' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '/=' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -408,7 +408,7 @@ Object *ob_inplace_mod( Object *a, Object *b ){
 		return a->type->inplace_mod(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '%=' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '%=' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -417,7 +417,7 @@ Object *ob_bw_and( Object *a, Object *b ){
 		return a->type->bw_and(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '&' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '&' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -426,7 +426,7 @@ Object *ob_bw_or( Object *a, Object *b ){
 		return a->type->bw_or(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '|' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '|' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -435,7 +435,7 @@ Object *ob_bw_not( Object *o ){
 		return o->type->bw_not(o);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '~' operator for object type '%s'", o->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '~' operator for object type '%s'", o->type->name );
 	}
 }
 
@@ -444,7 +444,7 @@ Object *ob_bw_xor( Object *a, Object *b ){
 		return a->type->bw_xor(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '^' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '^' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -453,7 +453,7 @@ Object *ob_bw_lshift( Object *a, Object *b ){
 		return a->type->bw_lshift(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '<<' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '<<' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -462,7 +462,7 @@ Object *ob_bw_rshift( Object *a, Object *b ){
 		return a->type->bw_rshift(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '>>' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '>>' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -471,7 +471,7 @@ Object *ob_bw_inplace_and( Object *a, Object *b ){
 		return a->type->bw_inplace_and(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '&=' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '&=' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -480,7 +480,7 @@ Object *ob_bw_inplace_or( Object *a, Object *b ){
 		return a->type->bw_inplace_or(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '|=' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '|=' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -489,7 +489,7 @@ Object *ob_bw_inplace_xor( Object *a, Object *b ){
 		return a->type->bw_inplace_xor(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '^=' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '^=' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -498,7 +498,7 @@ Object *ob_bw_inplace_lshift( Object *a, Object *b ){
 		return a->type->bw_inplace_lshift(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '<<=' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '<<=' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -507,7 +507,7 @@ Object *ob_bw_inplace_rshift( Object *a, Object *b ){
 		return a->type->bw_inplace_rshift(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '>>=' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '>>=' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -516,7 +516,7 @@ Object *ob_l_not( Object *o ){
 		return o->type->l_not(o);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '!' operator for object type '%s'", o->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '!' operator for object type '%s'", o->type->name );
 	}
 }
 
@@ -525,7 +525,7 @@ Object *ob_l_same( Object *a, Object *b ){
 		return a->type->l_same(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '==' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '==' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -534,7 +534,7 @@ Object *ob_l_diff( Object *a, Object *b ){
 		return a->type->l_diff(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '!=' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '!=' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -543,7 +543,7 @@ Object *ob_l_less( Object *a, Object *b ){
 		return a->type->l_less(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '<' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '<' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -552,7 +552,7 @@ Object *ob_l_greater( Object *a, Object *b ){
 		return a->type->l_greater(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '>' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '>' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -561,7 +561,7 @@ Object *ob_l_less_or_same( Object *a, Object *b ){
 		return a->type->l_less_or_same(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '<=' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '<=' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -570,7 +570,7 @@ Object *ob_l_greater_or_same( Object *a, Object *b ){
 		return a->type->l_greater_or_same(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '>=' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '>=' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -579,7 +579,7 @@ Object *ob_l_or( Object *a, Object *b ){
 		return a->type->l_or(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '||' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '||' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -588,7 +588,7 @@ Object *ob_l_and( Object *a, Object *b ){
 		return a->type->l_and(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '&&' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '&&' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -597,7 +597,7 @@ Object *ob_cl_concat( Object *a, Object *b ){
 		return a->type->cl_concat(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '.' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '.' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -606,7 +606,7 @@ Object *ob_cl_inplace_concat( Object *a, Object *b ){
 		return a->type->cl_inplace_concat(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '.=' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '.=' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -615,7 +615,7 @@ Object *ob_cl_push( Object *a, Object *b ){
 		return a->type->cl_push(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -625,7 +625,7 @@ Object *ob_cl_push_reference( Object *a, Object *b ){
 		return a->type->cl_push_reference(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -636,7 +636,7 @@ Object *ob_cl_pop( Object *o ){
 		return item;
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", o->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", o->type->name );
 	}
 }
 
@@ -647,7 +647,7 @@ Object *ob_cl_remove( Object *a, Object *b ){
 		return item;
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -656,7 +656,7 @@ Object *ob_cl_at( Object *a, Object *b ){
 		return a->type->cl_at(a,b);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -665,7 +665,7 @@ Object *ob_cl_set( Object *a, Object *b, Object *c ){
 		return a->type->cl_set(a,b,c);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '[] =' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '[] =' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -675,7 +675,7 @@ Object *ob_cl_set_reference( Object *a, Object *b, Object *c ){
 		return a->type->cl_set_reference(a,b,c);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "invalid '[] =' operator for object type '%s'", a->type->name );
+		hyb_error( H_ET_SYNTAX, "invalid '[] =' operator for object type '%s'", a->type->name );
 	}
 }
 
@@ -699,7 +699,7 @@ void ob_add_attribute( Object *s, char *a ){
 		return s->type->add_attribute(s,a);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", s->type->name );
+		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", s->type->name );
 	}
 }
 
@@ -708,7 +708,7 @@ Object *ob_get_attribute( Object *s, char *a ){
 		return s->type->get_attribute(s,a);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", s->type->name );
+		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", s->type->name );
 	}
 }
 
@@ -717,7 +717,7 @@ void ob_set_attribute( Object *s, char *a, Object *v ){
 		return s->type->set_attribute(s,a,v);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", s->type->name );
+		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", s->type->name );
 	}
 }
 
@@ -727,7 +727,7 @@ void ob_set_attribute_reference( Object *s, char *a, Object *v ){
 		return s->type->set_attribute_reference(s,a,v);
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", s->type->name );
+		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", s->type->name );
 	}
 }
 
@@ -736,7 +736,7 @@ void ob_define_method( Object *c, char *name, Node *code ){
 		c->type->define_method( c, name, code );
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a class", c->type->name );
+		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a class", c->type->name );
 	}
 }
 
@@ -745,6 +745,6 @@ Node *ob_get_method( Object *c, char *name, int argc /*= -1*/ ){
 		return c->type->get_method( c, name, argc );
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "object type '%s' does not name a class", c->type->name );
+		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a class", c->type->name );
 	}
 }

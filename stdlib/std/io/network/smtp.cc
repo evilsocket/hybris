@@ -35,7 +35,7 @@
                                     buffer.find("250") == string::npos && \
                                     buffer.find("334") == string::npos && \
                                     buffer.find("354") == string::npos ){ \
-                            hyb_throw( H_ET_WARNING, buffer.c_str() ); \
+                            hyb_error( H_ET_WARNING, buffer.c_str() ); \
                            }
 
 HYBRIS_DEFINE_FUNCTION(hsmtp_send);
@@ -139,7 +139,7 @@ string base64( unsigned char *data, unsigned int size ){
 
 HYBRIS_DEFINE_FUNCTION(hsmtp_send){
 	if( ob_argc() < 2 ) {
-		hyb_throw( H_ET_SYNTAX, "function 'smtp_send' requires at least 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'smtp_send' requires at least 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 	ob_type_assert( ob_argv(1), otMap );
@@ -217,7 +217,7 @@ HYBRIS_DEFINE_FUNCTION(hsmtp_send){
             buffer.find("334") == string::npos &&
             buffer.find("354") == string::npos ){
 
-            hyb_throw( H_ET_WARNING, buffer.c_str() );
+            hyb_error( H_ET_WARNING, buffer.c_str() );
         }
         else if( buffer.find( "250 " ) != string::npos ){
             break;

@@ -47,7 +47,7 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 
 HYBRIS_DEFINE_FUNCTION(hsettimeout){
 	if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'settimeout' requires 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'settimeout' requires 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otInteger );
 	ob_type_assert( ob_argv(1), otInteger );
@@ -93,7 +93,7 @@ HYBRIS_DEFINE_FUNCTION(hconnect){
 		_return = ob_dcast( gc_new_integer(sd) );
     }
 	else{
-		hyb_throw( H_ET_SYNTAX, "function 'connect' requires at least 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'connect' requires at least 2 parameters (called with %d)", ob_argc() );
 	}
     return _return;
 }
@@ -134,7 +134,7 @@ HYBRIS_DEFINE_FUNCTION(hserver){
 		_return = ob_dcast( gc_new_integer(sd) );
     }
 	else{
-		hyb_throw( H_ET_SYNTAX, "function 'server' requires at least 1 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'server' requires at least 1 parameters (called with %d)", ob_argc() );
 	}
     return _return;
 }
@@ -154,7 +154,7 @@ HYBRIS_DEFINE_FUNCTION(haccept){
 		_return = ob_dcast( gc_new_integer(csd) );
 	}
 	else{
-		hyb_throw( H_ET_SYNTAX, "function 'accept' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'accept' requires 1 parameter (called with %d)", ob_argc() );
 	}
 
     return _return;
@@ -162,7 +162,7 @@ HYBRIS_DEFINE_FUNCTION(haccept){
 
 HYBRIS_DEFINE_FUNCTION(hrecv){
 	if( ob_argc() < 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'recv' requires 2 or 3 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'recv' requires 2 or 3 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otInteger );
 
@@ -180,7 +180,7 @@ HYBRIS_DEFINE_FUNCTION(hrecv){
 
 HYBRIS_DEFINE_FUNCTION(hsend){
 	if( ob_argc() < 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'send' requires 2 or 3 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'send' requires 2 or 3 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otInteger );
 

@@ -47,7 +47,7 @@ HYBRIS_DEFINE_FUNCTION(harray){
 
 HYBRIS_DEFINE_FUNCTION(helements){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'elements' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'elements' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otVector );
 
@@ -56,7 +56,7 @@ HYBRIS_DEFINE_FUNCTION(helements){
 
 HYBRIS_DEFINE_FUNCTION(hpop){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'pop' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'pop' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otVector );
 
@@ -65,7 +65,7 @@ HYBRIS_DEFINE_FUNCTION(hpop){
 
 HYBRIS_DEFINE_FUNCTION(hremove){
 	if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'remove' requires 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'remove' requires 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otVector );
 
@@ -74,7 +74,7 @@ HYBRIS_DEFINE_FUNCTION(hremove){
 
 HYBRIS_DEFINE_FUNCTION(hcontains){
 	if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'contains' requires 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'contains' requires 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otVector );
 
@@ -93,7 +93,7 @@ HYBRIS_DEFINE_FUNCTION(hcontains){
 
 HYBRIS_DEFINE_FUNCTION(hjoin){
 	if( ob_argc() != 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'join' requires 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'join' requires 2 parameters (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(1), otVector );
 

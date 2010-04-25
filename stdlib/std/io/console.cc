@@ -118,10 +118,10 @@ HYBRIS_DEFINE_FUNCTION(hprintln){
 
 HYBRIS_DEFINE_FUNCTION(hprintf){
 	if( ob_argc() < 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'printf' requires at least 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'printf' requires at least 1 parameter (called with %d)", ob_argc() );
 	}
 	else if( ob_argc() > PRINTF_MAX_ARGS ){
-		hyb_throw( H_ET_SYNTAX, "function 'printf' supports at max %d parameters (called with %d)", PRINTF_MAX_ARGS, ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'printf' supports at max %d parameters (called with %d)", PRINTF_MAX_ARGS, ob_argc() );
 	}
 
 	ob_type_assert( ob_argv(0), otString );
@@ -161,7 +161,7 @@ HYBRIS_DEFINE_FUNCTION(hprintf){
 	}
 
 	if( ffi_prep_cif( &cif, FFI_DEFAULT_ABI, argc, &ffi_type_ulong, args_t ) != FFI_OK ){
-		hyb_throw( H_ET_GENERIC, "ffi_prep_cif failed" );
+		hyb_error( H_ET_GENERIC, "ffi_prep_cif failed" );
 	}
 
 	ffi_call( &cif, FFI_FN(function), &ul_ret, args_v );
@@ -188,7 +188,7 @@ HYBRIS_DEFINE_FUNCTION(hinput){
         _return = ob_argv(0);
     }
 	else{
-		hyb_throw( H_ET_SYNTAX, "function 'input' requires 1 or 2 parameters (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'input' requires 1 or 2 parameters (called with %d)", ob_argc() );
 	}
 
     return _return;

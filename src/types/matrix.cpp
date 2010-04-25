@@ -175,7 +175,7 @@ Object *matrix_add( Object *me, Object *o ){
     if( ob_is_matrix(o) ){
         MatrixObject *mo = ob_matrix_ucast(o);
         if( mme->rows != mo->rows || mme->columns != mo->columns ){
-            hyb_throw( H_ET_SYNTAX, "matrices have to be the same size" );
+            hyb_error( H_ET_SYNTAX, "matrices have to be the same size" );
         }
         for( x = 0; x < mme->rows; ++x ){
             for( y = 0; y < mme->columns; ++y ){
@@ -201,7 +201,7 @@ Object *matrix_sub( Object *me, Object *o ){
     if( ob_is_matrix(o) ){
         MatrixObject *mo = ob_matrix_ucast(o);
         if( mme->rows != mo->rows || mme->columns != mo->columns ){
-            hyb_throw( H_ET_SYNTAX, "matrices have to be the same size" );
+            hyb_error( H_ET_SYNTAX, "matrices have to be the same size" );
         }
 
         mme = ob_matrix_ucast( ob_clone(me) );
@@ -231,7 +231,7 @@ Object *matrix_mul( Object *me, Object *o ){
     if( ob_is_matrix(o) ){
         MatrixObject *mo = ob_matrix_ucast(o);
         if( mme->columns != mo->rows ){
-            hyb_throw( H_ET_SYNTAX, "first matrix columns have to be the same size of second matrix rows" );
+            hyb_error( H_ET_SYNTAX, "first matrix columns have to be the same size of second matrix rows" );
         }
 
         nm = ob_matrix_ucast( gc_track( ob_dcast(new MatrixObject( mme->columns, mo->rows )), sizeof(MatrixObject) ) );
@@ -262,7 +262,7 @@ Object *matrix_div( Object *me, Object *o ){
     if( ob_is_matrix(o) ){
         MatrixObject *mo = ob_matrix_ucast(o);
         if( mme->rows != mo->rows || mme->columns != mo->columns ){
-            hyb_throw( H_ET_SYNTAX, "matrices have to be the same size" );
+            hyb_error( H_ET_SYNTAX, "matrices have to be the same size" );
         }
         for( x = 0; x < mme->rows; ++x ){
             for( y = 0; y < mme->columns; ++y ){
@@ -288,7 +288,7 @@ Object *matrix_inplace_add( Object *me, Object *o ){
     if( ob_is_matrix(o) ){
         MatrixObject *mo = ob_matrix_ucast(o);
         if( mme->rows != mo->rows || mme->columns != mo->columns ){
-            hyb_throw( H_ET_SYNTAX, "matrices have to be the same size" );
+            hyb_error( H_ET_SYNTAX, "matrices have to be the same size" );
         }
         for( x = 0; x < mme->rows; ++x ){
             for( y = 0; y < mme->columns; ++y ){
@@ -314,7 +314,7 @@ Object *matrix_inplace_sub( Object *me, Object *o ){
     if( ob_is_matrix(o) ){
         MatrixObject *mo = ob_matrix_ucast(o);
         if( mme->rows != mo->rows || mme->columns != mo->columns ){
-            hyb_throw( H_ET_SYNTAX, "matrices have to be the same size" );
+            hyb_error( H_ET_SYNTAX, "matrices have to be the same size" );
         }
         for( x = 0; x < mme->rows; ++x ){
             for( y = 0; y < mme->columns; ++y ){
@@ -348,7 +348,7 @@ Object *matrix_inplace_div( Object *me, Object *o ){
     if( ob_is_matrix(o) ){
         MatrixObject *mo = ob_matrix_ucast(o);
         if( mme->rows != mo->rows || mme->columns != mo->columns ){
-            hyb_throw( H_ET_SYNTAX, "matrices have to be the same size" );
+            hyb_error( H_ET_SYNTAX, "matrices have to be the same size" );
         }
         for( x = 0; x < mme->rows; ++x ){
             for( y = 0; y < mme->columns; ++y ){
@@ -374,7 +374,7 @@ Object *matrix_cl_at( Object *me, Object *i ){
 
     #ifdef BOUNDS_CHECK
     if( idx >= mme->columns ){
-        hyb_throw( H_ET_GENERIC, "index out of bounds" );
+        hyb_error( H_ET_GENERIC, "index out of bounds" );
     }
     #endif
 

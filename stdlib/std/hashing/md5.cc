@@ -262,7 +262,7 @@ void md5_finish( md5_context *ctx, unsigned char output[16] )
 
 HYBRIS_DEFINE_FUNCTION(hmd5){
     if( ob_argc() != 1 ){
-        hyb_throw( H_ET_SYNTAX, "function 'md5' requires 1 parameter (called with %d)", ob_argc() );
+        hyb_error( H_ET_SYNTAX, "function 'md5' requires 1 parameter (called with %d)", ob_argc() );
     }
     ob_type_assert( ob_argv(0), otString );
 

@@ -37,7 +37,7 @@ Node *VirtualCode::add( char *identifier, Node *node ){
     }
     /* else set the new value */
     else{
-        hyb_throw( H_ET_SYNTAX, "Function %s already defined", identifier );
+        hyb_error( H_ET_SYNTAX, "Function %s already defined", identifier );
     }
 
     return node;

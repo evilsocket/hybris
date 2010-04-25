@@ -56,7 +56,7 @@ HYBRIS_DEFINE_FUNCTION(hticks){
 
 HYBRIS_DEFINE_FUNCTION(husleep){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'usleep' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'usleep' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otInteger );
 
@@ -71,7 +71,7 @@ HYBRIS_DEFINE_FUNCTION(husleep){
 
 HYBRIS_DEFINE_FUNCTION(hsleep){
 	if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'sleep' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'sleep' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otInteger );
 

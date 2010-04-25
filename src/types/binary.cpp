@@ -185,7 +185,7 @@ Object *binary_cl_push_reference( Object *me, Object *o ){
     DECLARE_TYPE(Float);
 
     if( ob_is_type_in( o, &Char_Type, &Integer_Type, &Float_Type, NULL ) == false ){
-        hyb_throw( H_ET_SYNTAX, "binary type allows only char, int or float types in its subscript operator" );
+        hyb_error( H_ET_SYNTAX, "binary type allows only char, int or float types in its subscript operator" );
     }
 
     ((BinaryObject *)me)->value.push_back( o );
@@ -198,7 +198,7 @@ Object *binary_cl_at( Object *me, Object *i ){
     size_t idx = ob_ivalue(i);
     #ifdef BOUNDS_CHECK
     if( idx >= ob_binary_ucast(me)->items ){
-        hyb_throw( H_ET_GENERIC, "index out of bounds" );
+        hyb_error( H_ET_GENERIC, "index out of bounds" );
     }
     #endif
 
@@ -213,7 +213,7 @@ Object *binary_cl_set_reference( Object *me, Object *i, Object *v ){
     size_t idx = ob_ivalue(i);
     #ifdef BOUNDS_CHECK
     if( idx >= ob_binary_ucast(me)->items ){
-        hyb_throw( H_ET_GENERIC, "index out of bounds" );
+        hyb_error( H_ET_GENERIC, "index out of bounds" );
     }
     #endif
 
@@ -222,7 +222,7 @@ Object *binary_cl_set_reference( Object *me, Object *i, Object *v ){
     DECLARE_TYPE(Float);
 
     if( ob_is_type_in( v, &Char_Type, &Integer_Type, &Float_Type, NULL ) == false ){
-        hyb_throw( H_ET_SYNTAX, "binary type allows only char, int or float types in its subscript operator" );
+        hyb_error( H_ET_SYNTAX, "binary type allows only char, int or float types in its subscript operator" );
     }
 
     Object *old = ((BinaryObject *)me)->value[idx];

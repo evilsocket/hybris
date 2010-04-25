@@ -31,7 +31,7 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 
 HYBRIS_DEFINE_FUNCTION(hmatrix){
     if( ob_argc() < 2 ){
-		hyb_throw( H_ET_SYNTAX, "function 'matrix' requires at least 2 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'matrix' requires at least 2 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otInteger );
     ob_type_assert( ob_argv(1), otInteger );
@@ -43,7 +43,7 @@ HYBRIS_DEFINE_FUNCTION(hmatrix){
     vector<Object *> values;
 
     if( nvalues != (rows * columns) ){
-        hyb_throw( H_ET_SYNTAX, "unexpected number of values for the matrix, expected %d (%dx%d), given %d", rows*columns, rows, columns, nvalues );
+        hyb_error( H_ET_SYNTAX, "unexpected number of values for the matrix, expected %d (%dx%d), given %d", rows*columns, rows, columns, nvalues );
     }
 
     for( i = 2; i < data->size(); ++i ){
@@ -55,7 +55,7 @@ HYBRIS_DEFINE_FUNCTION(hmatrix){
 
 HYBRIS_DEFINE_FUNCTION(hcolumns){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'columns' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'columns' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otMatrix );
 
@@ -64,7 +64,7 @@ HYBRIS_DEFINE_FUNCTION(hcolumns){
 
 HYBRIS_DEFINE_FUNCTION(hrows){
     if( ob_argc() != 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'rows' requires 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'rows' requires 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otMatrix );
 

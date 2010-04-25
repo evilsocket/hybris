@@ -51,7 +51,7 @@ void * hyb_pthread_worker( void *arg ){
 		}
 	}
 
-    ctx->engine->onThreadedCall( string_argv(0), &stack );
+    ctx->engine->onThreadedCall( string_argv(0), data, &stack );
 
     delete args;
 
@@ -62,7 +62,7 @@ void * hyb_pthread_worker( void *arg ){
 
 HYBRIS_DEFINE_FUNCTION(hpthread_create){
 	if( ob_argc() < 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'pthread_create' requires at least 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'pthread_create' requires at least 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otString );
 
@@ -79,20 +79,20 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
     else{
     	switch( code ){
 			case EAGAIN :
-				hyb_throw( H_ET_WARNING, "The system lacked the necessary resources to create another thread, or the system-imposed "
+				hyb_error( H_ET_WARNING, "The system lacked the necessary resources to create another thread, or the system-imposed "
 										 "limit on the total number of threads in a process PTHREAD_THREADS_MAX would be exceeded" );
 			break;
 
 			case EINVAL :
-				hyb_throw( H_ET_WARNING, "Invalid attribute value for pthread_create" );
+				hyb_error( H_ET_WARNING, "Invalid attribute value for pthread_create" );
 			break;
 
 			case EPERM  :
-				hyb_throw( H_ET_WARNING, "The caller does not have appropriate permission to set the required scheduling parameters or scheduling policy" );
+				hyb_error( H_ET_WARNING, "The caller does not have appropriate permission to set the required scheduling parameters or scheduling policy" );
 			break;
 
 			default :
-				hyb_throw( H_ET_WARNING, "Unknown system error while creating the thread" );
+				hyb_error( H_ET_WARNING, "Unknown system error while creating the thread" );
     	}
 
     	return H_DEFAULT_ERROR;
@@ -108,7 +108,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_exit){
 
 HYBRIS_DEFINE_FUNCTION(hpthread_join){
     if( ob_argc() < 1 ){
-		hyb_throw( H_ET_SYNTAX, "function 'pthread_join' requires at least 1 parameter (called with %d)", ob_argc() );
+		hyb_error( H_ET_SYNTAX, "function 'pthread_join' requires at least 1 parameter (called with %d)", ob_argc() );
 	}
 	ob_type_assert( ob_argv(0), otInteger );
 
