@@ -43,7 +43,7 @@ using std::string;
 
 /*
  * This class is the base for all the lookup tables inside Hybris.
- * It's used by VirtualMemory, VirtualCode, cache tables and so on.
+ * It's used by MemorySegment, CodeSegment, cache tables and so on.
  *
  * HashMap has two main containers.
  *
