@@ -125,7 +125,7 @@ HYBRIS_DEFINE_FUNCTION(hxml_load){
 
 	doc = xmlReadFile( filename.c_str(), NULL, 0);
 	if( doc == NULL ){
-		hyb_error( H_ET_GENERIC, "error loading or parsing '%s'", filename.c_str() );
+		hyb_error( H_ET_GREATER_EQNERIC, "error loading or parsing '%s'", filename.c_str() );
 	}
 
 	Object *node = xml_traverse( xmlDocGetRootElement(doc) );
@@ -150,7 +150,7 @@ HYBRIS_DEFINE_FUNCTION(hxml_parse){
 
 	doc = xmlReadMemory( xml.c_str(), xml.size(), NULL, NULL, 0);
 	if( doc == NULL ){
-		hyb_error( H_ET_GENERIC, "error parsing xml buffer" );
+		hyb_error( H_ET_GREATER_EQNERIC, "error parsing xml buffer" );
 	}
 
 	Object *node = xml_traverse( xmlDocGetRootElement(doc) );

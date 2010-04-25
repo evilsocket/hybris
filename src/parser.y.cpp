@@ -54,7 +54,7 @@
 #define MK_FOREACH_NODE(a,b,c)    new StatementNode( T_FOREACH, 3, MK_IDENT_NODE(a), b, c )
 #define MK_FOREACHM_NODE(a,b,c,d) new StatementNode( T_FOREACHM, 4, MK_IDENT_NODE(a), MK_IDENT_NODE(b), c, d )
 #define MK_BREAK_NODE()		  	  new StatementNode( T_BREAK, 0 )
-#define MK_NEXT_NODE()		  	  new StatementNode( T_NEXT, 0 )
+#define MK_NEXT_NODE()		  	  new StatementNode( T_NOT_SAMEXT, 0 )
 #define MK_RETURN_NODE(a)         new StatementNode( T_RETURN, 1, a )
 #define MK_IF_NODE(a, b)          new StatementNode( T_IF, 2, a, b )
 #define MK_IF_ELSE_NODE(a, b, c)  new StatementNode( T_IF, 3, a, b, c )
@@ -100,15 +100,15 @@
 #define MK_SHIFTR_NODE(a, b)	  new ExpressionNode( T_SHIFTR, 2, a, b )
 #define MK_SHIFTRE_NODE(a, b)	  new ExpressionNode( T_SHIFTRE, 2, a, b )
 #define MK_FACT_NODE(a)			  new ExpressionNode( T_FACT, 1, a )
-#define MK_LNOT_NODE(a)			  new ExpressionNode( T_LNOT, 1, a )
+#define MK_LNOT_NODE(a)			  new ExpressionNode( T_L_NOT, 1, a )
 #define MK_LESS_NODE(a, b)		  new ExpressionNode( T_LESS, 2, a, b )
 #define MK_GREATER_NODE(a, b)	  new ExpressionNode( T_GREATER, 2, a, b )
-#define MK_GE_NODE(a, b)		  new ExpressionNode( T_GE, 2, a, b )
-#define MK_LE_NODE(a, b)		  new ExpressionNode( T_LE, 2, a, b )
-#define MK_NE_NODE(a, b)		  new ExpressionNode( T_NE, 2, a, b )
-#define MK_EQ_NODE(a, b)		  new ExpressionNode( T_EQ, 2, a, b )
-#define MK_LAND_NODE(a, b)		  new ExpressionNode( T_LAND, 2, a, b )
-#define MK_LOR_NODE(a, b)		  new ExpressionNode( T_LOR, 2, a, b )
+#define MK_GE_NODE(a, b)		  new ExpressionNode( T_GREATER_EQ, 2, a, b )
+#define MK_LE_NODE(a, b)		  new ExpressionNode( T_LESS_EQ, 2, a, b )
+#define MK_NE_NODE(a, b)		  new ExpressionNode( T_NOT_SAME, 2, a, b )
+#define MK_EQ_NODE(a, b)		  new ExpressionNode( T_SAME, 2, a, b )
+#define MK_LAND_NODE(a, b)		  new ExpressionNode( T_L_AND, 2, a, b )
+#define MK_LOR_NODE(a, b)		  new ExpressionNode( T_L_OR, 2, a, b )
 #define MK_PCRE_NODE(a, b)		  new ExpressionNode( T_REGEX_OP, 2, a, b )
 #define MK_NEW_NODE( a, b )		  new NewNode( a, b )
 #define MK_CALL_NODE(a, b)        new CallNode( a, b )
@@ -154,33 +154,7 @@ VM __hyb_vm;
 %token <method>   	T_METHOD_PROTOTYPE;
 
 %token T_EOSTMT
-%token T_DDOT
-%token T_DOT
-%token T_DOTE
-%token T_PLUS
-%token T_PLUSE
-%token T_MINUS
-%token T_MINUSE
-%token T_DIV
-%token T_DIVE
-%token T_MUL
-%token T_MULE
-%token T_MOD
-%token T_MODE
-%token T_FACT
-%token T_XOR
-%token T_XORE
-%token T_NOT
-%token T_AND
-%token T_ANDE
-%token T_OR
-%token T_ORE
-%token T_SHIFTL
-%token T_SHIFTLE
-%token T_SHIFTR
-%token T_SHIFTRE
 %token T_ASSIGN
-%token T_REGEX_OP
 %token T_RANGE
 %token T_SUBSCRIPTADD
 %token T_SUBSCRIPTSET
@@ -196,7 +170,7 @@ VM __hyb_vm;
 %token T_SWITCH
 %token T_CASE
 %token T_BREAK
-%token T_NEXT
+%token T_NOT_SAMEXT
 %token T_DEFAULT
 %token T_QUESTION
 %token T_DOLLAR
@@ -205,7 +179,7 @@ VM __hyb_vm;
 %token T_OBJ
 %token T_RETURN
 %token T_CALL
-%token T_NEW
+%token T_NOT_SAMEW
 %token T_STRUCT
 %token T_CLASS
 %token T_EXTENDS
@@ -222,12 +196,22 @@ VM __hyb_vm;
 %nonassoc T_SWITCH_END
 %nonassoc T_CALL_END
 %nonassoc T_ELSE
-%nonassoc T_UMINUS
 %nonassoc T_DOT_END
-%nonassoc T_NEW_END
+%nonassoc T_NOT_SAMEW_END
 
-%left T_LNOT T_GE T_LE T_EQ T_NE T_GREATER T_LESS T_LAND T_LOR
-%left T_DOLLAR T_INC T_DEC T_MULE T_MUL T_DIVE T_DIV T_PLUSE T_PLUS T_MINUSE T_MINUS T_DOTE T_DOT
+%left T_L_NOT T_L_AND T_L_OR
+%left T_LESS T_GREATER T_SAME T_NOT_SAME T_LESS_EQ T_GREATER_EQ
+%left T_DOLLAR T_DDOT T_REGEX_OP
+%left T_PLUSE T_MINUSE T_DOTE T_XORE
+%left T_DIVE T_MULE T_ANDE T_ORE
+%left T_PLUS T_MINUS T_DOT T_XOR
+%left T_DIV T_MUL T_AND T_OR
+%left T_MOD T_MODE T_SHIFTL T_SHIFTLE T_SHIFTR T_SHIFTRE
+
+%nonassoc T_UMINUS
+%nonassoc T_FACT
+%nonassoc T_NOT
+%nonassoc T_INC T_DEC
 
 %type <node>   statement expression statements
 %type <list>   argumentList
@@ -338,7 +322,7 @@ statement  : T_EOSTMT                                                   { $$ = M
 	   	   | expression                                                 { $$ = MK_NODE($1); }
            | expression T_EOSTMT                                        { $$ = MK_NODE($1); }
            | T_BREAK T_EOSTMT											{ $$ = MK_BREAK_NODE(); }
-           | T_NEXT T_EOSTMT											{ $$ = MK_NEXT_NODE(); }
+           | T_NOT_SAMEXT T_EOSTMT											{ $$ = MK_NEXT_NODE(); }
            | T_RETURN expression T_EOSTMT                               { $$ = MK_RETURN_NODE( $2 ); }
            | T_THROW expression T_EOSTMT								{ $$ = MK_THROW_NODE( $2 ); }
            /* subscript operator special cases */
@@ -425,21 +409,21 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
 		   | expression T_SHIFTLE expression                  { $$ = MK_SHIFTLE_NODE( $1, $3 ); }
 		   | expression T_SHIFTR expression                   { $$ = MK_SHIFTR_NODE( $1, $3 ); }
 		   | expression T_SHIFTRE expression                  { $$ = MK_SHIFTRE_NODE( $1, $3 ); }
-		   | expression T_LNOT                                { $$ = MK_FACT_NODE( $1 ); }
+		   | expression T_L_NOT                                { $$ = MK_FACT_NODE( $1 ); }
            /* logic */
-		   | T_LNOT expression                                { $$ = MK_LNOT_NODE( $2 ); }
+		   | T_L_NOT expression                                { $$ = MK_LNOT_NODE( $2 ); }
            | expression T_LESS expression                     { $$ = MK_LESS_NODE( $1, $3 ); }
            | expression T_GREATER expression                  { $$ = MK_GREATER_NODE( $1, $3 ); }
-           | expression T_GE expression                       { $$ = MK_GE_NODE( $1, $3 ); }
-           | expression T_LE expression                       { $$ = MK_LE_NODE( $1, $3 ); }
-           | expression T_NE expression                       { $$ = MK_NE_NODE( $1, $3 ); }
-           | expression T_EQ expression                       { $$ = MK_EQ_NODE( $1, $3 ); }
-           | expression T_LAND expression                     { $$ = MK_LAND_NODE( $1, $3 ); }
-           | expression T_LOR expression                      { $$ = MK_LOR_NODE( $1, $3 ); }
+           | expression T_GREATER_EQ expression                       { $$ = MK_GE_NODE( $1, $3 ); }
+           | expression T_LESS_EQ expression                       { $$ = MK_LE_NODE( $1, $3 ); }
+           | expression T_NOT_SAME expression                       { $$ = MK_NE_NODE( $1, $3 ); }
+           | expression T_SAME expression                       { $$ = MK_EQ_NODE( $1, $3 ); }
+           | expression T_L_AND expression                     { $$ = MK_LAND_NODE( $1, $3 ); }
+           | expression T_L_OR expression                      { $$ = MK_LOR_NODE( $1, $3 ); }
            /* regex specific */
            | expression T_REGEX_OP expression                 { $$ = MK_PCRE_NODE( $1, $3 ); }
            /* structure or class creation */
-           | T_NEW T_IDENT '(' argumentList ')' %prec T_NEW_END { $$ = MK_NEW_NODE( $2, $4 ); }
+           | T_NOT_SAMEW T_IDENT '(' argumentList ')' %prec T_NOT_SAMEW_END { $$ = MK_NEW_NODE( $2, $4 ); }
            /* function or method call (consider two different cases due to hybris function calls */
 		   | T_IDENT    '(' argumentList ')' %prec T_CALL_END { $$ = MK_CALL_NODE( $1, $3 ); }
 		   | identChain '(' argumentList ')' %prec T_CALL_END { $$ = MK_METHOD_CALL_NODE( $1, $3 ); }
@@ -523,13 +507,13 @@ int main( int argc, char *argv[] ){
 				 * Check for valid integer values.
 				 */
 				if( gc_threshold == 0 ){
-					hyb_error( H_ET_GENERIC, "Invalid memory size %s given.", optarg );
+					hyb_error( H_ET_GREATER_EQNERIC, "Invalid memory size %s given.", optarg );
 				}
 				/*
 				 * Check for a valid multiplier.
 				 */
 				else if( multiplier != 0x00 && strchr( "kKmM", multiplier ) == 0 ){
-					hyb_error( H_ET_GENERIC, "Invalid multiplier %c given.", multiplier );
+					hyb_error( H_ET_GREATER_EQNERIC, "Invalid multiplier %c given.", multiplier );
 				}
 				/*
 				 * Perform multiplication if multiplier was specified (multiplier != 0x00)
@@ -549,7 +533,7 @@ int main( int argc, char *argv[] ){
 				 * Check for integer overflow.
 				 */
 				if( gc_threshold <= 0 ){
-					hyb_error( H_ET_GENERIC, "Memory limit is too high." );
+					hyb_error( H_ET_GREATER_EQNERIC, "Memory limit is too high." );
 				}
 				/*
 				 * Done, let's pass it to the context structure.

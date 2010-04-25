@@ -95,7 +95,7 @@ HYBRIS_DEFINE_FUNCTION(hcall){
 				case otString  : call->addChild( new ConstantNode( (char *)string_argv(i).c_str() ) ); break;
 
 				default :
-                    hyb_error( H_ET_GENERIC, "type %s not supported for reflected call", ob_argv(i)->type->name );
+                    hyb_error( H_ET_GREATER_EQNERIC, "type %s not supported for reflected call", ob_argv(i)->type->name );
 			}
 		}
 	}

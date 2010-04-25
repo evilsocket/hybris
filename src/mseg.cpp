@@ -35,10 +35,10 @@ MemorySegment::~MemorySegment(){
 		state._exception = false;
 		assert( state.value != NULL );
 		if( state.value->type->svalue ){
-			hyb_error( H_ET_GENERIC, "Unhandled exception : %s", ob_svalue(state.value).c_str() );
+			hyb_error( H_ET_GREATER_EQNERIC, "Unhandled exception : %s", ob_svalue(state.value).c_str() );
 		}
 		else{
-			hyb_error( H_ET_GENERIC, "Unhandled '%s' exception", ob_typename(state.value) );
+			hyb_error( H_ET_GREATER_EQNERIC, "Unhandled '%s' exception", ob_typename(state.value) );
 		}
 	}
 }

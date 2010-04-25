@@ -65,7 +65,7 @@ class Pipe extends File {
 	}
 
 	public method open(){
-		if( (me->pname == "") || (me->mode == "") ){
+		if( me->pname == "" || me->mode == "" ){
 			return false;		
 		}
 		me->file = popen( me->pname." ".me->pargs, me->mode );

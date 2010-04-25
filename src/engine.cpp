@@ -70,7 +70,7 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
         case H_NT_FUNCTION   :
             return onFunctionDeclaration( frame, node );
         /* structure or class creation */
-        case H_NT_NEW :
+        case H_NT_NOT_SAMEW :
             return onNewOperator( frame, node );
         /* function call */
         case H_NT_CALL       :
@@ -117,7 +117,7 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
 					frame->state._break = true;
 				break;
 				/* next; */
-				case T_NEXT :
+				case T_NOT_SAMEXT :
 					frame->state._next = true;
 				break;
 				/* return */
@@ -247,7 +247,7 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                 case T_NOT    :
                     return onNot( frame, node );
                 /* !expression */
-                case T_LNOT   :
+                case T_L_NOT   :
                     return onLnot( frame, node );
                 /* expression < expression */
                 case T_LESS    :
@@ -256,22 +256,22 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                 case T_GREATER    :
                     return onGreater( frame, node );
                 /* expression >= expression */
-                case T_GE     :
+                case T_GREATER_EQ     :
                     return onGe( frame, node );
                 /* expression <= expression */
-                case T_LE     :
+                case T_LESS_EQ     :
                     return onLe( frame, node );
                 /* expression != expression */
-                case T_NE     :
+                case T_NOT_SAME     :
                     return onNe( frame, node );
                 /* expression == expression */
-                case T_EQ     :
+                case T_SAME     :
                     return onEq( frame, node );
                 /* expression && expression */
-                case T_LAND   :
+                case T_L_AND   :
                     return onLand( frame, node );
                 /* expression || expression */
-                case T_LOR    :
+                case T_L_OR    :
                     return onLor( frame, node );
             }
     }
@@ -515,7 +515,7 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 			ob_define_method( c, (char *)node->child(i)->value.m_method.c_str(), node->child(i) );
 		}
 		else{
-			hyb_error( H_ET_GENERIC, "unexpected node type for class declaration" );
+			hyb_error( H_ET_GREATER_EQNERIC, "unexpected node type for class declaration" );
 		}
 	}
 	/*

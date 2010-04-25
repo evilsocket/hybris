@@ -47,18 +47,15 @@ void yyerror( char *error ){
     error[0] = toupper( error[0] );
 
     fflush(stderr);
-
     /*
      * Print line number only for syntax errors.
      */
     if( strstr( error, "Syntax error : " ) ){
-    	fprintf( stderr, "[LINE %d] %s .%s", yylineno, error, strchr( error, '\n' ) ? "" : "\n" );
+    	fprintf( stderr, "[LINE %d] %s%c", yylineno, error, (strchr( error, '\n' ) ? 0x00 : '\n') );
     }
     else{
-    	fprintf( stderr, "%s .%s", yylineno, error, strchr( error, '\n' ) ? "" : "\n" );
+    	fprintf( stderr, "%s%c", error, (strchr( error, '\n' ) ? 0x00 : '\n') );
     }
-
-    __hyb_vm.lock();
 
 	/*
 	 * If the error was triggered by a SIGSEGV signal, force
@@ -78,8 +75,6 @@ void yyerror( char *error ){
 	__hyb_vm.closeFile();
 	__hyb_vm.release();
 
-	__hyb_vm.unlock();
-
 	exit(-1);
 }
 
@@ -96,15 +91,15 @@ void hyb_error( H_ERROR_TYPE type, const char *format, ... ){
     switch( type ){
         // simple warning
         case H_ET_WARNING :
-            sprintf( error, "\033[01;33mWARNING : %s .\n\033[00m", message );
+            sprintf( error, "\033[01;33mWARNING : %s .\033[00m", message );
         break;
         // generic error (file not found, module not found, ecc)
-        case H_ET_GENERIC :
-            sprintf( error, "\033[22;31mERROR : %s .\n\033[00m", message );
+        case H_ET_GREATER_EQNERIC :
+            sprintf( error, "\033[22;31mERROR : %s .\033[00m", message );
         break;
         // same as generic one but for syntax specific errors with line number printing
         case H_ET_SYNTAX  :
-            sprintf( error, "\033[22;31mSyntax error : %s .\n\033[00m", message );
+            sprintf( error, "\033[22;31mSyntax error : %s .\033[00m", message );
         break;
     }
 

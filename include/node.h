@@ -42,7 +42,7 @@ enum H_NODE_TYPE {
     H_NT_ATTRIBUTE   = 9,
     H_NT_METHOD		 = 10,
     H_NT_CLASS		 = 11,
-    H_NT_NEW	     = 12
+    H_NT_NOT_SAMEW	     = 12
 };
 
 #ifndef H_ACCESS_SPECIFIER

@@ -20,7 +20,7 @@
 
 void VM::signal_handler( int signo ){
     if( signo == SIGSEGV ){
-        hyb_error( H_ET_GENERIC, "SIGSEGV Signal Catched" );
+        hyb_error( H_ET_GREATER_EQNERIC, "SIGSEGV Signal Catched" );
     }
 }
 
@@ -188,7 +188,7 @@ void VM::loadNamespace( string path ){
     struct dirent *ent;
 
     if( (dir = opendir(path.c_str())) == NULL ) {
-        hyb_error( H_ET_GENERIC, "could not open directory '%s' for reading", path.c_str() );
+        hyb_error( H_ET_GREATER_EQNERIC, "could not open directory '%s' for reading", path.c_str() );
     }
 
     while( (ent = readdir(dir)) != NULL ){

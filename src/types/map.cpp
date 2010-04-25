@@ -190,7 +190,7 @@ Object *map_cl_pop( Object *me ){
     size_t last_idx = ob_map_ucast(me)->items - 1;
     #ifdef BOUNDS_CHECK
     if( last_idx < 0 ){
-        hyb_error( H_ET_GENERIC, "could not pop an element from an empty map" );
+        hyb_error( H_ET_GREATER_EQNERIC, "could not pop an element from an empty map" );
     }
     #endif
 
@@ -231,7 +231,7 @@ Object *map_cl_at( Object *me, Object *k ){
         return ((MapObject *)me)->values[idx];
     }
     else{
-        hyb_error( H_ET_GENERIC, "no mapped values for label '%s'", ob_svalue(k).c_str() );
+        hyb_error( H_ET_GREATER_EQNERIC, "no mapped values for label '%s'", ob_svalue(k).c_str() );
     }
     return me;
 }

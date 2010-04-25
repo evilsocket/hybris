@@ -49,7 +49,7 @@ HYBRIS_DEFINE_FUNCTION(hpcre_replace){
 
 	compiled = pcre_compile( pattern.c_str(), opts, &error, &eoffset, 0 );
 	if( !compiled ){
-		hyb_error( H_ET_GENERIC, "error during regex evaluation at offset %d (%s)", eoffset, error );
+		hyb_error( H_ET_GREATER_EQNERIC, "error during regex evaluation at offset %d (%s)", eoffset, error );
 	}
 
 	rc = pcre_fullinfo( compiled, 0, PCRE_INFO_CAPTURECOUNT, &ccount );
