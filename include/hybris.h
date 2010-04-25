@@ -19,9 +19,9 @@
 #ifndef _HHYBRIS_H_
 #   define _HHYBRIS_H_
 
-#include "context.h"
-#include "vmem.h"
-#include "vcode.h"
+#include "vm.h"
+#include "mseg.h"
+#include "cseg.h"
 #include "node.h"
 #include "common.h"
 
