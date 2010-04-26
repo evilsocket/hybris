@@ -583,6 +583,13 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
 		stack.push( value );
     }
 
+    /*
+	 * An exception has been thrown inside an exec call.
+	 */
+	if( frame->state._exception ){
+		return frame->state.value;
+	}
+
     vmachine->trace( callname, &stack );
     vmachine->setCurrentFrame( &stack );
     /* call the function */
@@ -930,31 +937,23 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 		/*
 		 * Try to find out if the child is an attribute or a method.
 		 */
-		if( (child = ob_get_attribute( owner, (char *)child_id.c_str() )) == H_UNDEFINED ){
+		if( (method = ob_get_method( owner, (char *)child_id.c_str(), argc )) != H_UNDEFINED ){
 			/*
-			 * Owner is a class ?
+			 * The last child of a method is its body itself, so we compare
+			 * call children with method->children() - 1 to ignore the body.
 			 */
-			if( ob_is_class(owner) ){
-				method = ob_get_method( owner, (char *)child_id.c_str(), argc );
-				if( method ){
-					/*
-					 * The last child of a method is its body itself, so we compare
-					 * call children with method->children() - 1 to ignore the body.
-					 */
-					method_argc = method->children() - 1;
-				}
-				break;
-			}
-			else{
-				hyb_error( H_ET_SYNTAX, "'%s' is not a member of '%s'", child_id.c_str(), owner_id.c_str() );
-			}
+			method_argc = method->children() - 1;
+			break;
 		}
 		/*
 		 * Update owner-child relationship and continue the loop.
 		 */
-		else{
+		else if( (child = ob_get_attribute( owner, (char *)child_id.c_str() )) != H_UNDEFINED ){
 			owner    = child;
 			owner_id = child_id;
+		}
+		else{
+			hyb_error( H_ET_SYNTAX, "'%s' is not a member of '%s'", child_id.c_str(), owner_id.c_str() );
 		}
 	}
 	/*
