@@ -90,7 +90,94 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	if( stack.state._exception == true ){
 		stack.state._exception = false;
 		__hyb_vm.vframe->state._exception = true;
-		__hyb_vm.vframe->state.value 	   = stack.state.value;
+		__hyb_vm.vframe->state.value 	  = stack.state.value;
+	}
+
+	/* return method evaluation value */
+	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
+}
+
+Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool lazy, int argc, ... ){
+	Node    *ds = H_UNDEFINED;
+	vframe_t stack,
+			*frame;
+	Object  *result = H_UNDEFINED;
+	unsigned int i, ds_argc;
+	va_list ap;
+	extern VM __hyb_vm;
+	vframe_state_t state;
+
+	if( (ds = ob_get_method( me, (char *)ds_name, argc )) == H_UNDEFINED ){
+		if( lazy == false ){
+			hyb_error( H_ET_SYNTAX, "class %s does not overload '%s' descriptor", ob_typename(me), ds_name );
+		}
+		else{
+			return H_UNDEFINED;
+		}
+	}
+
+	ds_argc = ds->children() - 1;
+
+	/*
+	 * The last child of a method is its body itself, so we compare
+	 * call children with method->children() - 1 to ignore the body.
+	 */
+	if( argc != ds_argc ){
+		__hyb_vm.depool();
+		hyb_error( H_ET_SYNTAX, "descriptor '%s' requires %d parameters (called with %d)",
+								 ds_name,
+								 ds_argc,
+								 argc );
+	}
+
+	/*
+	 * Create the "me" reference to the class itself, used inside
+	 * methods for me->... calls.
+	 */
+	stack.insert( "me", me );
+	va_start( ap, argc );
+	for( i = 0; i < argc; ++i ){
+		/*
+		 * Value references count is set to zero now, builtins
+		 * do not care about reference counting, so this object will
+		 * be safely freed after the method call by the gc.
+		 */
+		stack.insert( (char *)ds->child(i)->value.m_identifier.c_str(), va_arg( ap, Object * ) );
+	}
+	va_end(ap);
+
+	/*
+	 * Save current frame.
+	 */
+	frame = __hyb_vm.vframe;
+	/*
+	 * Save stack frame state.
+	 */
+	state.assign(__hyb_vm.vframe->state);
+	/*
+	 * Reset it.
+	 */
+	__hyb_vm.vframe->state._break     = false;
+	__hyb_vm.vframe->state._next      = false;
+	__hyb_vm.vframe->state._return    = false;
+	__hyb_vm.vframe->state._exception = false;
+	__hyb_vm.vframe->state.value      = 0;
+
+	/* call the descriptor */
+	result = __hyb_vm.engine->exec( &stack, ds->callBody() );
+	/*
+	 * Restore stack frame state.
+	 */
+	__hyb_vm.vframe->state.assign(state);
+
+	/*
+	 * Check for unhandled exceptions and put them on the root
+	 * memory frame.
+	 */
+	if( stack.state._exception == true ){
+		stack.state._exception = false;
+		__hyb_vm.vframe->state._exception = true;
+		__hyb_vm.vframe->state.value 	  = stack.state.value;
 	}
 
 	/* return method evaluation value */
@@ -146,14 +233,14 @@ Object *class_clone( Object *me ){
 							    );
     }
 
-    cclone->items = cme->items;
     cclone->name  = cme->name;
 
     return (Object *)(cclone);
 }
 
 size_t class_get_size( Object *me ){
-	return ob_class_ucast(me)->items;
+	Object *size = class_call_overloaded_descriptor( me, "__size", false, 0 );
+	return ob_ivalue(size);
 }
 
 void class_free( Object *me ){
@@ -201,54 +288,36 @@ void class_free( Object *me ){
 		delete attribute;
 	}
 	cme->c_attributes.clear();
-
-    cme->items = 0;
 }
 
 long class_ivalue( Object *me ){
-    return static_cast<long>( ob_class_ucast(me)->items );
+    return static_cast<long>( class_get_size(me) );
 }
 
 double class_fvalue( Object *me ){
-    return static_cast<double>( ob_class_ucast(me)->items );
+    return static_cast<double>( class_get_size(me) );
 }
 
 bool class_lvalue( Object *me ){
-    return static_cast<bool>( ob_class_ucast(me)->items );
+    return static_cast<bool>( class_get_size(me) );
 }
 
 string class_svalue( Object *me ){
-    return "<" + ob_class_ucast(me)->name + ">";
+	Object *svalue = H_UNDEFINED;
+
+	if( (svalue = class_call_overloaded_descriptor( me, "__to_string", true, 0 )) == H_UNDEFINED ){
+		return "<" + ob_class_ucast(me)->name + ">";
+	}
+	else{
+		return ob_svalue(svalue);
+	}
 }
 
 void class_print( Object *me, int tabs ){
-	ClassObject *cme = ob_class_ucast(me);
-	ClassObjectAttributeIterator ai;
-	ClassObjectMethodIterator 	 mi;
 	int j;
+	Object *svalue = class_call_overloaded_descriptor( me, "__to_string", false, 0 );
 
-	for( j = 0; j < tabs; ++j ){
-		printf( "\t" );
-	}
-	printf( "class {\n" );
-	for( ai = cme->c_attributes.begin(); ai != cme->c_attributes.end(); ai++ ){
-		for( j = 0; j < tabs + 1; ++j ) printf( "\t" );
-		printf( "%s %s -> ", (*ai)->value->value->type->name, (*ai)->value->name.c_str() );
-		ob_print( (*ai)->value->value, tabs + 1 );
-		printf( "\n" );
-	}
-	printf( "\n" );
-	for( mi = cme->c_methods.begin(); mi != cme->c_methods.end(); mi++ ){
-		for( j = 0; j < tabs + 1; ++j ) printf( "\t" );
-		if( (*mi)->value->name.find("__op@") == 0 ){
-			printf( "operator %s { ... }\n", (*mi)->value->name.c_str() + strlen("__op@") );
-		}
-		else{
-			printf( "method %s { ... }\n", (*mi)->value->name.c_str() );
-		}
-	}
-	for( j = 0; j < tabs; ++j ) printf( "\t" );
-	printf( "}\n" );
+	ob_print( svalue, tabs );
 }
 
 Object *class_range( Object *me, Object *op ){
@@ -444,7 +513,6 @@ void class_add_attribute( Object *me, char *name ){
 									  (Object *)gc_new_integer(0)
 							  )
 							);
-    cme->items++;
 }
 
 Object *class_get_attribute( Object *me, char *name ){
@@ -477,7 +545,6 @@ void class_set_attribute_reference( Object *me, char *name, Object *value ){
 										  value
 								  )
 								);
-		cme->items++;
 	}
 }
 
@@ -501,10 +568,6 @@ void class_define_method( Object *me, char *name, Node *code ){
 	else{
 		cme->c_methods.insert( name, new class_method_t( name, code->clone() ) );
 	}
-	/*
-	 * In both cases increment item counter.
-	 */
-	cme->items++;
 }
 
 Node *class_get_method( Object *me, char *name, int argc ){

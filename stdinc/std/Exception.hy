@@ -35,13 +35,18 @@ class Exception {
 		return me->message;
 	}
 
-	public method print(){
-		if( me->file ){
-			println( "[".me->file.":".me->line."] ".me->message );
+	public method __to_string(){
+		if( me->file ){	
+			svalue = "[".me->file.":".me->line."] ".me->message;
 		}
 		else{
-			println( me->message );	
+			svalue = me->message;	
 		}
+		return svalue;
+	}
+
+	public method print(){
+		println( me->__to_string() );
 	}
 }
 

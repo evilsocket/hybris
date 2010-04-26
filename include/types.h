@@ -948,13 +948,12 @@ class_method_t;
 
 typedef struct _ClassObject {
     BASE_OBJECT_HEADER;
-    size_t           items;
-    string			 name;
+    string name;
 
     HashMap<class_attribute_t> c_attributes;
     HashMap<class_method_t>	   c_methods;
 
-    _ClassObject() : items(0), BASE_OBJECT_HEADER_INIT(Class) {
+    _ClassObject() : BASE_OBJECT_HEADER_INIT(Class) {
 
     }
 }

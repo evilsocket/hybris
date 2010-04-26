@@ -1262,19 +1262,20 @@ Object *Engine::onFor( vframe_t *frame, Node *node ){
 }
 
 Object *Engine::onForeach( vframe_t *frame, Node *node ){
-    int     i, size;
+    int     size;
     Node   *body;
     Object *v      = H_UNDEFINED,
            *result = H_UNDEFINED;
     char   *identifier;
+    IntegerObject index(0);
 
     identifier = (char *)node->child(0)->value.m_identifier.c_str();
     v          = exec( frame, node->child(1) );
     body       = node->child(2);
     size       = ob_get_size(v);
 
-    for( i = 0; i < size; ++i ){
-        frame->add( identifier, ob_vector_ucast(v)->value[i] );
+    for( ; index.value < size; ++index.value ){
+        frame->add( identifier, ob_cl_at( v, (Object *)&index ) );
 
         result = exec( frame, body );
 
