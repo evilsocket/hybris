@@ -514,12 +514,17 @@ void class_add_attribute( Object *me, char *name ){
 Object *class_get_attribute( Object *me, char *name ){
     ClassObject *cme = ob_class_ucast(me);
     class_attribute_t *attribute;
+    Object *a_value;
 
-	if( (attribute = cme->c_attributes.find(name)) != NULL ){
+	if( (attribute = cme->c_attributes.find(name)) != H_UNDEFINED ){
 		return attribute->value;
 	}
-
-    return NULL;
+	else if( (a_value = class_call_overloaded_descriptor( me, "__attribute", true, 1, (Object *)gc_new_string(name) )) != H_UNDEFINED ){
+		return a_value;
+	}
+	else{
+		return NULL;
+	}
 }
 
 void class_set_attribute_reference( Object *me, char *name, Object *value ){
