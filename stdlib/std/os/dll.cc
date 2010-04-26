@@ -178,7 +178,9 @@ HYBRIS_DEFINE_FUNCTION(hdllclose){
 	}
 	ob_type_assert( ob_argv(0), otInteger );
 
-	dlclose( (void *)int_argv(0) );
+	if( int_argv(0) ){
+		dlclose( (void *)int_argv(0) );
+	}
 
     return H_DEFAULT_RETURN;
 }

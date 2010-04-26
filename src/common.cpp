@@ -50,7 +50,7 @@ void yyerror( char *error ){
     /*
      * Print line number only for syntax errors.
      */
-    if( strstr( error, "Syntax error : " ) ){
+    if( strstr( error, "Syntax error" ) ){
     	fprintf( stderr, "[LINE %d] %s%c", yylineno, error, (strchr( error, '\n' ) ? 0x00 : '\n') );
     }
     else{
