@@ -61,8 +61,8 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
         case H_NT_IDENTIFIER :
             return onIdentifier( frame, node );
         /* attribute */
-        case H_NT_ATTRIBUTE  :
-            return onAttribute( frame, node );
+        case H_NT_MEMBER  :
+            return onMemberRequest( frame, node );
         /* constant value */
         case H_NT_CONSTANT   :
             return onConstant( frame, node );
@@ -288,7 +288,7 @@ Node * Engine::findEntryPoint( vframe_t *frame, Node *call ){
 		return function;
 	}
 	/* then search for a function alias */
-	AliasObject *alias = ob_alias_ucast( frame->get( callname ) );
+	AliasObject *alias = (AliasObject *)frame->get( callname );
 	if( alias != H_UNDEFINED && ob_is_alias(alias) ){
 		return (Node *)alias->value;
 	}
@@ -342,38 +342,38 @@ Object *Engine::onIdentifier( vframe_t *frame, Node *node ){
 	}
 }
 
-Object *Engine::onAttribute( vframe_t *frame, Node *node ){
-    Object    *owner  = H_UNDEFINED,
-              *child  = H_UNDEFINED;
-    int        i, j, attributes(node->children());
-    char      *identifier = (char *)node->value.m_identifier.c_str(),
-              *owner_id   = identifier,
-              *child_id   = NULL;
+Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
+	Object    *owner  = H_UNDEFINED,
+			  *child  = H_UNDEFINED;
+	int        i, j, attributes(node->children());
+	char      *identifier = (char *)node->value.m_identifier.c_str(),
+			  *owner_id   = identifier,
+			  *child_id   = NULL;
 
-    /*
+	/*
 	 * Search for the identifier on the function frame.
 	 */
-    owner = frame->get( identifier );
-    if( owner == H_UNDEFINED && H_ADDRESS_OF(frame) != H_ADDRESS_OF(vm) ){
-        /*
+	owner = frame->get( identifier );
+	if( owner == H_UNDEFINED && H_ADDRESS_OF(frame) != H_ADDRESS_OF(vm) ){
+		/*
 		 * Search it on the global frame if it's different from local frame.
 		 */
-        owner = vm->get( identifier );
-    }
+		owner = vm->get( identifier );
+	}
 	/*
 	 * Nope :( not defined anywhere.
 	 */
-    if( owner == H_UNDEFINED ){
-        hyb_error( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
-    }
+	if( owner == H_UNDEFINED ){
+		hyb_error( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
+	}
 	/*
 	 * Ok, definetly it's defined "somewhere", but we don't know exactly where.
 	 * That could be the user types definition segments, who knows (the gc should),
 	 * anyway, check if it's REALLY a user defined type.
 	 */
-    else if( ob_is_struct(owner) == false && ob_is_class(owner) == false ){
-        hyb_error( H_ET_SYNTAX, "'%s' does not name a structure nor a class", identifier );
-    }
+	else if( ob_is_struct(owner) == false && ob_is_class(owner) == false ){
+		hyb_error( H_ET_SYNTAX, "'%s' does not name a structure nor a class", identifier );
+	}
 	/* 
 	 * Loop each element of the members chain :
 	 * 
@@ -381,38 +381,38 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
 	 * 
 	 * Until last element 'X' of this chain is found.
 	 */
-    for( i = 0; i < attributes; ++i ){
-        child_id = (char *)node->child(i)->value.m_identifier.c_str();
-        child    = ob_get_attribute( owner, child_id );
-        /*
+	for( i = 0; i < attributes; ++i ){
+		child_id = (char *)node->child(i)->value.m_identifier.c_str();
+		child    = ob_get_attribute( owner, child_id );
+		/*
 		 * Something went wrong dude!
 		 */
-        if( child == H_UNDEFINED ){
-       		hyb_error( H_ET_SYNTAX, "'%s' is not a member of %s", child_id, owner_id );
-        }
-        /*
+		if( child == H_UNDEFINED ){
+			hyb_error( H_ET_SYNTAX, "'%s' is not a member of %s", child_id, owner_id );
+		}
+		/*
 		 * Ok, let's consider the next element and shift
 		 * relationships between owner and child pointers.
 		 */
-        if( ob_is_struct(child) || ob_is_class(child) ){
-            owner    = child;
-            owner_id = child_id;
-        }
+		if( ob_is_struct(child) || ob_is_class(child) ){
+			owner    = child;
+			owner_id = child_id;
+		}
 		/*
 		 * Hello Mr. 'X', you are the last element of the chain!
 		 */
-        else{
-        	/*
-        	 * Check for access specifiers for class attributes.
-        	 */
-        	if( ob_is_class(owner) ){
-        		/*
-        		 * Get attribute access descriptor.
-        		 */
-        		ClassObject *cobj = ob_class_ucast(owner);
-        		access_t access   = ob_attribute_access( owner, child_id );
+		else{
+			/*
+			 * Check for access specifiers for class attributes.
+			 */
+			if( ob_is_class(owner) ){
+				/*
+				 * Get attribute access descriptor.
+				 */
+				ClassObject *cobj = ob_class_ucast(owner);
+				access_t access   = ob_attribute_access( owner, child_id );
 
-        		if( access != asPublic ){
+				if( access != asPublic ){
 					/*
 					 * The attribute is protected.
 					 */
@@ -438,10 +438,11 @@ Object *Engine::onAttribute( vframe_t *frame, Node *node ){
 					}
 				}
 			}
-            return child;
-        }
-    }
-    return owner;
+			return child;
+		}
+	}
+
+	return owner;
 }
 
 Object *Engine::onConstant( vframe_t *frame, Node *node ){
@@ -514,6 +515,11 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 		else if( node->child(i)->type() == H_NT_METHOD ){
 			ob_define_method( c, (char *)node->child(i)->value.m_method.c_str(), node->child(i) );
 		}
+		/*
+		 * WTF this should not happen!
+		 * The parser should not accept everything that's not an attribute
+		 * or a method declaration.
+		 */
 		else{
 			hyb_error( H_ET_GENERIC, "unexpected node type for class declaration" );
 		}
@@ -1093,14 +1099,12 @@ Object *Engine::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*
 }
 
 Object *Engine::onDollar( vframe_t *frame, Node *node ){
-    Object *o    = H_UNDEFINED,
-           *name = H_UNDEFINED;
+    Object *o = H_UNDEFINED;
 
-    o    = exec( frame, node->child(0) );
-    name = ob_to_string(o);
+    o = exec( frame, node->child(0) );
 
-    if( (o = frame->get( (char *)ob_string_ucast(name)->value.c_str() )) == H_UNDEFINED ){
-        hyb_error( H_ET_SYNTAX, "'%s' undeclared identifier", ob_string_ucast(name)->value.c_str() );
+    if( (o = frame->get( (char *)ob_svalue(o).c_str() )) == H_UNDEFINED ){
+        hyb_error( H_ET_SYNTAX, "'%s' undeclared identifier", ob_svalue(o).c_str() );
     }
 
     return o;
@@ -1471,7 +1475,7 @@ Object *Engine::onAssign( vframe_t *frame, Node *node ){
     }
     /*
      * If not, we evaluate the first node as a "owner->child->..." sequence,
-     * just like the onAttribute handler.
+     * just like the onMemberRequest handler.
      */
     else{
     	Object    *owner  = H_UNDEFINED,

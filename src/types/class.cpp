@@ -157,11 +157,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	/*
 	 * Reset it.
 	 */
-	__hyb_vm.vframe->state._break     = false;
-	__hyb_vm.vframe->state._next      = false;
-	__hyb_vm.vframe->state._return    = false;
-	__hyb_vm.vframe->state._exception = false;
-	__hyb_vm.vframe->state.value      = 0;
+	__hyb_vm.vframe->state.reset();
 
 	/* call the descriptor */
 	result = __hyb_vm.engine->exec( &stack, ds->callBody() );

@@ -39,7 +39,7 @@ enum H_NODE_TYPE {
     H_NT_CALL        = 6,
     H_NT_METHOD_CALL = 7,
     H_NT_STRUCT      = 8,
-    H_NT_ATTRIBUTE   = 9,
+    H_NT_MEMBER   = 9,
     H_NT_METHOD		 = 10,
     H_NT_CLASS		 = 11,
     H_NT_NEW	     = 12
@@ -197,10 +197,10 @@ class IdentifierNode : public Node {
 };
 
 /* structure attribute expression */
-class AttributeNode : public Node {
+class MemberRequestNode : public Node {
     public :
 
-        AttributeNode( NodeList *attrlist );
+        MemberRequestNode( NodeList *attrlist );
 };
 
 /* function declarations */
@@ -251,6 +251,7 @@ class ClassNode : public Node {
 /* method calls (a subset of StatementNode) */
 class MethodCallNode : public Node {
     public :
+		MethodCallNode( char *classname, char *method, NodeList *argv );
 		MethodCallNode( NodeList *mcall, NodeList *argv );
 };
 

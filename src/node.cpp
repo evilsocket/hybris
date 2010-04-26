@@ -149,8 +149,8 @@ Node *Node::clone(){
 			}
         break;
 
-        case H_NT_ATTRIBUTE :
-        	clone = new AttributeNode( NULL );
+        case H_NT_MEMBER :
+        	clone = new MemberRequestNode( NULL );
         	clone->value.m_identifier = value.m_identifier;
         	for( i = 0; i < sz; ++i ){
 				if( child(i) ){
@@ -282,17 +282,32 @@ IdentifierNode::IdentifierNode( access_t access, char *identifier ) : Node(H_NT_
 }
 
 /* structure attribute */
-AttributeNode::AttributeNode( NodeList *attrlist ) : Node(H_NT_ATTRIBUTE) {
+MemberRequestNode::MemberRequestNode( NodeList *attrlist ) : Node(H_NT_MEMBER) {
     if( attrlist != NULL ){
         int sz( attrlist->size() );
         NodeList::iterator ni = attrlist->begin();
 
-        value.m_identifier = (*ni)->value.m_identifier;
-        reserve( sz - 1 );
-        ni++;
-		for( ; ni != attrlist->end(); ni++ ){
-            push_back( *ni );
-		}
+        if( (*ni)->type() == H_NT_IDENTIFIER ){
+			value.m_identifier = (*ni)->value.m_identifier;
+			reserve( sz - 1 );
+			ni++;
+			for( ; ni != attrlist->end(); ni++ ){
+				push_back( *ni );
+			}
+        }
+        else if( (*ni)->type() == H_NT_METHOD_CALL ){
+        	ni = (*ni)->value.m_method_call.begin();
+        	value.m_identifier = (*ni)->value.m_identifier;
+        	ni++;
+        	push_back( *ni );
+        	ni = attrlist->begin();
+        	int i, sz( (*ni)->children() );
+
+        	for( i = 0; i < sz; ++i ){
+				push_back( (*ni)->child(i) );
+			}
+        }
+
 		delete attrlist;
 	}
 }
@@ -423,6 +438,19 @@ ClassNode::ClassNode( char *classname, NodeList *extends, NodeList *members ) : 
 }
 
 /* method calls (a subset of StatementNode) */
+MethodCallNode::MethodCallNode( char *classname, char *method, NodeList *argv ) : Node(H_NT_METHOD_CALL) {
+	value.m_method_call.tail( new IdentifierNode(classname) );
+	value.m_method_call.tail( new IdentifierNode(method) );
+
+	if( argv != NULL ){
+		reserve( argv->size() );
+		for( NodeList::iterator ni = argv->begin(); ni != argv->end(); ni++ ){
+			push_back( *ni );
+		}
+		delete argv;
+	}
+}
+
 MethodCallNode::MethodCallNode( NodeList *mcall, NodeList *argv ) : Node(H_NT_METHOD_CALL) {
 	if( mcall ){
 		value.m_method_call = *mcall;

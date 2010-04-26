@@ -74,6 +74,14 @@ typedef struct _vframe_state {
 		_exception = s._exception;
 		value      = s.value;
 	}
+
+	__force_inline void reset(){
+		_break     = false;
+		_next      = false;
+		_return    = false;
+		_exception = false;
+		value      = 0;
+	}
 }
 vframe_state_t;
 

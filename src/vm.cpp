@@ -32,7 +32,7 @@ string VM::mk_trace( char *function, vframe_t *frame ){
 
     for( i = 0; i < size; ++i ){
 		if( strcmp( frame->label(i), "me" ) != 0 ){
-			trace += " " + ob_svalue( frame->at(i) ) + (i < i_end ? "," : "");
+			trace += " " + string( ob_typename( frame->at(i) ) ) + (i < i_end ? "," : "");
 		}
     }
     trace += " )";

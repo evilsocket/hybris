@@ -46,7 +46,7 @@
 #define MK_IDENT_NODE(a)          new IdentifierNode(a)
 #define MK_ATTR_NODE(a,b)		  new IdentifierNode(a,b)
 #define MK_CONST_NODE(a)          new ConstantNode(a)
-#define MK_IDLST_NODE(a)          new AttributeNode(a)
+#define MK_IDLST_NODE(a)          new MemberRequestNode(a)
 /* statements */
 #define MK_WHILE_NODE(a, b)       new StatementNode( T_WHILE, 2, a, b )
 #define MK_DO_NODE(a, b)          new StatementNode( T_DO, 2, a, b )

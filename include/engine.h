@@ -88,7 +88,7 @@ class Engine {
 		 * Special nodes.
 		 */
         Object *onIdentifier( vframe_t *, Node * );
-        Object *onAttribute( vframe_t *, Node * );
+        Object *onMemberRequest( vframe_t *, Node * );
         Object *onConstant( vframe_t *, Node * );
         Object *onFunctionDeclaration( vframe_t *, Node * );
         Object *onStructureDeclaration( vframe_t *, Node * );
