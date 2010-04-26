@@ -545,8 +545,7 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 			for( ai = cobj->c_attributes.begin(); ai != cobj->c_attributes.end(); ai++ ){
 				attrname = (char *)(*ai)->label.c_str();
 
-				ob_set_attribute( c, attrname, (*ai)->value->value );
-				ob_set_attribute_access( c, attrname, (*ai)->value->access );
+				ob_define_attribute( c, attrname, (*ai)->value->access );
 			}
 
 			for( mi = cobj->c_methods.begin(); mi != cobj->c_methods.end(); mi++ ){
@@ -903,7 +902,12 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
 Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 	Object    *owner = H_UNDEFINED,
 			  *child = H_UNDEFINED;
-	NodeList  method_call( call->value.m_method_call );
+	NodeList   method_call( call->value.m_method_call );
+	Node      *identifier = H_UNDEFINED;
+	vframe_t   stack;
+	Object    *value  = H_UNDEFINED,
+			  *result = H_UNDEFINED;
+	unsigned int j;
 
 	if( method_call.size() == 0 ){
 		return H_UNDEFINED;
@@ -953,9 +957,12 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 		/*
 		 * Update owner-child relationship and continue the loop.
 		 */
-		else if( (child = ob_get_attribute( owner, (char *)child_id.c_str() )) != H_UNDEFINED ){
+		else if( (child = ob_get_attribute( owner, (char *)child_id.c_str(), false )) != H_UNDEFINED ){
 			owner    = child;
 			owner_id = child_id;
+		}
+		else if( (result = ob_call_undefined_method( vmachine, owner, (char *)owner_id.c_str(), (char *)child_id.c_str(), call )) != H_UNDEFINED ){
+			return result;
 		}
 		else{
 			hyb_error( H_ET_SYNTAX, "'%s' is not a member of '%s'", child_id.c_str(), owner_id.c_str() );
@@ -1013,12 +1020,6 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 			}
 		}
 	}
-
-	Node    *identifier           = H_UNDEFINED;
-	vframe_t stack;
-	Object  *value                = H_UNDEFINED,
-			*result               = H_UNDEFINED;
-	unsigned int j;
 
 	/*
 	 * The last child of a method is its body itself, so we compare

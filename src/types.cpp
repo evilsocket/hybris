@@ -18,6 +18,9 @@
 */
 #include "types.h"
 #include "common.h"
+#include "mseg.h"
+#include "node.h"
+#include "vm.h"
 
 #define HYB_UNIMPLEMENTED_FUNCTION 0
 
@@ -712,9 +715,9 @@ void ob_add_attribute( Object *s, char *a ){
 	}
 }
 
-Object *ob_get_attribute( Object *s, char *a ){
+Object *ob_get_attribute( Object *s, char *a, bool with_descriptor /*= true*/ ){
     if( s->type->get_attribute != HYB_UNIMPLEMENTED_FUNCTION ){
-		return s->type->get_attribute(s,a);
+		return s->type->get_attribute(s,a,with_descriptor);
 	}
 	else{
 		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", s->type->name );
@@ -756,4 +759,55 @@ Node *ob_get_method( Object *c, char *name, int argc /*= -1*/ ){
 	else{
 		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a class", c->type->name );
 	}
+}
+
+Object *ob_call_undefined_method( VM *vm, Object *c, char *c_name, char *method_name, Node *argv ){
+	Node    *identifier = H_UNDEFINED,
+		    *method     = H_UNDEFINED;
+	vframe_t stack,
+			*frame;
+	Object  *value  = H_UNDEFINED,
+			*result = H_UNDEFINED;
+	unsigned int i, j, argc(argv->children());
+
+	method = ob_get_method( c, "__method", 2 );
+	if( method == H_UNDEFINED ){
+		return H_UNDEFINED;
+	}
+
+	VectorObject *args = gc_new_vector();
+
+	stack.insert( "me", c );
+	stack.insert( "name", (Object *)gc_new_string(method_name) );
+	for( i = 0; i < argc; ++i ){
+		ob_cl_push( (Object *)args, vm->engine->exec( vm->vframe, argv->child(i) ) );
+	}
+	stack.insert( "argv", (Object *)args );
+
+	/*
+	 * Save current frame.
+	 */
+	frame = vm->vframe;
+
+	vm->trace( method_name, &stack );
+	vm->setCurrentFrame( &stack );
+
+	/* call the method */
+	result = vm->engine->exec( &stack, method->callBody() );
+
+	vm->setCurrentFrame( frame );
+	vm->detrace();
+
+	/*
+	 * Check for unhandled exceptions and put them on the root
+	 * memory frame.
+	 */
+	if( stack.state._exception == true ){
+		stack.state._exception = false;
+		vm->vframe->state._exception = true;
+		vm->vframe->state.value 	 = stack.state.value;
+	}
+
+	/* return method evaluation value */
+	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
 }

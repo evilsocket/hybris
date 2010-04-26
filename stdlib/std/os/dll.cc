@@ -23,12 +23,14 @@
 HYBRIS_DEFINE_FUNCTION(hdllopen);
 HYBRIS_DEFINE_FUNCTION(hdlllink);
 HYBRIS_DEFINE_FUNCTION(hdllcall);
+HYBRIS_DEFINE_FUNCTION(hdllcall_argv);
 HYBRIS_DEFINE_FUNCTION(hdllclose);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "dllopen", hdllopen },
 	{ "dlllink", hdlllink },
 	{ "dllcall", hdllcall },
+	{ "dllcall_argv", hdllcall_argv },
 	{ "dllclose", hdllclose },
 	{ "", NULL }
 };
@@ -170,6 +172,25 @@ HYBRIS_DEFINE_FUNCTION(hdllcall){
 	}
 
     return ob_dcast( gc_new_integer(ul_ret) );
+}
+
+HYBRIS_DEFINE_FUNCTION(hdllcall_argv){
+    if( ob_argc() != 2 ){
+        hyb_error( H_ET_SYNTAX, "function 'dllcall_argv' requires 2 parameters (called with %d)", ob_argc() );
+    }
+    ob_type_assert( ob_argv(0), otExtern );
+    ob_type_assert( ob_argv(1), otVector );
+
+    vframe_t stack;
+    int size( ob_get_size( ob_argv(1) ) );
+    IntegerObject index(0);
+
+    stack.push( ob_argv(0) );
+    for( ; index.value < size; ++index.value ){
+    	stack.push( ob_cl_at( ob_argv(1), (Object *)&index ) );
+    }
+
+    return hdllcall( vmachine, &stack );
 }
 
 HYBRIS_DEFINE_FUNCTION(hdllclose){

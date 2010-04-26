@@ -40,7 +40,19 @@ class Dll {
 	}
 	
 	public method sym( name ){
-		return dlllink( me->link, name );
+		symbol = dlllink( me->link, name );
+		if( !symbol ){
+			throw new Exception( __FILE__, __LINE__, "Could not load ".name." symbol from ".me->name." dynamic library." );
+		}
+		return symbol;
+	}
+
+	public method __attribute( name ){
+		return me->sym(name);
+	}
+
+	public method __method( name, argv ){
+		return dllcall_argv( me->sym(name), argv );		
 	}
 
 	operator [] ( name ){

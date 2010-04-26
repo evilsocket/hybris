@@ -165,7 +165,7 @@ void struct_add_attribute( Object *me, char *name ){
 	struct_define_attribute( me, name, asPublic );
 }
 
-Object *struct_get_attribute( Object *me, char *name ){
+Object *struct_get_attribute( Object *me, char *name, bool with_descriptor ){
     StructureObject *sme = ob_struct_ucast(me);
 
     int i, sz( sme->items );

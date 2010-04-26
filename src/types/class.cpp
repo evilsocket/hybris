@@ -515,7 +515,7 @@ void class_add_attribute( Object *me, char *name ){
 	class_define_attribute( me, name, asPublic );
 }
 
-Object *class_get_attribute( Object *me, char *name ){
+Object *class_get_attribute( Object *me, char *name, bool with_descriptor /* = true */ ){
     ClassObject *cme = ob_class_ucast(me);
     class_attribute_t *attribute;
     Object *a_value;
@@ -530,7 +530,7 @@ Object *class_get_attribute( Object *me, char *name ){
 	 * Else, if the class overloads the __attribute descriptor,
 	 * call it.
 	 */
-	else if( (a_value = class_call_overloaded_descriptor( me, "__attribute", true, 1, (Object *)gc_new_string(name) )) != H_UNDEFINED ){
+	else if( with_descriptor && (a_value = class_call_overloaded_descriptor( me, "__attribute", true, 1, (Object *)gc_new_string(name) )) != H_UNDEFINED ){
 		return a_value;
 	}
 	/*

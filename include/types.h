@@ -117,6 +117,7 @@ Object;
 #endif
 
 class Node;
+class VM;
 
 /*
  * Type function pointers descriptors .
@@ -162,7 +163,7 @@ typedef void     (*ob_define_attribute_function_t) ( Object *, char *, access_t 
 typedef access_t (*ob_attribute_access_function_t) ( Object *, char * );
 typedef void     (*ob_set_attribute_access_function_t) ( Object *, char *, access_t );
 typedef void     (*ob_add_attribute_function_t) ( Object *, char * );
-typedef Object * (*ob_get_attribute_function_t) ( Object *, char * );
+typedef Object * (*ob_get_attribute_function_t) ( Object *, char *, bool );
 typedef void     (*ob_set_attribute_function_t) ( Object *, char *, Object * );
 // functions to manage class methods
 typedef void     (*ob_define_method_function_t) ( Object *, char *, Node * );
@@ -609,7 +610,7 @@ void    ob_add_attribute( Object *s, char *a );
 /*
  * Get the value of the attribute 'a' from the structure 's'.
  */
-Object *ob_get_attribute( Object *s, char *a );
+Object *ob_get_attribute( Object *s, char *a, bool with_descriptor = true );
 /*
  * Create a clone of 'v' and call ob_set_attribute_reference( s, a, clone )
  * to set the value of the attribute 'a' inside the structure 's'.
@@ -631,6 +632,10 @@ void    ob_define_method( Object *c, char *name, Node *code );
  * return the first method found.
  */
 Node   *ob_get_method( Object *c, char *name, int argc = -1 );
+/*
+ * Special function to execute a __method class descriptor.
+ */
+Object *ob_call_undefined_method( VM *vm, Object *c, char *c_name, char *method_name, Node *argv );
 
 /**
  * Types definition.
