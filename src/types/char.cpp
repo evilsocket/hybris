@@ -500,6 +500,7 @@ IMPLEMENT_TYPE(Char) {
 	0, // cl_set_reference
 
 	/** structure operators **/
+	0, // define_attribute
 	0, // attribute_access
 	0, // set_attribute_access
     0, // add_attribute;

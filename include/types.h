@@ -158,6 +158,7 @@ typedef Object * (*ob_binary_function_t)        ( Object *, Object * );
 // {a}<operator{b} '=' {c}
 typedef Object * (*ob_ternary_function_t)       ( Object *, Object *, Object * );
 // functions to manage structure and class attributes
+typedef void     (*ob_define_attribute_function_t) ( Object *, char *, access_t );
 typedef access_t (*ob_attribute_access_function_t) ( Object *, char * );
 typedef void     (*ob_set_attribute_access_function_t) ( Object *, char *, access_t );
 typedef void     (*ob_add_attribute_function_t) ( Object *, char * );
@@ -287,6 +288,7 @@ typedef struct _object_type_t {
     ob_ternary_function_t       cl_set_reference;
 
     /** structure and class operators **/
+    ob_define_attribute_function_t define_attribute;
     ob_attribute_access_function_t attribute_access;
     ob_set_attribute_access_function_t set_attribute_access;
     ob_add_attribute_function_t add_attribute;
@@ -592,6 +594,10 @@ Object *ob_cl_set_reference( Object *a, Object *b, Object *c );
  * Return the access level for a given attribute.
  */
 access_t ob_attribute_access( Object *o, char * a );
+/*
+ * Define a new attribute inside the structure or the class.
+ */
+void     ob_define_attribute( Object *o, char *name, access_t a );
 /*
  * Set the access level for a given attribute.
  */

@@ -479,6 +479,18 @@ Object *class_cl_set( Object *me, Object *index, Object *op ){
 }
 
 /** class operators **/
+void class_define_attribute( Object *me, char *name, access_t a ){
+	ClassObject *cme = ob_class_ucast(me);
+
+	cme->c_attributes.insert( name,
+							  new class_attribute_t(
+									  name,
+									  a,
+									  (Object *)gc_new_integer(0)
+							  )
+							);
+}
+
 access_t class_attribute_access( Object *me, char *name ){
 	ClassObject *cme = ob_class_ucast(me);
 	class_attribute_t *attribute;
@@ -500,15 +512,7 @@ void class_set_attribute_access( Object *me, char *name, access_t a ){
 }
 
 void class_add_attribute( Object *me, char *name ){
-    ClassObject *cme = ob_class_ucast(me);
-
-    cme->c_attributes.insert( name,
-							  new class_attribute_t(
-									  name,
-									  asPublic,
-									  (Object *)gc_new_integer(0)
-							  )
-							);
+	class_define_attribute( me, name, asPublic );
 }
 
 Object *class_get_attribute( Object *me, char *name ){
@@ -516,12 +520,22 @@ Object *class_get_attribute( Object *me, char *name ){
     class_attribute_t *attribute;
     Object *a_value;
 
+    /*
+     * If the attribute is defined, return it.
+     */
 	if( (attribute = cme->c_attributes.find(name)) != H_UNDEFINED ){
 		return attribute->value;
 	}
+	/*
+	 * Else, if the class overloads the __attribute descriptor,
+	 * call it.
+	 */
 	else if( (a_value = class_call_overloaded_descriptor( me, "__attribute", true, 1, (Object *)gc_new_string(name) )) != H_UNDEFINED ){
 		return a_value;
 	}
+	/*
+	 * Nothing found.
+	 */
 	else{
 		return NULL;
 	}
@@ -539,13 +553,7 @@ void class_set_attribute_reference( Object *me, char *name, Object *value ){
 		attribute->value = ob_assign( attribute->value, value );
 	}
 	else{
-		cme->c_attributes.insert( name,
-								  new class_attribute_t(
-										  name,
-										  asPublic,
-										  value
-								  )
-								);
+		class_call_overloaded_descriptor( me, "__attribute", false, 2, (Object *)gc_new_string(name), value );
 	}
 }
 
@@ -701,6 +709,7 @@ IMPLEMENT_TYPE(Class) {
 	0, // cl_set_reference
 
 	/** structure operators **/
+	class_define_attribute, // define_attribute
 	class_attribute_access, // attribute_access
 	class_set_attribute_access, // set_attribute_access
     class_add_attribute, // add_attribute

@@ -679,6 +679,15 @@ Object *ob_cl_set_reference( Object *a, Object *b, Object *c ){
 	}
 }
 
+void ob_define_attribute( Object *o, char *name, access_t a ){
+	if( o->type->define_attribute != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->define_attribute(o,name,a);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", o->type->name );
+	}
+}
+
 access_t ob_attribute_access( Object *o, char * a ){
 	if( o->type->attribute_access != HYB_UNIMPLEMENTED_FUNCTION ){
 		return o->type->attribute_access(o,a);

@@ -506,8 +506,7 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 		if( node->child(i)->type() == H_NT_IDENTIFIER ){
 			attrname = (char *)node->child(i)->value.m_identifier.c_str();
 
-			ob_add_attribute( c, attrname );
-			ob_set_attribute_access( c, attrname, node->child(i)->value.m_access );
+			ob_define_attribute( c, attrname, node->child(i)->value.m_access );
 		}
 		/*
 		 * Define a method
@@ -1543,6 +1542,7 @@ Object *Engine::onAssign( vframe_t *frame, Node *node ){
 				 * to the object itself.
 				 */
 				value = exec( frame, node->child(1) );
+				// printf( "ob_set_attribute_reference( %s, %s, %s )\n", owner_id, child_id, ob_typename(value) );
 				ob_set_attribute_reference( owner, child_id, value );
 				return owner;
 			}

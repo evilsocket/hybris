@@ -153,12 +153,16 @@ Object *struct_assign( Object *me, Object *op ){
 }
 
 /** structure operators **/
-void struct_add_attribute( Object *me, char *name ){
-    StructureObject *sme = ob_struct_ucast(me);
+void struct_define_attribute( Object *me, char *name, access_t a ){
+	StructureObject *sme = ob_struct_ucast(me);
 
-    sme->names.push_back( name );
-    sme->values.push_back( (Object *)gc_new_integer(0) );
-    sme->items = sme->names.size();
+	sme->names.push_back( name );
+	sme->values.push_back( (Object *)gc_new_integer(0) );
+	sme->items = sme->names.size();
+}
+
+void struct_add_attribute( Object *me, char *name ){
+	struct_define_attribute( me, name, asPublic );
 }
 
 Object *struct_get_attribute( Object *me, char *name ){
@@ -280,6 +284,7 @@ IMPLEMENT_TYPE(Structure) {
 	0, // cl_set_reference
 
 	/** structure operators **/
+	struct_define_attribute, // define_attribute
 	0, // attribute_access
 	0, // set_attribute_access
     struct_add_attribute, // add_attribute
