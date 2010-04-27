@@ -27,20 +27,6 @@ MemorySegment::~MemorySegment(){
 	/*
 	 * See note on ~HashMap()
 	 */
-
-	/*
-	 * Handle non managed exceptions.
-	 */
-	if( state._exception == true ){
-		state._exception = false;
-		assert( state.value != NULL );
-		if( state.value->type->svalue ){
-			hyb_error( H_ET_GENERIC, "Unhandled exception : %s", ob_svalue(state.value).c_str() );
-		}
-		else{
-			hyb_error( H_ET_GENERIC, "Unhandled '%s' exception", ob_typename(state.value) );
-		}
-	}
 }
 
 Object *MemorySegment::add( char *identifier, Object *object ){
