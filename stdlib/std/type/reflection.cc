@@ -22,14 +22,18 @@ HYBRIS_DEFINE_FUNCTION(hvar_names);
 HYBRIS_DEFINE_FUNCTION(hvar_values);
 HYBRIS_DEFINE_FUNCTION(huser_functions);
 HYBRIS_DEFINE_FUNCTION(hdyn_functions);
+HYBRIS_DEFINE_FUNCTION(hmethods);
 HYBRIS_DEFINE_FUNCTION(hcall);
+HYBRIS_DEFINE_FUNCTION(hcall_method);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "var_names", hvar_names },
 	{ "var_values", hvar_values },
 	{ "user_functions", huser_functions },
 	{ "dyn_functions", hdyn_functions },
+	{ "methods", hmethods },
 	{ "call", hcall },
+	{ "call_method", hcall_method },
 	{ "", NULL }
 };
 
@@ -77,6 +81,23 @@ HYBRIS_DEFINE_FUNCTION(hdyn_functions){
     return map;
 }
 
+HYBRIS_DEFINE_FUNCTION(hmethods){
+	if( ob_argc() != 1 ){
+		hyb_error( H_ET_SYNTAX, "function 'methods' requires 1 parameter (called with %d)", ob_argc() );
+	}
+	ob_type_assert( ob_argv(0), otClass );
+
+	ClassObject  *co = (ClassObject *)ob_argv(0);
+	Object 		 *vo = (Object *)gc_new_vector();
+	ClassObjectMethodIterator i;
+
+	for( i = co->c_methods.begin(); i != co->c_methods.end(); i++ ){
+		ob_cl_push_reference( vo, (Object *)gc_new_string( (*i)->label.c_str() ) );
+	}
+
+	return vo;
+}
+
 HYBRIS_DEFINE_FUNCTION(hcall){
 	if( ob_argc() < 1 ){
 		hyb_error( H_ET_SYNTAX, "function 'call' requires at least 1 parameter (called with %d)", ob_argc() );
@@ -105,3 +126,18 @@ HYBRIS_DEFINE_FUNCTION(hcall){
 
 	return _return;
 }
+
+HYBRIS_DEFINE_FUNCTION(hcall_method){
+	if( ob_argc() != 3 ){
+		hyb_error( H_ET_SYNTAX, "function 'call_method' requires 3 parameter (called with %d)", ob_argc() );
+	}
+	ob_type_assert( ob_argv(0), otClass );
+	ob_type_assert( ob_argv(1), otString );
+	ob_type_assert( ob_argv(2), otVector );
+
+	Object *classref   = ob_argv(0);
+	char   *methodname = (char *)((StringObject *)ob_argv(1))->value.c_str();
+
+	return ob_call_method( vmachine, classref, (char *)ob_typename(classref), methodname, ob_argv(2) );
+}
+

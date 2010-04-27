@@ -80,11 +80,12 @@ HYBRIS_DEFINE_FUNCTION(hcontains){
 
 	Object *array = ob_argv(0),
            *find  = ob_argv(1);
-	unsigned int i;
+	IntegerObject index(0);
+	unsigned int size( ob_get_size(array) );
 
-	for( i = 0; i < ob_vector_ucast(array)->items; ++i ){
-		if( ob_cmp( ob_vector_ucast(array)->value[i], find ) == 0 ){
-			return ob_dcast( gc_new_integer(i) );
+	for( ; index.value < size; ++index.value ){
+		if( ob_cmp( ob_cl_at( array, (Object *)&index ), find ) == 0 ){
+			return ob_dcast( gc_new_integer(index.value) );
 		}
 	}
 

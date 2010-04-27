@@ -636,6 +636,10 @@ Node   *ob_get_method( Object *c, char *name, int argc = -1 );
  * Special function to execute a __method class descriptor.
  */
 Object *ob_call_undefined_method( VM *vm, Object *c, char *c_name, char *method_name, Node *argv );
+/*
+ * Special function to execute a class method.
+ */
+Object *ob_call_method( VM *vm, Object *c, char *c_name, char *method_name, Object *argv );
 
 /**
  * Types definition.

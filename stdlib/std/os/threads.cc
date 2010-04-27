@@ -165,7 +165,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_join){
     void *status;
 
     // fix issue #0000014
-    if( tid != -1 ){
+    if( tid > 0 ){
     	pthread_join( tid, &status );
 		vmachine->depool();
 		return H_DEFAULT_RETURN;
