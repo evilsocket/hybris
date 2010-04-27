@@ -29,6 +29,15 @@
 /* default null value for an Object pointer */
 #define H_UNDEFINED          NULL
 
+
+enum state_t {
+	None      = 0, // 00000000
+	Break     = 1, // 00000001
+	Next      = 2, // 00000010
+	Return    = 4, // 00000100
+	Exception = 8  // 00001000
+};
+
 /*
  * This structure holds the state of a memory frame.
  * Only the exception state is cloned up to higher frame
@@ -36,51 +45,43 @@
  */
 typedef struct _vframe_state {
 	/*
-	 * Set to true when a break statement is found or
-	 * when a return statement is found inside a loop.
+	 * The state bitmask.
 	 */
-	bool 	_break;
-	/*
-	 * Set to true when a next statement is found.
-	 */
-	bool 	_next;
-	/*
-	 * Set to true when a return statement is found.
-	 */
-	bool 	_return;
-	/*
-	 * Set to true when an exception is thrown.
-	 */
-	bool    _exception;
+	unsigned long mask;
 	/*
 	 * This will hold the exception or return data.
 	 */
 	Object *value;
 
-	_vframe_state()
-		: _break(false),
-		  _next(false),
-		  _return(false),
-		  _exception(false),
-		  value(NULL)
-	{
+	_vframe_state() : mask(None), value(NULL) {
 
+	}
+
+	__force_inline void set( state_t s ){
+		mask |= s;
+	}
+
+	__force_inline void set( state_t s, Object *v ){
+		mask |= s;
+		value = v;
+	}
+
+	__force_inline void unset( state_t s ){
+		mask &= ~s;
+	}
+
+	__force_inline bool is( state_t s ){
+		return (mask & s) == s;
 	}
 
 	__force_inline void assign( struct _vframe_state& s ){
-		_break     = s._break;
-		_next      = s._next;
-		_return    = s._return;
-		_exception = s._exception;
-		value      = s.value;
+		mask  = s.mask;
+		value = s.value;
 	}
 
 	__force_inline void reset(){
-		_break     = false;
-		_next      = false;
-		_return    = false;
-		_exception = false;
-		value      = 0;
+		mask  = None;
+		value = NULL;
 	}
 }
 vframe_state_t;
@@ -92,9 +93,17 @@ vframe_state_t;
 class MemorySegment : public HashMap<Object> {
     public :
 		/*
+		 * Name of the function/method that owns this stack.
+		 */
+		string			owner;
+		/*
 		 * Virtual memory frame state.
 		 */
-		vframe_state_t state;
+		vframe_state_t  state;
+		/*
+		 * Mutex for thread shared segments.
+		 */
+		pthread_mutex_t mutex;
 
 		MemorySegment();
         ~MemorySegment();

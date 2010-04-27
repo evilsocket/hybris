@@ -93,19 +93,15 @@ typedef struct _gc {
     size_t     		usage;
     size_t     	 	threshold;
     size_t			collecting;
-	#ifdef MT_SUPPORT
 	pthread_mutex_t mutex;
-	#endif
 
     _gc() : pool_head(NULL),
     		pool_tail(NULL),
 			items(0),
 			usage(0),
 			threshold(GC_DEFAULT_MEMORY_THRESHOLD),
-			collecting(0)
-			#ifdef MT_SUPPORT
-			,mutex(PTHREAD_MUTEX_INITIALIZER)
-			#endif
+			collecting(0),
+			mutex(PTHREAD_MUTEX_INITIALIZER)
 	{ }
 }
 gc_t;

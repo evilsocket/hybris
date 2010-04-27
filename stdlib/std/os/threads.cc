@@ -167,7 +167,6 @@ HYBRIS_DEFINE_FUNCTION(hpthread_join){
     // fix issue #0000014
     if( tid > 0 ){
     	pthread_join( tid, &status );
-		vmachine->depool();
 		return H_DEFAULT_RETURN;
     }
     else{
@@ -182,6 +181,11 @@ HYBRIS_DEFINE_FUNCTION(hpthread_kill){
 	ob_type_assert( ob_argv(0), otInteger );
 	ob_type_assert( ob_argv(1), otInteger );
 
-	return (Object *)gc_new_integer( pthread_kill( int_argv(0), int_argv(1) ) );
+	if( int_argv(0) > 0 ){
+		return (Object *)gc_new_integer( pthread_kill( int_argv(0), int_argv(1) ) );
+	}
+	else{
+		return H_DEFAULT_ERROR;
+	}
 }
 

@@ -19,7 +19,7 @@
 #include "mseg.h"
 #include "common.h"
 
-MemorySegment::MemorySegment() : HashMap<Object>() {
+MemorySegment::MemorySegment() : HashMap<Object>(), mutex(PTHREAD_MUTEX_INITIALIZER) {
 
 }
 
@@ -31,7 +31,8 @@ MemorySegment::~MemorySegment(){
 
 Object *MemorySegment::add( char *identifier, Object *object ){
     Object *_new = H_UNDEFINED,
-           *_old = H_UNDEFINED;
+           *_old = H_UNDEFINED,
+           *_ret = H_UNDEFINED;
 
     if( object != H_UNDEFINED ){
     	/*
@@ -50,9 +51,10 @@ Object *MemorySegment::add( char *identifier, Object *object ){
     	ob_set_references( _new, +1 );
     }
 
+    pthread_mutex_lock( &mutex );
     /* if object does not exist yet, insert as a new one */
     if( (_old = get( identifier )) == H_UNDEFINED ){
-        return insert( identifier, _new );
+    	_ret = insert( identifier, _new );
     }
     /* else set the new value */
     else{
@@ -60,8 +62,11 @@ Object *MemorySegment::add( char *identifier, Object *object ){
 
 		ob_free(_old);
 
-		return _new;
+		_ret = _new;
     }
+    pthread_mutex_unlock( &mutex );
+
+    return _ret;
 }
 
 MemorySegment *MemorySegment::clone(){

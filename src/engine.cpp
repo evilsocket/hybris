@@ -19,6 +19,9 @@
 #include "engine.h"
 #include "parser.hpp"
 
+#define CHECK_FRAME_EXCEPTION() if( frame->state.is(Exception) ){ \
+									return frame->state.value; \
+								}
 
 Engine::Engine( VM *context ) :
     vmachine(context),
@@ -37,22 +40,20 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
 	 * when the frame will be deleted (vframe_t class destructor), exit
 	 * with a non handled exception.
 	 */
-	if( frame->state._exception ){
-		return frame->state.value;
-	}
+	CHECK_FRAME_EXCEPTION()
     /*
 	 * A return statement was succesfully executed, skip everything
 	 * now on until the frame will be destroyed and return appropriate
 	 * value.
 	 */
-	else if( frame->state._return ){
+	if( frame->state.is(Return) ){
 		return frame->state.value;
 	}
     /*
      * A next statement was found, so skip nodes execution
      * until one of the loop handlers will reset the flag.
      */
-    else if( frame->state._next ){
+    else if( frame->state.is(Next) ){
     	return H_DEFAULT_RETURN;
     }
 
@@ -114,11 +115,11 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
                     return onForeachMapping( frame, node );
 				/* break; */
 				case T_BREAK :
-					frame->state._break = true;
+					frame->state.set(Break);
 				break;
 				/* next; */
 				case T_NEXT :
-					frame->state._next = true;
+					frame->state.set(Next);
 				break;
 				/* return */
 				case T_RETURN :
@@ -575,6 +576,7 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
     if( (function = vmachine->getFunction( callname )) == H_UNDEFINED ){
         return H_UNDEFINED;
     }
+	stack.owner = callname;
     /* do object assignment */
     for( i = 0; i < children; ++i ){
         /* create function stack value */
@@ -590,16 +592,16 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
     /*
 	 * An exception has been thrown inside an exec call.
 	 */
-	if( frame->state._exception ){
+	if( frame->state.is(Exception) ){
 		return frame->state.value;
 	}
 
-    vmachine->trace( callname, &stack );
-    vmachine->setCurrentFrame( &stack );
+    vmachine->addFrame( &stack );
+
     /* call the function */
     result = function( vmachine, &stack );
-    vmachine->setCurrentFrame( frame );
-    vmachine->detrace();
+
+    vmachine->popFrame();
 
     /* return function evaluation value */
     return result;
@@ -618,7 +620,6 @@ Object *Engine::onThreadedCall( string function_name, vframe_t *frame, vmem_t *a
 
 	/* search first in the code segment */
 	if( (function = vc->get((char *)function_name.c_str())) == H_UNDEFINED ){
-		vmachine->lock();
 		hyb_error( H_ET_SYNTAX, "'%s' undeclared user function identifier", function_name.c_str() );
 	}
 
@@ -634,8 +635,6 @@ Object *Engine::onThreadedCall( string function_name, vframe_t *frame, vmem_t *a
 	}
 
 	if( identifiers.size() != argv->size() ){
-	   vmachine->depool();
-	   vmachine->lock();
 	   hyb_error( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
 						       function_name.c_str(),
 						       identifiers.size(),
@@ -643,6 +642,7 @@ Object *Engine::onThreadedCall( string function_name, vframe_t *frame, vmem_t *a
 	}
 
 	children = argv->size();
+	stack.owner = function_name;
 	for( i = 0; i < children; ++i  ){
 		/*
 		 * Value references count is set to zero now, builtins
@@ -652,14 +652,12 @@ Object *Engine::onThreadedCall( string function_name, vframe_t *frame, vmem_t *a
 		stack.insert( (char *)identifiers[i].c_str(), argv->at(i) );
 	}
 
-	vmachine->trace( (char *)function_name.c_str(), &stack );
-	vmachine->setCurrentFrame( &stack );
+	vmachine->addFrame( &stack );
 
 	/* call the function */
 	result = exec( &stack, body );
 
-	vmachine->setCurrentFrame( frame );
-	vmachine->detrace();
+	vmachine->popFrame();
 
 	/* return function evaluation value */
 	return result;
@@ -693,9 +691,6 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
     }
 
     if( identifiers.size() != call->children() ){
-        if( threaded ){
-           vmachine->depool();
-        }
         hyb_error( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
                              function->value.m_function.c_str(),
                              identifiers.size(),
@@ -703,6 +698,7 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
     }
 
     children = call->children();
+    stack.owner = function->value.m_function;
     for( i = 0; i < children; ++i ){
         value = exec( frame, call->child(i) );
         /*
@@ -713,23 +709,19 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
         stack.insert( (char *)identifiers[i].c_str(), value );
     }
 
-    vmachine->trace( callname, &stack );
-    vmachine->setCurrentFrame( &stack );
+    vmachine->addFrame( &stack );
 
     /* call the function */
     result = exec( &stack, body );
 
-    vmachine->setCurrentFrame( frame );
-    vmachine->detrace();
+    vmachine->popFrame();
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
 	 * memory frame.
 	 */
-	if( stack.state._exception == true ){
-		stack.state._exception  = false;
-		frame->state._exception = true;
-		frame->state.value = stack.state.value;
+	if( stack.state.is(Exception) ){
+		frame->state.set( Exception, stack.state.value );
 	}
 
     /* return function evaluation value */
@@ -797,6 +789,7 @@ Object *Engine::onNewOperator( vframe_t *frame, Node *type ){
 			 * Create the "me" reference to the class itself, used inside
 			 * methods for me->... calls.
 			 */
+			stack.owner = string(type_name) + "::" + string(type_name);
 			stack.insert( "me", newtype );
 			for( i = 0; i < children; ++i ){
 				arg   = type->child(i);
@@ -809,31 +802,27 @@ Object *Engine::onNewOperator( vframe_t *frame, Node *type ){
 				stack.insert( (char *)ctor->child(i)->value.m_identifier.c_str(), value );
 			}
 
-			vmachine->trace( type_name, &stack );
-			vmachine->setCurrentFrame( &stack );
+			vmachine->addFrame( &stack );
 
 			/* call the ctor */
 			exec( &stack, ctor->callBody() );
 
-			vmachine->setCurrentFrame( frame );
-			vmachine->detrace();
+			vmachine->popFrame();
 
 			/*
 			 * Check for unhandled exceptions and put them on the root
 			 * memory frame.
 			 */
-			if( stack.state._exception == true ){
-				stack.state._exception  = false;
-				frame->state._exception = true;
-				frame->state.value = stack.state.value;
+			if( stack.state.is(Exception) ){
+				frame->state.set( Exception, stack.state.value );
 			}
 		}
 		else{
 			if( children > ob_class_ucast(newtype)->c_attributes.size() ){
 				hyb_error( H_ET_SYNTAX, "class '%s' has %d attributes, initialized with %d",
-									 type_name,
-									 ob_class_ucast(newtype)->c_attributes.size(),
-									 children );
+										 type_name,
+										 ob_class_ucast(newtype)->c_attributes.size(),
+										 children );
 			}
 
 			for( i = 0; i < children; ++i ){
@@ -861,19 +850,14 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
     function_t dllcall = vmachine->getFunction( "dllcall" );
 
     if( (fn_pointer = frame->get( callname )) == H_UNDEFINED ){
-        if( threaded ){
-            vmachine->depool();
-        }
         return H_UNDEFINED;
     }
     else if( ob_is_extern(fn_pointer) == false ){
-        if( threaded ){
-            vmachine->depool();
-        }
         return H_UNDEFINED;
     }
 
     /* at this point we're sure that it's an extern function pointer, so build the frame for hdllcall */
+    stack.owner = callname;
     stack.push( fn_pointer );
     children = call->children();
     for( i = 0; i < children; ++i ){
@@ -886,14 +870,12 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
         stack.push( value );
     }
 
-    vmachine->trace( callname, &stack );
-    vmachine->setCurrentFrame( &stack );
+    vmachine->addFrame( &stack );
 
     /* call the function */
     result = dllcall( vmachine, &stack );
 
-    vmachine->setCurrentFrame( frame );
-    vmachine->detrace();
+    vmachine->popFrame();
 
     /* return function evaluation value */
     return result;
@@ -1026,7 +1008,6 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 	 * call children with method->children() - 1 to ignore the body.
 	 */
 	if( argc != method_argc ){
-		vmachine->depool();
 		hyb_error( H_ET_SYNTAX, "method '%s' requires %d parameters (called with %d)",
 								 method->value.m_method.c_str(),
 								 method_argc,
@@ -1037,6 +1018,7 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 	 * Create the "me" reference to the class itself, used inside
 	 * methods for me->... calls.
 	 */
+	stack.owner = owner_id + "::" + method->value.m_method.c_str();
 	stack.insert( "me", owner );
 	for( j = 0; j < argc; ++j ){
 		identifier = call->child(j);
@@ -1049,23 +1031,18 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 		stack.insert( (char *)method->child(j)->value.m_identifier.c_str(), value );
 	}
 
-	vmachine->trace( (char *)child_id.c_str(), &stack );
-	vmachine->setCurrentFrame( &stack );
+	vmachine->addFrame( &stack );
 
 	/* call the method */
 	result = exec( &stack, method->callBody() );
 
-	vmachine->setCurrentFrame( frame );
-	vmachine->detrace();
-
+	vmachine->popFrame();
 	/*
 	 * Check for unhandled exceptions and put them on the root
 	 * memory frame.
 	 */
-	if( stack.state._exception == true ){
-		stack.state._exception  = false;
-		frame->state._exception = true;
-		frame->state.value = stack.state.value;
+	if( stack.state.is(Exception) ){
+		frame->state.set( Exception, stack.state.value );
 	}
 
 	/* return method evaluation value */
@@ -1115,9 +1092,9 @@ Object *Engine::onReturn( vframe_t *frame, Node *node ){
 	 * Set break and return state to make every loop and/or condition
 	 * statement to exit with this return value.
 	 */
-    frame->state.value   = exec( frame, node->child(0) );
-    frame->state._break  = true;
-    frame->state._return = true;
+    frame->state.value = exec( frame, node->child(0) );
+    frame->state.set( Break);
+    frame->state.set( Return );
 
     return frame->state.value;
 }
@@ -1129,6 +1106,9 @@ Object *Engine::onRange( vframe_t *frame, Node *node ){
 
     from  = exec( frame, node->child(0) );
    	to    = exec( frame, node->child(1) );
+
+   	CHECK_FRAME_EXCEPTION()
+
 	range = ob_range( from, to );
 
 	return range;
@@ -1141,6 +1121,9 @@ Object *Engine::onSubscriptAdd( vframe_t *frame, Node *node ){
 
     array  = exec( frame, node->child(0) );
 	object = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	res    = ob_cl_push( array, object );
 
 	return res;
@@ -1157,6 +1140,8 @@ Object *Engine::onSubscriptGet( vframe_t *frame, Node *node ){
 		identifier = exec( frame, node->child(0) );
 		index      = exec( frame, node->child(2) );
 
+		CHECK_FRAME_EXCEPTION()
+
 		ob_assign( identifier,
 					ob_cl_at( array, index )
 				  );
@@ -1166,6 +1151,9 @@ Object *Engine::onSubscriptGet( vframe_t *frame, Node *node ){
 	else{
 		array  = exec( frame, node->child(0) );
 		index  = exec( frame, node->child(1) );
+
+		CHECK_FRAME_EXCEPTION()
+
 		result = ob_cl_at( array, index );
 	}
 
@@ -1180,6 +1168,8 @@ Object *Engine::onSubscriptSet( vframe_t *frame, Node *node ){
     array = exec( frame, node->child(0) );
    	index  = exec( frame, node->child(1) );
    	object = exec( frame, node->child(2) );
+
+   	CHECK_FRAME_EXCEPTION()
 
    	ob_cl_set( array, index, object );
 
@@ -1199,10 +1189,11 @@ Object *Engine::onWhile( vframe_t *frame, Node *node ){
     while( ob_lvalue( (boolean = exec(  frame, condition )) ) ){
    		result = exec( frame, body );
 
-   		frame->state._next = false;
+   		CHECK_FRAME_EXCEPTION()
 
-        if( frame->state._break ){
-        	frame->state._break = false;
+   		frame->state.unset(Next);
+        if( frame->state.is(Break) ){
+        	frame->state.unset(Break);
 			break;
         }
     }
@@ -1222,10 +1213,11 @@ Object *Engine::onDo( vframe_t *frame, Node *node ){
     do{
 		result = exec( frame, body );
 
-		frame->state._next = false;
+		CHECK_FRAME_EXCEPTION()
 
-        if( frame->state._break ){
-			frame->state._break = false;
+		frame->state.unset(Next);
+		if( frame->state.is(Break) ){
+			frame->state.unset(Break);
 			break;
 		}
     }
@@ -1254,10 +1246,11 @@ Object *Engine::onFor( vframe_t *frame, Node *node ){
 
 		result = exec( frame, body );
 
-		frame->state._next = false;
+		CHECK_FRAME_EXCEPTION()
 
-        if( frame->state._break ){
-        	frame->state._break = false;
+		frame->state.unset(Next);
+		if( frame->state.is(Break) ){
+			frame->state.unset(Break);
 			break;
 		}
     }
@@ -1283,10 +1276,11 @@ Object *Engine::onForeach( vframe_t *frame, Node *node ){
 
         result = exec( frame, body );
 
-        frame->state._next = false;
+        CHECK_FRAME_EXCEPTION()
 
-        if( frame->state._break ){
-			frame->state._break = false;
+        frame->state.unset(Next);
+		if( frame->state.is(Break) ){
+			frame->state.unset(Break);
 			break;
 		}
     }
@@ -1314,10 +1308,11 @@ Object *Engine::onForeachMapping( vframe_t *frame, Node *node ){
 
         result = exec( frame, body );
 
-        frame->state._next = false;
+        CHECK_FRAME_EXCEPTION()
 
-        if( frame->state._break ){
-			frame->state._break = false;
+        frame->state.unset(Next);
+		if( frame->state.is(Break) ){
+			frame->state.unset(Break);
 			break;
 		}
     }
@@ -1339,6 +1334,8 @@ Object *Engine::onIf( vframe_t *frame, Node *node ){
         result = exec( frame, node->child(2) );
     }
 
+    CHECK_FRAME_EXCEPTION()
+
     return H_UNDEFINED;
 }
 
@@ -1354,6 +1351,8 @@ Object *Engine::onQuestion( vframe_t *frame, Node *node ){
     else{
         result = exec( frame, node->child(2) );
     }
+
+    CHECK_FRAME_EXCEPTION()
 
     return result;
 }
@@ -1376,6 +1375,9 @@ Object *Engine::onSwitch( vframe_t *frame, Node *node){
 
         if( case_node != H_UNDEFINED && stmt_node != H_UNDEFINED ){
             compare = exec( frame, case_node );
+
+            CHECK_FRAME_EXCEPTION()
+
             if( ob_cmp( target, compare ) == 0 ){
                 return exec( frame, stmt_node );
             }
@@ -1385,6 +1387,8 @@ Object *Engine::onSwitch( vframe_t *frame, Node *node){
     // exec default case
     if( node->value.m_default != H_UNDEFINED ){
         result = exec( frame, node->value.m_default );
+
+        CHECK_FRAME_EXCEPTION()
     }
 
     return result;
@@ -1392,7 +1396,7 @@ Object *Engine::onSwitch( vframe_t *frame, Node *node){
 
 Object *Engine::onThrow( vframe_t *frame, Node *node ){
 	frame->state.value = exec( frame, node->child(0) );
-	frame->state._exception = true;
+	frame->state.set( Exception );
 
 	return frame->state.value;
 }
@@ -1405,10 +1409,10 @@ Object *Engine::onTryCatch( vframe_t *frame, Node *node ){
 
 	exec( frame, main_body );
 
-	if( frame->state._exception ){
+	if( frame->state.is(Exception) ){
 		assert( frame->state.value != H_UNDEFINED );
 		frame->add( (char *)ex_ident->value.m_identifier.c_str(), frame->state.value );
-		frame->state._exception = false;
+		frame->state.unset(Exception);
 		exec( frame, catch_body );
 	}
 
@@ -1426,6 +1430,8 @@ Object *Engine::onEostmt( vframe_t *frame, Node *node ){
     res_1 = exec( frame, node->child(0) );
     res_2 = exec( frame, node->child(1) );
 
+    CHECK_FRAME_EXCEPTION()
+
     return res_2;
 }
 
@@ -1436,6 +1442,9 @@ Object *Engine::onDot( vframe_t *frame, Node *node ){
 
     a      = exec( frame, node->child(0) );
     b      = exec( frame, node->child(1) );
+
+    CHECK_FRAME_EXCEPTION()
+
     result = ob_cl_concat( a, b );
 
     return result;
@@ -1448,6 +1457,9 @@ Object *Engine::onInplaceDot( vframe_t *frame, Node *node ){
 
     a      = exec( frame, node->child(0) );
     b      = exec( frame, node->child(1) );
+
+    CHECK_FRAME_EXCEPTION()
+
     result = ob_cl_inplace_concat( a, b );
 
     return result;
@@ -1558,6 +1570,9 @@ Object *Engine::onUminus( vframe_t *frame, Node *node ){
            *result = H_UNDEFINED;
 
     o      = exec( frame, node->child(0) );
+
+    CHECK_FRAME_EXCEPTION()
+
     result = ob_uminus(o);
 
     return result;
@@ -1569,7 +1584,10 @@ Object *Engine::onRegex( vframe_t *frame, Node *node ){
            *result = H_UNDEFINED;
 
     o = exec(  frame, node->child(0) );
-	regexp = exec(  frame, node->child(1) );
+	regexp = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	result = ob_apply_regexp( o, regexp );
 
 	return result;
@@ -1582,6 +1600,9 @@ Object *Engine::onAdd( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_add( a, b );
 
 	return c;
@@ -1593,6 +1614,8 @@ Object *Engine::onInplaceAdd( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
 
 	ob_inplace_add( a, b );
 
@@ -1606,6 +1629,9 @@ Object *Engine::onSub( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_sub( a, b );
 
 	return c;
@@ -1617,6 +1643,8 @@ Object *Engine::onInplaceSub( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
 
 	ob_inplace_sub( a, b );
 
@@ -1630,6 +1658,9 @@ Object *Engine::onMul( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_mul( a, b );
 
 	return c;
@@ -1641,6 +1672,8 @@ Object *Engine::onInplaceMul( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
 
 	ob_inplace_mul( a, b );
 
@@ -1654,6 +1687,9 @@ Object *Engine::onDiv( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_div( a, b );
 
 	return c;
@@ -1665,6 +1701,8 @@ Object *Engine::onInplaceDiv( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
 
 	ob_inplace_div( a, b );
 
@@ -1678,6 +1716,9 @@ Object *Engine::onMod( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_mod( a, b );
 
 	return c;
@@ -1690,6 +1731,8 @@ Object *Engine::onInplaceMod( vframe_t *frame, Node *node ){
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
 
+	CHECK_FRAME_EXCEPTION()
+
 	ob_inplace_mod( a, b );
 
 	return a;
@@ -1699,6 +1742,9 @@ Object *Engine::onInc( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
     o = exec( frame, node->child(0) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	ob_increment(o);
 
 	return o;
@@ -1708,6 +1754,9 @@ Object *Engine::onDec( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
     o = exec( frame, node->child(0) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	ob_decrement(o);
 
 	return o;
@@ -1720,6 +1769,9 @@ Object *Engine::onXor( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_bw_xor( a, b );
 
 	return c;
@@ -1731,6 +1783,8 @@ Object *Engine::onInplaceXor( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
 
 	ob_bw_inplace_xor( a, b );
 
@@ -1744,6 +1798,9 @@ Object *Engine::onAnd( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_bw_and( a, b );
 
 	return c;
@@ -1755,6 +1812,8 @@ Object *Engine::onInplaceAnd( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
 
 	ob_bw_inplace_and( a, b );
 
@@ -1768,6 +1827,9 @@ Object *Engine::onOr( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_bw_or( a, b );
 
 	return c;
@@ -1779,6 +1841,8 @@ Object *Engine::onInplaceOr( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
 
 	ob_bw_inplace_or( a, b );
 
@@ -1792,6 +1856,13 @@ Object *Engine::onShiftl( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	if( frame->state.is(Exception) ){
+		return frame->state.value;
+	}
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_bw_lshift( a, b );
 
 	return c;
@@ -1803,6 +1874,8 @@ Object *Engine::onInplaceShiftl( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
 
 	ob_bw_inplace_lshift( a, b );
 
@@ -1816,6 +1889,9 @@ Object *Engine::onShiftr( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_bw_rshift( a, b );
 
 	return c;
@@ -1828,6 +1904,8 @@ Object *Engine::onInplaceShiftr( vframe_t *frame, Node *node ){
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
 
+	CHECK_FRAME_EXCEPTION()
+
 	ob_bw_inplace_rshift( a, b );
 
 	return a;
@@ -1838,6 +1916,9 @@ Object *Engine::onFact( vframe_t *frame, Node *node ){
            *r = H_UNDEFINED;
 
     o = exec(  frame, node->child(0) );
+
+	CHECK_FRAME_EXCEPTION()
+
     r = ob_factorial(o);
 
     return r;
@@ -1848,6 +1929,9 @@ Object *Engine::onNot( vframe_t *frame, Node *node ){
            *r = H_UNDEFINED;
 
     o = exec( frame, node->child(0) );
+
+	CHECK_FRAME_EXCEPTION()
+
    	r = ob_bw_not(o);
 
    	return r;
@@ -1858,6 +1942,9 @@ Object *Engine::onLnot( vframe_t *frame, Node *node ){
            *r = H_UNDEFINED;
 
     o = exec( frame, node->child(0) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	r = ob_l_not(o);
 
 	return r;
@@ -1870,6 +1957,9 @@ Object *Engine::onLess( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_l_less( a, b );
 
 	return c;
@@ -1882,6 +1972,9 @@ Object *Engine::onGreater( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_l_greater( a, b );
 
 	return c;
@@ -1894,6 +1987,9 @@ Object *Engine::onGe( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_l_greater_or_same( a, b );
 
 	return c;
@@ -1906,6 +2002,9 @@ Object *Engine::onLe( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_l_less_or_same( a, b );
 
 	return c;
@@ -1918,6 +2017,9 @@ Object *Engine::onNe( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_l_diff( a, b );
 
 	return c;
@@ -1930,6 +2032,9 @@ Object *Engine::onEq( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_l_same( a, b );
 
 	return c;
@@ -1942,6 +2047,9 @@ Object *Engine::onLand( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_l_and( a, b );
 
 	return c;
@@ -1954,6 +2062,9 @@ Object *Engine::onLor( vframe_t *frame, Node *node ){
 
     a = exec( frame, node->child(0) );
 	b = exec( frame, node->child(1) );
+
+	CHECK_FRAME_EXCEPTION()
+
 	c = ob_l_or( a, b );
 
 	return c;

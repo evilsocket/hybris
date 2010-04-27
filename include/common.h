@@ -85,10 +85,6 @@ void yyerror( char *error );
  */
 void  hyb_error( H_ERROR_TYPE type, const char *format, ... );
 /*
- * Print the call stack trace.
- */
-void  hyb_print_stacktrace( int force = 0 );
-/*
  * Check if the given file exists.
  */
 int   hyb_file_exists ( char *filename );

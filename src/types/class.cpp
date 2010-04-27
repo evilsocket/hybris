@@ -26,9 +26,8 @@
 Object *class_call_overloaded_operator( Object *me, const char *op_name, int argc, ... ){
 	char     op_mangled_name[0xFF] = {0};
 	Node    *op = H_UNDEFINED;
-	vframe_t stack,
-			*frame;
-	Object  *result               = H_UNDEFINED;
+	vframe_t stack;
+	Object  *result = H_UNDEFINED;
 	unsigned int i, op_argc;
 	va_list ap;
 	extern VM __hyb_vm;
@@ -46,7 +45,6 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	 * call children with method->children() - 1 to ignore the body.
 	 */
 	if( argc != op_argc ){
-		__hyb_vm.depool();
 		hyb_error( H_ET_SYNTAX, "operator '%s' requires %d parameters (called with %d)",
 								 op_name,
 								 op_argc,
@@ -57,6 +55,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	 * Create the "me" reference to the class itself, used inside
 	 * methods for me->... calls.
 	 */
+	stack.owner = string(ob_typename(me)) + "::" + string(op_name);
 	stack.insert( "me", me );
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
@@ -69,28 +68,19 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	}
 	va_end(ap);
 
-	/*
-	 * Save current frame.
-	 */
-	frame = __hyb_vm.vframe;
-
-	__hyb_vm.trace( (char *)op_name, &stack );
-	__hyb_vm.setCurrentFrame( &stack );
+	__hyb_vm.addFrame( &stack );
 
 	/* call the operator */
 	result = __hyb_vm.engine->exec( &stack, op->callBody() );
 
-	__hyb_vm.setCurrentFrame( frame );
-	__hyb_vm.detrace();
+	__hyb_vm.popFrame();
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
 	 * memory frame.
 	 */
-	if( stack.state._exception == true ){
-		stack.state._exception = false;
-		__hyb_vm.vframe->state._exception = true;
-		__hyb_vm.vframe->state.value 	  = stack.state.value;
+	if( stack.state.is(Exception) ){
+		__hyb_vm.frame()->state.set( Exception, stack.state.value );
 	}
 
 	/* return method evaluation value */
@@ -99,8 +89,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 
 Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool lazy, int argc, ... ){
 	Node    *ds = H_UNDEFINED;
-	vframe_t stack,
-			*frame;
+	vframe_t stack;
 	Object  *result = H_UNDEFINED;
 	unsigned int i, ds_argc;
 	va_list ap;
@@ -123,7 +112,6 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	 * call children with method->children() - 1 to ignore the body.
 	 */
 	if( argc != ds_argc ){
-		__hyb_vm.depool();
 		hyb_error( H_ET_SYNTAX, "descriptor '%s' requires %d parameters (called with %d)",
 								 ds_name,
 								 ds_argc,
@@ -134,6 +122,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	 * Create the "me" reference to the class itself, used inside
 	 * methods for me->... calls.
 	 */
+	stack.owner = string(ob_typename(me)) + "::" + string(ds_name);
 	stack.insert( "me", me );
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
@@ -146,10 +135,6 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	}
 	va_end(ap);
 
-	/*
-	 * Save current frame.
-	 */
-	frame = __hyb_vm.vframe;
 	/*
 	 * Save stack frame state.
 	 */
@@ -170,10 +155,8 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	 * Check for unhandled exceptions and put them on the root
 	 * memory frame.
 	 */
-	if( stack.state._exception == true ){
-		stack.state._exception = false;
-		__hyb_vm.vframe->state._exception = true;
-		__hyb_vm.vframe->state.value 	  = stack.state.value;
+	if( stack.state.is(Exception) ){
+		__hyb_vm.frame()->state.set( Exception, stack.state.value );
 	}
 
 	/* return method evaluation value */
@@ -258,11 +241,7 @@ void class_free( Object *me ){
 
 			stack.insert( "me", me );
 
-			__hyb_vm.trace( "__expire", &stack );
-
 			__hyb_vm.engine->exec( &stack, dtor->callBody() );
-
-			__hyb_vm.detrace();
 		}
     }
 	/*

@@ -24,22 +24,6 @@ void VM::signal_handler( int signo ){
     }
 }
 
-string VM::mk_trace( char *function, vframe_t *frame ){
-    string trace( function + string("(") );
-    unsigned int i,
-                 size( frame->size() ),
-                 i_end( size - 1 );
-
-    for( i = 0; i < size; ++i ){
-		if( strcmp( frame->label(i), "me" ) != 0 ){
-			trace += " " + string( ob_typename( frame->at(i) ) ) + (i < i_end ? "," : "");
-		}
-    }
-    trace += " )";
-
-    return trace;
-}
-
 void VM::str_split( string& str, string delimiters, vector<string>& tokens ){
     string::size_type lastPos = str.find_first_not_of(delimiters, 0);
     string::size_type pos     = str.find_first_of(delimiters, lastPos);
@@ -104,9 +88,7 @@ void VM::init( int argc, char *argv[] ){
     /* save interpreter directory */
     getcwd( args.rootpath, 0xFF );
     /* initialize pthread mutex */
-    #ifdef MT_SUPPORT
     th_mutex = PTHREAD_MUTEX_INITIALIZER;
-    #endif
     /* set signal handler */
     signal( SIGSEGV, VM::signal_handler );
 
@@ -131,7 +113,6 @@ void VM::init( int argc, char *argv[] ){
 }
 
 void VM::release(){
-    #ifdef MT_SUPPORT
     lock();
         if( th_pool.size() > 0 ){
             printf( "[WARNING] Hard killing remaining running threads ... " );
@@ -142,12 +123,12 @@ void VM::release(){
             printf( "done .\n" );
         }
     unlock();
-    #endif
+
     /*
      * Handle unhandled exceptions in the main memory frame.
      */
-    if( vmem.state._exception == true ){
-    	vmem.state._exception = false;
+    if( vmem.state.is(Exception) ){
+    	vmem.state.unset(Exception);
     	assert( vmem.state.value != NULL );
     	if( vmem.state.value->type->svalue ){
     		fprintf( stderr, "\033[22;31mERROR : Unhandled exception : %s\n\033[00m", ob_svalue(vmem.state.value).c_str() );
@@ -256,6 +237,18 @@ void VM::loadModule( string path, string name ){
     }
 
     modules.push_back(hmod);
+}
+
+void VM::printStackTrace( bool force /*= false*/ ){
+	if( args.stacktrace || force ){
+		list<vframe_t *>::reverse_iterator i;
+		unsigned int j;
+		fprintf( stderr, "\nSTACK TRACE :\n\n" );
+		for( i = frames.rbegin(), j = 0; i != frames.rend(); i++, ++j ){
+			fprintf( stderr, "\t%.3d : %s\n", j, (*i)->owner.c_str() );
+		}
+		fprintf( stderr, "\n" );
+	}
 }
 
 void VM::loadModule( char *module ){

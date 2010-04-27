@@ -46,7 +46,7 @@ class Exception {
 	}
 
 	public method print(){
-		println( me->__to_string() );
+		println( me );
 	}
 }
 

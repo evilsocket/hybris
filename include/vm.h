@@ -118,10 +118,6 @@ class VM {
 		 */
         static void signal_handler( int signo );
         /*
-         * Create a detailed string for the function call.
-         */
-        string mk_trace( char *function, vframe_t *frame );
-        /*
          * Split 'str' into 'tokens' vector using 'delimiters'.
          */
         void   str_split( string& str, string delimiters, vector<string>& tokens );
@@ -136,49 +132,69 @@ class VM {
 
     public  :
 
-        #ifdef MT_SUPPORT
-            /* running threads pool vector */
-            vector<pthread_t> th_pool;
-            /* threads mutex */
-            pthread_mutex_t   th_mutex;
-            /* lock the pthread mutex */
-            __force_inline void lock(){
-                pthread_mutex_lock( &th_mutex );
-            }
-            /* release the pthread mutex */
-            __force_inline void unlock(){
-                pthread_mutex_unlock( &th_mutex );
-            }
-            /* add a thread to the threads pool */
-            __force_inline void pool( pthread_t tid = 0 ){
-                tid = (tid == 0 ? pthread_self() : tid);
-                lock();
-                th_pool.push_back(tid);
-                unlock();
-            }
-            /* remove a thread from the threads pool */
-            __force_inline void depool( pthread_t tid = 0 ){
-                tid = (tid == 0 ? pthread_self() : tid);
+		/* running threads pool vector */
+		vector<pthread_t> th_pool;
+		/* threads mutex */
+		pthread_mutex_t   th_mutex;
 
-                lock();
-                for( int pool_i = 0; pool_i < th_pool.size(); ++pool_i ){
-                    if( th_pool[pool_i] == tid ){
-                        th_pool.erase( th_pool.begin() + pool_i );
-                        break;
-                    }
-                }
-                unlock();
-            }
-        #else
-            __force_inline void lock(){}
-            __force_inline void unlock(){}
-            __force_inline void pool( pthread_t tid = 0 ){}
-            __force_inline void depool( pthread_t tid = 0 ){}
-        #endif
+		/* lock the pthread mutex */
+		__force_inline void lock(){
+			pthread_mutex_lock( &th_mutex );
+		}
+		/* release the pthread mutex */
+		__force_inline void unlock(){
+			pthread_mutex_unlock( &th_mutex );
+		}
+		/* add a thread to the threads pool */
+		__force_inline void pool( pthread_t tid = 0 ){
+			tid = (tid == 0 ? pthread_self() : tid);
+			lock();
+			th_pool.push_back(tid);
+			unlock();
+		}
+		/* remove a thread from the threads pool */
+		__force_inline void depool( pthread_t tid = 0 ){
+			tid = (tid == 0 ? pthread_self() : tid);
+
+			lock();
+			for( int pool_i = 0; pool_i < th_pool.size(); ++pool_i ){
+				if( th_pool[pool_i] == tid ){
+					th_pool.erase( th_pool.begin() + pool_i );
+					break;
+				}
+			}
+			unlock();
+		}
+
+		/*
+		 * The list of calling frames.
+		 */
+		list<vframe_t *> frames;
+		/*
+		 * Push a frame to the trace stack.
+		 */
+		__force_inline void addFrame( vframe_t *frame ){
+			lock();
+				frames.push_back(frame);
+			unlock();
+		}
+		/*
+		 * Remove the last frame from the trace stack.
+		 */
+		__force_inline void popFrame(){
+			lock();
+				frames.pop_back();
+			unlock();
+		}
+		/*
+		 * Return the active frame pointer (last in the list).
+		 */
+		__force_inline vframe_t *frame(){
+			return frames.back();
+		}
+
         /* source file handle */
         FILE          *fp;
-        /* function call trace vector */
-        vector<string> stack_trace;
         /* data segment */
         vmem_t         vmem;
         /* active memory frame pointer */
@@ -213,30 +229,6 @@ class VM {
          * Change working directory to the script one.
          */
         int chdir();
-        /*
-         * Push a function name inside the stack trace vector.
-         */
-        __force_inline void trace( char *function, vframe_t *frame ){
-            lock();
-                stack_trace.push_back( mk_trace( function, frame  ) );
-            unlock();
-        }
-        /*
-         * Remove last pushed function from the stack trace vector.
-         */
-        __force_inline void detrace(){
-            lock();
-                stack_trace.pop_back();
-            unlock();
-        }
-        /*
-		 * Update active memory frame pointer.
-		 */
-        __force_inline void setCurrentFrame( vframe_t *frame ){
-        	lock();
-        		vframe = frame;
-        	unlock();
-        }
 
         /*
          * Compute execution time and print it.
@@ -272,6 +264,10 @@ class VM {
          *
          */
         void loadModule( char *module );
+        /*
+         * Print the calling stack trace.
+         */
+        void printStackTrace( bool force = false );
         /*
          * Find out if a function has been registered by some previously
          * loaded module and return its pointer.

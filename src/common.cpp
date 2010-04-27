@@ -23,20 +23,6 @@
 #include <time.h>
 #include <sys/time.h>
 
-
-void hyb_print_stacktrace( int force /* = 0 */ ){
-    extern VM __hyb_vm;
-
-    if( (__hyb_vm.args.stacktrace && __hyb_vm.stack_trace.size()) || force ){
-        int tail = __hyb_vm.stack_trace.size() - 1;
-        printf( "\nSTACK TRACE :\n\n" );
-        for( int i = tail; i >= 0; i-- ){
-            printf( "\t%.3d : %s\n", i, __hyb_vm.stack_trace[i].c_str() );
-        }
-        printf( "\n" );
-    }
-}
-
 void yyerror( char *error ){
     extern int yylineno;
     extern VM __hyb_vm;
@@ -57,21 +43,11 @@ void yyerror( char *error ){
     	fprintf( stderr, "%s%c", error, (strchr( error, '\n' ) ? 0x00 : '\n') );
     }
 
-	/*
-	 * If the error was triggered by a SIGSEGV signal, force
-	 * the stack trace to printed.
-	 */
-	if( strstr( error, "SIGSEGV Signal Catched" ) ){
-		hyb_print_stacktrace(1);
-	}
-	/*
-	 * Otherwise, print it only if cmd line arguments are configured
-	 * to do so.
-	 */
-	else{
-		hyb_print_stacktrace();
-	}
-
+   /*
+    * If the error was triggered by a SIGSEGV signal, force
+    * the stack trace to printed.
+    */
+    __hyb_vm.printStackTrace( (strstr( error, "SIGSEGV Signal Catched" ) != NULL) );
 	__hyb_vm.closeFile();
 	__hyb_vm.release();
 

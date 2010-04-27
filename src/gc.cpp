@@ -27,15 +27,11 @@ extern void hyb_error( H_ERROR_TYPE type, const char *format, ... );
 gc_t __gc;
 
 __force_inline void gc_lock(){
-	#ifdef MT_SUPPORT
 	pthread_mutex_lock( &__gc.mutex );
-	#endif
 }
 
 __force_inline void gc_unlock(){
-	#ifdef MT_SUPPORT
 	pthread_mutex_unlock( &__gc.mutex );
-	#endif
 }
 
 __force_inline void gc_pool_append( gc_item_t *item ){

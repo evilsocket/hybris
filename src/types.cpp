@@ -764,8 +764,7 @@ Node *ob_get_method( Object *c, char *name, int argc /*= -1*/ ){
 Object *ob_call_undefined_method( VM *vm, Object *c, char *c_name, char *method_name, Node *argv ){
 	Node    *identifier = H_UNDEFINED,
 		    *method     = H_UNDEFINED;
-	vframe_t stack,
-			*frame;
+	vframe_t stack;
 	Object  *value  = H_UNDEFINED,
 			*result = H_UNDEFINED;
 	unsigned int i, j, argc(argv->children());
@@ -777,6 +776,7 @@ Object *ob_call_undefined_method( VM *vm, Object *c, char *c_name, char *method_
 
 	VectorObject *args = gc_new_vector();
 
+	stack.owner = string(c_name) + "::" + method_name;
 	stack.insert( "me", c );
 	stack.insert( "name", (Object *)gc_new_string(method_name) );
 	for( i = 0; i < argc; ++i ){
@@ -784,28 +784,19 @@ Object *ob_call_undefined_method( VM *vm, Object *c, char *c_name, char *method_
 	}
 	stack.insert( "argv", (Object *)args );
 
-	/*
-	 * Save current frame.
-	 */
-	frame = vm->vframe;
-
-	vm->trace( method_name, &stack );
-	vm->setCurrentFrame( &stack );
+	vm->addFrame( &stack );
 
 	/* call the method */
 	result = vm->engine->exec( &stack, method->callBody() );
 
-	vm->setCurrentFrame( frame );
-	vm->detrace();
+	vm->popFrame();
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
 	 * memory frame.
 	 */
-	if( stack.state._exception == true ){
-		stack.state._exception = false;
-		vm->vframe->state._exception = true;
-		vm->vframe->state.value 	 = stack.state.value;
+	if( stack.state.is(Exception) ){
+		vm->frame()->state.set( Exception, stack.state.value );
 	}
 
 	/* return method evaluation value */
@@ -815,8 +806,7 @@ Object *ob_call_undefined_method( VM *vm, Object *c, char *c_name, char *method_
 Object *ob_call_method( VM *vm, Object *c, char *c_name, char *method_name, Object *argv ){
 	Node    *identifier = H_UNDEFINED,
 		    *method     = H_UNDEFINED;
-	vframe_t stack,
-			*frame;
+	vframe_t stack;
 	Object  *value  = H_UNDEFINED,
 			*result = H_UNDEFINED;
 	IntegerObject index(0);
@@ -826,34 +816,25 @@ Object *ob_call_method( VM *vm, Object *c, char *c_name, char *method_name, Obje
 	if( method == H_UNDEFINED ){
 		hyb_error( H_ET_SYNTAX, "'%s' does not name a method neither an attribute of '%s'", method_name, c_name );
 	}
-
+	stack.owner = string(c_name) + "::" + method_name;
 	stack.insert( "me", c );
 	for( ; index.value < argc; ++index.value ){
 		stack.insert( (char *)method->child(j)->value.m_identifier.c_str(), ob_cl_at( argv, (Object *)&index ) );
 	}
 
-	/*
-	 * Save current frame.
-	 */
-	frame = vm->vframe;
-
-	vm->trace( method_name, &stack );
-	vm->setCurrentFrame( &stack );
+	vm->addFrame( &stack );
 
 	/* call the method */
 	result = vm->engine->exec( &stack, method->callBody() );
 
-	vm->setCurrentFrame( frame );
-	vm->detrace();
+	vm->popFrame();
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
 	 * memory frame.
 	 */
-	if( stack.state._exception == true ){
-		stack.state._exception = false;
-		vm->vframe->state._exception = true;
-		vm->vframe->state.value 	 = stack.state.value;
+	if( stack.state.is(Exception) ){
+		vm->frame()->state.set( Exception, stack.state.value );
 	}
 
 	/* return method evaluation value */
