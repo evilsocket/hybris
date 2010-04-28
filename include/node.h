@@ -37,12 +37,11 @@ enum H_NODE_TYPE {
     H_NT_STATEMENT   = 4,
     H_NT_FUNCTION    = 5,
     H_NT_CALL        = 6,
-    H_NT_METHOD_CALL = 7,
-    H_NT_STRUCT      = 8,
-    H_NT_MEMBER   = 9,
-    H_NT_METHOD		 = 10,
-    H_NT_CLASS		 = 11,
-    H_NT_NEW	     = 12
+    H_NT_STRUCT      = 7,
+    H_NT_MEMBER      = 8,
+    H_NT_METHOD		 = 9,
+    H_NT_CLASS		 = 10,
+    H_NT_NEW	     = 11
 };
 
 #ifndef H_ACCESS_SPECIFIER
@@ -98,8 +97,9 @@ class NodeValue {
         access_t m_access;
         string   m_method;
         string   m_call;
-        NodeList m_method_call;
         Node    *m_alias_call;
+        Node    *m_owner;
+        Node    *m_member;
 
         NodeValue();
         ~NodeValue();
@@ -200,7 +200,7 @@ class IdentifierNode : public Node {
 class MemberRequestNode : public Node {
     public :
 
-        MemberRequestNode( NodeList *attrlist );
+		MemberRequestNode( Node *owner, Node *member );
 };
 
 /* function declarations */
@@ -246,13 +246,6 @@ class ClassNode : public Node {
 	public :
 		NodeList m_extends;
 		ClassNode( char *classname, NodeList *extends, NodeList *members );
-};
-
-/* method calls (a subset of StatementNode) */
-class MethodCallNode : public Node {
-    public :
-		MethodCallNode( char *classname, char *method, NodeList *argv );
-		MethodCallNode( NodeList *mcall, NodeList *argv );
 };
 
 #endif

@@ -223,7 +223,7 @@ include          BEGIN(T_INCLUSION);
 [\(|\)|\{|\}|\[|\]|\,\?\:] return yytext[0];
 
 "$"             return T_DOLLAR;
-"->"            return T_MAPS;
+"->"            return T_GET_MEMBER;
 "while"         return T_WHILE;
 "do"            return T_DO;
 "for"		    return T_FOR;

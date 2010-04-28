@@ -46,7 +46,7 @@
 #define MK_IDENT_NODE(a)          new IdentifierNode(a)
 #define MK_ATTR_NODE(a,b)		  new IdentifierNode(a,b)
 #define MK_CONST_NODE(a)          new ConstantNode(a)
-#define MK_IDLST_NODE(a)          new MemberRequestNode(a)
+#define MK_MREQ_NODE(a,b)         new MemberRequestNode(a,b)
 /* statements */
 #define MK_WHILE_NODE(a, b)       new StatementNode( T_WHILE, 2, a, b )
 #define MK_DO_NODE(a, b)          new StatementNode( T_DO, 2, a, b )
@@ -174,7 +174,7 @@ VM __hyb_vm;
 %token T_DEFAULT
 %token T_QUESTION
 %token T_DOLLAR
-%token T_MAPS
+%token T_GET_MEMBER
 %token T_PTR
 %token T_OBJ
 %token T_RETURN
@@ -198,6 +198,7 @@ VM __hyb_vm;
 %nonassoc T_ELSE
 %nonassoc T_DOT_END
 %nonassoc T_NEW_END
+%nonassoc T_METHOD_END
 
 %left T_L_NOT T_L_AND T_L_OR
 %left T_LESS T_GREATER T_SAME T_NOT_SAME T_LESS_EQ T_GREATER_EQ
@@ -218,7 +219,6 @@ VM __hyb_vm;
 %type <list>   argumentList
 %type <list>   caseCascade
 %type <list>   attrList
-%type <list>   identChain
 %type <list>   identList
 %type <list>   methodList
 %type <list>   classMembers
@@ -236,13 +236,10 @@ body       : body statement { __hyb_vm.timer( HYB_TIMER_START );
            | /* empty */ ;
 
 
-argumentList : expression T_MAPS argumentList { $$ = MK_NODE($3);    $$->head($1); }
-             | expression ',' argumentList    { $$ = MK_NODE($3);    $$->head($1); }
-             | expression                     { $$ = MK_NODE_LIST(); $$->tail($1); }
-             | /* empty */                    { $$ = MK_NODE_LIST(); };
-
-identChain : T_IDENT T_MAPS identChain { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
-		   | T_IDENT T_MAPS T_IDENT    { $$ = MK_NODE_LIST(); $$->tail( MK_IDENT_NODE($1), MK_IDENT_NODE($3) ); }
+argumentList : expression ':' argumentList { $$ = MK_NODE($3);    $$->head($1); }
+			 | expression ',' argumentList { $$ = MK_NODE($3);    $$->head($1); }
+			 | expression                  { $$ = MK_NODE_LIST(); $$->tail($1); }
+			 | /* empty */                 { $$ = MK_NODE_LIST(); };
 
 caseCascade  : T_CASE expression ':' statements T_BREAK T_EOSTMT caseCascade { $$ = MK_NODE($7);    $$->head( $2, $4 ); }
              | T_CASE expression ':' statements T_BREAK T_EOSTMT             { $$ = MK_NODE_LIST(); $$->tail( $2, $4 ); }
@@ -334,7 +331,7 @@ statement  : T_EOSTMT                                                   { $$ = M
            | T_DO statement T_WHILE '(' expression ')' T_EOSTMT         { $$ = MK_DO_NODE( $2, $5 ); }
 		   | T_FOR '(' statement statement expression ')' statement     { $$ = MK_FOR_NODE( $3, $4, $5, $7 ); }
 		   | T_FOREACH '(' T_IDENT T_OF expression ')' statement        { $$ = MK_FOREACH_NODE( $3, $5, $7 ); }
-		   | T_FOREACH '(' T_IDENT T_MAPS T_IDENT T_OF expression ')' statement {
+		   | T_FOREACH '(' T_IDENT T_GET_MEMBER T_IDENT T_OF expression ')' statement {
 		   		$$ = MK_FOREACHM_NODE( $3, $5, $7, $9 );
 		   }
            | T_IF '(' expression ')' statement %prec T_IF_END           { $$ = MK_IF_NODE( $3, $5 ); }
@@ -405,22 +402,27 @@ logicExpression : T_L_NOT expression                 			   { $$ = MK_LNOT_NODE( 
 				| expression T_L_OR expression       			   { $$ = MK_LOR_NODE( $1, $3 ); }
 				| '(' expression '?' expression ':' expression ')' { $$ = MK_QUESTION_NODE( $2, $4, $6 ); };
 
-callExpression : T_NEW T_IDENT '(' argumentList ')' %prec T_NEW_END { $$ = MK_NEW_NODE( $2, $4 ); }
-			   | T_IDENT    '(' argumentList ')' %prec T_CALL_END   { $$ = MK_CALL_NODE( $1, $3 ); }
-			   | identChain '(' argumentList ')' %prec T_CALL_END   { $$ = MK_METHOD_CALL_NODE( $1, $3 ); }
-			   | expression '(' argumentList ')'                    { $$ = MK_CALL_NODE( $1, $3 ); }
+callExpression : /* expression -> <identifier>( ... ) */
+				 expression T_GET_MEMBER T_IDENT '(' argumentList ')' { $$ = MK_MREQ_NODE( $1, MK_CALL_NODE( $3, $5 ) ); }
+				 /* new <identifier>( ... ) */
+			   | T_NEW T_IDENT '(' argumentList ')' 				  { $$ = MK_NEW_NODE( $2, $4 ); }
+			     /* <identifier>( ... ) */
+			   | T_IDENT    '(' argumentList ')' %prec T_CALL_END     { $$ = MK_CALL_NODE( $1, $3 ); }
+			     /* expression ( ... ) */
+			   | expression '(' argumentList ')'                      { $$ = MK_CALL_NODE( $1, $3 ); };
 
 expression : T_INTEGER                                        { $$ = MK_CONST_NODE($1); }
            | T_REAL                                           { $$ = MK_CONST_NODE($1); }
            | T_CHAR                                           { $$ = MK_CONST_NODE($1); }
            | T_STRING                                         { $$ = MK_CONST_NODE($1); }
-           /* identifiers and attributes */
+           /* expression -> <identifier> */
+           | expression T_GET_MEMBER T_IDENT 				  { $$ = MK_MREQ_NODE( $1, MK_IDENT_NODE($3) ); }
+           /* identifier */
            | T_IDENT                                          { $$ = MK_IDENT_NODE($1); }
-           | identChain                                       { $$ = MK_IDLST_NODE($1);  }
            /* expression evaluation returns an identifier */
            | T_DOLLAR expression                              { $$ = MK_DOLLAR_NODE($2); }
            /* attribute declaration/assignation */
-           | identChain T_ASSIGN expression                   { $$ = MK_ASSIGN_NODE( MK_IDLST_NODE($1), $3 ); }
+           | expression T_ASSIGN expression                   { $$ = MK_ASSIGN_NODE( $1, $3 ); }
 		   /* identifier declaration/assignation */
 		   | T_IDENT T_ASSIGN expression                      { $$ = MK_ASSIGN_NODE( MK_IDENT_NODE($1), $3 ); }
            /* a single subscript could be an expression itself */

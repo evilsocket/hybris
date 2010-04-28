@@ -31,7 +31,9 @@ NodeValue::NodeValue() :
     m_call(""),
     m_alias_call(NULL),
     m_switch(NULL),
-    m_default(NULL) {
+    m_default(NULL),
+    m_owner(NULL),
+    m_member(NULL) {
 
 }
 
@@ -139,24 +141,8 @@ Node *Node::clone(){
 			}
         break;
 
-        case H_NT_METHOD_CALL :
-			clone = new MethodCallNode( NULL, NULL );
-			clone->value.m_method_call = value.m_method_call;
-			for( i = 0; i < sz; ++i ){
-				if( child(i) ){
-					clone->push_back( child(i)->clone() );
-				}
-			}
-        break;
-
         case H_NT_MEMBER :
-        	clone = new MemberRequestNode( NULL );
-        	clone->value.m_identifier = value.m_identifier;
-        	for( i = 0; i < sz; ++i ){
-				if( child(i) ){
-					clone->push_back( child(i)->clone() );
-				}
-			}
+        	clone = new MemberRequestNode( value.m_owner, value.m_member );
         break;
 
         case H_NT_NEW :
@@ -281,35 +267,10 @@ IdentifierNode::IdentifierNode( access_t access, char *identifier ) : Node(H_NT_
 	value.m_identifier = identifier;
 }
 
-/* structure attribute */
-MemberRequestNode::MemberRequestNode( NodeList *attrlist ) : Node(H_NT_MEMBER) {
-    if( attrlist != NULL ){
-        int sz( attrlist->size() );
-        NodeList::iterator ni = attrlist->begin();
-
-        if( (*ni)->type() == H_NT_IDENTIFIER ){
-			value.m_identifier = (*ni)->value.m_identifier;
-			reserve( sz - 1 );
-			ni++;
-			for( ; ni != attrlist->end(); ni++ ){
-				push_back( *ni );
-			}
-        }
-        else if( (*ni)->type() == H_NT_METHOD_CALL ){
-        	ni = (*ni)->value.m_method_call.begin();
-        	value.m_identifier = (*ni)->value.m_identifier;
-        	ni++;
-        	push_back( *ni );
-        	ni = attrlist->begin();
-        	int i, sz( (*ni)->children() );
-
-        	for( i = 0; i < sz; ++i ){
-				push_back( (*ni)->child(i) );
-			}
-        }
-
-		delete attrlist;
-	}
+/* structure or class member request */
+MemberRequestNode::MemberRequestNode( Node *owner, Node *member ) : Node(H_NT_MEMBER) {
+	value.m_owner  = owner;
+	value.m_member = member;
 }
 
 /* functions */
@@ -437,30 +398,3 @@ ClassNode::ClassNode( char *classname, NodeList *extends, NodeList *members ) : 
 	}
 }
 
-/* method calls (a subset of StatementNode) */
-MethodCallNode::MethodCallNode( char *classname, char *method, NodeList *argv ) : Node(H_NT_METHOD_CALL) {
-	value.m_method_call.tail( new IdentifierNode(classname) );
-	value.m_method_call.tail( new IdentifierNode(method) );
-
-	if( argv != NULL ){
-		reserve( argv->size() );
-		for( NodeList::iterator ni = argv->begin(); ni != argv->end(); ni++ ){
-			push_back( *ni );
-		}
-		delete argv;
-	}
-}
-
-MethodCallNode::MethodCallNode( NodeList *mcall, NodeList *argv ) : Node(H_NT_METHOD_CALL) {
-	if( mcall ){
-		value.m_method_call = *mcall;
-		delete mcall;
-	}
-	if( argv != NULL ){
-		reserve( argv->size() );
-		for( NodeList::iterator ni = argv->begin(); ni != argv->end(); ni++ ){
-			push_back( *ni );
-		}
-		delete argv;
-	}
-}

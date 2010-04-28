@@ -82,8 +82,6 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
         /* function call */
         case H_NT_CALL       :
             return onFunctionCall( frame, node );
-        case H_NT_METHOD_CALL :
-        	return onMethodCall( frame, node );
         /* struct type declaration */
         case H_NT_STRUCT :
             return onStructureDeclaration( frame, node );
@@ -350,107 +348,181 @@ Object *Engine::onIdentifier( vframe_t *frame, Node *node ){
 }
 
 Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
-	Object    *owner  = H_UNDEFINED,
-			  *child  = H_UNDEFINED;
-	int        i, j, attributes(node->children());
-	char      *identifier = (char *)node->value.m_identifier.c_str(),
-			  *owner_id   = identifier,
-			  *child_id   = NULL;
+	Object  *cobj      = exec( frame, node->value.m_owner ),
+		    *attribute = H_UNDEFINED,
+		    *result    = H_UNDEFINED;
+	char    *name,
+			*owner_id;
+	access_t access;
+	Node    *member = node->value.m_member,
+			*method = H_UNDEFINED;
+	vframe_t stack;
+	int      argc,
+			 method_argc,
+			 i;
 
-	/*
-	 * Search for the identifier on the function frame.
-	 */
-	owner = frame->get( identifier );
-	if( owner == H_UNDEFINED && H_ADDRESS_OF(frame) != H_ADDRESS_OF(vm) ){
-		/*
-		 * Search it on the global frame if it's different from local frame.
-		 */
-		owner = vm->get( identifier );
-	}
-	/*
-	 * Nope :( not defined anywhere.
-	 */
-	if( owner == H_UNDEFINED ){
-		hyb_error( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
-	}
-	/*
-	 * Ok, definetly it's defined "somewhere", but we don't know exactly where.
-	 * That could be the user types definition segments, who knows (the gc should),
-	 * anyway, check if it's REALLY a user defined type.
-	 */
-	else if( ob_is_struct(owner) == false && ob_is_class(owner) == false ){
-		hyb_error( H_ET_SYNTAX, "'%s' does not name a structure nor a class", identifier );
-	}
-	/* 
-	 * Loop each element of the members chain :
-	 * 
-	 * foo->bar->moo->...->X
-	 * 
-	 * Until last element 'X' of this chain is found.
-	 */
-	for( i = 0; i < attributes; ++i ){
-		Object *dbg = exec( frame, node->child(i) );
-		child_id = (char *)node->child(i)->value.m_identifier.c_str();
-		child    = ob_get_attribute( owner, child_id );
-		/*
-		 * Something went wrong dude!
-		 */
-		if( child == H_UNDEFINED ){
-			hyb_error( H_ET_SYNTAX, "'%s' is not a member of %s", child_id, owner_id );
+	owner_id = (char *)node->value.m_owner->value.m_identifier.c_str();
+
+	if( member->type() == H_NT_IDENTIFIER ){
+		name      = (char *)member->value.m_identifier.c_str();
+		attribute = ob_get_attribute( cobj, name, true );
+
+		if( attribute == H_UNDEFINED ){
+			hyb_error( H_ET_SYNTAX, "'%s' is not an attribute of object '%s'", name, ob_typename(cobj) );
 		}
 		/*
-		 * Ok, let's consider the next element and shift
-		 * relationships between owner and child pointers.
+		 * Check attribute access.
 		 */
-		if( ob_is_struct(child) || ob_is_class(child) ){
-			owner    = child;
-			owner_id = child_id;
-		}
+		access = ob_attribute_access( cobj, name );
 		/*
-		 * Hello Mr. 'X', you are the last element of the chain!
+		 * If the attribute has public access, skip the access checking
+		 * because everyone can access it.
 		 */
-		else{
+		if( access != asPublic ){
 			/*
-			 * Check for access specifiers for class attributes.
+			 * The attribute is protected.
 			 */
-			if( ob_is_class(owner) ){
+			if( access == asProtected ){
 				/*
-				 * Get attribute access descriptor.
+				 * Protected attributes can be accessed only by the class itself
+				 * or derived classes.
 				 */
-				ClassObject *cobj = ob_class_ucast(owner);
-				access_t access   = ob_attribute_access( owner, child_id );
-
-				if( access != asPublic ){
-					/*
-					 * The attribute is protected.
-					 */
-					if( access == asProtected ){
-						/*
-						 * Protected attributes can be accessed only by derived classes.
-						 */
-						if( strcmp( owner_id, "me" ) != 0 ){
-							hyb_error( H_ET_SYNTAX, "Protected attribute '%s' can be accessed only by derived classes of '%s'", child_id, cobj->name.c_str() );
-						}
-					}
-					/*
-					 * The attribute is private, so only the owner can use it.
-					 */
-					else if( access == asPrivate ){
-						/*
-						 * Let's check if the class pointed by 'me' it's the owner of
-						 * the private attribute.
-						 */
-						if( strcmp( owner_id, "me" ) != 0 ){
-							hyb_error( H_ET_SYNTAX, "Private attribute '%s' can be accessed only within '%s' class", child_id, cobj->name.c_str() );
-						}
-					}
+				if( strcmp( owner_id, "me" ) != 0 ){
+					hyb_error( H_ET_SYNTAX, "Protected attribute '%s' can be accessed only by derived classes of '%s'", name, ob_typename(cobj) );
 				}
 			}
-			return child;
+			/*
+			 * The attribute is private, so only the owner can use it.
+			 */
+			else if( access == asPrivate ){
+				/*
+				 * Let's check if the class pointed by 'me' it's the owner of
+				 * the private attribute.
+				 */
+				if( strcmp( owner_id, "me" ) != 0 ){
+					hyb_error( H_ET_SYNTAX, "Private attribute '%s' can be accessed only within '%s' class", name, ob_typename(cobj) );
+				}
+			}
 		}
-	}
 
-	return owner;
+		return attribute;
+	}
+	else if( member->type() == H_NT_CALL ){
+		name   = (char *)member->value.m_call.c_str();
+		argc   = member->children();
+		method = ob_get_method( cobj, name, argc );
+
+		if( method == H_UNDEFINED ){
+			/*
+			 * Try to call the __method descriptor if it's overloaded.
+			 */
+			result = ob_call_undefined_method( vmachine, cobj, owner_id, name, member );
+			if( result == H_UNDEFINED ){
+				hyb_error( H_ET_SYNTAX, "'%s' is not a method of object '%s'", name, ob_typename(cobj) );
+			}
+			else{
+				return result;
+			}
+		}
+
+		method_argc = method->children() - 1;
+		method_argc = (method_argc < 0 ? 0 : method_argc);
+
+		if( method->value.m_access != asPublic ){
+			/*
+			 * Search for the type name of the class that owns the method.
+			 * We're pretty sure that someone owns it, otherwise the method
+			 * pointer would be undefined and previous error would be triggered.
+			 */
+			string method_owner;
+			int k, tsz(vt->size() - 1);
+			for( k = tsz; k >= 0; --k ){
+				if( ob_is_class(vt->at(k)) && ob_get_method( vt->at(k), (char *)method->value.m_method.c_str() ) != H_UNDEFINED ){
+					method_owner = vt->label(k);
+				}
+			}
+			/*
+			 * The method is protected.
+			 */
+			if( method->value.m_access == asProtected ){
+				/*
+				 * Protected methods can be accessed only by derived classes.
+				 */
+				if( strcmp( owner_id, "me" ) != 0 ){
+					hyb_error( H_ET_SYNTAX, "Protected method '%s' can be accessed only by derived classes of '%s'", name, method_owner.c_str() );
+				}
+			}
+			/*
+			 * The method is private, so only the owner can use it.
+			 */
+			else if( method->value.m_access == asPrivate ){
+				/*
+				 * Let's check if the class pointed by 'me' it's the owner of
+				 * the private method.
+				 */
+				if( strcmp( owner_id, "me" ) == 0 ){
+					if( ((ClassObject *)cobj)->name != method_owner ){
+						hyb_error( H_ET_SYNTAX, "Private method '%s' can be accessed only within '%s' class", name, method_owner.c_str() );
+					}
+				}
+				/*
+				 * No way dude, you called a private method!
+				 */
+				else{
+					hyb_error( H_ET_SYNTAX, "Private method '%s' can be accessed only within '%s' class", name, method_owner.c_str() );
+				}
+			}
+		}
+
+		/*
+		 * The last child of a method is its body itself, so we compare
+		 * call children with method->children() - 1 to ignore the body.
+		 */
+		if( argc != method_argc ){
+			hyb_error( H_ET_SYNTAX, "method '%s' requires %d parameters (called with %d)",
+									 name,
+									 method_argc,
+									 argc );
+		}
+
+		/*
+		 * Create the "me" reference to the class itself, used inside
+		 * methods for me->... calls.
+		 */
+		stack.owner = owner_id + string("::") + name;
+		stack.insert( "me", cobj );
+		for( i = 0; i < argc; ++i ){
+			/*
+			 * Value references count is set to zero now, builtins
+			 * do not care about reference counting, so this object will
+			 * be safely freed after the method call by the gc.
+			 */
+			stack.insert( (char *)method->child(i)->value.m_identifier.c_str(), exec( frame, member->child(i) ) );
+		}
+
+		vmachine->addFrame( &stack );
+
+		/* call the method */
+		result = exec( &stack, method->callBody() );
+
+		vmachine->popFrame();
+		/*
+		 * Check for unhandled exceptions and put them on the root
+		 * memory frame.
+		 */
+		if( stack.state.is(Exception) ){
+			frame->state.set( Exception, stack.state.value );
+		}
+
+		/* return method evaluation value */
+		return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
+	}
+	else{
+		/*
+		 * THIS SHOULD NEVER HAPPEN!
+		 */
+		assert( false );
+	}
 }
 
 Object *Engine::onConstant( vframe_t *frame, Node *node ){
@@ -686,15 +758,15 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
         return H_UNDEFINED;
     }
 
-    body = function->child(0);
-    /* a function could be without arguments */
-    if( body->type() == H_NT_IDENTIFIER ){
-        children = function->children();
-        do{
-        	identifier = body;
-        	identifiers.push_back( identifier->value.m_identifier );
-        	body = function->child(++i);
-        }while( body->type() == H_NT_IDENTIFIER && i < children );
+    children = function->children();
+    for( i = 0, body = function->child(0); i < children; ++i ){
+    	body = function->child(i);
+    	if( body->type() == H_NT_IDENTIFIER ){
+    		identifiers.push_back( body->value.m_identifier );
+    	}
+    	else{
+    		break;
+    	}
     }
 
     if( identifiers.size() != call->children() ){
@@ -888,175 +960,6 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
     return result;
 }
 
-Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
-	Object    *owner = H_UNDEFINED,
-			  *child = H_UNDEFINED;
-	NodeList   method_call( call->value.m_method_call );
-	Node      *identifier = H_UNDEFINED;
-	vframe_t   stack;
-	Object    *value  = H_UNDEFINED,
-			  *result = H_UNDEFINED;
-	unsigned int j;
-
-	if( method_call.size() == 0 ){
-		return H_UNDEFINED;
-	}
-
-	Node     *method = H_UNDEFINED;
-	int       calls( call->value.m_method_call.size() ),
-			  argc( call->children() ),
-			  method_argc;
-	string    child_id = (*method_call.begin())->value.m_identifier,
-			  owner_id = child_id;
-	NodeIterator i( method_call.begin() );
-
-	/*
-	 * Search for the identifier on the function frame.
-	 */
-	owner = frame->get( (char *)owner_id.c_str() );
-	if( owner == H_UNDEFINED && H_ADDRESS_OF(frame) != H_ADDRESS_OF(vm) ){
-		/*
-		 * Search it on the global frame if it's different from local frame.
-		 */
-		owner = vm->get( (char *)owner_id.c_str() );
-	}
-	/*
-	 * Nope :( not defined anywhere.
-	 */
-	if( owner == H_UNDEFINED ){
-		hyb_error( H_ET_SYNTAX, "'%s' undeclared identifier", owner_id.c_str() );
-	}
-	/*
-	 * Loop from the second node (first one was used to initialize the first owner
-	 * of the chain).
-	 */
-	for( advance( i, 1 ); i != method_call.end(); i++ ){
-		child_id = (*i)->value.m_identifier;
-		/*
-		 * Try to find out if the child is an attribute or a method.
-		 */
-		if( (method = ob_get_method( owner, (char *)child_id.c_str(), argc )) != H_UNDEFINED ){
-			/*
-			 * The last child of a method is its body itself, so we compare
-			 * call children with method->children() - 1 to ignore the body.
-			 */
-			method_argc = method->children() - 1;
-			break;
-		}
-		/*
-		 * Update owner-child relationship and continue the loop.
-		 */
-		else if( (child = ob_get_attribute( owner, (char *)child_id.c_str(), false )) != H_UNDEFINED ){
-			owner    = child;
-			owner_id = child_id;
-		}
-		else if( (result = ob_call_undefined_method( vmachine, owner, (char *)owner_id.c_str(), (char *)child_id.c_str(), call )) != H_UNDEFINED ){
-			return result;
-		}
-		else{
-			hyb_error( H_ET_SYNTAX, "'%s' is not a member of '%s'", child_id.c_str(), owner_id.c_str() );
-		}
-	}
-	/*
-	 * Nothing found, neither an attribute nor a method!
-	 */
-	if( method == H_UNDEFINED ){
-		hyb_error( H_ET_SYNTAX, "'%s' does not name a method neither an attribute of '%s'", child_id.c_str(), owner_id.c_str() );
-	}
-
-	if( method->value.m_access != asPublic ){
-		/*
-		 * Search for the type name of the class that owns the method.
-		 * We're pretty sure that someone owns it, otherwise the method
-		 * pointer would be undefined and previous error would be triggered.
-		 */
-		string method_owner;
-		int k, tsz(vt->size() - 1);
-		for( k = tsz; k >= 0; --k ){
-			if( ob_is_class(vt->at(k)) && ob_get_method( vt->at(k), (char *)method->value.m_method.c_str() ) != H_UNDEFINED ){
-				method_owner = vt->label(k);
-			}
-		}
-		/*
-		 * The method is protected.
-		 */
-		if( method->value.m_access == asProtected ){
-			/*
-			 * Protected methods can be accessed only by derived classes.
-			 */
-			if( owner_id != "me" ){
-				hyb_error( H_ET_SYNTAX, "Protected method '%s' can be accessed only by derived classes of '%s'", method->value.m_method.c_str(), method_owner.c_str() );
-			}
-		}
-		/*
-		 * The method is private, so only the owner can use it.
-		 */
-		else if( method->value.m_access == asPrivate ){
-			/*
-			 * Let's check if the class pointed by 'me' it's the owner of
-			 * the private method.
-			 */
-			if( owner_id == "me" ){
-				if( ((ClassObject *)owner)->name != method_owner ){
-					hyb_error( H_ET_SYNTAX, "Private method '%s' can be accessed only within '%s' class", method->value.m_method.c_str(), method_owner.c_str() );
-				}
-			}
-			/*
-			 * No way dude, you called a private method!
-			 */
-			else{
-				hyb_error( H_ET_SYNTAX, "Private method '%s' can be accessed only within '%s' class", method->value.m_method.c_str(), method_owner.c_str() );
-			}
-		}
-	}
-
-	method_argc = (method_argc < 0 ? 0 : method_argc);
-	/*
-	 * The last child of a method is its body itself, so we compare
-	 * call children with method->children() - 1 to ignore the body.
-	 */
-	if( argc != method_argc ){
-		hyb_error( H_ET_SYNTAX, "method '%s' requires %d parameters (called with %d)",
-								 method->value.m_method.c_str(),
-								 method_argc,
-							 	 argc );
-	}
-
-	/*
-	 * Create the "me" reference to the class itself, used inside
-	 * methods for me->... calls.
-	 */
-	stack.owner = owner_id + "::" + method->value.m_method.c_str();
-	stack.insert( "me", owner );
-	for( j = 0; j < argc; ++j ){
-		identifier = call->child(j);
-		value = exec( frame, identifier );
-		/*
-		 * Value references count is set to zero now, builtins
-		 * do not care about reference counting, so this object will
-		 * be safely freed after the method call by the gc.
-		 */
-		stack.insert( (char *)method->child(j)->value.m_identifier.c_str(), value );
-	}
-
-	vmachine->addFrame( &stack );
-
-	/* call the method */
-	result = exec( &stack, method->callBody() );
-
-	vmachine->popFrame();
-	/*
-	 * Check for unhandled exceptions and put them on the root
-	 * memory frame.
-	 */
-	if( stack.state.is(Exception) ){
-		frame->state.set( Exception, stack.state.value );
-	}
-
-	/* return method evaluation value */
-	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
-}
-
 Object *Engine::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*/ ){
     Object *result = H_UNDEFINED;
 
@@ -1070,10 +973,6 @@ Object *Engine::onFunctionCall( vframe_t *frame, Node *call, int threaded /*= 0*
     }
     /* check if the function is an extern identifier loaded by dll importing routines */
     else if( (result = onDllFunctionCall( frame, call, threaded )) != H_UNDEFINED ){
-    	return result;
-    }
-    /* check for a method */
-    else if( (result = onMethodCall( frame, call )) != H_UNDEFINED ){
     	return result;
     }
     else{
@@ -1498,78 +1397,16 @@ Object *Engine::onAssign( vframe_t *frame, Node *node ){
      * just like the onMemberRequest handler.
      */
     else{
-    	Object    *owner  = H_UNDEFINED,
-				  *child  = H_UNDEFINED;
-    	Node      *root   = lexpr;
-		int        i, j, attributes(node->children());
-		char      *identifier = (char *)root->value.m_identifier.c_str(),
-				  *owner_id   = identifier,
-				  *child_id   = NULL;
+    	Node *member    = lexpr,
+			 *owner     = member->value.m_owner,
+			 *attribute = member->value.m_member;
 
-		/*
-		 * Search for the identifier on the function frame.
-		 */
-		owner = frame->get( identifier );
-		if( owner == H_UNDEFINED && H_ADDRESS_OF(frame) != H_ADDRESS_OF(vm) ){
-			/*
-			 * Search it on the global frame if it's different from local frame.
-			 */
-			owner = vm->get( identifier );
-		}
-		/*
-		 * Nope :( not defined anywhere.
-		 */
-		if( owner == H_UNDEFINED ){
-			hyb_error( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
-		}
-		/*
-		 * Ok, definetly it's defined "somewhere", but we don't know exactly where.
-		 * That could be the user types definition segments, who knows (the gc should),
-		 * anyway, check if it's REALLY a user defined type.
-		 */
-		else if( ob_is_struct(owner) == false && ob_is_class(owner) == false ){
-			hyb_error( H_ET_SYNTAX, "'%s' does not name a structure nor a class", identifier );
-		}
-		/*
-		 * Loop each element of the members chain :
-		 *
-		 * foo->bar->moo->...->X
-		 *
-		 * Until last element 'X' of this chain is found.
-		 */
-		for( i = 0; i < attributes; ++i ){
-			child_id = (char *)root->child(i)->value.m_identifier.c_str();
-			child    = ob_get_attribute( owner, child_id );
-			/*
-			 * Something went wrong dude!
-			 */
-			if( child == H_UNDEFINED ){
-				hyb_error( H_ET_SYNTAX, "'%s' is not a member of %s", child_id, owner_id );
-			}
-			/*
-			 * Ok, let's consider the next element and shift
-			 * relationships between owner and child pointers.
-			 */
-			if( ob_is_struct(child) || ob_is_class(child) ){
-				owner    = child;
-				owner_id = child_id;
-			}
-			/*
-			 * Hello Mr. 'X', you are the last element of the chain!
-			 */
-			else{
-				/*
-				 * Finally, evaluate the new value for the object and assign it
-				 * to the object itself.
-				 */
-				value = exec( frame, node->child(1) );
-				// printf( "ob_set_attribute_reference( %s, %s, %s )\n", owner_id, child_id, ob_typename(value) );
-				ob_set_attribute_reference( owner, child_id, value );
-				return owner;
-			}
-		}
+    	Object *obj   = exec( frame, owner ),
+			   *value = exec( frame, node->child(1) );
 
-		return object;
+    	ob_set_attribute( obj, (char *)attribute->value.m_identifier.c_str(), value );
+
+    	return obj;
     }
 }
 

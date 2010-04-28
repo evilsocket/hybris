@@ -60,10 +60,6 @@ class Engine {
          * Handle dynamic loaded function call.
          */
         Object *onDllFunctionCall( vframe_t *, Node *, int threaded = 0 );
-        /*
-         * Handle method call.
-         */
-        Object *onMethodCall( vframe_t *, Node * );
 
     public  :
 
