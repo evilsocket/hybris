@@ -389,6 +389,7 @@ Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
 	 * Until last element 'X' of this chain is found.
 	 */
 	for( i = 0; i < attributes; ++i ){
+		Object *dbg = exec( frame, node->child(i) );
 		child_id = (char *)node->child(i)->value.m_identifier.c_str();
 		child    = ob_get_attribute( owner, child_id );
 		/*
@@ -544,10 +545,10 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 				hyb_error( H_ET_SYNTAX, "couldn't extend from '%s' type", type->type->name );
 			}
 
-			ClassObject 			   		   *cobj = ob_class_ucast(type);
-			ClassObjectAttributeIterator 		ai;
-			ClassObjectMethodIterator 	 		mi;
-			ClassObjectPrototypesIterator mvi;
+			ClassObject 			     *cobj = ob_class_ucast(type);
+			ClassObjectAttributeIterator  ai;
+			ClassObjectMethodIterator 	  mi;
+			ClassObjectPrototypesIterator pi;
 
 			for( ai = cobj->c_attributes.begin(); ai != cobj->c_attributes.end(); ai++ ){
 				attrname = (char *)(*ai)->label.c_str();
@@ -556,8 +557,8 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 			}
 
 			for( mi = cobj->c_methods.begin(); mi != cobj->c_methods.end(); mi++ ){
-				for( mvi = (*mi)->value->method.begin(); mvi != (*mi)->value->method.end(); mvi++ ){
-					ob_define_method( c, (char *)(*mi)->label.c_str(), *mvi );
+				for( pi = (*mi)->value->prototypes.begin(); pi != (*mi)->value->prototypes.end(); pi++ ){
+					ob_define_method( c, (char *)(*mi)->label.c_str(), *pi );
 				}
 			}
 		}
