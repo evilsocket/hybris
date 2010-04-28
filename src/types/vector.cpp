@@ -173,11 +173,10 @@ Object *vector_cl_push_reference( Object *me, Object *o ){
 
 Object *vector_cl_pop( Object *me ){
     size_t last_idx = ob_vector_ucast(me)->items - 1;
-    #ifdef BOUNDS_CHECK
+
     if( last_idx < 0 ){
         hyb_error( H_ET_GENERIC, "could not pop an element from an empty array" );
     }
-    #endif
 
     Object *last_item = ob_vector_ucast(me)->value[last_idx];
     ob_vector_ucast(me)->value.pop_back();
@@ -188,11 +187,10 @@ Object *vector_cl_pop( Object *me ){
 
 Object *vector_cl_remove( Object *me, Object *i ){
     size_t idx = ob_ivalue(i);
-    #ifdef BOUNDS_CHECK
+
     if( idx >= ob_vector_ucast(me)->items ){
         hyb_error( H_ET_GENERIC, "index out of bounds" );
     }
-    #endif
 
     Object *item = ob_vector_ucast(me)->value[idx];
     ob_vector_ucast(me)->value.erase( ob_vector_ucast(me)->value.begin() + idx );
@@ -203,11 +201,10 @@ Object *vector_cl_remove( Object *me, Object *i ){
 
 Object *vector_cl_at( Object *me, Object *i ){
     size_t idx = ob_ivalue(i);
-    #ifdef BOUNDS_CHECK
+
     if( idx >= ob_vector_ucast(me)->items ){
         hyb_error( H_ET_GENERIC, "index out of bounds" );
     }
-    #endif
 
     return ob_vector_ucast(me)->value[idx];
 }
@@ -218,11 +215,10 @@ Object *vector_cl_set( Object *me, Object *i, Object *v ){
 
 Object *vector_cl_set_reference( Object *me, Object *i, Object *v ){
     size_t idx = ob_ivalue(i);
-    #ifdef BOUNDS_CHECK
+
     if( idx >= ob_vector_ucast(me)->items ){
         hyb_error( H_ET_GENERIC, "index out of bounds" );
     }
-    #endif
 
     Object *old = ob_vector_ucast(me)->value[idx];
 

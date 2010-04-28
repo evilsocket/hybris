@@ -20,12 +20,10 @@
 #	define _HGC_H_
 
 #include "config.h"
-#include <memory.h>
 #include <stdio.h>
 #include <assert.h>
-#ifdef MT_SUPPORT
-#	include <pthread.h>
-#endif
+#include <pthread.h>
+
 /*
  * Force specified functions to be inlined by the compiler.
  */

@@ -196,11 +196,10 @@ Object *binary_cl_push_reference( Object *me, Object *o ){
 
 Object *binary_cl_at( Object *me, Object *i ){
     size_t idx = ob_ivalue(i);
-    #ifdef BOUNDS_CHECK
+
     if( idx >= ob_binary_ucast(me)->items ){
         hyb_error( H_ET_GENERIC, "index out of bounds" );
     }
-    #endif
 
     return ((BinaryObject *)me)->value[idx];
 }
@@ -211,11 +210,10 @@ Object *binary_cl_set( Object *me, Object *i, Object *v ){
 
 Object *binary_cl_set_reference( Object *me, Object *i, Object *v ){
     size_t idx = ob_ivalue(i);
-    #ifdef BOUNDS_CHECK
+
     if( idx >= ob_binary_ucast(me)->items ){
         hyb_error( H_ET_GENERIC, "index out of bounds" );
     }
-    #endif
 
     DECLARE_TYPE(Char);
     DECLARE_TYPE(Integer);

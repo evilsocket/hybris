@@ -188,11 +188,10 @@ Object *map_assign( Object *me, Object *op ){
 /** collection operators **/
 Object *map_cl_pop( Object *me ){
     size_t last_idx = ob_map_ucast(me)->items - 1;
-    #ifdef BOUNDS_CHECK
+
     if( last_idx < 0 ){
         hyb_error( H_ET_GENERIC, "could not pop an element from an empty map" );
     }
-    #endif
 
     Object *kitem = ((MapObject *)me)->keys[last_idx],
            *vitem = ((MapObject *)me)->values[last_idx];

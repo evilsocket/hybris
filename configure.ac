@@ -23,38 +23,22 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
 # Checks for feature disable
-AC_ARG_ENABLE( gc, 
-    AS_HELP_STRING([--disable-gc], [Disable garbage collector support]),
-    [ ac_disable_gc=yes ], [] )
- 
-AC_ARG_ENABLE( boundaries, 
-    AS_HELP_STRING([--disable-boundaries], [Disable boundaries check]),
-    [ ac_disable_bc=yes ], [] )
-
 AC_ARG_ENABLE( memdebug, 
     AS_HELP_STRING([--enable-memdebug], [Enable memory debugging messages]),
     [ ac_enble_mdbg=yes ], [] )
 
-if test "x${ac_disable_gc}" != xyes; then
-	AC_DEFINE( GC_SUPPORT, 1, [basic garbage collection] )
-fi
-if test "x${ac_disable_bc}" != xyes; then
-	AC_DEFINE( BOUNDS_CHECK, 1, [security check on bounds for array/map/matrix access] )
-fi
 if test "x${ac_enble_mdbg}" == xyes; then
 	AC_DEFINE( MEM_DEBUG, 1, [memory allocation debug messages] )
 fi
 
 # Checks for libraries.
-AC_CHECK_LIB( [dl],  [dlsym],        [], [AC_MSG_ERROR([libdl is missing])] ) 
-AC_DEFINE( PCRE_SUPPORT, 1, [support for regular expressions] )
-AC_CHECK_LIB( [pcre], [pcre_compile], [], [AC_MSG_ERROR([libpcre is missing])] ) 
-AC_DEFINE( MT_SUPPORT, 1, [multi threading support] )
-AC_CHECK_LIB( [pthread], [pthread_create], [], [AC_MSG_ERROR([libpthread is missing])] )
-AC_CHECK_HEADERS( [pthread.h], [], [AC_MSG_ERROR([pthread.h header missing])] )
+AC_CHECK_LIB( 	  [dl],  [dlsym],        [], [AC_MSG_ERROR([libdl is missing])] ) 
+AC_CHECK_LIB( 	  [pcre], [pcre_compile], [], [AC_MSG_ERROR([libpcre is missing])] ) 
+AC_CHECK_LIB( 	  [pthread], [pthread_create], [], [AC_MSG_ERROR([libpthread is missing])] )
 # Checks for header files.
 AC_FUNC_ALLOCA
 AC_HEADER_RESOLV
+AC_CHECK_HEADERS( [pthread.h], [], [AC_MSG_ERROR([pthread.h header missing])] )
 AC_CHECK_HEADERS( [arpa/inet.h], [], [AC_MSG_ERROR([arpa/inet.h header missing])] )
 AC_CHECK_HEADERS( [assert.h], [], [AC_MSG_ERROR([assert.h header missing])] )
 AC_CHECK_HEADERS( [dirent.h], [], [AC_MSG_ERROR([dirent.h header missing])] )

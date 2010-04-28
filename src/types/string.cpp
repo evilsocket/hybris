@@ -362,11 +362,11 @@ Object *string_cl_inplace_concat( Object *me, Object *op ){
 
 Object *string_cl_at( Object *me, Object *i ){
     size_t idx = ob_ivalue(i);
-    #ifdef BOUNDS_CHECK
+
     if( idx >= ob_string_ucast(me)->items ){
         hyb_error( H_ET_GENERIC, "index out of bounds" );
     }
-    #endif
+
     char chr = ob_string_ucast(me)->value[idx];
 
     return (Object *)gc_new_char( chr );
@@ -374,11 +374,10 @@ Object *string_cl_at( Object *me, Object *i ){
 
 Object *string_cl_set( Object *me, Object *i, Object *v ){
     size_t idx = ob_ivalue(i);
-    #ifdef BOUNDS_CHECK
+
     if( idx >= ob_string_ucast(me)->items ){
         hyb_error( H_ET_GENERIC, "index out of bounds" );
     }
-    #endif
 
     ob_string_ucast(me)->value[idx] = ob_ivalue(v);
 

@@ -372,11 +372,10 @@ Object *matrix_cl_at( Object *me, Object *i ){
     size_t idx = ob_ivalue(i);
     MatrixObject *mme = ob_matrix_ucast(me);
 
-    #ifdef BOUNDS_CHECK
+
     if( idx >= mme->columns ){
         hyb_error( H_ET_GENERIC, "index out of bounds" );
     }
-    #endif
 
     VectorObject *vector = gc_new_vector();
     size_t        x = idx, y;
