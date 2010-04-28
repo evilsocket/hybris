@@ -245,8 +245,10 @@ void VM::printStackTrace( bool force /*= false*/ ){
 	if( args.stacktrace || force ){
 		list<vframe_t *>::iterator i;
 		unsigned int j, pad, k, args, last;
+		string name, svalue;
 		vframe_t *frame;
 		extern gc_t __gc;
+
 
 		fprintf( stderr, "\nCall Stack [memory usage %d bytes] :\n\n", __gc.usage );
 
@@ -263,9 +265,13 @@ void VM::printStackTrace( bool force /*= false*/ ){
 
 			fprintf( stderr, "%s(%s", frame->owner.c_str(), (args ? " " : "") );
 			for( k = 0; k < args; ++k ){
-				fprintf( stderr, "%s = %s%s", frame->label(k),
-											  ob_svalue( frame->at(k) ).c_str(),
-											  (k < last ? ", " : " ") );
+				name   = frame->label(k);
+				svalue = ob_svalue( frame->at(k) );
+				if( name != "me" ){
+					fprintf( stderr, "%s = %s%s", name.c_str(),
+												  svalue.c_str(),
+												  (k < last ? ", " : " ") );
+				}
 			}
 			fprintf( stderr, ")\n" );
 		}
