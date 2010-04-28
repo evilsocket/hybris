@@ -18,7 +18,7 @@
 */
 #include "types.h"
 #include "common.h"
-#include "mseg.h"
+#include "memory.h"
 #include "node.h"
 #include "vm.h"
 

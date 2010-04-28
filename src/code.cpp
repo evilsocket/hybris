@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "cseg.h"
+#include "code.h"
 
 CodeSegment::CodeSegment() : HashMap<Node>() {
     #ifdef MEM_DEBUG

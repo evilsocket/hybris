@@ -21,7 +21,7 @@
 
 #include "node.h"
 #include "hashmap.h"
-#include "mseg.h"
+#include "memory.h"
 
 /*
  * This class represent user defined functions.

@@ -19,7 +19,7 @@
 #include "common.h"
 #include "types.h"
 #include "node.h"
-#include "mseg.h"
+#include "memory.h"
 #include "vm.h"
 
 /*

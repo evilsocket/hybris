@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "mseg.h"
+#include "memory.h"
 #include "common.h"
 
 MemorySegment::MemorySegment() : HashMap<Object>(), mutex(PTHREAD_MUTEX_INITIALIZER) {

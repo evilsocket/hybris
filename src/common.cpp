@@ -18,7 +18,7 @@
 */
 #include "hybris.h"
 #include "common.h"
-#include "mseg.h"
+#include "memory.h"
 #include "vm.h"
 #include <time.h>
 #include <sys/time.h>

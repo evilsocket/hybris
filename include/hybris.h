@@ -20,8 +20,8 @@
 #   define _HHYBRIS_H_
 
 #include "vm.h"
-#include "mseg.h"
-#include "cseg.h"
+#include "memory.h"
+#include "code.h"
 #include "node.h"
 #include "common.h"
 

@@ -17,7 +17,7 @@
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "node.h"
-#include "mseg.h"
+#include "memory.h"
 #include "engine.h"
 
 NodeValue::NodeValue() :

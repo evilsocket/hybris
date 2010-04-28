@@ -25,8 +25,8 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include "types.h"
-#include "mseg.h"
-#include "cseg.h"
+#include "memory.h"
+#include "code.h"
 #include "engine.h"
 
 using std::string;
