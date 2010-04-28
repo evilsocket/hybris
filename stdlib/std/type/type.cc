@@ -328,8 +328,8 @@ string Object2Xml( Object *o, unsigned int tabs = 0 ){
 		case otStructure :
             xml << xtabs << "<struct>\n";
             for( i = 0; i < ob_struct_ucast(o)->items; ++i ){
-				xml << xtabs << "\t" << "<attribute>" << ob_struct_ucast(o)->names[i] << "</attribute>\n";
-				xml << Object2Xml( ob_struct_ucast(o)->values[i], tabs + 1 );
+				xml << xtabs << "\t" << "<attribute>" << ob_struct_ucast(o)->s_attributes.label(i) << "</attribute>\n";
+				xml << Object2Xml( ob_struct_ucast(o)->s_attributes.at(i), tabs + 1 );
 			}
             xml << xtabs << "</struct>\n";
 		break;

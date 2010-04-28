@@ -47,7 +47,10 @@ Object *MemorySegment::add( char *identifier, Object *object ){
     	else{
     		_new = object;
     	}
-
+    	/*
+    	 * This object is going to have a new reference inside this memory
+    	 * segment, so in any case increment its reference counter.
+    	 */
     	ob_set_references( _new, +1 );
     }
 

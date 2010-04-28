@@ -202,7 +202,7 @@ VM __hyb_vm;
 
 %left T_L_NOT T_L_AND T_L_OR
 %left T_LESS T_GREATER T_SAME T_NOT_SAME T_LESS_EQ T_GREATER_EQ
-%left T_DDOT T_REGEX_OP
+%left T_RANGE T_REGEX_OP
 %left T_PLUSE T_MINUSE T_DOTE T_XORE
 %left T_DIVE T_MULE T_ANDE T_ORE
 %left T_PLUS T_MINUS T_XOR
@@ -428,7 +428,7 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            /* a single subscript could be an expression itself */
            | expression '[' expression ']' %prec T_SB_END     { $$ = MK_SB_NODE( $1, $3 ); }
            /* range evaluation */
-           | expression T_DDOT expression                     { $$ = MK_RANGE_NODE( $1, $3 ); }
+           | expression T_RANGE expression                     { $$ = MK_RANGE_NODE( $1, $3 ); }
            /* arithmetic */
            | arithmeticExpression 							  { $$ = MK_NODE($1); }
            /* bitwise */

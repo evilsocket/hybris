@@ -829,16 +829,18 @@ Object *Engine::onNewOperator( vframe_t *frame, Node *type ){
 	 * you can not set more attributes than the structure/class have.
 	 */
 	if( ob_is_struct(newtype) ){
-		if( children > ob_struct_ucast(newtype)->items ){
+		StructureObject *stype = (StructureObject *)newtype;
+
+		if( children > stype->items ){
 			hyb_error( H_ET_SYNTAX, "structure '%s' has %d attributes, initialized with %d",
 								 type_name,
-								 ob_struct_ucast(newtype)->items,
+								 stype->items,
 								 children );
 		}
 
 		for( i = 0; i < children; ++i ){
 			object = exec( frame, type->child(i) );
-			ob_set_attribute( newtype, (char *)ob_struct_ucast(newtype)->names[i].c_str(), object );
+			ob_set_attribute( newtype, (char *)stype->s_attributes.label(i), object );
 		}
 	}
 	else if( ob_is_class(newtype) ){

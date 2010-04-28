@@ -96,7 +96,7 @@ HYBRIS_DEFINE_FUNCTION(hpack){
 			}
 			for( i = 1, j = 0; i < ob_argc(); ++i, ++j ){
 				ob_type_assert( ob_argv(i), otInteger );
-				do_simple_packing( stream, ob_struct_ucast(o)->values[j], int_argv(i) );
+				do_simple_packing( stream, ob_struct_ucast(o)->s_attributes.at(j), int_argv(i) );
 			}
 		break;
 

@@ -25,24 +25,22 @@ const char *struct_typename( Object *o ){
 }
 
 void struct_set_references( Object *me, int ref ){
-    StructureObjectValueIterator vi;
+	StructureObjectAttributeIterator ai;
     StructureObject *sme = ob_struct_ucast(me);
 
     me->ref += ref;
-
-    for( vi = sme->values.begin(); vi != sme->values.end(); vi++ ){
-        ob_set_references( *vi, ref );
+    for( ai = sme->s_attributes.begin(); ai != sme->s_attributes.end(); ai++ ){
+        ob_set_references( (*ai)->value, ref );
     }
 }
 
 Object *struct_clone( Object *me ){
     StructureObject *sclone = gc_new_struct(),
                     *sme    = ob_struct_ucast(me);
-    StructureObjectNameIterator  ni;
-    StructureObjectValueIterator vi;
+    StructureObjectAttributeIterator ai;
 
-    for( ni = sme->names.begin(), vi = sme->values.begin(); ni != sme->names.end(); ni++, vi++ ){
-        sclone->type->set_attribute( (Object *)sclone, (char *)(*ni).c_str(), *vi );
+    for( ai = sme->s_attributes.begin(); ai != sme->s_attributes.end(); ai++ ){
+    	ob_set_attribute( (Object *)sclone, (char *)(*ai)->label.c_str(), (*ai)->value );
     }
 
     sclone->items = sme->items;
@@ -55,59 +53,19 @@ size_t struct_get_size( Object *me ){
 }
 
 void struct_free( Object *me ){
-    StructureObjectValueIterator vi;
+	StructureObjectAttributeIterator ai;
     StructureObject *sme = ob_struct_ucast(me);
     Object          *vitem;
 
-    for( vi = sme->values.begin(); vi != sme->values.end(); vi++ ){
-        vitem = *vi;
-        if( vitem ){
-            ob_free(vitem);
-        }
+    for( ai = sme->s_attributes.begin(); ai != sme->s_attributes.end(); ai++ ){
+    	vitem = (*ai)->value;
+		if( vitem ){
+			ob_free(vitem);
+		}
     }
 
-    sme->names.clear();
-    sme->values.clear();
+    sme->s_attributes.clear();
     sme->items = 0;
-}
-
-int struct_cmp( Object *me, Object *cmp ){
-    if( !ob_is_struct(cmp) ){
-        return 1;
-    }
-    else {
-        StructureObject *sme  = ob_struct_ucast(me),
-                  *scmp = ob_struct_ucast(cmp);
-        size_t     sme_nsize( sme->names.size() ),
-                   mcmp_nsize( scmp->names.size() ),
-                   sme_vsize( sme->values.size() ),
-                   mcmp_vsize( scmp->values.size() );
-
-        if( sme_nsize > mcmp_nsize || sme_vsize > mcmp_vsize ){
-            return 1;
-        }
-        else if( sme_nsize < mcmp_nsize || sme_vsize < mcmp_vsize ){
-            return -1;
-        }
-        /*
-         * Same type and same size, let's check the elements.
-         */
-        else{
-            size_t i;
-            int    diff;
-
-            for( i = 0; i < sme_nsize; ++i ){
-                if( sme->names[i] != scmp->names[i] ){
-                    return 1;
-                }
-                diff = ob_cmp( sme->values[i], scmp->values[i] );
-                if( diff != 0 ){
-                    return diff;
-                }
-            }
-            return 0;
-        }
-    }
 }
 
 long struct_ivalue( Object *me ){
@@ -128,14 +86,15 @@ string struct_svalue( Object *me ){
 
 void struct_print( Object *me, int tabs ){
     StructureObject *sme = ob_struct_ucast(me);
-    int        i, j;
+    StructureObjectAttributeIterator ai;
+    int i;
 
     printf( "struct {\n" );
-    for( i = 0; i < sme->items; ++i ){
-        for( j = 0; j <= tabs; ++j ) printf( "\t" );
-        printf( "%s : ", sme->names[i].c_str() );
-        ob_print( sme->values[i], tabs + 1 );
-        printf( "\n" );
+    for( ai = sme->s_attributes.begin(); ai != sme->s_attributes.end(); ai++ ){
+    	for( i = 0; i <= tabs; ++i ) printf( "\t" );
+    	printf( "%s : ", (*ai)->label.c_str() );
+		ob_print( (*ai)->value, tabs + 1 );
+		printf( "\n" );
     }
     for( i = 0; i < tabs; ++i ) printf( "\t" );
     printf( "}\n" );
@@ -156,9 +115,8 @@ Object *struct_assign( Object *me, Object *op ){
 void struct_define_attribute( Object *me, char *name, access_t a ){
 	StructureObject *sme = ob_struct_ucast(me);
 
-	sme->names.push_back( name );
-	sme->values.push_back( (Object *)gc_new_integer(0) );
-	sme->items = sme->names.size();
+	sme->s_attributes.insert( name, (Object *)gc_new_integer(0) );
+	sme->items = sme->s_attributes.size();
 }
 
 void struct_add_attribute( Object *me, char *name ){
@@ -167,32 +125,21 @@ void struct_add_attribute( Object *me, char *name ){
 
 Object *struct_get_attribute( Object *me, char *name, bool with_descriptor ){
     StructureObject *sme = ob_struct_ucast(me);
-
-    int i, sz( sme->items );
-    for( i = 0; i < sz; ++i ){
-        if( sme->names[i] == string(name) ){
-            return sme->values[i];
-        }
-    }
-    return NULL;
-
+    return sme->s_attributes.find(name);
 }
 
 void struct_set_attribute_reference( Object *me, char *name, Object *value ){
     StructureObject *sme = ob_struct_ucast(me);
     Object          *o;
-    int i, sz( sme->items );
 
-    for( i = 0; i < sz; ++i ){
-        if( sme->names[i] == string(name) ){
-            sme->values[i] = ob_assign( sme->values[i], value );
-            return;
-        }
+    o = sme->s_attributes.find(name);
+    if( o != NULL ){
+    	sme->s_attributes.replace( name, o, ob_assign( o, value ) );
     }
-
-    sme->names.push_back( name );
-    sme->values.push_back( value );
-    sme->items = sme->names.size();
+    else{
+    	sme->s_attributes.insert( name, value );
+    	sme->items = sme->s_attributes.size();
+    }
 }
 
 void struct_set_attribute( Object *me, char *name, Object *value ){
@@ -217,7 +164,7 @@ IMPLEMENT_TYPE(Structure) {
 	0, // deserialize
 	0, // to_fd
 	0, // from_fd
-	struct_cmp, // cmp
+	0, // cmp
 	struct_ivalue, // ivalue
 	struct_fvalue, // fvalue
 	struct_lvalue, // lvalue

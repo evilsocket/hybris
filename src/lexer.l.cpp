@@ -178,7 +178,7 @@ include          BEGIN(T_INCLUSION);
 
 ";" 		    return T_EOSTMT;
 
-".."            return T_DDOT;
+".."            return T_RANGE;
 "."             return T_DOT;
 ".="            return T_DOTE;
 

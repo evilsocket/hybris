@@ -905,21 +905,15 @@ DECLARE_TYPE(Structure);
 typedef struct _StructureObject {
     BASE_OBJECT_HEADER;
     size_t           items;
-    vector<string>   names;
-    vector<Object *> values;
+    HashMap<Object>  s_attributes;
 
     _StructureObject() : items(0), BASE_OBJECT_HEADER_INIT(Structure) {
-        // define to test space reservation optimization
-        #ifdef RESERVED_VECTORS_SPACE
-            names.reserve( RESERVE_VECTORS_SPACE );
-            values.reserve( RESERVE_VECTORS_SPACE );
-        #endif
+
     }
 }
 StructureObject;
 
-typedef vector<string>::iterator   StructureObjectNameIterator;
-typedef vector<Object *>::iterator StructureObjectValueIterator;
+typedef HashMap<Object>::iterator StructureObjectAttributeIterator;
 
 #define ob_is_struct(o)    ob_is_typeof(o,Structure)
 #define ob_struct_ucast(o) ((StructureObject *)(o))
