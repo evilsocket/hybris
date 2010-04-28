@@ -214,7 +214,7 @@ VM __hyb_vm;
 %nonassoc T_NOT
 %nonassoc T_INC T_DEC
 
-%type <node>   statement expression statements
+%type <node>   statement arithmeticExpression bitwiseExpression logicExpression callExpression expression statements
 %type <list>   argumentList
 %type <list>   caseCascade
 %type <list>   attrList
@@ -366,6 +366,50 @@ statements : /* empty */          { $$ = MK_NODE(0);  }
            | statement            { $$ = MK_NODE($1); }
            | statements statement { $$ = MK_EOSTMT_NODE( $1, $2 ); };
 
+arithmeticExpression : T_MINUS expression %prec T_UMINUS { $$ = MK_UMINUS_NODE( $2 ); }
+					 | expression T_DOT expression       { $$ = MK_DOT_NODE( $1, $3 ); }
+					 | expression T_DOTE expression      { $$ = MK_DOTE_NODE( $1, $3 ); }
+					 | expression T_PLUS expression      { $$ = MK_PLUS_NODE( $1, $3 ); }
+					 | expression T_PLUSE expression     { $$ = MK_PLUSE_NODE( $1, $3 ); }
+					 | expression T_MINUS expression     { $$ = MK_MINUS_NODE( $1, $3 ); }
+					 | expression T_MINUSE expression    { $$ = MK_MINUSE_NODE( $1, $3 ); }
+					 | expression T_MUL expression       { $$ = MK_MUL_NODE( $1, $3 ); }
+					 | expression T_MULE expression      { $$ = MK_MULE_NODE( $1, $3 ); }
+					 | expression T_DIV expression       { $$ = MK_DIV_NODE( $1, $3 ); }
+					 | expression T_DIVE expression      { $$ = MK_DIVE_NODE( $1, $3 ); }
+					 | expression T_MOD expression       { $$ = MK_MOD_NODE( $1, $3 ); }
+					 | expression T_INC                  { $$ = MK_INC_NODE( $1 ); }
+					 | expression T_DEC                  { $$ = MK_DEC_NODE( $1 ); };
+
+bitwiseExpression : expression T_XOR expression     { $$ = MK_XOR_NODE( $1, $3 ); }
+				  | expression T_XORE expression    { $$ = MK_XORE_NODE( $1, $3 ); }
+				  | T_NOT expression                { $$ = MK_NOT_NODE( $2 ); }
+				  | expression T_AND expression     { $$ = MK_AND_NODE( $1, $3 ); }
+				  | expression T_ANDE expression    { $$ = MK_ANDE_NODE( $1, $3 ); }
+				  | expression T_OR expression      { $$ = MK_OR_NODE( $1, $3 ); }
+				  | expression T_ORE expression     { $$ = MK_ORE_NODE( $1, $3 ); }
+				  | expression T_SHIFTL expression  { $$ = MK_SHIFTL_NODE( $1, $3 ); }
+				  | expression T_SHIFTLE expression { $$ = MK_SHIFTLE_NODE( $1, $3 ); }
+				  | expression T_SHIFTR expression  { $$ = MK_SHIFTR_NODE( $1, $3 ); }
+				  | expression T_SHIFTRE expression { $$ = MK_SHIFTRE_NODE( $1, $3 ); }
+				  | expression T_L_NOT              { $$ = MK_FACT_NODE( $1 ); };
+
+logicExpression : T_L_NOT expression                 			   { $$ = MK_LNOT_NODE( $2 ); }
+				| expression T_LESS expression       			   { $$ = MK_LESS_NODE( $1, $3 ); }
+				| expression T_GREATER expression    			   { $$ = MK_GREATER_NODE( $1, $3 ); }
+				| expression T_GREATER_EQ expression 			   { $$ = MK_GE_NODE( $1, $3 ); }
+				| expression T_LESS_EQ expression    			   { $$ = MK_LE_NODE( $1, $3 ); }
+				| expression T_NOT_SAME expression   			   { $$ = MK_NE_NODE( $1, $3 ); }
+				| expression T_SAME expression       			   { $$ = MK_EQ_NODE( $1, $3 ); }
+				| expression T_L_AND expression      			   { $$ = MK_LAND_NODE( $1, $3 ); }
+				| expression T_L_OR expression       			   { $$ = MK_LOR_NODE( $1, $3 ); }
+				| '(' expression '?' expression ':' expression ')' { $$ = MK_QUESTION_NODE( $2, $4, $6 ); };
+
+callExpression : T_NEW T_IDENT '(' argumentList ')' %prec T_NEW_END { $$ = MK_NEW_NODE( $2, $4 ); }
+			   | T_IDENT    '(' argumentList ')' %prec T_CALL_END   { $$ = MK_CALL_NODE( $1, $3 ); }
+			   | identChain '(' argumentList ')' %prec T_CALL_END   { $$ = MK_METHOD_CALL_NODE( $1, $3 ); }
+			   | expression '(' argumentList ')'                    { $$ = MK_CALL_NODE( $1, $3 ); }
+
 expression : T_INTEGER                                        { $$ = MK_CONST_NODE($1); }
            | T_REAL                                           { $$ = MK_CONST_NODE($1); }
            | T_CHAR                                           { $$ = MK_CONST_NODE($1); }
@@ -383,54 +427,16 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            | expression '[' expression ']' %prec T_SB_END     { $$ = MK_SB_NODE( $1, $3 ); }
            /* range evaluation */
            | expression T_DDOT expression                     { $$ = MK_RANGE_NODE( $1, $3 ); }
-           /* arithmetic & misc operators */
-           | T_MINUS expression %prec T_UMINUS                { $$ = MK_UMINUS_NODE( $2 ); }
-           | expression T_DOT expression                      { $$ = MK_DOT_NODE( $1, $3 ); }
-		   | expression T_DOTE expression                     { $$ = MK_DOTE_NODE( $1, $3 ); }
-           | expression T_PLUS expression                     { $$ = MK_PLUS_NODE( $1, $3 ); }
-		   | expression T_PLUSE expression                    { $$ = MK_PLUSE_NODE( $1, $3 ); }
-           | expression T_MINUS expression                    { $$ = MK_MINUS_NODE( $1, $3 ); }
-		   | expression T_MINUSE expression                   { $$ = MK_MINUSE_NODE( $1, $3 ); }
-           | expression T_MUL expression                      { $$ = MK_MUL_NODE( $1, $3 ); }
-		   | expression T_MULE expression                     { $$ = MK_MULE_NODE( $1, $3 ); }
-           | expression T_DIV expression                      { $$ = MK_DIV_NODE( $1, $3 ); }
-		   | expression T_DIVE expression                     { $$ = MK_DIVE_NODE( $1, $3 ); }
-           | expression T_MOD expression                      { $$ = MK_MOD_NODE( $1, $3 ); }
-           | expression T_INC                                 { $$ = MK_INC_NODE( $1 ); }
-           | expression T_DEC                                 { $$ = MK_DEC_NODE( $1 ); }
+           /* arithmetic */
+           | arithmeticExpression 							  { $$ = MK_NODE($1); }
            /* bitwise */
-           | expression T_XOR expression                      { $$ = MK_XOR_NODE( $1, $3 ); }
-		   | expression T_XORE expression                     { $$ = MK_XORE_NODE( $1, $3 ); }
-           | T_NOT expression                                 { $$ = MK_NOT_NODE( $2 ); }
-           | expression T_AND expression                      { $$ = MK_AND_NODE( $1, $3 ); }
-		   | expression T_ANDE expression                     { $$ = MK_ANDE_NODE( $1, $3 ); }
-           | expression T_OR expression                       { $$ = MK_OR_NODE( $1, $3 ); }
-		   | expression T_ORE expression                      { $$ = MK_ORE_NODE( $1, $3 ); }
-		   | expression T_SHIFTL expression                   { $$ = MK_SHIFTL_NODE( $1, $3 ); }
-		   | expression T_SHIFTLE expression                  { $$ = MK_SHIFTLE_NODE( $1, $3 ); }
-		   | expression T_SHIFTR expression                   { $$ = MK_SHIFTR_NODE( $1, $3 ); }
-		   | expression T_SHIFTRE expression                  { $$ = MK_SHIFTRE_NODE( $1, $3 ); }
-		   | expression T_L_NOT                                { $$ = MK_FACT_NODE( $1 ); }
+           | bitwiseExpression 								  { $$ = MK_NODE($1); }
            /* logic */
-		   | T_L_NOT expression                                { $$ = MK_LNOT_NODE( $2 ); }
-           | expression T_LESS expression                     { $$ = MK_LESS_NODE( $1, $3 ); }
-           | expression T_GREATER expression                  { $$ = MK_GREATER_NODE( $1, $3 ); }
-           | expression T_GREATER_EQ expression                       { $$ = MK_GE_NODE( $1, $3 ); }
-           | expression T_LESS_EQ expression                       { $$ = MK_LE_NODE( $1, $3 ); }
-           | expression T_NOT_SAME expression                       { $$ = MK_NE_NODE( $1, $3 ); }
-           | expression T_SAME expression                       { $$ = MK_EQ_NODE( $1, $3 ); }
-           | expression T_L_AND expression                     { $$ = MK_LAND_NODE( $1, $3 ); }
-           | expression T_L_OR expression                      { $$ = MK_LOR_NODE( $1, $3 ); }
+           | logicExpression 								  { $$ = MK_NODE($1); }
            /* regex specific */
            | expression T_REGEX_OP expression                 { $$ = MK_PCRE_NODE( $1, $3 ); }
-           /* structure or class creation */
-           | T_NEW T_IDENT '(' argumentList ')' %prec T_NEW_END { $$ = MK_NEW_NODE( $2, $4 ); }
-           /* function or method call (consider two different cases due to hybris function calls */
-		   | T_IDENT    '(' argumentList ')' %prec T_CALL_END { $$ = MK_CALL_NODE( $1, $3 ); }
-		   | identChain '(' argumentList ')' %prec T_CALL_END { $$ = MK_METHOD_CALL_NODE( $1, $3 ); }
-           | expression '(' argumentList ')'                  { $$ = MK_CALL_NODE( $1, $3 ); }
-           /* ternary operator */
-           | '(' expression '?' expression ':' expression ')' { $$ = MK_QUESTION_NODE( $2, $4, $6 ); }
+           /* call */
+           | callExpression									  { $$ = MK_NODE($1); }
            /* group expression */
            | '(' expression ')'                               { $$ = MK_NODE($2); };
 

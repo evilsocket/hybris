@@ -96,9 +96,11 @@ void VM::init( int argc, char *argv[] ){
     	gc_set_threshold(args.gc_threshold);
     }
 
+    vmem.owner = (argc > 1 ? argv[1] : "<stdin>");
+
     /* initialize command line arguments */
     HYBRIS_DEFINE_CONSTANT( this, "argc", gc_new_integer(argc - 1) );
-    for( i = 0; i < argc; ++i ){
+    for( i = 1; i < argc; ++i ){
         sprintf( name, "%d", i - 1 );
         HYBRIS_DEFINE_CONSTANT( this, name, gc_new_string(argv[i]) );
     }
@@ -241,11 +243,31 @@ void VM::loadModule( string path, string name ){
 
 void VM::printStackTrace( bool force /*= false*/ ){
 	if( args.stacktrace || force ){
-		list<vframe_t *>::reverse_iterator i;
-		unsigned int j;
-		fprintf( stderr, "\nSTACK TRACE :\n\n" );
-		for( i = frames.rbegin(), j = 0; i != frames.rend(); i++, ++j ){
-			fprintf( stderr, "\t%.3d : %s\n", j, (*i)->owner.c_str() );
+		list<vframe_t *>::iterator i;
+		unsigned int j, pad, k, args, last;
+		vframe_t *frame;
+		extern gc_t __gc;
+
+		fprintf( stderr, "\nCall Stack [memory usage %d bytes] :\n\n", __gc.usage );
+
+		fprintf( stderr, "%s\n", vmem.owner.c_str() );
+		for( i = frames.begin(), j = 1; i != frames.end(); i++, ++j ){
+			frame = (*i);
+			args  = frame->size();
+			last  = args - 1;
+			pad   = j;
+
+			while(pad--){
+				fprintf( stderr, "  " );
+			}
+
+			fprintf( stderr, "%s(%s", frame->owner.c_str(), (args ? " " : "") );
+			for( k = 0; k < args; ++k ){
+				fprintf( stderr, "%s = %s%s", frame->label(k),
+											  ob_svalue( frame->at(k) ).c_str(),
+											  (k < last ? ", " : " ") );
+			}
+			fprintf( stderr, ")\n" );
 		}
 		fprintf( stderr, "\n" );
 	}
