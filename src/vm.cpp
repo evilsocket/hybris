@@ -249,7 +249,6 @@ void VM::printStackTrace( bool force /*= false*/ ){
 		vframe_t *frame;
 		extern gc_t __gc;
 
-
 		fprintf( stderr, "\nCall Stack [memory usage %d bytes] :\n\n", __gc.usage );
 
 		fprintf( stderr, "%s\n", vmem.owner.c_str() );

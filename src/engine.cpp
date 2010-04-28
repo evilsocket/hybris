@@ -56,6 +56,12 @@ Object *Engine::exec( vframe_t *frame, Node *node ){
     else if( frame->state.is(Next) ){
     	return H_DEFAULT_RETURN;
     }
+	/*
+	 * Null node, probably a function or method without statements.
+	 */
+    else if( node == H_UNDEFINED ){
+    	return H_DEFAULT_RETURN;
+    }
 
     switch( node->type() ){
         /* identifier */
@@ -541,7 +547,7 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 			ClassObject 			   		   *cobj = ob_class_ucast(type);
 			ClassObjectAttributeIterator 		ai;
 			ClassObjectMethodIterator 	 		mi;
-			ClassObjectMethodVariationsIterator mvi;
+			ClassObjectPrototypesIterator mvi;
 
 			for( ai = cobj->c_attributes.begin(); ai != cobj->c_attributes.end(); ai++ ){
 				attrname = (char *)(*ai)->label.c_str();
@@ -1003,6 +1009,7 @@ Object *Engine::onMethodCall( vframe_t *frame, Node *call ){
 		}
 	}
 
+	method_argc = (method_argc < 0 ? 0 : method_argc);
 	/*
 	 * The last child of a method is its body itself, so we compare
 	 * call children with method->children() - 1 to ignore the body.

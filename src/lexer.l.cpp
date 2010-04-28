@@ -456,7 +456,7 @@ method_decl_t *hyb_lex_operator( char * text ){
 	/*
 	 * Mangle operator name.
 	 */
-	strcpy( declaration->method, ("__op@" + tokens[0]).c_str() );
+	strcpy( declaration->method, tokens[0].c_str() );
 
 	pattern = "("+identifier+")";
 

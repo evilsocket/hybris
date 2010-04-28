@@ -940,23 +940,21 @@ typedef struct _class_attribute_t {
 }
 class_attribute_t;
 
+typedef vector<Node *> prototypes_t;
+
 typedef struct _class_method_t {
 	string		   name;
 	/*
 	 * A class could have more methods with the same name but
 	 * different parameters, so we have to hold a vector of Nodes.
 	 */
-	vector<Node *> method;
+	prototypes_t prototypes;
 
-	_class_method_t( string n, Node *m ) :
-		name(n) {
-		method.push_back(m);
+	_class_method_t( string n, Node *m ) : name(n) {
+		prototypes.push_back(m);
 	}
 
-	_class_method_t( string n, vector<Node *>& mv ) :
-		name(n),
-		method(mv) {
-
+	_class_method_t( string n, prototypes_t& p ) : name(n), prototypes(p) {
 	}
 }
 class_method_t;
@@ -976,7 +974,7 @@ ClassObject;
 
 typedef HashMap<class_attribute_t>::iterator ClassObjectAttributeIterator;
 typedef HashMap<class_method_t>::iterator	 ClassObjectMethodIterator;
-typedef vector<Node *>::iterator	 		 ClassObjectMethodVariationsIterator;
+typedef vector<Node *>::iterator	 		 ClassObjectPrototypesIterator;
 
 #define ob_is_class(o)    ob_is_typeof(o,Class)
 #define ob_class_ucast(o) ((ClassObject *)(o))

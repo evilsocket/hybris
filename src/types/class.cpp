@@ -22,9 +22,11 @@
 #include "mseg.h"
 #include "vm.h"
 
-/** helpers **/
+/*
+ * Call the operator 'op_name' of class 'me' with 'argc' arguments if overloaded,
+ * otherwise print a syntax error.
+ */
 Object *class_call_overloaded_operator( Object *me, const char *op_name, int argc, ... ){
-	char     op_mangled_name[0xFF] = {0};
 	Node    *op = H_UNDEFINED;
 	vframe_t stack;
 	Object  *result = H_UNDEFINED;
@@ -32,13 +34,12 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	va_list ap;
 	extern VM __hyb_vm;
 
-	sprintf( op_mangled_name, "__op@%s", op_name );
-
-	if( (op = ob_get_method( me, op_mangled_name, argc )) == H_UNDEFINED ){
+	if( (op = ob_get_method( me, (char *)op_name, argc )) == H_UNDEFINED ){
 		hyb_error( H_ET_SYNTAX, "class %s does not overload '%s' operator", ob_typename(me), op_name );
 	}
 
 	op_argc = op->children() - 1;
+	op_argc = (op_argc < 0 ? 0 : op_argc);
 
 	/*
 	 * The last child of a method is its body itself, so we compare
@@ -87,6 +88,11 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
 }
 
+/*
+ * Call the descriptor 'ds_name' of class 'me' with 'argc' arguments if overloaded,
+ * if the descriptor is not overloaded, return NULL if lazy = true or print a
+ * syntax error.
+ */
 Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool lazy, int argc, ... ){
 	Node    *ds = H_UNDEFINED;
 	vframe_t stack;
@@ -182,11 +188,10 @@ void class_set_references( Object *me, int ref ){
 Object *class_clone( Object *me ){
     ClassObject *cclone = gc_new_class(),
                 *cme    = ob_class_ucast(me);
-    ClassObjectAttributeIterator ai;
-    ClassObjectMethodIterator    mi;
-    ClassObjectMethodVariationsIterator mvi;
-
-    vector<Node *>				 method_variations;
+    ClassObjectAttributeIterator  ai;
+    ClassObjectMethodIterator     mi;
+    ClassObjectPrototypesIterator pi;
+    prototypes_t 				  prototypes;
 
     for( ai = cme->c_attributes.begin(); ai != cme->c_attributes.end(); ai++ ){
     	cclone->c_attributes.insert( (char *)(*ai)->value->name.c_str(),
@@ -199,20 +204,20 @@ Object *class_clone( Object *me ){
     }
 
     for( mi = cme->c_methods.begin(); mi != cme->c_methods.end(); mi++ ){
-    	method_variations.clear();
-    	for( mvi = (*mi)->value->method.begin(); mvi != (*mi)->value->method.end(); mvi++ ){
-    		method_variations.push_back( (*mvi)->clone() );
+    	prototypes.clear();
+    	for( pi = (*mi)->value->prototypes.begin(); pi != (*mi)->value->prototypes.end(); pi++ ){
+    		prototypes.push_back( (*pi)->clone() );
     	}
 
     	cclone->c_methods.insert( (char *)(*mi)->value->name.c_str(),
 								  new class_method_t(
 									(*mi)->value->name,
-									method_variations
+									prototypes
 								  )
 							    );
     }
 
-    cclone->name  = cme->name;
+    cclone->name = cme->name;
 
     return (Object *)(cclone);
 }
@@ -225,7 +230,7 @@ size_t class_get_size( Object *me ){
 void class_free( Object *me ){
     ClassObjectAttributeIterator ai;
     ClassObjectMethodIterator    mi;
-    ClassObjectMethodVariationsIterator mvi;
+    ClassObjectPrototypesIterator pi;
     ClassObject *cme = ob_class_ucast(me);
     class_method_t *method;
     class_attribute_t *attribute;
@@ -234,11 +239,12 @@ void class_free( Object *me ){
      * Check if the class has a destructors and call it.
      */
     if( (method = cme->c_methods.find( "__expire" )) ){
-		for( mvi = method->method.begin(); mvi != method->method.end(); mvi++ ){
-			Node *dtor = (*mvi);
+		for( pi = method->prototypes.begin(); pi != method->prototypes.end(); pi++ ){
+			Node *dtor = (*pi);
 			vframe_t stack;
 			extern VM __hyb_vm;
 
+			stack.owner = string(ob_typename(me)) + "::__expire";
 			stack.insert( "me", me );
 
 			__hyb_vm.engine->exec( &stack, dtor->callBody() );
@@ -458,13 +464,13 @@ Object *class_cl_set( Object *me, Object *index, Object *op ){
 }
 
 /** class operators **/
-void class_define_attribute( Object *me, char *name, access_t a ){
+void class_define_attribute( Object *me, char *name, access_t access ){
 	ClassObject *cme = ob_class_ucast(me);
 
 	cme->c_attributes.insert( name,
 							  new class_attribute_t(
 									  name,
-									  a,
+									  access,
 									  (Object *)gc_new_integer(0)
 							  )
 							);
@@ -481,12 +487,12 @@ access_t class_attribute_access( Object *me, char *name ){
 	return asPublic;
 }
 
-void class_set_attribute_access( Object *me, char *name, access_t a ){
+void class_set_attribute_access( Object *me, char *name, access_t access ){
 	ClassObject *cme = ob_class_ucast(me);
 	class_attribute_t *attribute;
 
 	if( (attribute = cme->c_attributes.find(name)) != NULL ){
-		attribute->access = a;
+		attribute->access = access;
 	}
 }
 
@@ -497,7 +503,6 @@ void class_add_attribute( Object *me, char *name ){
 Object *class_get_attribute( Object *me, char *name, bool with_descriptor /* = true */ ){
     ClassObject *cme = ob_class_ucast(me);
     class_attribute_t *attribute;
-    Object *a_value;
 
     /*
      * If the attribute is defined, return it.
@@ -506,11 +511,11 @@ Object *class_get_attribute( Object *me, char *name, bool with_descriptor /* = t
 		return attribute->value;
 	}
 	/*
-	 * Else, if the class overloads the __attribute descriptor,
-	 * call it.
+	 * Else, if the class overloads the __attribute descriptor
+	 * and with_descriptor = true, call it.
 	 */
-	else if( with_descriptor && (a_value = class_call_overloaded_descriptor( me, "__attribute", true, 1, (Object *)gc_new_string(name) )) != H_UNDEFINED ){
-		return a_value;
+	else if( with_descriptor ){
+		return class_call_overloaded_descriptor( me, "__attribute", true, 1, (Object *)gc_new_string(name) );
 	}
 	/*
 	 * Nothing found.
@@ -548,7 +553,7 @@ void class_define_method( Object *me, char *name, Node *code ){
 	 * push the node to the variations vector.
 	 */
 	if( (method = cme->c_methods.find(name)) ){
-		method->method.push_back( code->clone() );
+		method->prototypes.push_back( code->clone() );
 	}
 	/*
 	 * Otherwise define a new method.
@@ -561,37 +566,34 @@ void class_define_method( Object *me, char *name, Node *code ){
 Node *class_get_method( Object *me, char *name, int argc ){
 	ClassObject *cme = ob_class_ucast(me);
 	class_method_t *method;
-	char mangled_op_name[0xFF] = {0};
 
-	sprintf( mangled_op_name, "__op@%s", name );
-
-	if( (method = cme->c_methods.find(name)) || (method = cme->c_methods.find(mangled_op_name)) ){
+	if( method = cme->c_methods.find(name) ){
 		/*
 		 * If no parameters number is specified, return the first method found.
 		 */
 		if( argc < 0 ){
-			return (*method->method.begin());
+			return (*method->prototypes.begin());
 		}
 		/*
 		 * Otherwise, find the best match.
 		 */
-		ClassObjectMethodVariationsIterator mvi;
+		ClassObjectPrototypesIterator pi;
 		Node *best_match = NULL;
 		int   best_match_argc, match_argc;
 
-		for( mvi = method->method.begin(); mvi != method->method.end(); mvi++ ){
+		for( pi = method->prototypes.begin(); pi != method->prototypes.end(); pi++ ){
 			/*
 			 * The last child of a method is its body itself, so we compare
 			 * call children with method->children() - 1 to ignore the body.
 			 */
 			if( best_match == NULL ){
-				best_match 		= *mvi;
+				best_match 		= *pi;
 				best_match_argc = best_match->children() - 1;
 			}
 			else{
-				match_argc = (*mvi)->children() - 1;
+				match_argc = (*pi)->children() - 1;
 				if( match_argc != best_match_argc && match_argc == argc ){
-					return (*mvi);
+					return (*pi);
 				}
 			}
 		}
