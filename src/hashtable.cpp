@@ -290,17 +290,18 @@ __force_inline static ulong DenseTableMemory(ulong cBuckets, ulong cOccupied)
 
 __force_inline static ulong Hash(hash_table_t *ht, char *key, ulong cBuckets)
 {
-   ulong a, b, c, cchKey, cchKeyOrig;
+   ulong a, b, c, cchKey, cchKeyOrig,
+	     sizeof_ulong_3 = 3 * sizeof(ulong),
+	     sizeof_ulong_2 = 2 * sizeof(ulong);
 
    cchKeyOrig = strlen(key);
    a = b = c = 0x9e3779b9;       /* the golden ratio; an arbitrary value */
 
-   for ( cchKey = cchKeyOrig;  cchKey >= 3 * sizeof(ulong);
-	 cchKey -= 3 * sizeof(ulong),  key += 3 * sizeof(ulong) )
-   {
+   for( cchKey = cchKeyOrig; cchKey >= sizeof_ulong_3; cchKey -= sizeof_ulong_3,  key += sizeof_ulong_3 ) {
       a += WORD_AT(key);
-      b += WORD_AT(key + sizeof(ulong));
-      c += WORD_AT(key + sizeof(ulong)*2);
+      b += WORD_AT(key + sizeof(ulong) );
+      c += WORD_AT(key + sizeof_ulong_2 );
+
       mix(a,b,c);
    }
 
@@ -366,40 +367,47 @@ __force_inline static hash_item_t *Rehash(hash_table_t *ht, ulong cNewBuckets, h
 {
    dense_bin_t *tableNew;
    ulong iBucketFirst;
-   hash_item_t *bck, *bckNew = NULL;
-   ulong offset;                         /* the i in h(x) + i*(i-1)/2 */
-   int fOverwrite = 0;    /* not an issue: there can be no collisions */
+   hash_item_t *bck, *bckNew(NULL);
+   ulong offset;         /* the i in h(x) + i*(i-1)/2 */
+   int fOverwrite(0);    /* not an issue: there can be no collisions */
 
-   assert( ht->table );
    cNewBuckets = DenseTableAllocate(&tableNew, cNewBuckets);
-      /* Since we RETURN the new position of bckWatch, we want  *
-       * to make sure it doesn't get moved due to some table    *
-       * rehashing that comes after it's inserted.  Thus, we    *
-       * have to put it in last.  This makes the loop weird.    */
-   for ( bck = ht_first_bucket(ht); ; bck = ht_next_bucket(ht) )
-   {
-      if ( bck == NULL )      /* we're done iterating, so look at bckWatch */
-      {
-	 bck = bckWatch;
-	 if ( bck == NULL )           /* I guess bckWatch wasn't specified */
-	    break;
+
+  /* Since we RETURN the new position of bckWatch, we want  *
+   * to make sure it doesn't get moved due to some table    *
+   * rehashing that comes after it's inserted.  Thus, we    *
+   * have to put it in last.  This makes the loop weird.    */
+   for( bck = ht_first_bucket(ht); ;bck = ht_next_bucket(ht) ) {
+	   /* we're done iterating, so look at bckWatch */
+	   if( bck == NULL ){
+		   bck = bckWatch;
+		   /* I guess bckWatch wasn't specified */
+		   if( bck == NULL )
+			   break;
       }
-      else if ( bck == bckWatch )
-	 continue;             /* ignore if we see it during the iteration */
+      else if( bck == bckWatch )
+    	  /* ignore if we see it during the iteration */
+    	  continue;
 
       offset = 0;                              /* a new i for a new bucket */
-      for ( iBucketFirst = Hash(ht, (char *)(bck->key), cNewBuckets);
-            !DenseTableIsEmpty(tableNew, iBucketFirst);
-            iBucketFirst = (iBucketFirst + JUMP(KEY_PTR(ht,bck->key), offset)) & (cNewBuckets-1) );
-        bckNew = DenseTableInsert(tableNew, bck, iBucketFirst, &fOverwrite);
-      if ( bck == bckWatch )       /* we're done with the last thing to do */
-	 break;
+      for( iBucketFirst = Hash(ht, (char *)(bck->key), cNewBuckets);
+           !DenseTableIsEmpty(tableNew, iBucketFirst);
+           iBucketFirst = (iBucketFirst + JUMP(KEY_PTR(ht,bck->key), offset)) & (cNewBuckets-1) );
+
+      bckNew = DenseTableInsert(tableNew, bck, iBucketFirst, &fOverwrite);
+      /* we're done with the last thing to do */
+      if( bck == bckWatch )
+    	  break;
    }
+
    DenseTableFree(ht->table, ht->cBuckets);
-   ht->table = tableNew;
-   ht->cBuckets = cNewBuckets;
+
+   ht->table 		 = tableNew;
+   ht->cBuckets 	 = cNewBuckets;
    ht->cDeletedItems = 0;
-   return bckNew;     /* new position of bckWatch, which was inserted last */
+
+   /* new position of bckWatch, which was inserted last */
+   return bckNew;
 }
 
 /*************************************************************************\
