@@ -986,7 +986,6 @@ Object *Engine::onDollar( vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
     o = exec( frame, node->child(0) );
-
     if( (o = frame->get( (char *)ob_svalue(o).c_str() )) == H_UNDEFINED ){
         hyb_error( H_ET_SYNTAX, "'%s' undeclared identifier", ob_svalue(o).c_str() );
     }
