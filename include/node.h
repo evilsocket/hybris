@@ -132,6 +132,10 @@ public  :
         return at(i);
     }
 
+    __force_inline char *id(){
+    	return (char *)value.m_identifier.c_str();
+    }
+
     __force_inline Node *callBody(){
     	int i, sz( size() );
     	for( i = 0; i < sz; ++i ){

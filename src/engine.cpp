@@ -411,7 +411,9 @@ Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
 		name   = (char *)member->value.m_call.c_str();
 		argc   = member->children();
 		method = ob_get_method( cobj, name, argc );
-
+		/*
+		 * Method not found.
+		 */
 		if( method == H_UNDEFINED ){
 			/*
 			 * Try to call the __method descriptor if it's overloaded.
@@ -425,52 +427,22 @@ Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
 			}
 		}
 
-		method_argc = method->children() - 1;
-		method_argc = (method_argc < 0 ? 0 : method_argc);
-
-		if( method->value.m_access != asPublic ){
-			/*
-			 * Search for the type name of the class that owns the method.
-			 * We're pretty sure that someone owns it, otherwise the method
-			 * pointer would be undefined and previous error would be triggered.
-			 */
-			string method_owner;
-			int k, tsz(vt->size() - 1);
-			for( k = tsz; k >= 0; --k ){
-				if( ob_is_class(vt->at(k)) && ob_get_method( vt->at(k), (char *)method->value.m_method.c_str() ) != H_UNDEFINED ){
-					method_owner = vt->label(k);
-				}
-			}
+		/*
+		 * If the method access specifier is not asPublic, only the identifier
+		 * "me" can use the method.
+		 */
+		if( method->value.m_access != asPublic && strcmp( owner_id, "me" ) != 0 ){
 			/*
 			 * The method is protected.
 			 */
 			if( method->value.m_access == asProtected ){
-				/*
-				 * Protected methods can be accessed only by derived classes.
-				 */
-				if( strcmp( owner_id, "me" ) != 0 ){
-					hyb_error( H_ET_SYNTAX, "Protected method '%s' can be accessed only by derived classes of '%s'", name, method_owner.c_str() );
-				}
+				hyb_error( H_ET_SYNTAX, "Protected method '%s' can be accessed only by derived classes of '%s'", name, ob_typename(cobj) );
 			}
 			/*
-			 * The method is private, so only the owner can use it.
+			 * The method is private..
 			 */
-			else if( method->value.m_access == asPrivate ){
-				/*
-				 * Let's check if the class pointed by 'me' it's the owner of
-				 * the private method.
-				 */
-				if( strcmp( owner_id, "me" ) == 0 ){
-					if( ((ClassObject *)cobj)->name != method_owner ){
-						hyb_error( H_ET_SYNTAX, "Private method '%s' can be accessed only within '%s' class", name, method_owner.c_str() );
-					}
-				}
-				/*
-				 * No way dude, you called a private method!
-				 */
-				else{
-					hyb_error( H_ET_SYNTAX, "Private method '%s' can be accessed only within '%s' class", name, method_owner.c_str() );
-				}
+			else{
+				hyb_error( H_ET_SYNTAX, "Private method '%s' can be accessed only within '%s' class", name, ob_typename(cobj) );
 			}
 		}
 
@@ -478,6 +450,9 @@ Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
 		 * The last child of a method is its body itself, so we compare
 		 * call children with method->children() - 1 to ignore the body.
 		 */
+		method_argc = method->children() - 1;
+		method_argc = (method_argc < 0 ? 0 : method_argc);
+
 		if( argc != method_argc ){
 			hyb_error( H_ET_SYNTAX, "method '%s' requires %d parameters (called with %d)",
 									 name,
@@ -584,9 +559,7 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 		 * Define an attribute
 		 */
 		if( node->child(i)->type() == H_NT_IDENTIFIER ){
-			attrname = (char *)node->child(i)->value.m_identifier.c_str();
-
-			ob_define_attribute( c, attrname, node->child(i)->value.m_access );
+			ob_define_attribute( c, node->child(i)->id(), node->child(i)->value.m_access );
 		}
 		/*
 		 * Define a method
@@ -596,7 +569,7 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 		}
 		/*
 		 * WTF this should not happen!
-		 * The parser should not accept everything that's not an attribute
+		 * The parser should not accept anything that's not an attribute
 		 * or a method declaration.
 		 */
 		else{
@@ -649,8 +622,7 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
     vframe_t     stack;
     unsigned int i(0),
                  children( call->children() );
-    Object      *value  = H_UNDEFINED,
-                *result = H_UNDEFINED;
+    Object      *result = H_UNDEFINED;
 
     if( (function = vmachine->getFunction( callname )) == H_UNDEFINED ){
         return H_UNDEFINED;
@@ -658,14 +630,12 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
 	stack.owner = callname;
     /* do object assignment */
     for( i = 0; i < children; ++i ){
-        /* create function stack value */
-        value = exec( frame, call->child(i) );
 		/*
 		 * Value references count is set to zero now, builtins
 		 * do not care about reference counting, so this object will
 		 * be safely freed after the function call by the gc.
 		 */
-		stack.push( value );
+		stack.push( exec( frame, call->child(i) ) );
     }
 
     /*
@@ -702,16 +672,16 @@ Object *Engine::onThreadedCall( string function_name, vframe_t *frame, vmem_t *a
 		hyb_error( H_ET_SYNTAX, "'%s' undeclared user function identifier", function_name.c_str() );
 	}
 
-	body = function->child(0);
-	/* a function could be without arguments */
-	if( body->type() == H_NT_IDENTIFIER ){
-		children = function->children();
-		do{
-			identifier = body;
-			identifiers.push_back( identifier->value.m_identifier );
-			body = function->child(++i);
-		}while( body->type() == H_NT_IDENTIFIER && i < children );
-	}
+    children = function->children();
+    for( i = 0, body = function->child(0); i < children; ++i ){
+    	body = function->child(i);
+    	if( body->type() == H_NT_IDENTIFIER ){
+    		identifiers.push_back( body->value.m_identifier );
+    	}
+    	else{
+    		break;
+    	}
+    }
 
 	if( identifiers.size() != argv->size() ){
 	   hyb_error( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
@@ -720,7 +690,7 @@ Object *Engine::onThreadedCall( string function_name, vframe_t *frame, vmem_t *a
 						       argv->size() );
 	}
 
-	children = argv->size();
+	children 	= argv->size();
 	stack.owner = function_name;
 	for( i = 0; i < children; ++i  ){
 		/*
@@ -1382,6 +1352,9 @@ Object *Engine::onAssign( vframe_t *frame, Node *node ){
     	}
 
     	value  = exec( frame, node->child(1) );
+
+    	CHECK_FRAME_EXCEPTION()
+
 		object = frame->add( (char *)lexpr->value.m_identifier.c_str(), value );
 
 		return object;
@@ -1395,8 +1368,14 @@ Object *Engine::onAssign( vframe_t *frame, Node *node ){
 			 *owner     = member->value.m_owner,
 			 *attribute = member->value.m_member;
 
-    	Object *obj   = exec( frame, owner ),
-			   *value = exec( frame, node->child(1) );
+    	Object *obj = exec( frame, owner ),
+    		   *value;
+
+    	CHECK_FRAME_EXCEPTION()
+
+		value = exec( frame, node->child(1) );
+
+    	CHECK_FRAME_EXCEPTION()
 
     	ob_set_attribute( obj, (char *)attribute->value.m_identifier.c_str(), value );
 
@@ -1408,7 +1387,7 @@ Object *Engine::onUminus( vframe_t *frame, Node *node ){
     Object *o      = H_UNDEFINED,
            *result = H_UNDEFINED;
 
-    o      = exec( frame, node->child(0) );
+    o = exec( frame, node->child(0) );
 
     CHECK_FRAME_EXCEPTION()
 

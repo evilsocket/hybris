@@ -294,7 +294,9 @@ Object * string_regexp( Object *me, Object *r ){
 	rc = pcre_fullinfo( compiled, 0, PCRE_INFO_CAPTURECOUNT, &ccount );
 
 	offsets = new int[ 3 * (ccount + 1) ];
-
+	/*
+	 * The regex is going to capture at least one element, return a vector.
+	 */
 	if( ccount > 0 ){
 		_pcre_return = (Object *)gc_new_vector();
 
@@ -309,6 +311,10 @@ Object * string_regexp( Object *me, Object *r ){
 			offset = offsets[1];
 		}
 	}
+	/*
+	 * The regex will only match the subject against the pattern, no capture.
+	 * Return an integer/boolean.
+	 */
 	else{
 		rc = pcre_exec( compiled, 0, subject.c_str(), subject.length(), offset, 0, offsets, 3 * (ccount + 1) );
 		_pcre_return = (Object *)gc_new_integer( rc >= 0 );

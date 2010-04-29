@@ -338,17 +338,27 @@ statement  : T_EOSTMT                                                   { $$ = M
            | T_IF '(' expression ')' statement T_ELSE statement         { $$ = MK_IF_ELSE_NODE( $3, $5, $7 ); }
            | T_SWITCH '(' expression ')' '{'
                 caseCascade
-            '}' %prec T_SWITCH_END                                      { $$ = MK_SWITCH_NODE( $3, $6 ); }
+            '}' %prec T_SWITCH_END {
+        	   $$ = MK_SWITCH_NODE( $3, $6 );
+           }
            | T_SWITCH '(' expression ')' '{'
                 caseCascade
                 T_DEFAULT ':' statements
-            '}'                                                         { $$ = MK_SWITCH_DEF_NODE( $3, $6, $9 ); }
+            '}' {
+        	   $$ = MK_SWITCH_DEF_NODE( $3, $6, $9 );
+           }
            /* statement body */
-           | '{' statements '}' { $$ = $2; }
+           | '{' statements '}' {
+        	   $$ = $2;
+           }
            /* function declaration */
-           | T_FUNCTION_PROTOTYPE '{' statements '}'                    { $$ = MK_FUNCTION_NODE( $1, $3 ); }
+           | T_FUNCTION_PROTOTYPE '{' statements '}' {
+        	   $$ = MK_FUNCTION_NODE( $1, $3 );
+           }
            /* structure declaration */
-           | T_STRUCT T_IDENT '{' attrList '}'                       { $$ = MK_STRUCT_NODE( $2, $4 ); }
+           | T_STRUCT T_IDENT '{' attrList '}' {
+        	   $$ = MK_STRUCT_NODE( $2, $4 );
+           }
 		   /* class declaration */
            | T_CLASS T_IDENT classExtensions '{' classMembers '}' {
         	   $$ = MK_CLASS_NODE( $2, $3, $5 );
@@ -428,7 +438,7 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            /* a single subscript could be an expression itself */
            | expression '[' expression ']' %prec T_SB_END     { $$ = MK_SB_NODE( $1, $3 ); }
            /* range evaluation */
-           | expression T_RANGE expression                     { $$ = MK_RANGE_NODE( $1, $3 ); }
+           | expression T_RANGE expression                    { $$ = MK_RANGE_NODE( $1, $3 ); }
            /* arithmetic */
            | arithmeticExpression 							  { $$ = MK_NODE($1); }
            /* bitwise */
