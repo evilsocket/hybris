@@ -53,18 +53,17 @@ const char *ob_typename( Object * o ){
 }
 
 void ob_set_references( Object *o, int ref ){
-    if( o->type->set_references != HYB_UNIMPLEMENTED_FUNCTION ){
-        return o->type->set_references(o,ref);
-    }
+	/*
+	 * Every object has to implement its own set_reference.
+	 */
+	return o->type->set_references(o,ref);
 }
 
 Object* ob_clone( Object *o ){
-    if( o->type->clone != HYB_UNIMPLEMENTED_FUNCTION ){
-        return o->type->clone(o);
-    }
-    else{
-        hyb_error( H_ET_SYNTAX, "couldn't copy the object type '%s'", o->type->name );
-    }
+    /*
+	 * Every object has to implement its own clone.
+	 */
+	return o->type->clone(o);
 }
 
 bool ob_free( Object *o ){
@@ -87,14 +86,10 @@ bool ob_free( Object *o ){
 }
 
 size_t ob_get_size( Object *o ){
-	if( o->type->get_size != HYB_UNIMPLEMENTED_FUNCTION ){
-		return o->type->get_size(o);
-	}
 	/*
-	 * Every type should define a get_size function.
-	 * Should we trig an error?
+	 * Every object has to implement its own get_size.
 	 */
-	return 0;
+	return o->type->get_size(o);
 }
 
 byte * ob_serialize( Object *o, size_t size ){
@@ -277,16 +272,13 @@ Object *ob_apply_regexp( Object *a, Object *b ){
 }
 
 Object *ob_assign( Object *a, Object *b ){
-	if( a->type->assign != HYB_UNIMPLEMENTED_FUNCTION ){
-	    /**
-	     * NOTE: If 'a' is already defined, the assign method will just replace
-		 * its value, then the VM will decrement old value reference counter.
-	     */
-		return a->type->assign(a,b);
-	}
-	else{
-		hyb_error( H_ET_SYNTAX, "invalid '=' for object type '%s'", a->type->name );
-	}
+	/*
+	 * Every object has to implement its own assign.
+     *
+	 * NOTE: If 'a' is already defined, the assign method will just replace
+	 * its value, then the VM will decrement old value reference counter.
+	 */
+	return a->type->assign(a,b);
 }
 
 Object *ob_factorial( Object *o ){

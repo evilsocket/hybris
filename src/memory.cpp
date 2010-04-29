@@ -23,12 +23,6 @@ MemorySegment::MemorySegment() : HashMap<Object>(), mutex(PTHREAD_MUTEX_INITIALI
 
 }
 
-MemorySegment::~MemorySegment(){
-	/*
-	 * See note on ~HashMap()
-	 */
-}
-
 Object *MemorySegment::add( char *identifier, Object *object ){
     Object *_new = H_UNDEFINED,
            *_old = H_UNDEFINED,

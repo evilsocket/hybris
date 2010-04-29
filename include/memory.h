@@ -106,7 +106,6 @@ class MemorySegment : public HashMap<Object> {
 		pthread_mutex_t mutex;
 
 		MemorySegment();
-        ~MemorySegment();
 
         __force_inline Object *get( char *identifier ){
         	return find(identifier);

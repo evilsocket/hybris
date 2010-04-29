@@ -1085,16 +1085,14 @@ Object *Engine::onSubscriptSet( vframe_t *frame, Node *node ){
 }
 
 Object *Engine::onWhile( vframe_t *frame, Node *node ){
-    Node *condition,
-         *body;
-
-    Object *boolean = H_UNDEFINED,
-           *result  = H_UNDEFINED;
+    Node   *condition,
+		   *body;
+    Object *result  = H_UNDEFINED;
 
     condition = node->child(0);
     body      = node->child(1);
 
-    while( ob_lvalue( (boolean = exec(  frame, condition )) ) ){
+    while( ob_lvalue( exec( frame, condition ) ) ){
    		result = exec( frame, body );
 
    		CHECK_FRAME_EXCEPTION()
@@ -1113,8 +1111,7 @@ Object *Engine::onDo( vframe_t *frame, Node *node ){
     Node *condition,
          *body;
 
-    Object *boolean = H_UNDEFINED,
-           *result  = H_UNDEFINED;
+    Object *result  = H_UNDEFINED;
 
     body      = node->child(0);
     condition = node->child(1);
@@ -1129,30 +1126,26 @@ Object *Engine::onDo( vframe_t *frame, Node *node ){
 			break;
 		}
     }
-    while( ob_lvalue( (boolean = exec(  frame, condition )) ) );
+    while( ob_lvalue( exec( frame, condition ) ) );
 
     return result;
 }
 
 Object *Engine::onFor( vframe_t *frame, Node *node ){
-    Node *condition,
-         *increment,
-         *body;
+    Node   *condition,
+           *increment,
+		   *body;
+    Object *result  = H_UNDEFINED;
 
-    Object *init    = H_UNDEFINED,
-           *boolean = H_UNDEFINED,
-           *inc     = H_UNDEFINED,
-           *result  = H_UNDEFINED;
+    exec(  frame, node->child(0) );
 
-    init      = exec(  frame, node->child(0) );
     condition = node->child(1);
     increment = node->child(2);
     body      = node->child(3);
-    for( init;
-         ob_lvalue( (boolean = exec(  frame, condition )) );
-         (inc   = exec(  frame, increment )) ){
 
-		result = exec( frame, body );
+    for( ; ob_lvalue( exec( frame, condition ) ); exec( frame, increment ) ){
+
+    	result = exec( frame, body );
 
 		CHECK_FRAME_EXCEPTION()
 
@@ -1232,7 +1225,7 @@ Object *Engine::onIf( vframe_t *frame, Node *node ){
     Object *boolean = H_UNDEFINED,
            *result  = H_UNDEFINED;
 
-    boolean = exec(  frame, node->child(0) );
+    boolean = exec( frame, node->child(0) );
 
     if( ob_lvalue(boolean) ){
         result = exec( frame, node->child(1) );
