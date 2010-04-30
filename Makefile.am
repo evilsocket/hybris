@@ -93,6 +93,10 @@ OBJECTS=$(SOURCES:.cpp=.o)
 LOBJECTS=$(SOURCES:.cpp=.lo)
 STDOBJ=$(patsubst stdlib%.cc,build%.so, $(STDSRC))
 
+
+debug: CFLAGS= -Iinclude/ $(WFLAGS) -g -pg
+debug: all
+
 all: src/lexer.cpp src/parser.cpp lib hybris stdlib
 
 lib: $(LOBJECTS)	

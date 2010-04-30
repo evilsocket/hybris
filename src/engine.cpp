@@ -464,7 +464,7 @@ Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
 		 * Create the "me" reference to the class itself, used inside
 		 * methods for me->... calls.
 		 */
-		stack.owner = owner_id + string("::") + name;
+		stack.owner = ob_typename(cobj) + string("::") + name;
 		stack.insert( "me", cobj );
 		for( i = 0; i < argc; ++i ){
 			/*
