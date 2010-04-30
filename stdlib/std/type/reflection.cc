@@ -18,6 +18,8 @@
 */
 #include <hybris.h>
 
+HYBRIS_DEFINE_FUNCTION(hload);
+HYBRIS_DEFINE_FUNCTION(heval);
 HYBRIS_DEFINE_FUNCTION(hvar_names);
 HYBRIS_DEFINE_FUNCTION(hvar_values);
 HYBRIS_DEFINE_FUNCTION(huser_functions);
@@ -27,6 +29,8 @@ HYBRIS_DEFINE_FUNCTION(hcall);
 HYBRIS_DEFINE_FUNCTION(hcall_method);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
+	{ "load", hload },
+	{ "eval", heval },
 	{ "var_names", hvar_names },
 	{ "var_values", hvar_values },
 	{ "user_functions", huser_functions },
@@ -36,6 +40,88 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "call_method", hcall_method },
 	{ "", NULL }
 };
+
+extern "C" void hybris_module_init( VM * vmachine ){
+	extern VM  *__hyb_vm;
+
+	/*
+	 * This module is linked against libhybris.so.1 which contains a compiled
+	 * parser.cpp, which has an uninitialized __hyb_vm pointer.
+	 * The real VM is passed to this function by the core, so we have to initialize
+	 * the pointer with the right data.
+	 */
+	__hyb_vm = vmachine;
+}
+
+HYBRIS_DEFINE_FUNCTION(heval){
+	if( ob_argc() != 1 ){
+		hyb_error( H_ET_SYNTAX, "function 'eval' requires 1 parameter (called with %d)", ob_argc() );
+	}
+	ob_type_assert( ob_argv(0), otString );
+
+	extern int  yy_scan_string(const char *);
+	extern int  yyparse(void);
+	extern void yypop_buffer_state(void);
+
+	/*
+	 * Create a buffer from a string and make yyin points to it instead of
+	 * a file handle.
+	 */
+	yy_scan_string( ob_svalue( ob_argv(0) ).c_str() );
+	/*
+	 * Do actual parsing (yyparse calls yylex).
+	 */
+	yyparse();
+	/*
+	 * Restore previous buffer.
+	 */
+	yypop_buffer_state();
+
+	return H_DEFAULT_RETURN;
+}
+
+HYBRIS_DEFINE_FUNCTION(hload){
+	if( ob_argc() != 1 ){
+		hyb_error( H_ET_SYNTAX, "function 'load' requires 1 parameter (called with %d)", ob_argc() );
+	}
+	ob_type_assert( ob_argv(0), otString );
+
+	extern int  yy_scan_string(const char *);
+	extern int  yyparse(void);
+	extern void yypop_buffer_state(void);
+
+	string filename = ob_svalue( ob_argv(0) ),
+		   buffer;
+
+	if( hyb_file_exists( (char *)filename.c_str() ) == 0 ){
+		return H_DEFAULT_ERROR;
+	}
+
+	FILE  *fp = fopen( filename.c_str(), "rt" );
+	char   line[1024] = {0};
+
+    while( fgets( line, 1024, fp ) != NULL ){
+    	buffer += line;
+    }
+
+	fclose(fp);
+
+	/*
+	 * Create a buffer from a string and make yyin points to it instead of
+	 * a file handle.
+	 */
+	yy_scan_string( buffer.c_str() );
+	/*
+	 * Do actual parsing (yyparse calls yylex).
+	 */
+	yyparse();
+	/*
+	 * Restore previous buffer.
+	 */
+	yypop_buffer_state();
+
+	return H_DEFAULT_RETURN;
+}
 
 HYBRIS_DEFINE_FUNCTION(hvar_names){
 	unsigned int i;

@@ -68,7 +68,7 @@ vector<string> __hyb_file_stack;
 vector<int>	   __hyb_line_stack;
 
 extern int     yylineno;
-extern VM __hyb_vm;
+extern VM   *__hyb_vm;
 
 %}
 
@@ -139,9 +139,13 @@ include          BEGIN(T_INCLUSION);
     BEGIN(INITIAL);
 }
 <<EOF>> {
-	__hyb_file_stack.pop_back();
-	__hyb_line_stack.pop_back();
-	yylineno = __hyb_line_stack.back();
+	if( __hyb_file_stack.size() ){
+		__hyb_file_stack.pop_back();
+	}
+	if( __hyb_line_stack.size() ){
+		__hyb_line_stack.pop_back();
+		yylineno = __hyb_line_stack.back();
+	}
 
     yypop_buffer_state();
 
@@ -169,7 +173,7 @@ include          BEGIN(T_INCLUSION);
 
     yytext = sptr;
 
-    __hyb_vm.loadModule( (char *)module.c_str() );
+    __hyb_vm->loadModule( (char *)module.c_str() );
 }
 
 "#"             { hyb_lex_skip_line();    }
@@ -272,12 +276,22 @@ include          BEGIN(T_INCLUSION);
 }
 
 "__FILE__" {
-	strcpy( yylval.string, __hyb_file_stack.back().c_str() );
+	if( __hyb_file_stack.size() ){
+		strcpy( yylval.string, __hyb_file_stack.back().c_str() );
+	}
+	else{
+		strcpy( yylval.string, "<unknown>" );
+	}
 	return T_STRING;
 }
 
 "__LINE__" {
-	yylval.integer = __hyb_line_stack.back();
+	if( __hyb_line_stack.size() ){
+		yylval.integer = __hyb_line_stack.back();
+	}
+	else{
+		yylval.integer = 0;
+	}
 	return T_INTEGER;
 }
 
@@ -378,7 +392,7 @@ matches_t hyb_pcre_matches( string pattern, char *subject ){
 	pcre 		*compiled;
 	matches_t    matches;
 
-	compiled = __hyb_vm.pcre_compile( pattern, PCRE_CASELESS|PCRE_MULTILINE, &error, &eoffset );
+	compiled = __hyb_vm->pcre_compile( pattern, PCRE_CASELESS|PCRE_MULTILINE, &error, &eoffset );
 	rc 		 = pcre_fullinfo( compiled, 0, PCRE_INFO_CAPTURECOUNT, &ccount );
 
 	offsets = new int[ 3 * (ccount + 1) ];

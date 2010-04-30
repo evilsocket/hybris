@@ -25,7 +25,7 @@
 
 void yyerror( char *error ){
     extern int yylineno;
-    extern VM __hyb_vm;
+    extern VM *__hyb_vm;
 
     /*
      * Make sure first character is uppercase.
@@ -47,9 +47,9 @@ void yyerror( char *error ){
     * If the error was triggered by a SIGSEGV signal, force
     * the stack trace to printed.
     */
-    __hyb_vm.printStackTrace( (strstr( error, "SIGSEGV Signal Catched" ) != NULL) );
-	__hyb_vm.closeFile();
-	__hyb_vm.release();
+    __hyb_vm->printStackTrace( (strstr( error, "SIGSEGV Signal Catched" ) != NULL) );
+	__hyb_vm->closeFile();
+	__hyb_vm->release();
 
 	exit(-1);
 }

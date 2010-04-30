@@ -117,10 +117,11 @@
 
 extern int yyparse(void);
 extern int yylex(void);
+
 /*
  * The global virtual machine holder.
  */
-VM __hyb_vm;
+VM *__hyb_vm;
 %}
 
 %union {
@@ -227,10 +228,10 @@ VM __hyb_vm;
 %type <access> accessSpecifier
 %%
 
-program    : body           { __hyb_vm.timer( HYB_TIMER_STOP ); }
+program    : body           { __hyb_vm->timer( HYB_TIMER_STOP ); }
 
-body       : body statement { __hyb_vm.timer( HYB_TIMER_START );
-                              __hyb_vm.engine->exec( &__hyb_vm.vmem, $2 );
+body       : body statement { __hyb_vm->timer( HYB_TIMER_START );
+                              __hyb_vm->engine->exec( &__hyb_vm->vmem, $2 );
                               RM_NODE($2);
                             }
            | /* empty */ ;
@@ -490,6 +491,8 @@ int main( int argc, char *argv[] ){
             { 0, 0, 0, 0 }
     };
 
+    __hyb_vm = new VM();
+
     int index = 0;
     char c, multiplier, *p;
     long gc_threshold;
@@ -557,20 +560,20 @@ int main( int argc, char *argv[] ){
 				/*
 				 * Done, let's pass it to the context structure.
 				 */
-				__hyb_vm.args.gc_threshold = gc_threshold;
+				__hyb_vm->args.gc_threshold = gc_threshold;
 			break;
 
         	case 't':
         		/*
         		 * Enable execution time measurement.
         		 */
-        		__hyb_vm.args.tm_timer   = 1;
+        		__hyb_vm->args.tm_timer   = 1;
         	break;
         	case 's':
         		/*
         		 * Enable stack trace printing upon error.
         		 */
-        		__hyb_vm.args.stacktrace = 1;
+        		__hyb_vm->args.stacktrace = 1;
         	break;
         	case 'h':
         		return hyb_usage(argv[0]);
@@ -579,9 +582,9 @@ int main( int argc, char *argv[] ){
     }
 
     if( optind < argc ){
-        strncpy( __hyb_vm.args.source, argv[optind], sizeof(__hyb_vm.args.source) );
-		if( hyb_file_exists(__hyb_vm.args.source) == 0 ){
-			printf( "\033[22;31mERROR : '%s' no such file or directory.\n\n\033[00m", __hyb_vm.args.source );
+        strncpy( __hyb_vm->args.source, argv[optind], sizeof(__hyb_vm->args.source) );
+		if( hyb_file_exists(__hyb_vm->args.source) == 0 ){
+			printf( "\033[22;31mERROR : '%s' no such file or directory.\n\n\033[00m", __hyb_vm->args.source );
 			return hyb_usage( argv[0] );
 		}
     }
@@ -589,7 +592,7 @@ int main( int argc, char *argv[] ){
      * VM will receive every argument starting from the script
      * name to build the script virtual argv.
      */
-    __hyb_vm.init( argc - (optind - 1), argv + (optind - 1) );
+    __hyb_vm->init( argc - (optind - 1), argv + (optind - 1) );
 
     extern FILE *yyin;
     /*
@@ -597,14 +600,16 @@ int main( int argc, char *argv[] ){
      * or the stdin handle if not, in this case the interpreter will execute
      * user input.
      */
-    yyin = __hyb_vm.openFile();
+    yyin = __hyb_vm->openFile();
 
     while( !feof(yyin) ){
         yyparse();
     }
 
-    __hyb_vm.closeFile();
-    __hyb_vm.release();
+    __hyb_vm->closeFile();
+    __hyb_vm->release();
+
+    delete __hyb_vm;
 
     return 0;
 }

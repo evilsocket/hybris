@@ -32,7 +32,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	Object  *result = H_UNDEFINED;
 	unsigned int i, op_argc;
 	va_list ap;
-	extern VM __hyb_vm;
+	extern VM *__hyb_vm;
 
 	if( (op = ob_get_method( me, (char *)op_name, argc )) == H_UNDEFINED ){
 		hyb_error( H_ET_SYNTAX, "class %s does not overload '%s' operator", ob_typename(me), op_name );
@@ -69,19 +69,19 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	}
 	va_end(ap);
 
-	__hyb_vm.addFrame( &stack );
+	__hyb_vm->addFrame( &stack );
 
 	/* call the operator */
-	result = __hyb_vm.engine->exec( &stack, op->callBody() );
+	result = __hyb_vm->engine->exec( &stack, op->callBody() );
 
-	__hyb_vm.popFrame();
+	__hyb_vm->popFrame();
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
 	 * memory frame.
 	 */
 	if( stack.state.is(Exception) ){
-		__hyb_vm.frame()->state.set( Exception, stack.state.value );
+		__hyb_vm->frame()->state.set( Exception, stack.state.value );
 	}
 
 	/* return method evaluation value */
@@ -99,7 +99,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	Object  *result = H_UNDEFINED;
 	unsigned int i, ds_argc;
 	va_list ap;
-	extern VM __hyb_vm;
+	extern VM *__hyb_vm;
 	vframe_state_t state;
 
 	if( (ds = ob_get_method( me, (char *)ds_name, argc )) == H_UNDEFINED ){
@@ -144,25 +144,25 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	/*
 	 * Save stack frame state.
 	 */
-	state.assign(__hyb_vm.vframe->state);
+	state.assign(__hyb_vm->vframe->state);
 	/*
 	 * Reset it.
 	 */
-	__hyb_vm.vframe->state.reset();
+	__hyb_vm->vframe->state.reset();
 
 	/* call the descriptor */
-	result = __hyb_vm.engine->exec( &stack, ds->callBody() );
+	result = __hyb_vm->engine->exec( &stack, ds->callBody() );
 	/*
 	 * Restore stack frame state.
 	 */
-	__hyb_vm.vframe->state.assign(state);
+	__hyb_vm->vframe->state.assign(state);
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
 	 * memory frame.
 	 */
 	if( stack.state.is(Exception) ){
-		__hyb_vm.frame()->state.set( Exception, stack.state.value );
+		__hyb_vm->frame()->state.set( Exception, stack.state.value );
 	}
 
 	/* return method evaluation value */
@@ -242,12 +242,12 @@ void class_free( Object *me ){
 		for( pi = method->prototypes.begin(); pi != method->prototypes.end(); pi++ ){
 			Node *dtor = (*pi);
 			vframe_t stack;
-			extern VM __hyb_vm;
+			extern VM *__hyb_vm;
 
 			stack.owner = string(ob_typename(me)) + "::__expire";
 			stack.insert( "me", me );
 
-			__hyb_vm.engine->exec( &stack, dtor->callBody() );
+			__hyb_vm->engine->exec( &stack, dtor->callBody() );
 		}
     }
 	/*
