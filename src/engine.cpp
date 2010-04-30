@@ -532,8 +532,14 @@ Object *Engine::onFunctionDeclaration( vframe_t *frame, Node *node ){
 
 Object *Engine::onStructureDeclaration( vframe_t *frame, Node * node ){
     int        i, attributes( node->children() );
-    char      *s_name = (char *)node->value.m_identifier.c_str();
-    Object    *s      = (Object *)gc_new_struct();
+    char      *structname = (char *)node->value.m_identifier.c_str();
+
+	if( vt->find(structname) != H_UNDEFINED ){
+		hyb_error( H_ET_SYNTAX, "Structure '%s' already defined", structname );
+	}
+
+	/* structure prototypes are not garbage collected */
+    Object *s = (Object *)(new StructureObject());
 
     for( i = 0; i < attributes; ++i ){
         ob_add_attribute( s, (char *)node->child(i)->value.m_identifier.c_str() );
@@ -542,7 +548,7 @@ Object *Engine::onStructureDeclaration( vframe_t *frame, Node * node ){
      * ::defineType will take care of the structure attributes
 	 * to prevent it to be garbage collected (see ::onConstant).
      */
-    vmachine->defineType( s_name, s );
+    vmachine->defineType( structname, s );
 
     return H_UNDEFINED;
 }
@@ -551,8 +557,13 @@ Object *Engine::onClassDeclaration( vframe_t *frame, Node *node ){
 	int        i, j, members( node->children() );
 	char      *classname = (char *)node->value.m_identifier.c_str(),
 			  *attrname;
+
+	if( vt->find(classname) != H_UNDEFINED ){
+		hyb_error( H_ET_SYNTAX, "Class '%s' already defined", classname );
+	}
+
 	/* class prototypes are not garbage collected */
-	Object    *c         = (Object *)(new ClassObject());
+	Object *c = (Object *)(new ClassObject());
 
 	for( i = 0; i < members; ++i ){
 		/*
