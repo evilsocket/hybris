@@ -156,6 +156,7 @@ void VM::release(){
         for( j = 0; j < nfuncs; ++j ){
 			delete modules[i]->functions[j];
         }
+        dlclose( modules[i]->handle );
         delete modules[i];
     }
 
@@ -228,6 +229,7 @@ void VM::loadModule( string path, string name ){
 
     module_t *hmod    = new module_t;
     str_split( path, "/", hmod->tree );
+    hmod->handle	  = hmodule;
     hmod->name        = name;
     hmod->initializer = initializer;
     i = 0;

@@ -98,6 +98,7 @@ typedef vector<named_function_t *> named_functions_t;
 
 /* module structure definition */
 typedef struct _module_t {
+	void			 *handle;
     vstr_t            tree;
     string            name;
     initializer_t     initializer;
