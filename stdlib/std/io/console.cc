@@ -107,11 +107,11 @@ HYBRIS_DEFINE_FUNCTION(hprintln){
         unsigned int i;
         for( i = 0; i < ob_argc(); ++i ){
             ob_print( ob_argv(i) );
-            printf( "\n" );
+            fprintf( stdout, "\n" );
         }
     }
     else{
-        printf("\n");
+        fprintf( stdout,"\n");
     }
     return H_DEFAULT_RETURN;
 }

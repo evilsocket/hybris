@@ -109,9 +109,9 @@ string char_svalue( Object *me ){
 
 void char_print( Object *me, int tabs ){
     for( int i = 0; i < tabs; ++i ){
-        printf( "\t" );
+        fprintf( stdout, "\t" );
     }
-    printf( "%c", ob_char_ucast(me)->value );
+    fprintf( stdout, "%c", ob_char_ucast(me)->value );
 }
 
 void char_scanf( Object *me ){

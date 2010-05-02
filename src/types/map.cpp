@@ -159,19 +159,19 @@ void map_print( Object *me, int tabs ){
     int        j;
 
     for( j = 0; j < tabs; ++j ){
-        printf( "\t" );
+        fprintf( stdout, "\t" );
     }
-    printf( "map {\n" );
+    fprintf( stdout, "map {\n" );
     for( ki = mme->keys.begin(), vi = mme->values.begin(); ki != mme->keys.end() && vi != mme->values.end(); ki++, vi++ ){
         kitem = *ki;
         vitem = *vi;
         ob_print( kitem, tabs + 1 );
-        printf( " -> " );
+        fprintf( stdout, " -> " );
         ob_print( vitem, tabs + 1 );
-        printf( "\n" );
+        fprintf( stdout, "\n" );
     }
-    for( j = 0; j < tabs; ++j ) printf( "\t" );
-    printf( "}\n" );
+    for( j = 0; j < tabs; ++j ) fprintf( stdout, "\t" );
+    fprintf( stdout, "}\n" );
 }
 
 /** arithmetic operators **/

@@ -145,16 +145,16 @@ void matrix_print( Object *me, int tabs ){
     MatrixObject *mme = ob_matrix_ucast(me);
     size_t        x, y, j;
 
-    for( j = 0; j < tabs; ++j ){ printf( "\t" ); }
-    printf( "matrix [%dx%d] {\n", mme->rows, mme->columns );
+    for( j = 0; j < tabs; ++j ){ fprintf( stdout, "\t" ); }
+    fprintf( stdout, "matrix [%dx%d] {\n", mme->rows, mme->columns );
     for( x = 0; x < mme->rows; ++x ){
         for( y = 0; y < mme->columns; ++y ){
             ob_print( mme->matrix[x][y], tabs + 1 );
         }
-        printf( "\n" );
+        fprintf( stdout, "\n" );
     }
-    for( j = 0; j < tabs; ++j ) printf( "\t" );
-    printf( "}\n" );
+    for( j = 0; j < tabs; ++j ) fprintf( stdout, "\t" );
+    fprintf( stdout, "}\n" );
 }
 
 /** arithmetic operators **/

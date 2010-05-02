@@ -61,7 +61,8 @@ SOURCES=src/common.cpp \
 		src/types/class.cpp \
 		src/types/vector.cpp \
 	    src/engine.cpp \
-	    src/parser.cpp
+	    src/parser.cpp \
+		src/main.cpp
 
 STDSRC=stdlib/std/hashing/md5.cc \
 	   stdlib/std/hashing/crc32.cc \

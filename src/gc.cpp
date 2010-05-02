@@ -67,7 +67,7 @@ __force_inline void gc_pool_remove( gc_item_t *item ) {
 
 void gc_free( gc_item_t *item ){
     #ifdef MEM_DEBUG
-        printf( "[MEM DEBUG] Releasing %p [%s] [%d bytes] [%d references].\n",
+        fprintf( stdout, "[MEM DEBUG] Releasing %p [%s] [%d bytes] [%d references].\n",
         		item->pobj,
         		item->pobj->type->name,
         		ob_get_size(item->pobj),

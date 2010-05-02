@@ -45,6 +45,13 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "", NULL }
 };
 
+extern "C" void hybris_module_init( VM * vmachine ){
+
+	HYBRIS_DEFINE_CONSTANT( vmachine, "STDOUT_FILENO", gc_new_integer(STDOUT_FILENO) );
+	HYBRIS_DEFINE_CONSTANT( vmachine, "STDERR_FILENO", gc_new_integer(STDERR_FILENO) );
+	HYBRIS_DEFINE_CONSTANT( vmachine, "STDIN_FILENO",  gc_new_integer(STDIN_FILENO) );
+}
+
 HYBRIS_DEFINE_FUNCTION(hsettimeout){
 	if( ob_argc() != 2 ){
 		hyb_error( H_ET_SYNTAX, "function 'settimeout' requires 2 parameters (called with %d)", ob_argc() );

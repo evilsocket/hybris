@@ -20,6 +20,7 @@
 #include <sys/wait.h>
 #include <hybris.h>
 
+HYBRIS_DEFINE_FUNCTION(henv);
 HYBRIS_DEFINE_FUNCTION(hexec);
 HYBRIS_DEFINE_FUNCTION(hfork);
 HYBRIS_DEFINE_FUNCTION(hgetpid);
@@ -30,6 +31,7 @@ HYBRIS_DEFINE_FUNCTION(hexit);
 HYBRIS_DEFINE_FUNCTION(hkill);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
+	{ "env",  henv },
 	{ "exec", hexec },
 	{ "fork", hfork },
 	{ "getpid", hgetpid },
@@ -42,6 +44,16 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 };
 
 extern "C" void hybris_module_init( VM * vmachine ){
+	extern VM  *__hyb_vm;
+
+	/*
+	 * This module is linked against libhybris.so.1 which contains a compiled
+	 * parser.cpp, which has an uninitialized __hyb_vm pointer.
+	 * The real VM is passed to this function by the core, so we have to initialize
+	 * the pointer with the right data.
+	 */
+	__hyb_vm = vmachine;
+
 	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGHUP", gc_new_integer(SIGHUP) ); /* Hangup (POSIX).  */
 	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGINT", gc_new_integer(SIGINT) ); /* Interrupt (ANSI).  */
 	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGQUIT", gc_new_integer(SIGQUIT) ); /* Quit (POSIX).  */
@@ -74,6 +86,24 @@ extern "C" void hybris_module_init( VM * vmachine ){
 	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGIO", gc_new_integer(SIGIO) ); /* I/O now possible (4.2 BSD).  */
 	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGPWR", gc_new_integer(SIGPWR) ); /* Power failure restart (System V).  */
 	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGSYS", gc_new_integer(SIGSYS) ); /* Bad system call.  */
+}
+
+HYBRIS_DEFINE_FUNCTION(henv){
+	char   *duple,
+		   *marker,
+	      **env,
+		  **envp = vmachine->env;
+	Object *map  = (Object *)gc_new_map();
+
+	for( env = envp; *env != 0; env++ ){
+		duple   = *env;
+		marker  = strchr( duple, '=' );
+		*marker = 0x00;
+
+		ob_cl_set( map, (Object *)gc_new_string(duple), (Object *)gc_new_string( marker + 1 ) );
+	}
+
+	return map;
 }
 
 HYBRIS_DEFINE_FUNCTION(hexec){

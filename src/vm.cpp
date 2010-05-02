@@ -79,7 +79,7 @@ int VM::chdir(){
 	return 0;
 }
 
-void VM::init( int argc, char *argv[] ){
+void VM::init( int argc, char *argv[], char *envp[] ){
     int i;
     char name[0xFF] = {0};
 
@@ -112,17 +112,19 @@ void VM::init( int argc, char *argv[] ){
     HYBRIS_DEFINE_CONSTANT( this, "__VERSION__",  gc_new_string(VERSION) );
     HYBRIS_DEFINE_CONSTANT( this, "__LIB_PATH__", gc_new_string(LIB_PATH) );
     HYBRIS_DEFINE_CONSTANT( this, "__INC_PATH__", gc_new_string(INC_PATH) );
+
+    env = envp;
 }
 
 void VM::release(){
     lock();
         if( th_pool.size() > 0 ){
-            printf( "[WARNING] Hard killing remaining running threads ... " );
+            fprintf( stdout, "[WARNING] Hard killing remaining running threads ... " );
             for( int pool_i = 0; pool_i < th_pool.size(); ++pool_i ){
                 pthread_kill( th_pool[pool_i], SIGTERM );
             }
             th_pool.clear();
-            printf( "done .\n" );
+            fprintf( stdout, "done .\n" );
         }
     unlock();
 

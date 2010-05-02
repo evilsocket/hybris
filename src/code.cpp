@@ -20,7 +20,7 @@
 
 CodeSegment::CodeSegment() : HashMap<Node>() {
     #ifdef MEM_DEBUG
-    printf( "[MEM DEBUG] !!! Virtual code table initialized .\n" );
+    fprintf( stdout, "[MEM DEBUG] !!! Virtual code table initialized .\n" );
     #endif
 }
 
@@ -47,7 +47,7 @@ void CodeSegment::release(){
     unsigned int i;
 
     #ifdef MEM_DEBUG
-        printf( "[MEM DEBUG] !!! releasing code table\n" );
+        fprintf( stdout, "[MEM DEBUG] !!! releasing code table\n" );
     #endif
 
     for( i = 0; i < m_elements; ++i ){

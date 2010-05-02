@@ -89,15 +89,15 @@ void struct_print( Object *me, int tabs ){
     StructureObjectAttributeIterator ai;
     int i;
 
-    printf( "struct {\n" );
+    fprintf( stdout, "struct {\n" );
     for( ai = sme->s_attributes.begin(); ai != sme->s_attributes.end(); ai++ ){
-    	for( i = 0; i <= tabs; ++i ) printf( "\t" );
+    	for( i = 0; i <= tabs; ++i ) fprintf( stdout, "\t" );
     	printf( "%s : ", (*ai)->label.c_str() );
 		ob_print( (*ai)->value, tabs + 1 );
 		printf( "\n" );
     }
-    for( i = 0; i < tabs; ++i ) printf( "\t" );
-    printf( "}\n" );
+    for( i = 0; i < tabs; ++i ) fprintf( stdout, "\t" );
+    fprintf( stdout, "}\n" );
 }
 
 /** arithmetic operators **/

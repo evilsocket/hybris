@@ -111,9 +111,9 @@ string float_svalue( Object *me ){
 
 void float_print( Object *me, int tabs ){
     for( int i = 0; i < tabs; ++i ){
-        printf( "\t" );
+        fprintf( stdout, "\t" );
     }
-    printf( "%f", ob_float_ucast(me)->value );
+    fprintf( stdout, "%f", ob_float_ucast(me)->value );
 }
 
 void float_scanf( Object *me ){

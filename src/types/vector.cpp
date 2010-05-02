@@ -133,16 +133,16 @@ void vector_print( Object *me, int tabs ){
     int           j;
 
     for( j = 0; j < tabs; ++j ){
-        printf( "\t" );
+        fprintf( stdout, "\t" );
     }
-    printf( "array {\n" );
+    fprintf( stdout, "array {\n" );
     for( i = vme->value.begin(); i != vme->value.end(); i++ ){
         item = *i;
         ob_print( item, tabs + 1 );
-        printf( "\n" );
+        fprintf( stdout, "\n" );
     }
-    for( j = 0; j < tabs; ++j ) printf( "\t" );
-    printf( "}\n" );
+    for( j = 0; j < tabs; ++j ) fprintf( stdout, "\t" );
+    fprintf( stdout, "}\n" );
 }
 
 /** arithmetic operators **/

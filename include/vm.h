@@ -196,6 +196,8 @@ class VM {
 
         /* source file handle */
         FILE          *fp;
+        /* pointer to environment variables listing */
+        char         **env;
         /* data segment */
         vmem_t         vmem;
         /* active memory frame pointer */
@@ -245,14 +247,14 @@ class VM {
                     args.tm_end = hyb_uticks();
                     char buffer[0xFF] = {0};
                     hyb_timediff( args.tm_end - args.tm_start, buffer );
-                    printf( "\033[01;33m[TIME] Elapsed %s .\n\033[00m", buffer );
+                    fprintf( stdout, "\033[01;33m[TIME] Elapsed %s .\n\033[00m", buffer );
                 }
             }
         }
         /*
          * Initialize the context attributes and global constants.
          */
-        void init( int argc, char *argv[] );
+        void init( int argc, char *argv[], char *envp[] );
         /*
          * Release the context (free memory).
          */

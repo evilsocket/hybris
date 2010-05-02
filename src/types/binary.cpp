@@ -149,15 +149,15 @@ void binary_print( Object *me, int tabs ){
     int           j;
 
     for( j = 0; j < tabs; ++j ){
-        printf( "\t" );
+        fprintf( stdout, "\t" );
     }
-    printf( "binary {\n" );
+    fprintf( stdout, "binary {\n" );
     for( i = bme->value.begin(); i != bme->value.end(); i++ ){
         item = *i;
-        printf( "%.2X", ((CharObject *)item)->value );
+        fprintf( stdout, "%.2X", ((CharObject *)item)->value );
     }
-    for( j = 0; j < tabs; ++j ) printf( "\t" );
-    printf( "\n}\n" );
+    for( j = 0; j < tabs; ++j ) fprintf( stdout, "\t" );
+    fprintf( stdout, "\n}\n" );
 }
 
 /** arithmetic operators **/

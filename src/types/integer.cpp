@@ -127,9 +127,9 @@ string int_svalue( Object *me ){
 
 void int_print( Object *me, int tabs ){
     for( int i = 0; i < tabs; ++i ){
-        printf( "\t" );
+        fprintf( stdout, "\t" );
     }
-    printf( "%ld", (ob_int_ucast(me))->value );
+    fprintf( stdout, "%ld", (ob_int_ucast(me))->value );
 }
 
 void int_scanf( Object *me ){

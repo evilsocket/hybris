@@ -32,6 +32,15 @@ void yyerror( char *error ){
      */
     error[0] = toupper( error[0] );
 
+    /*
+     * If we are in CGI mode (stderr redirected to stdout), remove
+     * all color bytes from the error string.
+     */
+    if( stderr == stdout && strchr( error, '\033' ) ){
+    	error += strlen( "\033[0133m" );
+    	*strrchr( error, '\033' ) = 0x00;
+    }
+
     fflush(stderr);
     /*
      * Print line number only for syntax errors.

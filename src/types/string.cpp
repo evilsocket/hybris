@@ -193,9 +193,9 @@ string string_svalue( Object *me ){
 
 void string_print( Object *me, int tabs ){
     for( int i = 0; i < tabs; ++i ){
-        printf( "\t" );
+        fprintf( stdout, "\t" );
     }
-    printf( "%s", ob_string_ucast(me)->value.c_str() );
+    fprintf( stdout, "%s", ob_string_ucast(me)->value.c_str() );
 }
 
 void string_scanf( Object *me ){
