@@ -37,7 +37,7 @@ void yyerror( char *error ){
      * all color bytes from the error string.
      */
     if( stderr == stdout && strchr( error, '\033' ) ){
-    	error += strlen( "\033[0133m" );
+    	error += strlen( "\033[0133m" ) + 1;
     	*strrchr( error, '\033' ) = 0x00;
     }
 
