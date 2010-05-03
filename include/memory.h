@@ -123,7 +123,7 @@ class MemorySegment : public HashMap<Object> {
         __force_inline Object *push( Object *value ){
         	char label[0xFF] = {0};
         	sprintf( label, "HANONYMOUSIDENTIFIER%d", m_elements );
-        	return add( label, value );
+        	return insert( label, value );
         }
 
         MemorySegment *clone();

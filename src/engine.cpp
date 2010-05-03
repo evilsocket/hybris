@@ -675,14 +675,6 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
 
     vmachine->popFrame();
 
-    /*
-	 * Decrement reference counters of all the objects
-	 * this frame owns.
-	 */
-	for( i = 0; i < stack.size(); ++i ){
-		ob_dec_ref( stack.at(i) );
-	}
-
     /* return function evaluation value */
     return result;
 }
