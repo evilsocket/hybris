@@ -66,7 +66,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 		 * do not care about reference counting, so this object will
 		 * be safely freed after the method call by the gc.
 		 */
-		stack.add( (char *)op->child(i)->value.m_identifier.c_str(), va_arg( ap, Object * ) );
+		stack.insert( (char *)op->child(i)->value.m_identifier.c_str(), va_arg( ap, Object * ) );
 	}
 	va_end(ap);
 
@@ -76,14 +76,6 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	result = __hyb_vm->engine->exec( &stack, op->callBody() );
 
 	__hyb_vm->popFrame();
-
-	/*
-	 * Decrement reference counters of all the objects
-	 * this frame owns.
-	 */
-	for( i = 1; i < stack.size(); ++i ){
-		ob_dec_ref( stack.at(i) );
-	}
 
 	/*
 	 * Check for unhandled exceptions and put them on the root

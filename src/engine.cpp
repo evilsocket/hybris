@@ -355,6 +355,7 @@ Object *Engine::onIdentifier( vframe_t *frame, Node *node ){
 Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
 	Object  *cobj      = exec( frame, node->value.m_owner ),
 		    *attribute = H_UNDEFINED,
+		    *value	   = H_UNDEFINED,
 		    *result    = H_UNDEFINED;
 	char    *name,
 			*owner_id;
@@ -476,7 +477,9 @@ Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
 		 */
 		stack.insert( "me", cobj );
 		for( i = 0; i < argc; ++i ){
-			stack.add( (char *)method->child(i)->value.m_identifier.c_str(), exec( frame, member->child(i) ) );
+			value = exec( frame, member->child(i) );
+			ob_inc_ref(value);
+			stack.insert( (char *)method->child(i)->value.m_identifier.c_str(), value );
 		}
 
 		vmachine->addFrame( &stack );
