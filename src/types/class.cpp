@@ -52,7 +52,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 								 argc );
 	}
 
-	stack.owner = string(ob_typename(me)) + "::" + string(op_name);
+	stack.owner = string(ob_typename(me)) + ":: operator " + string(op_name);
 	/*
 	 * me is the result of an expression, probably of an identifier,
 	 * so we do not need to increment it's reference counter with the
@@ -82,7 +82,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	 * this frame owns.
 	 */
 	for( i = 1; i < stack.size(); ++i ){
-		ob_set_references( stack.at(i), -1 );
+		ob_dec_ref( stack.at(i) );
 	}
 
 	/*
@@ -109,7 +109,6 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	unsigned int i, ds_argc;
 	va_list ap;
 	extern VM *__hyb_vm;
-	vframe_state_t state;
 
 	if( (ds = ob_get_method( me, (char *)ds_name, argc )) == H_UNDEFINED ){
 		if( lazy == false ){
@@ -137,7 +136,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	 * Create the "me" reference to the class itself, used inside
 	 * methods for me->... calls.
 	 */
-	stack.owner = string(ob_typename(me)) + "::" + string(ds_name);
+	stack.owner = string(ob_typename(me)) + "::__method";
 	/*
 	 * me is the result of an expression, probably of an identifier,
 	 * so we do not need to increment it's reference counter with the
@@ -155,28 +154,19 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	}
 	va_end(ap);
 
-	/*
-	 * Save stack frame state.
-	 */
-	state.assign(__hyb_vm->vframe->state);
-	/*
-	 * Reset it.
-	 */
-	__hyb_vm->vframe->state.reset();
+	__hyb_vm->addFrame( &stack );
 
 	/* call the descriptor */
 	result = __hyb_vm->engine->exec( &stack, ds->callBody() );
-	/*
-	 * Restore stack frame state.
-	 */
-	__hyb_vm->vframe->state.assign(state);
+
+	__hyb_vm->popFrame();
 
 	/*
 	 * Decrement reference counters of all the objects
 	 * this frame owns.
 	 */
 	for( i = 1; i < stack.size(); ++i ){
-		ob_set_references( stack.at(i), -1 );
+		ob_dec_ref( stack.at(i) );
 	}
 
 	/*
@@ -221,8 +211,8 @@ Object *class_clone( Object *me ){
 									   (*ai)->value->name,
 									   (*ai)->value->access,
 									   ob_clone((*ai)->value->value)
-							       )
-								 );
+							         )
+								   );
     }
 
     for( mi = cme->c_methods.begin(); mi != cme->c_methods.end(); mi++ ){
@@ -489,13 +479,7 @@ Object *class_cl_set( Object *me, Object *index, Object *op ){
 void class_define_attribute( Object *me, char *name, access_t access ){
 	ClassObject   *cme = ob_class_ucast(me);
 
-	cme->c_attributes.insert( name,
-							  new class_attribute_t(
-									  name,
-									  access,
-									  (Object *)gc_new_integer(0)
-							  )
-							);
+	cme->c_attributes.insert( name, new class_attribute_t( name, access, H_VOID_VALUE ) );
 }
 
 access_t class_attribute_access( Object *me, char *name ){

@@ -467,6 +467,8 @@ Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
 		}
 
 		stack.owner = ob_typename(cobj) + string("::") + name;
+
+		ob_inc_ref(cobj);
 		/*
 		 * cobj is the result of an expression, probably of an identifier,
 		 * so we do not need to increment it's reference counter with the
@@ -489,8 +491,10 @@ Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
 		 * this frame owns.
 		 */
 		for( i = 1; i < stack.size(); ++i ){
-			ob_set_references( stack.at(i), -1 );
+			ob_dec_ref( stack.at(i) );
 		}
+
+		ob_dec_ref(cobj);
 
 		/*
 		 * Check for unhandled exceptions and put them on the root
@@ -644,7 +648,8 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
     vframe_t     stack;
     unsigned int i(0),
                  children( call->children() );
-    Object      *result = H_UNDEFINED;
+    Object      *value  = H_UNDEFINED,
+				*result = H_UNDEFINED;
 
     if( (function = vmachine->getFunction( callname )) == H_UNDEFINED ){
         return H_UNDEFINED;
@@ -652,7 +657,8 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
 	stack.owner = callname;
     /* do object assignment */
     for( i = 0; i < children; ++i ){
-		stack.push( exec( frame, call->child(i) ) );
+    	value = exec( frame, call->child(i) );
+		stack.push( value );
     }
 
     /*
@@ -674,7 +680,7 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
 	 * this frame owns.
 	 */
 	for( i = 0; i < stack.size(); ++i ){
-		ob_set_references( stack.at(i), -1 );
+		ob_dec_ref( stack.at(i) );
 	}
 
     /* return function evaluation value */
@@ -733,7 +739,7 @@ Object *Engine::onThreadedCall( string function_name, vframe_t *frame, vmem_t *a
 	 * this frame owns.
 	 */
 	for( i = 0; i < stack.size(); ++i ){
-		ob_set_references( stack.at(i), -1 );
+		ob_dec_ref( stack.at(i) );
 	}
 
 	/* return function evaluation value */
@@ -798,7 +804,7 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
 	 * this frame owns.
 	 */
 	for( i = 0; i < stack.size(); ++i ){
-		ob_set_references( stack.at(i), -1 );
+		ob_dec_ref( stack.at(i) );
 	}
 
 	/*
@@ -901,7 +907,7 @@ Object *Engine::onNewOperator( vframe_t *frame, Node *type ){
 			 * this frame owns.
 			 */
 			for( i = 0; i < stack.size(); ++i ){
-				ob_set_references( stack.at(i), -1 );
+				ob_dec_ref( stack.at(i) );
 			}
 			/*
 			 * Check for unhandled exceptions and put them on the root
@@ -971,7 +977,7 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
 	 * this frame owns.
 	 */
 	for( i = 0; i < stack.size(); ++i ){
-		ob_set_references( stack.at(i), -1 );
+		ob_dec_ref( stack.at(i) );
 	}
 
     /* return function evaluation value */
@@ -1191,6 +1197,8 @@ Object *Engine::onForeach( vframe_t *frame, Node *node ){
     body       = node->child(2);
     size       = ob_get_size(v);
 
+    ob_inc_ref(v);
+
     for( ; index.value < size; ++index.value ){
         frame->add( identifier, ob_cl_at( v, (Object *)&index ) );
 
@@ -1204,6 +1212,8 @@ Object *Engine::onForeach( vframe_t *frame, Node *node ){
 			break;
 		}
     }
+
+    ob_dec_ref(v);
 
     return result;
 }
@@ -1222,6 +1232,8 @@ Object *Engine::onForeachMapping( vframe_t *frame, Node *node ){
     body             = node->child(3);
     size             = ob_get_size(map);
 
+    ob_inc_ref(map);
+
     for( i = 0; i < size; ++i ){
         frame->add( key_identifier,   ob_map_ucast(map)->keys[i] );
         frame->add( value_identifier, ob_map_ucast(map)->values[i] );
@@ -1236,6 +1248,8 @@ Object *Engine::onForeachMapping( vframe_t *frame, Node *node ){
 			break;
 		}
     }
+
+    ob_dec_ref(map);
 
     return result;
 }
@@ -1298,9 +1312,13 @@ Object *Engine::onSwitch( vframe_t *frame, Node *node){
 
             CHECK_FRAME_EXIT()
 
+            ob_inc_ref(compare);
+
             if( ob_cmp( target, compare ) == 0 ){
                 return exec( frame, stmt_node );
             }
+
+            ob_dec_ref(compare);
         }
     }
 

@@ -321,6 +321,10 @@ const char *ob_typename( Object * o );
  * Increment the object references by 'ref' (i.e. ob_set_references(o,-1) will decrement them).
  */
 void    ob_set_references( Object *o, int ref );
+
+#define ob_inc_ref(o) ob_set_references( o, +1 )
+#define ob_dec_ref(o) ob_set_references( o, -1 )
+
 /*
  * Create a clone of the object.
  */

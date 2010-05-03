@@ -36,6 +36,7 @@ extern IntegerObject __default_error_value;
 
 #define H_DEFAULT_RETURN (Object *)&__default_return_value
 #define H_DEFAULT_ERROR  (Object *)&__default_error_value
+#define H_VOID_VALUE     H_DEFAULT_RETURN
 
 #endif
 

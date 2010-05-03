@@ -66,13 +66,6 @@ __force_inline void gc_pool_remove( gc_item_t *item ) {
 
 
 void gc_free( gc_item_t *item ){
-    #ifdef MEM_DEBUG
-        fprintf( stdout, "[MEM DEBUG] Releasing %p [%s] [%d references].\n",
-        		item->pobj,
-        		item->pobj->type->name,
-        		item->pobj->ref );
-    #endif
-
     __gc.items--;
     __gc.usage -= item->size;
 
@@ -164,6 +157,12 @@ void gc_collect(){
 				 * Skip objects that are still referenced somewhere.
 				 */
 				if( o->ref <= 0 ){
+					#ifdef MEM_DEBUG
+						fprintf( stdout, "[MEM DEBUG] Releasing %p [%s] [%d references] .\n",
+								item->pobj,
+								item->pobj->type->name,
+								item->pobj->ref );
+					#endif
 					/**
 					 * Finally execute garbage collection
 					 */
