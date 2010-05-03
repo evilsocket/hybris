@@ -470,11 +470,6 @@ Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
 		stack.owner = ob_typename(cobj) + string("::") + name;
 
 		ob_inc_ref(cobj);
-		/*
-		 * cobj is the result of an expression, probably of an identifier,
-		 * so we do not need to increment it's reference counter with the
-		 * stack::add method, we just use ::insert instead.
-		 */
 		stack.insert( "me", cobj );
 		for( i = 0; i < argc; ++i ){
 			value = exec( frame, member->child(i) );
@@ -493,7 +488,7 @@ Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
 		 * Decrement reference counters of all the objects
 		 * this frame owns.
 		 */
-		for( i = 1; i < stack.size(); ++i ){
+		for( i = 0; i < stack.size(); ++i ){
 			ob_dec_ref( stack.at(i) );
 		}
 
@@ -719,7 +714,9 @@ Object *Engine::onThreadedCall( string function_name, vframe_t *frame, vmem_t *a
 	children 	= argv->size();
 	stack.owner = function_name;
 	for( i = 0; i < children; ++i  ){
-		stack.add( (char *)identifiers[i].c_str(), argv->at(i) );
+		value = argv->at(i);
+		ob_inc_ref( value );
+		stack.insert( (char *)identifiers[i].c_str(), value );
 	}
 
 	vmachine->addFrame( &stack );
@@ -779,12 +776,8 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
     stack.owner = function->value.m_function;
     for( i = 0; i < children; ++i ){
         value = exec( frame, call->child(i) );
-        /*
-         * Value references count is set to zero now, builtins
-         * do not care about reference counting, so this object will
-         * be safely freed after the function call by the gc.
-         */
-        stack.add( (char *)identifiers[i].c_str(), value );
+        ob_inc_ref(value);
+        stack.insert( (char *)identifiers[i].c_str(), value );
     }
 
     vmachine->addFrame( &stack );
@@ -878,16 +871,18 @@ Object *Engine::onNewOperator( vframe_t *frame, Node *type ){
 			 * methods for me->... calls.
 			 */
 			stack.owner = string(type_name) + "::" + string(type_name);
-			stack.add( "me", newtype );
+			stack.insert( "me", newtype );
+			ob_inc_ref(newtype);
 			for( i = 0; i < children; ++i ){
 				arg   = type->child(i);
 				value = exec( frame, arg );
+				ob_inc_ref(value);
 				/*
 				 * Value references count is set to zero now, builtins
 				 * do not care about reference counting, so this object will
 				 * be safely freed after the function call by the gc.
 				 */
-				stack.add( (char *)ctor->child(i)->value.m_identifier.c_str(), value );
+				stack.insert( (char *)ctor->child(i)->value.m_identifier.c_str(), value );
 			}
 
 			vmachine->addFrame( &stack );
@@ -957,6 +952,7 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
     children = call->children();
     for( i = 0; i < children; ++i ){
         value = exec( frame, call->child(i) );
+        ob_inc_ref(value);
         stack.push( value );
     }
 

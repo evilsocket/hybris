@@ -29,7 +29,8 @@
 Object *class_call_overloaded_operator( Object *me, const char *op_name, int argc, ... ){
 	Node    *op = H_UNDEFINED;
 	vframe_t stack;
-	Object  *result = H_UNDEFINED;
+	Object  *result = H_UNDEFINED,
+			*value  = H_UNDEFINED;
 	unsigned int i, op_argc;
 	va_list ap;
 	extern VM *__hyb_vm;
@@ -53,20 +54,14 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	}
 
 	stack.owner = string(ob_typename(me)) + ":: operator " + string(op_name);
-	/*
-	 * me is the result of an expression, probably of an identifier,
-	 * so we do not need to increment it's reference counter with the
-	 * stack::add method, we just use ::insert instead.
-	 */
+
+	ob_inc_ref(me);
 	stack.insert( "me", me );
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
-		/*
-		 * Value references count is set to zero now, builtins
-		 * do not care about reference counting, so this object will
-		 * be safely freed after the method call by the gc.
-		 */
-		stack.insert( (char *)op->child(i)->value.m_identifier.c_str(), va_arg( ap, Object * ) );
+		value = va_arg( ap, Object * );
+		ob_inc_ref(value);
+		stack.insert( (char *)op->child(i)->value.m_identifier.c_str(), value );
 	}
 	va_end(ap);
 
@@ -76,6 +71,10 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	result = __hyb_vm->engine->exec( &stack, op->callBody() );
 
 	__hyb_vm->popFrame();
+
+	for( i = 0; i < stack.size(); ++i ){
+		ob_dec_ref( stack.at(i) );
+	}
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
@@ -97,7 +96,8 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool lazy, int argc, ... ){
 	Node    *ds = H_UNDEFINED;
 	vframe_t stack;
-	Object  *result = H_UNDEFINED;
+	Object  *result = H_UNDEFINED,
+			*value  = H_UNDEFINED;
 	unsigned int i, ds_argc;
 	va_list ap;
 	extern VM *__hyb_vm;
@@ -129,20 +129,14 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	 * methods for me->... calls.
 	 */
 	stack.owner = string(ob_typename(me)) + "::__method";
-	/*
-	 * me is the result of an expression, probably of an identifier,
-	 * so we do not need to increment it's reference counter with the
-	 * stack::add method, we just use ::insert instead.
-	 */
+
+	ob_inc_ref(me);
 	stack.insert( "me", me );
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
-		/*
-		 * Value references count is set to zero now, builtins
-		 * do not care about reference counting, so this object will
-		 * be safely freed after the method call by the gc.
-		 */
-		stack.add( (char *)ds->child(i)->value.m_identifier.c_str(), va_arg( ap, Object * ) );
+		value = va_arg( ap, Object * );
+		ob_inc_ref(value);
+		stack.insert( (char *)ds->child(i)->value.m_identifier.c_str(), value );
 	}
 	va_end(ap);
 
@@ -157,7 +151,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	 * Decrement reference counters of all the objects
 	 * this frame owns.
 	 */
-	for( i = 1; i < stack.size(); ++i ){
+	for( i = 0; i < stack.size(); ++i ){
 		ob_dec_ref( stack.at(i) );
 	}
 
