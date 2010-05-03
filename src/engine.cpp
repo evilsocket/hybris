@@ -878,7 +878,7 @@ Object *Engine::onNewOperator( vframe_t *frame, Node *type ){
 			 * methods for me->... calls.
 			 */
 			stack.owner = string(type_name) + "::" + string(type_name);
-			stack.insert( "me", newtype );
+			stack.add( "me", newtype );
 			for( i = 0; i < children; ++i ){
 				arg   = type->child(i);
 				value = exec( frame, arg );
@@ -901,7 +901,7 @@ Object *Engine::onNewOperator( vframe_t *frame, Node *type ){
 			 * Decrement reference counters of all the objects
 			 * this frame owns.
 			 */
-			for( i = 1; i < children; ++i ){
+			for( i = 0; i < children; ++i ){
 				ob_set_references( stack.at(i), -1 );
 			}
 			/*
