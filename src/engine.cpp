@@ -375,6 +375,7 @@ Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
 		if( attribute == H_UNDEFINED ){
 			hyb_error( H_ET_SYNTAX, "'%s' is not an attribute of object '%s'", name, ob_typename(cobj) );
 		}
+
 		/*
 		 * Check attribute access.
 		 */
@@ -470,7 +471,7 @@ Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
 		 * methods for me->... calls.
 		 */
 		stack.owner = ob_typename(cobj) + string("::") + name;
-		stack.add( "me", cobj );
+		stack.insert( "me", cobj );
 		for( i = 0; i < argc; ++i ){
 			stack.add( (char *)method->child(i)->value.m_identifier.c_str(), exec( frame, member->child(i) ) );
 		}
@@ -486,7 +487,7 @@ Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
 		 * Decrement reference counters of all the objects
 		 * this frame owns.
 		 */
-		for( i = 0; i < argc; ++i ){
+		for( i = 1; i < argc; ++i ){
 			ob_set_references( stack.at(i), -1 );
 		}
 
@@ -877,7 +878,7 @@ Object *Engine::onNewOperator( vframe_t *frame, Node *type ){
 			 * methods for me->... calls.
 			 */
 			stack.owner = string(type_name) + "::" + string(type_name);
-			stack.add( "me", newtype );
+			stack.insert( "me", newtype );
 			for( i = 0; i < children; ++i ){
 				arg   = type->child(i);
 				value = exec( frame, arg );
@@ -900,7 +901,7 @@ Object *Engine::onNewOperator( vframe_t *frame, Node *type ){
 			 * Decrement reference counters of all the objects
 			 * this frame owns.
 			 */
-			for( i = 0; i < children; ++i ){
+			for( i = 1; i < children; ++i ){
 				ob_set_references( stack.at(i), -1 );
 			}
 			/*
@@ -1609,9 +1610,7 @@ Object *Engine::onInc( vframe_t *frame, Node *node ){
 
 	CHECK_FRAME_EXIT()
 
-	ob_increment(o);
-
-	return o;
+	return ob_increment(o);
 }
 
 Object *Engine::onDec( vframe_t *frame, Node *node ){
@@ -1621,9 +1620,7 @@ Object *Engine::onDec( vframe_t *frame, Node *node ){
 
 	CHECK_FRAME_EXIT()
 
-	ob_decrement(o);
-
-	return o;
+	return ob_decrement(o);
 }
 
 Object *Engine::onXor( vframe_t *frame, Node *node ){

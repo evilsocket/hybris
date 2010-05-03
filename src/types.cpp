@@ -769,7 +769,7 @@ Object *ob_call_undefined_method( VM *vm, Object *c, char *c_name, char *method_
 	VectorObject *args = gc_new_vector();
 
 	stack.owner = string(c_name) + "::" + method_name;
-	stack.add( "me", c );
+	stack.insert( "me", c );
 	stack.add( "name", (Object *)gc_new_string(method_name) );
 	for( i = 0; i < argc; ++i ){
 		ob_cl_push( (Object *)args, vm->engine->exec( vm->vframe, argv->child(i) ) );
@@ -787,7 +787,7 @@ Object *ob_call_undefined_method( VM *vm, Object *c, char *c_name, char *method_
 	 * Decrement reference counters of all the objects
 	 * this frame owns.
 	 */
-	for( i = 0; i < argc; ++i ){
+	for( i = 1; i < argc; ++i ){
 		ob_set_references( stack.at(i), -1 );
 	}
 
@@ -817,7 +817,7 @@ Object *ob_call_method( VM *vm, Object *c, char *c_name, char *method_name, Obje
 		hyb_error( H_ET_SYNTAX, "'%s' does not name a method neither an attribute of '%s'", method_name, c_name );
 	}
 	stack.owner = string(c_name) + "::" + method_name;
-	stack.add( "me", c );
+	stack.insert( "me", c );
 	for( ; index.value < argc; ++index.value ){
 		stack.add( (char *)method->child(j)->value.m_identifier.c_str(), ob_cl_at( argv, (Object *)&index ) );
 	}
@@ -833,7 +833,7 @@ Object *ob_call_method( VM *vm, Object *c, char *c_name, char *method_name, Obje
 	 * Decrement reference counters of all the objects
 	 * this frame owns.
 	 */
-	for( i = 0; i < argc; ++i ){
+	for( i = 1; i < argc; ++i ){
 		ob_set_references( stack.at(i), -1 );
 	}
 

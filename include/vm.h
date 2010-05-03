@@ -311,7 +311,7 @@ class VM {
          * Define a structure inside the vtypes member.
          */
         __force_inline Object * defineStructure( char *name, int nattrs, char *attributes[] ){
-            StructureObject *type = gc_new_struct();
+            StructureObject *type = new StructureObject();
             unsigned int     i;
 
             for( i = 0; i < nattrs; ++i ){
@@ -320,9 +320,7 @@ class VM {
            /*
             * Prevent the structure or class definition from being deleted by the gc.
             */
-            type->attributes |= H_OA_CONSTANT;
-
-            return vtypes.insert( name, (Object *)type );
+            return vtypes.addConstant( name, (Object *)type );
         }
         /*
          * Same as before, but the structure or the class will be defined from an alreay
@@ -332,9 +330,7 @@ class VM {
            /*
             * Prevent the structure or class definition from being deleted by the gc.
             */
-            type->attributes |= H_OA_CONSTANT;
-
-            vtypes.insert( name, type );
+            vtypes.addConstant( name, type );
         }
         /*
          * Find the object pointer of a user defined type (i.e. structures or classes).
