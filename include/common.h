@@ -63,6 +63,8 @@ typedef struct {
     ulong tm_start;
     ulong tm_end;
 
+	bool  cgi_mode;
+
     ulong gc_threshold;
 }
 h_args_t;

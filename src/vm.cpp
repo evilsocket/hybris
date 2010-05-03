@@ -98,10 +98,12 @@ void VM::init( int argc, char *argv[], char *envp[] ){
 
     vmem.owner = (argc > 1 ? argv[1] : "<stdin>");
 
+    int h_argc = argc - 1;
+
     /* initialize command line arguments */
-    HYBRIS_DEFINE_CONSTANT( this, "argc", gc_new_integer(argc - 1) );
+    HYBRIS_DEFINE_CONSTANT( this, "argc", gc_new_integer(h_argc) );
     for( i = 1; i < argc; ++i ){
-        sprintf( name, "%d", i - 1 );
+        sprintf( name, "%d", i - 1);
         HYBRIS_DEFINE_CONSTANT( this, name, gc_new_string(argv[i]) );
     }
     /* initialize misc constants */

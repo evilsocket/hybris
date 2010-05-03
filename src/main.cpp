@@ -19,9 +19,6 @@
 #include "hybris.h"
 #include <getopt.h>
 
-extern VM *__hyb_vm;
-extern int yyparse(void);
-
 int hyb_banner(){
     fprintf( stdout, "Hybris %s (built: %s %s)\n"
             "Released under GPL v3.0 by %s\n"
@@ -59,6 +56,9 @@ int main( int argc, char *argv[], char* envp[] ){
             { "help",    0, 0, 'h' },
             { 0, 0, 0, 0 }
     };
+
+    extern VM *__hyb_vm;
+    extern int yyparse(void);
 
     __hyb_vm = new VM();
 
@@ -136,14 +136,14 @@ int main( int argc, char *argv[], char* envp[] ){
         		/*
         		 * Enable execution time measurement.
         		 */
-        		__hyb_vm->args.tm_timer   = 1;
+        		__hyb_vm->args.tm_timer = 1;
         	break;
 
         	case 'c':
         		/*
         		 * Redirect stderr to stdout in CGI mode.
         		 */
-        		stderr = stdout;
+        		__hyb_vm->args.cgi_mode = true;
         	break;
 
         	case 's':

@@ -120,7 +120,7 @@ string int_svalue( Object *me ){
     long ivalue = (ob_int_ucast(me))->value;
     char svalue[0xFF] = {0};
 
-    sprintf( svalue, "%ld", ivalue );
+    sprintf( svalue, "%d", ivalue );
 
     return string(svalue);
 }

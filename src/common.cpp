@@ -36,7 +36,7 @@ void yyerror( char *error ){
      * If we are in CGI mode (stderr redirected to stdout), remove
      * all color bytes from the error string.
      */
-    if( stderr == stdout && strchr( error, '\033' ) ){
+    if( __hyb_vm->args.cgi_mode && strchr( error, '\033' ) ){
     	error += strlen( "\033[0133m" ) + 1;
     	*strrchr( error, '\033' ) = 0x00;
     }

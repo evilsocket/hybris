@@ -104,7 +104,7 @@ string float_svalue( Object *me ){
     double fvalue = ob_float_ucast(me)->value;
     char svalue[0xFF] = {0};
 
-    sprintf( svalue, "%lf", fvalue );
+    sprintf( svalue, "%f", fvalue );
 
     return string(svalue);
 }

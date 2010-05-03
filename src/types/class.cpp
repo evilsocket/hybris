@@ -57,7 +57,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	 * methods for me->... calls.
 	 */
 	stack.owner = string(ob_typename(me)) + "::" + string(op_name);
-	stack.insert( "me", me );
+	stack.add( "me", me );
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
 		/*
@@ -65,7 +65,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 		 * do not care about reference counting, so this object will
 		 * be safely freed after the method call by the gc.
 		 */
-		stack.insert( (char *)op->child(i)->value.m_identifier.c_str(), va_arg( ap, Object * ) );
+		stack.add( (char *)op->child(i)->value.m_identifier.c_str(), va_arg( ap, Object * ) );
 	}
 	va_end(ap);
 
@@ -75,6 +75,14 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	result = __hyb_vm->engine->exec( &stack, op->callBody() );
 
 	__hyb_vm->popFrame();
+
+	/*
+	 * Decrement reference counters of all the objects
+	 * this frame owns.
+	 */
+	for( i = 0; i < argc; ++i ){
+		ob_set_references( stack.at(i), -1 );
+	}
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
@@ -129,7 +137,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	 * methods for me->... calls.
 	 */
 	stack.owner = string(ob_typename(me)) + "::" + string(ds_name);
-	stack.insert( "me", me );
+	stack.add( "me", me );
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
 		/*
@@ -137,7 +145,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 		 * do not care about reference counting, so this object will
 		 * be safely freed after the method call by the gc.
 		 */
-		stack.insert( (char *)ds->child(i)->value.m_identifier.c_str(), va_arg( ap, Object * ) );
+		stack.add( (char *)ds->child(i)->value.m_identifier.c_str(), va_arg( ap, Object * ) );
 	}
 	va_end(ap);
 
@@ -156,6 +164,14 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	 * Restore stack frame state.
 	 */
 	__hyb_vm->vframe->state.assign(state);
+
+	/*
+	 * Decrement reference counters of all the objects
+	 * this frame owns.
+	 */
+	for( i = 0; i < argc; ++i ){
+		ob_set_references( stack.at(i), -1 );
+	}
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
@@ -245,7 +261,7 @@ void class_free( Object *me ){
 			extern VM *__hyb_vm;
 
 			stack.owner = string(ob_typename(me)) + "::__expire";
-			stack.insert( "me", me );
+			stack.add( "me", me );
 
 			__hyb_vm->engine->exec( &stack, dtor->callBody() );
 		}

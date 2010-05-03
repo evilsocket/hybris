@@ -295,9 +295,16 @@ __force_inline static ulong Hash(hash_table_t *ht, char *key, ulong cBuckets)
 	     sizeof_ulong_2 = 2 * sizeof(ulong);
 
    cchKeyOrig = strlen(key);
-   a = b = c = 0x9e3779b9;       /* the golden ratio; an arbitrary value */
+   /*
+    * The golden ratio; an arbitrary value.
+    *
+    * BUG!
+    *
+    * If it's not appropriately high, may cause hash collisions!
+    */
+   a = b = c = 0xfe3779b9;
 
-   for( cchKey = cchKeyOrig; cchKey >= sizeof_ulong_3; cchKey -= sizeof_ulong_3,  key += sizeof_ulong_3 ) {
+   for( cchKey = cchKeyOrig; cchKey >= sizeof_ulong_3; cchKey -= sizeof_ulong_3, key += sizeof_ulong_3 ) {
       a += WORD_AT(key);
       b += WORD_AT(key + sizeof(ulong) );
       c += WORD_AT(key + sizeof_ulong_2 );
