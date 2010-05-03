@@ -289,9 +289,15 @@ void VM::printStackTrace( bool force /*= false*/ ){
 				}
 
 				if( name != "me" ){
-					fprintf( stderr, "%s = %s%s", name.c_str(),
-												  svalue.c_str(),
-												  (k < last ? ", " : " ") );
+					if( name.find("HANONYMOUSIDENTIFIER") == 0 ){
+						fprintf( stderr, "%s%s", svalue.c_str(),
+												 (k < last ? ", " : " ") );
+					}
+					else{
+						fprintf( stderr, "%s = %s%s", name.c_str(),
+													  svalue.c_str(),
+													  (k < last ? ", " : " ") );
+					}
 				}
 			}
 			fprintf( stderr, ")\n" );

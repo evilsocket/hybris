@@ -180,6 +180,13 @@ class VM {
 			unlock();
 		}
 		/*
+		 * Set the active frame (from threaded calls).
+		 */
+		__force_inline void setFrame( vframe_t *frame ){
+			popFrame();
+			addFrame(frame);
+		}
+		/*
 		 * Remove the last frame from the trace stack.
 		 */
 		__force_inline void popFrame(){

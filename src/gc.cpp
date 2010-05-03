@@ -147,9 +147,8 @@ void gc_collect(){
      * Execute garbage collection loop only if used memory has reaced the
      * threshold.
      */
-    if( __gc.usage >= __gc.threshold && !__gc.collecting ){
+    if( __gc.usage >= __gc.threshold ){
     	gc_lock();
-    	__gc.collecting = 1;
 
 		#ifdef MEM_DEBUG
 			printf( "[MEM DEBUG] GC quota (%d bytes) reached with %d bytes, collecting ...\n", __gc.threshold, __gc.usage );
@@ -172,8 +171,8 @@ void gc_collect(){
 				}
 			}
         }
-		__gc.collecting = 0;
-		gc_unlock();
+
+        gc_unlock();
     }
 }
 

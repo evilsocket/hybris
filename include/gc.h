@@ -81,7 +81,6 @@ gc_item_t;
  * items	  : Number of items in the pool.
  * usage	  : Global memory usage, in bytes.
  * threshold  : If usage >= this, the gc is triggered.
- * collecting : 1 if the gc is collecting, otherwise 0.
  * mutex      : Mutex to lock the pool while collecting.
  */
 typedef struct _gc {
@@ -90,7 +89,6 @@ typedef struct _gc {
     size_t     		items;
     size_t     		usage;
     size_t     	 	threshold;
-    size_t			collecting;
 	pthread_mutex_t mutex;
 
     _gc() : pool_head(NULL),
@@ -98,7 +96,6 @@ typedef struct _gc {
 			items(0),
 			usage(0),
 			threshold(GC_DEFAULT_MEMORY_THRESHOLD),
-			collecting(0),
 			mutex(PTHREAD_MUTEX_INITIALIZER)
 	{ }
 }

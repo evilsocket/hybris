@@ -52,11 +52,12 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 								 argc );
 	}
 
-	/*
-	 * Create the "me" reference to the class itself, used inside
-	 * methods for me->... calls.
-	 */
 	stack.owner = string(ob_typename(me)) + "::" + string(op_name);
+	/*
+	 * me is the result of an expression, probably of an identifier,
+	 * so we do not need to increment it's reference counter with the
+	 * stack::add method, we just use ::insert instead.
+	 */
 	stack.insert( "me", me );
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
@@ -65,7 +66,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 		 * do not care about reference counting, so this object will
 		 * be safely freed after the method call by the gc.
 		 */
-		stack.insert( (char *)op->child(i)->value.m_identifier.c_str(), va_arg( ap, Object * ) );
+		stack.add( (char *)op->child(i)->value.m_identifier.c_str(), va_arg( ap, Object * ) );
 	}
 	va_end(ap);
 
@@ -79,11 +80,11 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	/*
 	 * Decrement reference counters of all the objects
 	 * this frame owns.
-
-	for( i = 1; i < argc; ++i ){
+	 */
+	for( i = 1; i < stack.size(); ++i ){
 		ob_set_references( stack.at(i), -1 );
 	}
-	*/
+
 	/*
 	 * Check for unhandled exceptions and put them on the root
 	 * memory frame.
@@ -137,6 +138,11 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	 * methods for me->... calls.
 	 */
 	stack.owner = string(ob_typename(me)) + "::" + string(ds_name);
+	/*
+	 * me is the result of an expression, probably of an identifier,
+	 * so we do not need to increment it's reference counter with the
+	 * stack::add method, we just use ::insert instead.
+	 */
 	stack.insert( "me", me );
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
@@ -145,7 +151,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 		 * do not care about reference counting, so this object will
 		 * be safely freed after the method call by the gc.
 		 */
-		stack.insert( (char *)ds->child(i)->value.m_identifier.c_str(), va_arg( ap, Object * ) );
+		stack.add( (char *)ds->child(i)->value.m_identifier.c_str(), va_arg( ap, Object * ) );
 	}
 	va_end(ap);
 
@@ -164,6 +170,14 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	 * Restore stack frame state.
 	 */
 	__hyb_vm->vframe->state.assign(state);
+
+	/*
+	 * Decrement reference counters of all the objects
+	 * this frame owns.
+	 */
+	for( i = 1; i < stack.size(); ++i ){
+		ob_set_references( stack.at(i), -1 );
+	}
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
