@@ -28,6 +28,9 @@
 #include <vector>
 #include <pcre.h>
 
+#define MAX_STRING_SIZE 1024
+#define MAX_IDENT_SIZE  100
+
 using std::vector;
 using std::string;
 
@@ -295,7 +298,15 @@ include          BEGIN(T_INCLUSION);
 	return T_INTEGER;
 }
 
-{identifier}                           { strncpy( yylval.identifier, yytext, 0xFF ); return T_IDENT; }
+{identifier} {
+	if( strlen(yytext) > MAX_IDENT_SIZE ){
+		hyb_error( H_ET_GENERIC, "Identifier name above max size" );
+	}
+
+	yylval.identifier = strdup( yytext );
+
+	return T_IDENT;
+}
 
 -?[0-9]+                               { yylval.integer = atol(yytext);          return T_INTEGER; }
 -?0x[A-Fa-f0-9]+                       { yylval.integer = strtol(yytext,0,16);   return T_INTEGER; }
@@ -378,10 +389,10 @@ char *hyb_lex_string( char delimiter ){
 			break;
 		}
 		else{
-			/*
-			 * TODO : We should introduce a threshold!
-			 */
 			if( offset >= size ){
+				if( offset > MAX_STRING_SIZE ){
+					hyb_error( H_ET_GENERIC, "String constant above max size" );
+				}
 				size += 0xFF;
 				buffer = (char *)realloc( buffer, size );
 			}

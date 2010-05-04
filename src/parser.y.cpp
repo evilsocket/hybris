@@ -131,7 +131,7 @@ VM *__hyb_vm;
     char    byte;
     char   *string;
     /* variable identifier */
-    char    identifier[0xFF];
+    char   *identifier;
     /* function prototype declaration */
     function_decl_t *function;
     /* method prototype declaration */
@@ -257,9 +257,9 @@ accessSpecifier : T_PUBLIC    { $$ = asPublic;    }
 		        | T_PROTECTED { $$ = asProtected; }
 		        | /* empty */ { $$ = asPublic;    };
 
-identList : T_IDENT ',' identList { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); }
-		  | T_IDENT ',' T_IDENT   { $$ = MK_NODE_LIST(); $$->tail( MK_IDENT_NODE($1), MK_IDENT_NODE($3) );   }
-		  | T_IDENT 			  { $$ = MK_NODE_LIST(); $$->head( MK_IDENT_NODE($1) ); }
+identList : T_IDENT ',' identList { $$ = MK_NODE($3);    $$->head( MK_IDENT_NODE($1) ); free($1); }
+		  | T_IDENT ',' T_IDENT   { $$ = MK_NODE_LIST(); $$->tail( MK_IDENT_NODE($1), MK_IDENT_NODE($3) ); free($1); free($3); }
+		  | T_IDENT 			  { $$ = MK_NODE_LIST(); $$->head( MK_IDENT_NODE($1) ); free($1); }
 
 attrList  : accessSpecifier identList T_EOSTMT attrList {
 			  $$ = MK_NODE($4);
@@ -331,9 +331,11 @@ statement  : T_EOSTMT                                                   { $$ = M
            | T_WHILE '(' expression ')' statement                       { $$ = MK_WHILE_NODE( $3, $5 ); }
            | T_DO statement T_WHILE '(' expression ')' T_EOSTMT         { $$ = MK_DO_NODE( $2, $5 ); }
 		   | T_FOR '(' statement statement expression ')' statement     { $$ = MK_FOR_NODE( $3, $4, $5, $7 ); }
-		   | T_FOREACH '(' T_IDENT T_OF expression ')' statement        { $$ = MK_FOREACH_NODE( $3, $5, $7 ); }
+		   | T_FOREACH '(' T_IDENT T_OF expression ')' statement        { $$ = MK_FOREACH_NODE( $3, $5, $7 ); free($3); }
 		   | T_FOREACH '(' T_IDENT T_GET_MEMBER T_IDENT T_OF expression ')' statement {
 		   		$$ = MK_FOREACHM_NODE( $3, $5, $7, $9 );
+		   		free($3);
+		   		free($5);
 		   }
            | T_IF '(' expression ')' statement %prec T_IF_END           { $$ = MK_IF_NODE( $3, $5 ); }
            | T_IF '(' expression ')' statement T_ELSE statement         { $$ = MK_IF_ELSE_NODE( $3, $5, $7 ); }
@@ -367,6 +369,7 @@ statement  : T_EOSTMT                                                   { $$ = M
            /* exception handling */
            | T_TRY '{' statements '}' T_CATCH '(' T_IDENT ')' '{' statements '}' finallyBlock {
         	   $$ = MK_TRYCATCH_NODE( $3, MK_IDENT_NODE($7), $10, $12 );
+        	   free($7);
            };
 
 
@@ -427,7 +430,7 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            | T_CHAR                                           { $$ = MK_CONST_NODE($1); }
            | T_STRING                                         { $$ = MK_CONST_NODE($1); free($1); }
            /* expression -> <identifier> */
-           | expression T_GET_MEMBER T_IDENT 				  { $$ = MK_MREQ_NODE( $1, MK_IDENT_NODE($3) ); }
+           | expression T_GET_MEMBER T_IDENT 				  { $$ = MK_MREQ_NODE( $1, MK_IDENT_NODE($3) ); free($3); }
            /* identifier */
            | T_IDENT                                          { $$ = MK_IDENT_NODE($1); }
            /* expression evaluation returns an identifier */
@@ -435,7 +438,7 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            /* attribute declaration/assignation */
            | expression T_ASSIGN expression                   { $$ = MK_ASSIGN_NODE( $1, $3 ); }
 		   /* identifier declaration/assignation */
-		   | T_IDENT T_ASSIGN expression                      { $$ = MK_ASSIGN_NODE( MK_IDENT_NODE($1), $3 ); }
+		   | T_IDENT T_ASSIGN expression                      { $$ = MK_ASSIGN_NODE( MK_IDENT_NODE($1), $3 ); free($1); }
            /* a single subscript could be an expression itself */
            | expression '[' expression ']' %prec T_SB_END     { $$ = MK_SB_NODE( $1, $3 ); }
            /* range evaluation */
