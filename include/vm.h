@@ -223,6 +223,8 @@ class VM {
         HashMap<pcre>  pcre_cache;
         /* code execution engine */
         Engine        *engine;
+        /* flag set to true when ::release is called */
+        bool 		   releasing;
 
 
         VM();

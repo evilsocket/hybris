@@ -53,12 +53,22 @@ void yyerror( char *error ){
     }
 
    /*
-    * If the error was triggered by a SIGSEGV signal, force
-    * the stack trace to printed.
-    */
-    __hyb_vm->printStackTrace( (strstr( error, "SIGSEGV Signal Catched" ) != NULL) );
-	__hyb_vm->closeFile();
-	__hyb_vm->release();
+	* If the error was triggered by a SIGSEGV signal, force
+	* the stack trace to printed.
+	*/
+	__hyb_vm->printStackTrace( (strstr( error, "SIGSEGV Signal Catched" ) != NULL) );
+	/*
+	 * If an error occurred during releasing phase, an error in one class destructor
+	 * called from gc_release for instance, prevent to call those methods recursively.
+	 * because that would cause a stack corruption.
+	 *
+	 * Fixes #575284
+	 */
+    if( __hyb_vm->releasing == false ){
+
+		__hyb_vm->closeFile();
+		__hyb_vm->release();
+	}
 
 	exit(-1);
 }

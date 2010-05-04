@@ -243,9 +243,16 @@ void class_free( Object *me ){
 			extern VM *__hyb_vm;
 
 			stack.owner = string(ob_typename(me)) + "::__expire";
+			ob_inc_ref(me);
 			stack.insert( "me", me );
 
+			__hyb_vm->addFrame( &stack );
+
 			__hyb_vm->engine->exec( &stack, dtor->callBody() );
+
+			ob_dec_ref(me);
+
+			__hyb_vm->popFrame();
 		}
     }
 	/*

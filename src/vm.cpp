@@ -38,8 +38,9 @@ void VM::str_split( string& str, string delimiters, vector<string>& tokens ){
 
 VM::VM(){
     memset( &args, 0x00, sizeof(h_args_t) );
-    fp 	   = NULL;
-    vframe = &vmem;
+    fp 	   	  = NULL;
+    vframe 	  = &vmem;
+    releasing = false;
 }
 
 FILE *VM::openFile(){
@@ -119,6 +120,8 @@ void VM::init( int argc, char *argv[], char *envp[] ){
 }
 
 void VM::release(){
+	releasing = true;
+
     lock();
         if( th_pool.size() > 0 ){
             fprintf( stdout, "[WARNING] Hard killing remaining running threads ... " );
@@ -169,6 +172,8 @@ void VM::release(){
     vmem.release();
     vcode.release();
     vtypes.release();
+
+    releasing = false;
 }
 
 void VM::loadNamespace( string path ){
