@@ -47,7 +47,7 @@ void             hyb_lex_skip_comment();
 // handle multi line comments
 void             hyb_lex_skip_line();
 // handle string constants
-void             hyb_lex_string( char delimiter, char *buffer );
+char *           hyb_lex_string( char delimiter );
 // handle char constants
 char             hyb_lex_char( char delimiter );
 // extract tokens from a string give a regular expression
@@ -297,11 +297,11 @@ include          BEGIN(T_INCLUSION);
 
 {identifier}                           { strncpy( yylval.identifier, yytext, 0xFF ); return T_IDENT; }
 
--?[0-9]+                               { yylval.integer = atol(yytext);         return T_INTEGER; }
--?0x[A-Fa-f0-9]+                       { yylval.integer = strtol(yytext,0,16);  return T_INTEGER; }
--?([0-9]+|([0-9]*\.[0-9]+){exponent}?) { yylval.real    = atof(yytext);         return T_REAL; }
-"'"                                    { yylval.byte    = hyb_lex_char('\'');   return T_CHAR; }
-"\""                                   { hyb_lex_string( '"', yylval.string );  return T_STRING; }
+-?[0-9]+                               { yylval.integer = atol(yytext);          return T_INTEGER; }
+-?0x[A-Fa-f0-9]+                       { yylval.integer = strtol(yytext,0,16);   return T_INTEGER; }
+-?([0-9]+|([0-9]*\.[0-9]+){exponent}?) { yylval.real    = atof(yytext);          return T_REAL; }
+"'"                                    { yylval.byte    = hyb_lex_char('\'');    return T_CHAR; }
+"\""                                   { yylval.string  = hyb_lex_string( '"' ); return T_STRING; }
 
 . { hyb_error( H_ET_SYNTAX, "Unexpected token '%s'", yytext ); }
 
@@ -364,13 +364,13 @@ char hyb_lex_char( char delimiter ){
 	}
 }
 
-void hyb_lex_string( char delimiter, char *buffer ){
-    char *ptr;
-    int c, prev = 0x00;
+char *hyb_lex_string( char delimiter ){
+    char *ptr,
+		 *buffer;
+    int  size = 0xFF, offset = 0, c, prev = 0x00;
 
-    memset( buffer, 0x00, 0xFF );
-
-    ptr = buffer;
+    buffer = (char *)calloc( size, sizeof(char) );
+    ptr    = buffer;
 
 	for(;;){
 		/* break on non-escaped delimiter */
@@ -378,10 +378,20 @@ void hyb_lex_string( char delimiter, char *buffer ){
 			break;
 		}
 		else{
+			/*
+			 * TODO : We should introduce a threshold!
+			 */
+			if( offset >= size ){
+				size += 0xFF;
+				buffer = (char *)realloc( buffer, size );
+			}
 			*ptr++ = prev = c;
+			offset++;
 		}
 	}
     *ptr = 0x00;
+
+    return buffer;
 }
 
 matches_t hyb_pcre_matches( string pattern, char *subject ){

@@ -129,7 +129,7 @@ VM *__hyb_vm;
     long    integer;
     double  real;
     char    byte;
-    char    string[0xFF];
+    char   *string;
     /* variable identifier */
     char    identifier[0xFF];
     /* function prototype declaration */
@@ -425,7 +425,7 @@ callExpression : /* expression -> <identifier>( ... ) */
 expression : T_INTEGER                                        { $$ = MK_CONST_NODE($1); }
            | T_REAL                                           { $$ = MK_CONST_NODE($1); }
            | T_CHAR                                           { $$ = MK_CONST_NODE($1); }
-           | T_STRING                                         { $$ = MK_CONST_NODE($1); }
+           | T_STRING                                         { $$ = MK_CONST_NODE($1); free($1); }
            /* expression -> <identifier> */
            | expression T_GET_MEMBER T_IDENT 				  { $$ = MK_MREQ_NODE( $1, MK_IDENT_NODE($3) ); }
            /* identifier */
