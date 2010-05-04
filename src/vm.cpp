@@ -63,7 +63,7 @@ FILE *VM::openFile(){
 }
 
 void VM::closeFile(){
-    if( args.source[0] != 0x00 ){
+    if( args.source[0] != 0x00 && fp ){
         fclose(fp);
     }
 }
