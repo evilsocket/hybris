@@ -31,10 +31,167 @@ Engine::Engine( VM *context ) :
     vm(&context->vmem),
     vc(&context->vcode),
     vt(&context->vtypes) {
+
 }
 
 Engine::~Engine(){
 
+}
+
+
+__force_inline void Engine::prepare_stack( vframe_t *root, vframe_t &stack, string owner,  Object *cobj, int argc, Node *ids, Node *argv ){
+	int 	i;
+	Object *value;
+
+	/*
+	 * Set the stack owner
+	 */
+	stack.owner = owner;
+	/*
+	 * Increment references of the main class
+	 */
+	ob_inc_ref(cobj);
+	stack.insert( "me", cobj );
+	/*
+	 * Evaluate each object and incremente references
+	 */
+	for( i = 0; i < argc; ++i ){
+		value = exec( root, argv->child(i) );
+		ob_inc_ref(value);
+		stack.insert( (char *)ids->child(i)->value.m_identifier.c_str(), value );
+	}
+	/*
+	 * Add this frame as the active stack
+	 */
+	vmachine->addFrame( &stack );
+}
+
+__force_inline void Engine::prepare_stack( vframe_t &stack, string owner, Object *cobj, Node *ids, int argc, ... ){
+	va_list ap;
+	int i;
+	Object *value;
+
+	stack.owner = owner;
+
+	/*
+	 * Increment references of the main class
+	 */
+	ob_inc_ref( cobj );
+	stack.insert( "me", cobj );
+	/*
+	 * Evaluate each object and incremente references
+	 */
+	va_start( ap, argc );
+	for( i = 0; i < argc; ++i ){
+		value = va_arg( ap, Object * );
+		ob_inc_ref(value);
+		stack.insert( (char *)ids->child(i)->value.m_identifier.c_str(), value );
+	}
+	va_end(ap);
+
+	vmachine->addFrame( &stack );
+}
+
+__force_inline void Engine::prepare_stack( vframe_t *root, vframe_t &stack, string owner, vector<string> ids, vmem_t *argv ){
+	int 	i, argc;
+	Object *value;
+
+	/*
+	 * Set the stack owner
+	 */
+	stack.owner = owner;
+
+	argc = argv->size();
+	for( i = 0; i < argc; ++i ){
+		value = argv->at(i);
+		ob_inc_ref(value);
+		stack.insert( (char *)ids[i].c_str(), value );
+	}
+
+	/*
+	 * Add this frame as the active stack
+	 */
+	vmachine->addFrame( &stack );
+}
+
+__force_inline void Engine::prepare_stack( vframe_t *root, vframe_t &stack, string owner, vector<string> ids, Node *argv ){
+	int 	i, argc;
+	Object *value;
+
+	/*
+	 * Set the stack owner
+	 */
+	stack.owner = owner;
+
+	argc = argv->children();
+	for( i = 0; i < argc; ++i ){
+		value = exec( root, argv->at(i) );
+		ob_inc_ref(value);
+		stack.insert( (char *)ids[i].c_str(), value );
+	}
+
+	/*
+	 * Add this frame as the active stack
+	 */
+	vmachine->addFrame( &stack );
+}
+
+__force_inline void Engine::prepare_stack( vframe_t *root, vframe_t &stack, string owner, ExternObject *fn_pointer, Node *argv ){
+	int 	i, argc;
+	Object *value;
+
+	/*
+	 * Set the stack owner
+	 */
+	stack.owner = owner;
+
+	ob_inc_ref( (Object *)fn_pointer);
+	stack.push( (Object *)fn_pointer );
+	argc = argv->children();
+	for( i = 0; i < argc; ++i ){
+		value = exec( root, argv->child(i) );
+		ob_inc_ref(value);
+		stack.push( value );
+	}
+
+	/*
+	 * Add this frame as the active stack
+	 */
+	vmachine->addFrame( &stack );
+}
+
+__force_inline void Engine::prepare_stack( vframe_t *root, vframe_t &stack, string owner, Node *argv ){
+	int 	i, argc;
+	Object *value;
+
+	/*
+	 * Set the stack owner
+	 */
+	stack.owner = owner;
+	argc = argv->children();
+	for( i = 0; i < argc; ++i ){
+		value = exec( root, argv->child(i) );
+		ob_inc_ref(value);
+		stack.push( value );
+	}
+
+	/*
+	 * Add this frame as the active stack
+	 */
+	vmachine->addFrame( &stack );
+}
+
+__force_inline void Engine::dismiss_stack( vframe_t &stack ){
+	int i, size( stack.size() );
+
+	vmachine->popFrame();
+	/*
+	 * Decrement reference counters of all the objects
+	 * this frame owns.
+	 */
+	for( i = 0; i < size; ++i ){
+		ob_dec_ref( stack.at(i) );
+	}
 }
 
 Object *Engine::exec( vframe_t *frame, Node *node ){
@@ -467,30 +624,12 @@ Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
 									 argc );
 		}
 
-		stack.owner = ob_typename(cobj) + string("::") + name;
-
-		ob_inc_ref(cobj);
-		stack.insert( "me", cobj );
-		for( i = 0; i < argc; ++i ){
-			value = exec( frame, member->child(i) );
-			ob_inc_ref(value);
-			stack.insert( (char *)method->child(i)->value.m_identifier.c_str(), value );
-		}
-
-		vmachine->addFrame( &stack );
+		prepare_stack( frame, stack, ob_typename(cobj) + string("::") + name, cobj, argc, method, member );
 
 		/* call the method */
 		result = exec( &stack, method->callBody() );
 
-		vmachine->popFrame();
-
-		/*
-		 * Decrement reference counters of all the objects
-		 * this frame owns.
-		 */
-		for( i = 0; i < stack.size(); ++i ){
-			ob_dec_ref( stack.at(i) );
-		}
+		dismiss_stack( stack );
 
 		/*
 		 * Check for unhandled exceptions and put them on the root
@@ -650,26 +789,13 @@ Object *Engine::onBuiltinFunctionCall( vframe_t *frame, Node * call ){
     if( (function = vmachine->getFunction( callname )) == H_UNDEFINED ){
         return H_UNDEFINED;
     }
-	stack.owner = callname;
-    /* do object assignment */
-    for( i = 0; i < children; ++i ){
-    	value = exec( frame, call->child(i) );
-		stack.push( value );
-    }
 
-    /*
-	 * An exception has been thrown inside an exec call.
-	 */
-	if( frame->state.is(Exception) ){
-		return frame->state.value;
-	}
-
-    vmachine->addFrame( &stack );
+    prepare_stack( frame, stack, string(callname), call );
 
     /* call the function */
     result = function( vmachine, &stack );
 
-    vmachine->popFrame();
+    dismiss_stack( stack );
 
     /* return function evaluation value */
     return result;
@@ -709,28 +835,12 @@ Object *Engine::onThreadedCall( string function_name, vframe_t *frame, vmem_t *a
 						       argv->size() );
 	}
 
-	children 	= argv->size();
-	stack.owner = function_name;
-	for( i = 0; i < children; ++i  ){
-		value = argv->at(i);
-		ob_inc_ref( value );
-		stack.insert( (char *)identifiers[i].c_str(), value );
-	}
-
-	vmachine->addFrame( &stack );
+	prepare_stack( frame, stack, function_name, identifiers, argv );
 
 	/* call the function */
 	result = exec( &stack, body );
 
-	vmachine->popFrame();
-
-	/*
-	 * Decrement reference counters of all the objects
-	 * this frame owns.
-	 */
-	for( i = 0; i < stack.size(); ++i ){
-		ob_dec_ref( stack.at(i) );
-	}
+	dismiss_stack( stack );
 
 	/* return function evaluation value */
 	return result;
@@ -770,28 +880,12 @@ Object *Engine::onUserFunctionCall( vframe_t *frame, Node *call, int threaded /*
                              call->children() );
     }
 
-    children = call->children();
-    stack.owner = function->value.m_function;
-    for( i = 0; i < children; ++i ){
-        value = exec( frame, call->child(i) );
-        ob_inc_ref(value);
-        stack.insert( (char *)identifiers[i].c_str(), value );
-    }
-
-    vmachine->addFrame( &stack );
+    prepare_stack( frame, stack, function->value.m_function, identifiers, call );
 
     /* call the function */
     result = exec( &stack, body );
 
-    vmachine->popFrame();
-
-	/*
-	 * Decrement reference counters of all the objects
-	 * this frame owns.
-	 */
-	for( i = 0; i < stack.size(); ++i ){
-		ob_dec_ref( stack.at(i) );
-	}
+    dismiss_stack( stack );
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
@@ -859,39 +953,21 @@ Object *Engine::onNewOperator( vframe_t *frame, Node *type ){
 										 ctor->callDefinedArgc(),
 										 children );
 			}
-
-			Node    *arg = H_UNDEFINED;
 			vframe_t stack;
-			Object  *value = H_UNDEFINED;
 
-			/*
-			 * Create the "me" reference to the class itself, used inside
-			 * methods for me->... calls.
-			 */
-			stack.owner = string(type_name) + "::" + string(type_name);
-			ob_inc_ref(newtype);
-			stack.insert( "me", newtype );
-			for( i = 0; i < children; ++i ){
-				arg   = type->child(i);
-				value = exec( frame, arg );
-				ob_inc_ref(value);
-				stack.insert( (char *)ctor->child(i)->value.m_identifier.c_str(), value );
-			}
-
-			vmachine->addFrame( &stack );
+			prepare_stack( frame,
+						   stack,
+						   string(type_name) + "::" + string(type_name),
+						   newtype,
+						   children,
+						   ctor,
+						   type );
 
 			/* call the ctor */
 			exec( &stack, ctor->callBody() );
 
-			vmachine->popFrame();
+			dismiss_stack( stack );
 
-			/*
-			 * Decrement reference counters of all the objects
-			 * this frame owns.
-			 */
-			for( i = 0; i < stack.size(); ++i ){
-				ob_dec_ref( stack.at(i) );
-			}
 			/*
 			 * Check for unhandled exceptions and put them on the root
 			 * memory frame.
@@ -939,30 +1015,12 @@ Object *Engine::onDllFunctionCall( vframe_t *frame, Node *call, int threaded /*=
         return H_UNDEFINED;
     }
 
-    /* at this point we're sure that it's an extern function pointer, so build the frame for hdllcall */
-    stack.owner = callname;
-    stack.push( fn_pointer );
-    children = call->children();
-    for( i = 0; i < children; ++i ){
-        value = exec( frame, call->child(i) );
-        ob_inc_ref(value);
-        stack.push( value );
-    }
-
-    vmachine->addFrame( &stack );
+    prepare_stack( frame, stack, string(callname), (ExternObject *)fn_pointer, call );
 
     /* call the function */
     result = dllcall( vmachine, &stack );
 
-    vmachine->popFrame();
-
-    /*
-	 * Decrement reference counters of all the objects
-	 * this frame owns.
-	 */
-	for( i = 0; i < stack.size(); ++i ){
-		ob_dec_ref( stack.at(i) );
-	}
+    dismiss_stack( stack );
 
     /* return function evaluation value */
     return result;

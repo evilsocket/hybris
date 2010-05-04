@@ -44,6 +44,7 @@ class Engine {
          * Type definitions segment.
          */
         vmem_t  *vt;
+
         /*
          * Find the entry point (address) of a given user defined function.
          */
@@ -65,6 +66,23 @@ class Engine {
 
         Engine( VM *context );
         ~Engine();
+
+        /*
+         * Methods to initialize a stack given its owner, arguments, identifiers
+         * and so on.
+         *
+         * Each prepare_stack method will increment by one the reference counter
+         * of each value pushed/inserted into it, then the dismiss_stack method
+         * will decrement them again.
+         */
+        void prepare_stack( vframe_t *root, vframe_t &stack, string owner, Object *cobj, int argc, Node *ids, Node *argv );
+        void prepare_stack( vframe_t &stack, string owner, Object *cobj, Node *ids, int argc, ... );
+        void prepare_stack( vframe_t *root, vframe_t &stack, string owner, vector<string> ids, vmem_t *argv );
+        void prepare_stack( vframe_t *root, vframe_t &stack, string owner, vector<string> ids, Node *argv );
+        void prepare_stack( vframe_t *root, vframe_t &stack, string owner, ExternObject *fn_pointer, Node *argv );
+        void prepare_stack( vframe_t *root, vframe_t &stack, string owner, Node *argv );
+        void dismiss_stack( vframe_t &stack );
+
         /*
 		 * Node handler dispatcher.
 		 */
@@ -157,6 +175,5 @@ class Engine {
         Object *onLand( vframe_t *, Node * );
         Object *onLor( vframe_t *, Node * );
 };
-
 
 #endif
