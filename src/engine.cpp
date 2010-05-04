@@ -492,8 +492,6 @@ Object *Engine::onMemberRequest( vframe_t *frame, Node *node ){
 			ob_dec_ref( stack.at(i) );
 		}
 
-		ob_dec_ref(cobj);
-
 		/*
 		 * Check for unhandled exceptions and put them on the root
 		 * memory frame.
@@ -871,17 +869,12 @@ Object *Engine::onNewOperator( vframe_t *frame, Node *type ){
 			 * methods for me->... calls.
 			 */
 			stack.owner = string(type_name) + "::" + string(type_name);
-			stack.insert( "me", newtype );
 			ob_inc_ref(newtype);
+			stack.insert( "me", newtype );
 			for( i = 0; i < children; ++i ){
 				arg   = type->child(i);
 				value = exec( frame, arg );
 				ob_inc_ref(value);
-				/*
-				 * Value references count is set to zero now, builtins
-				 * do not care about reference counting, so this object will
-				 * be safely freed after the function call by the gc.
-				 */
 				stack.insert( (char *)ctor->child(i)->value.m_identifier.c_str(), value );
 			}
 
@@ -1044,7 +1037,12 @@ Object *Engine::onSubscriptAdd( vframe_t *frame, Node *node ){
            *res    = H_UNDEFINED;
 
     array  = exec( frame, node->child(0) );
+
+    ob_inc_ref( array );
+
 	object = exec( frame, node->child(1) );
+
+	ob_dec_ref( array );
 
 	CHECK_FRAME_EXIT()
 

@@ -251,8 +251,7 @@ void VM::printStackTrace( bool force /*= false*/ ){
 	if( args.stacktrace || force ){
 		list<vframe_t *>::iterator i;
 		unsigned int j, pad, k, args, last;
-		Object *arg;
-		string name, svalue;
+		string name;
 		vframe_t *frame;
 		extern gc_t __gc;
 
@@ -269,38 +268,7 @@ void VM::printStackTrace( bool force /*= false*/ ){
 				fprintf( stderr, "  " );
 			}
 
-			fprintf( stderr, "%s(%s", frame->owner.c_str(), (args ? " " : "") );
-			for( k = 0; k < args; ++k ){
-				name   = frame->label(k);
-				arg    = frame->at(k);
-				svalue = ob_svalue( frame->at(k) );
-				if( svalue.length() >= 10 ){
-					svalue = svalue.substr(0,6) + " ...";
-				}
-
-				string_replace( svalue, "\n", "\\n" );
-				string_replace( svalue, "\t", "\\t" );
-
-				if( ob_is_string(arg) ){
-					svalue = '"' + svalue + '"';
-				}
-				else if( ob_is_char(arg) ){
-					svalue = "'" + svalue + "'";
-				}
-
-				if( name != "me" ){
-					if( name.find("HANONYMOUSIDENTIFIER") == 0 ){
-						fprintf( stderr, "%s%s", svalue.c_str(),
-												 (k < last ? ", " : " ") );
-					}
-					else{
-						fprintf( stderr, "%s = %s%s", name.c_str(),
-													  svalue.c_str(),
-													  (k < last ? ", " : " ") );
-					}
-				}
-			}
-			fprintf( stderr, ")\n" );
+			fprintf( stderr, "%s( )\n", frame->owner.c_str() );
 		}
 		fprintf( stderr, "\n" );
 	}
