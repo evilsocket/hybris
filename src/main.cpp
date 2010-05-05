@@ -57,10 +57,10 @@ int main( int argc, char *argv[], char* envp[] ){
             { 0, 0, 0, 0 }
     };
 
-    extern VM *__hyb_vm;
+    extern vm_t *__hyb_vm;
     extern int yyparse(void);
 
-    __hyb_vm = new VM();
+    __hyb_vm = vm_create();
 
     int index = 0;
     char c, multiplier, *p;
@@ -166,10 +166,10 @@ int main( int argc, char *argv[], char* envp[] ){
 		}
     }
     /*
-     * VM will receive every argument starting from the script
+     * vm_t will receive every argument starting from the script
      * name to build the script virtual argv.
      */
-    __hyb_vm->init( argc - (optind - 1), argv + (optind - 1), envp );
+    vm_init( __hyb_vm, argc - (optind - 1), argv + (optind - 1), envp );
 
     extern FILE *yyin;
     /*
@@ -177,14 +177,14 @@ int main( int argc, char *argv[], char* envp[] ){
      * or the stdin handle if not, in this case the interpreter will execute
      * user input.
      */
-    yyin = __hyb_vm->openFile();
+    yyin = vm_fopen( __hyb_vm );
 
     while( !feof(yyin) ){
         yyparse();
     }
 
-    __hyb_vm->closeFile();
-    __hyb_vm->release();
+    vm_fclose( __hyb_vm );
+    vm_release( __hyb_vm );
 
     delete __hyb_vm;
 

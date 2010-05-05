@@ -52,18 +52,18 @@ md5_context;
     (b)[(i) + 3] = (unsigned char) ( (n) >> 24 );       \
 }
 
-void md5_starts( md5_context *vmachine )
+void md5_starts( md5_context *vm )
 {
-    vmachine->total[0] = 0;
-    vmachine->total[1] = 0;
+    vm->total[0] = 0;
+    vm->total[1] = 0;
 
-    vmachine->state[0] = 0x67452301;
-    vmachine->state[1] = 0xEFCDAB89;
-    vmachine->state[2] = 0x98BADCFE;
-    vmachine->state[3] = 0x10325476;
+    vm->state[0] = 0x67452301;
+    vm->state[1] = 0xEFCDAB89;
+    vm->state[2] = 0x98BADCFE;
+    vm->state[3] = 0x10325476;
 }
 
-static void md5_process( md5_context *vmachine, const unsigned char data[64] )
+static void md5_process( md5_context *vm, const unsigned char data[64] )
 {
     unsigned long X[16], A, B, C, D;
 
@@ -91,10 +91,10 @@ static void md5_process( md5_context *vmachine, const unsigned char data[64] )
     a += F(b,c,d) + X[k] + t; a = S(a,s) + b;           \
 }
 
-    A = vmachine->state[0];
-    B = vmachine->state[1];
-    C = vmachine->state[2];
-    D = vmachine->state[3];
+    A = vm->state[0];
+    B = vm->state[1];
+    C = vm->state[2];
+    D = vm->state[3];
 
 #define F(x,y,z) (z ^ (x & (y ^ z)))
 
@@ -180,13 +180,13 @@ static void md5_process( md5_context *vmachine, const unsigned char data[64] )
 
 #undef F
 
-    vmachine->state[0] += A;
-    vmachine->state[1] += B;
-    vmachine->state[2] += C;
-    vmachine->state[3] += D;
+    vm->state[0] += A;
+    vm->state[1] += B;
+    vm->state[2] += C;
+    vm->state[3] += D;
 }
 
-void md5_update( md5_context *vmachine, const unsigned char *input, int ilen )
+void md5_update( md5_context *vm, const unsigned char *input, int ilen )
 {
     int fill;
     unsigned long left;
@@ -194,20 +194,20 @@ void md5_update( md5_context *vmachine, const unsigned char *input, int ilen )
     if( ilen <= 0 )
         return;
 
-    left = vmachine->total[0] & 0x3F;
+    left = vm->total[0] & 0x3F;
     fill = 64 - left;
 
-    vmachine->total[0] += ilen;
-    vmachine->total[0] &= 0xFFFFFFFF;
+    vm->total[0] += ilen;
+    vm->total[0] &= 0xFFFFFFFF;
 
-    if( vmachine->total[0] < (unsigned long) ilen )
-        vmachine->total[1]++;
+    if( vm->total[0] < (unsigned long) ilen )
+        vm->total[1]++;
 
     if( left && ilen >= fill )
     {
-        memcpy( (void *) (vmachine->buffer + left),
+        memcpy( (void *) (vm->buffer + left),
                 (void *) input, fill );
-        md5_process( vmachine, vmachine->buffer );
+        md5_process( vm, vm->buffer );
         input += fill;
         ilen  -= fill;
         left = 0;
@@ -215,14 +215,14 @@ void md5_update( md5_context *vmachine, const unsigned char *input, int ilen )
 
     while( ilen >= 64 )
     {
-        md5_process( vmachine, input );
+        md5_process( vm, input );
         input += 64;
         ilen  -= 64;
     }
 
     if( ilen > 0 )
     {
-        memcpy( (void *) (vmachine->buffer + left),
+        memcpy( (void *) (vm->buffer + left),
                 (void *) input, ilen );
     }
 }
@@ -235,29 +235,29 @@ static const unsigned char md5_padding[64] =
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-void md5_finish( md5_context *vmachine, unsigned char output[16] )
+void md5_finish( md5_context *vm, unsigned char output[16] )
 {
     unsigned long last, padn;
     unsigned long high, low;
     unsigned char msglen[8];
 
-    high = ( vmachine->total[0] >> 29 )
-         | ( vmachine->total[1] <<  3 );
-    low  = ( vmachine->total[0] <<  3 );
+    high = ( vm->total[0] >> 29 )
+         | ( vm->total[1] <<  3 );
+    low  = ( vm->total[0] <<  3 );
 
     PUT_ULONG_LE( low,  msglen, 0 );
     PUT_ULONG_LE( high, msglen, 4 );
 
-    last = vmachine->total[0] & 0x3F;
+    last = vm->total[0] & 0x3F;
     padn = ( last < 56 ) ? ( 56 - last ) : ( 120 - last );
 
-    md5_update( vmachine, (unsigned char *) md5_padding, padn );
-    md5_update( vmachine, msglen, 8 );
+    md5_update( vm, (unsigned char *) md5_padding, padn );
+    md5_update( vm, msglen, 8 );
 
-    PUT_ULONG_LE( vmachine->state[0], output,  0 );
-    PUT_ULONG_LE( vmachine->state[1], output,  4 );
-    PUT_ULONG_LE( vmachine->state[2], output,  8 );
-    PUT_ULONG_LE( vmachine->state[3], output, 12 );
+    PUT_ULONG_LE( vm->state[0], output,  0 );
+    PUT_ULONG_LE( vm->state[1], output,  4 );
+    PUT_ULONG_LE( vm->state[2], output,  8 );
+    PUT_ULONG_LE( vm->state[3], output, 12 );
 }
 
 HYBRIS_DEFINE_FUNCTION(hmd5){
@@ -271,11 +271,11 @@ HYBRIS_DEFINE_FUNCTION(hmd5){
 	unsigned char hash[16] = {0};
 	char          hex[3]   = {0};
 	unsigned int  i, size( str.size() );
-	md5_context   md5_vmachine;
+	md5_context   md5_vm;
 
-	md5_starts( &md5_vmachine );
-    md5_update( &md5_vmachine, (const unsigned char *)str.c_str(), size );
-    md5_finish( &md5_vmachine, hash );
+	md5_starts( &md5_vm );
+    md5_update( &md5_vm, (const unsigned char *)str.c_str(), size );
+    md5_finish( &md5_vm, hash );
 
     for( i = 0; i < 16; ++i ){
 		sprintf( hex, "%.2x", hash[i] );

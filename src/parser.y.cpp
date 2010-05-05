@@ -120,7 +120,7 @@ extern int yylex(void);
 /*
  * The global virtual machine holder.
  */
-VM *__hyb_vm;
+vm_t *__hyb_vm;
 
 %}
 
@@ -228,10 +228,10 @@ VM *__hyb_vm;
 %type <access> accessSpecifier
 %%
 
-program    : body           { __hyb_vm->timer( HYB_TIMER_STOP ); }
+program    : body           { vm_timer( __hyb_vm, HYB_TIMER_STOP ); }
 
-body       : body statement { __hyb_vm->timer( HYB_TIMER_START );
-                              __hyb_vm->engine->exec( &__hyb_vm->vmem, $2 );
+body       : body statement { vm_timer( __hyb_vm, HYB_TIMER_START );
+                              engine_exec( __hyb_vm->engine, &__hyb_vm->vmem, $2 );
                               RM_NODE($2);
                             }
            | /* empty */ ;

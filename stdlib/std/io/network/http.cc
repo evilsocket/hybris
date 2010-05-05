@@ -35,9 +35,9 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 #define HTTP_GET  0
 #define HTTP_POST 1
 
-extern "C" void hybris_module_init( VM * vmachine ){
-    HYBRIS_DEFINE_CONSTANT( vmachine, "GET",  gc_new_integer(HTTP_GET) );
-    HYBRIS_DEFINE_CONSTANT( vmachine, "POST", gc_new_integer(HTTP_POST) );
+extern "C" void hybris_module_init( vm_t * vm ){
+    HYBRIS_DEFINE_CONSTANT( vm, "GET",  gc_new_integer(HTTP_GET) );
+    HYBRIS_DEFINE_CONSTANT( vm, "POST", gc_new_integer(HTTP_POST) );
 }
 
 static size_t http_append_callback( void *ptr, size_t size, size_t nmemb, void *data ){
@@ -262,10 +262,10 @@ HYBRIS_DEFINE_FUNCTION(hhttp){
     }
 
     if( method == HTTP_GET ){
-        return hhttp_get( vmachine, &hdata );
+        return hhttp_get( vm, &hdata );
     }
     else if( method == HTTP_POST ){
-        return hhttp_post( vmachine, &hdata );
+        return hhttp_post( vm, &hdata );
     }
     else{
         hyb_error( H_ET_SYNTAX, "function 'http', unknown method" );

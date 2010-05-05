@@ -43,56 +43,56 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "", NULL }
 };
 
-extern "C" void hybris_module_init( VM * vmachine ){
-	extern VM  *__hyb_vm;
+extern "C" void hybris_module_init( vm_t * vm ){
+	extern vm_t  *__hyb_vm;
 
 	/*
 	 * This module is linked against libhybris.so.1 which contains a compiled
 	 * parser.cpp, which has an uninitialized __hyb_vm pointer.
-	 * The real VM is passed to this function by the core, so we have to initialize
+	 * The real vm_t is passed to this function by the core, so we have to initialize
 	 * the pointer with the right data.
 	 */
-	__hyb_vm = vmachine;
+	__hyb_vm = vm;
 
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGHUP", gc_new_integer(SIGHUP) ); /* Hangup (POSIX).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGINT", gc_new_integer(SIGINT) ); /* Interrupt (ANSI).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGQUIT", gc_new_integer(SIGQUIT) ); /* Quit (POSIX).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGILL", gc_new_integer(SIGILL) ); /* Illegal instruction (ANSI).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGTRAP", gc_new_integer(SIGTRAP) ); /* Trace trap (POSIX).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGABRT", gc_new_integer(SIGABRT) ); /* Abort (ANSI).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGIOT", gc_new_integer(SIGIOT) ); /* IOT trap (4.2 BSD).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGBUS", gc_new_integer(SIGBUS) ); /* BUS error (4.2 BSD).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGFPE", gc_new_integer(SIGFPE) ); /* Floating-point exception (ANSI).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGKILL", gc_new_integer(SIGKILL) ); /* Kill, unblockable (POSIX).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGSEGV", gc_new_integer(SIGSEGV) ); /* Segmentation violation (ANSI).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGPIPE", gc_new_integer(SIGPIPE) ); /* Broken pipe (POSIX).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGALRM", gc_new_integer(SIGALRM) ); /* Alarm clock (POSIX).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGTERM", gc_new_integer(SIGTERM) ); /* Termination (ANSI).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGSTKFLT", gc_new_integer(SIGSTKFLT) ); /* Stack fault.  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGCLD", gc_new_integer(SIGCHLD) ); /* Same as SIGCHLD (System V).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGCHLD", gc_new_integer(SIGCHLD) ); /* Child status has changed (POSIX).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGCONT", gc_new_integer(SIGCONT) ); /* Continue (POSIX).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGSTOP", gc_new_integer(SIGSTOP) ); /* Stop, unblockable (POSIX).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGTSTP", gc_new_integer(SIGTSTP) ); /* Keyboard stop (POSIX).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGTTIN", gc_new_integer(SIGTTIN) ); /* Background read from tty (POSIX).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGTTOU", gc_new_integer(SIGTTOU) ); /* Background write to tty (POSIX).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGURG", gc_new_integer(SIGURG) ); /* Urgent condition on socket (4.2 BSD).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGXCPU", gc_new_integer(SIGXCPU) ); /* CPU limit exceeded (4.2 BSD).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGXFSZ", gc_new_integer(SIGXFSZ) ); /* File size limit exceeded (4.2 BSD).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGVTALRM", gc_new_integer(SIGVTALRM) ); /* Virtual alarm clock (4.2 BSD).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGPROF", gc_new_integer(SIGPROF) ); /* Profiling alarm clock (4.2 BSD).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGWINCH", gc_new_integer(SIGWINCH) ); /* Window size change (4.3 BSD, Sun).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGPOLL", gc_new_integer(SIGIO) ); /* Pollable event occurred (System V).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGIO", gc_new_integer(SIGIO) ); /* I/O now possible (4.2 BSD).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGPWR", gc_new_integer(SIGPWR) ); /* Power failure restart (System V).  */
-	HYBRIS_DEFINE_CONSTANT( vmachine, "SIGSYS", gc_new_integer(SIGSYS) ); /* Bad system call.  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGHUP", gc_new_integer(SIGHUP) ); /* Hangup (POSIX).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGINT", gc_new_integer(SIGINT) ); /* Interrupt (ANSI).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGQUIT", gc_new_integer(SIGQUIT) ); /* Quit (POSIX).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGILL", gc_new_integer(SIGILL) ); /* Illegal instruction (ANSI).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGTRAP", gc_new_integer(SIGTRAP) ); /* Trace trap (POSIX).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGABRT", gc_new_integer(SIGABRT) ); /* Abort (ANSI).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGIOT", gc_new_integer(SIGIOT) ); /* IOT trap (4.2 BSD).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGBUS", gc_new_integer(SIGBUS) ); /* BUS error (4.2 BSD).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGFPE", gc_new_integer(SIGFPE) ); /* Floating-point exception (ANSI).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGKILL", gc_new_integer(SIGKILL) ); /* Kill, unblockable (POSIX).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGSEGV", gc_new_integer(SIGSEGV) ); /* Segmentation violation (ANSI).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGPIPE", gc_new_integer(SIGPIPE) ); /* Broken pipe (POSIX).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGALRM", gc_new_integer(SIGALRM) ); /* Alarm clock (POSIX).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGTERM", gc_new_integer(SIGTERM) ); /* Termination (ANSI).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGSTKFLT", gc_new_integer(SIGSTKFLT) ); /* Stack fault.  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGCLD", gc_new_integer(SIGCHLD) ); /* Same as SIGCHLD (System V).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGCHLD", gc_new_integer(SIGCHLD) ); /* Child status has changed (POSIX).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGCONT", gc_new_integer(SIGCONT) ); /* Continue (POSIX).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGSTOP", gc_new_integer(SIGSTOP) ); /* Stop, unblockable (POSIX).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGTSTP", gc_new_integer(SIGTSTP) ); /* Keyboard stop (POSIX).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGTTIN", gc_new_integer(SIGTTIN) ); /* Background read from tty (POSIX).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGTTOU", gc_new_integer(SIGTTOU) ); /* Background write to tty (POSIX).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGURG", gc_new_integer(SIGURG) ); /* Urgent condition on socket (4.2 BSD).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGXCPU", gc_new_integer(SIGXCPU) ); /* CPU limit exceeded (4.2 BSD).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGXFSZ", gc_new_integer(SIGXFSZ) ); /* File size limit exceeded (4.2 BSD).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGVTALRM", gc_new_integer(SIGVTALRM) ); /* Virtual alarm clock (4.2 BSD).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGPROF", gc_new_integer(SIGPROF) ); /* Profiling alarm clock (4.2 BSD).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGWINCH", gc_new_integer(SIGWINCH) ); /* Window size change (4.3 BSD, Sun).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGPOLL", gc_new_integer(SIGIO) ); /* Pollable event occurred (System V).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGIO", gc_new_integer(SIGIO) ); /* I/O now possible (4.2 BSD).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGPWR", gc_new_integer(SIGPWR) ); /* Power failure restart (System V).  */
+	HYBRIS_DEFINE_CONSTANT( vm, "SIGSYS", gc_new_integer(SIGSYS) ); /* Bad system call.  */
 }
 
 HYBRIS_DEFINE_FUNCTION(henv){
 	char   *duple,
 		   *marker,
 	      **env,
-		  **envp = vmachine->env;
+		  **envp = vm->env;
 	Object *map  = (Object *)gc_new_map();
 
 	for( env = envp; *env != 0; env++ ){

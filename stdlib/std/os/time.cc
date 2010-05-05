@@ -41,10 +41,10 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 
 static Object *__dateTime_type = H_UNDEFINED;
 
-extern "C" void hybris_module_init( VM * vmachine ){
+extern "C" void hybris_module_init( vm_t * vm ){
     char *dateTime_attributes[] = { "sec", "min", "hour", "mday", "month", "year", "wday", "yday" };
 
-    __dateTime_type = HYBRIS_DEFINE_STRUCTURE( vmachine, "DateTime", 8, dateTime_attributes );
+    __dateTime_type = HYBRIS_DEFINE_STRUCTURE( vm, "DateTime", 8, dateTime_attributes );
 }
 
 HYBRIS_DEFINE_FUNCTION(hticks){

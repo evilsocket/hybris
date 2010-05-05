@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef _HVMEM_H_
-#	define _HVMEM_H_
+#ifndef _Hvm_tEM_H_
+#	define _Hvm_tEM_H_
 
 #include <stdlib.h>
 #include <string.h>

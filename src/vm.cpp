@@ -18,13 +18,13 @@
 */
 #include "vm.h"
 
-void VM::signal_handler( int signo ){
+void vm_signal_handler( int signo ){
     if( signo == SIGSEGV ){
         hyb_error( H_ET_GENERIC, "SIGSEGV Signal Catched" );
     }
 }
 
-void VM::str_split( string& str, string delimiters, vector<string>& tokens ){
+void vm_str_split( string& str, string delimiters, vector<string>& tokens ){
     string::size_type lastPos = str.find_first_not_of(delimiters, 0);
     string::size_type pos     = str.find_first_of(delimiters, lastPos);
 
@@ -36,114 +36,118 @@ void VM::str_split( string& str, string delimiters, vector<string>& tokens ){
 }
 
 
-VM::VM(){
-    memset( &args, 0x00, sizeof(h_args_t) );
-    fp 	   	  = NULL;
-    vframe 	  = &vmem;
-    releasing = false;
+vm_t *vm_create(){
+	vm_t *vm = new vm_t;
+
+    memset( &vm->args, 0x00, sizeof(h_args_t) );
+    vm->fp 	      = NULL;
+    vm->releasing = false;
+
+    return vm;
 }
 
-FILE *VM::openFile(){
+FILE *vm_fopen( vm_t *vm ){
 	extern vector<string> __hyb_file_stack;
 	extern vector<int>	  __hyb_line_stack;
 
-    if( args.source[0] != 0x00 ){
-    	__hyb_file_stack.push_back(args.source);
+    if( vm->args.source[0] != 0x00 ){
+    	__hyb_file_stack.push_back( vm->args.source);
     	__hyb_line_stack.push_back(0);
 
-        fp = fopen( args.source, "r" );
-        this->chdir();
+        vm->fp = fopen( vm->args.source, "r" );
+        vm_chdir( vm );
     }
     else{
     	__hyb_file_stack.push_back("<stdin>");
 
-        fp = stdin;
+    	vm->fp = stdin;
     }
-    return fp;
+
+    return vm->fp;
 }
 
-void VM::closeFile(){
-    if( args.source[0] != 0x00 && fp ){
-        fclose(fp);
+void vm_fclose( vm_t *vm ){
+    if( vm->args.source[0] != 0x00 && vm->fp ){
+        fclose(vm->fp);
     }
 }
 
-int VM::chdir(){
+int vm_chdir( vm_t *vm ){
 	/* compute source path and chdir to it */
-	char *ptr = strrchr( args.source, '/' );
+	char *ptr = strrchr( vm->args.source, '/' );
 	if( ptr != NULL ){
-		unsigned int pos = ptr - args.source + 1;
+		unsigned int pos = ptr - vm->args.source + 1;
 		char path[0xFF]  = {0};
-		strncpy( path, args.source, pos );
+		strncpy( path, vm->args.source, pos );
 		return ::chdir(path);
 	}
 	return 0;
 }
 
-void VM::init( int argc, char *argv[], char *envp[] ){
+void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
     int i;
     char name[0xFF] = {0};
 
     /* create code engine */
-    engine = new Engine( this );
+    vm->engine = engine_create( vm );
     /* save interpreter directory */
-    getcwd( args.rootpath, 0xFF );
+    getcwd( vm->args.rootpath, 0xFF );
     /* initialize pthread mutex */
-    th_mutex = PTHREAD_MUTEX_INITIALIZER;
+    vm->th_mutex = PTHREAD_MUTEX_INITIALIZER;
     /* set signal handler */
-    signal( SIGSEGV, VM::signal_handler );
+    signal( SIGSEGV, vm_signal_handler );
 
-    if( args.gc_threshold > 0 ){
-    	gc_set_threshold(args.gc_threshold);
+    if( vm->args.gc_threshold > 0 ){
+    	gc_set_threshold(vm->args.gc_threshold);
     }
 
-    vmem.owner = (argc > 1 ? argv[1] : "<stdin>");
+    vm->vmem.owner = (argc > 1 ? argv[1] : "<stdin>");
 
     int h_argc = argc - 1;
 
     /* initialize command line arguments */
-    HYBRIS_DEFINE_CONSTANT( this, "argc", gc_new_integer(h_argc) );
+    HYBRIS_DEFINE_CONSTANT( vm, "argc", gc_new_integer(h_argc) );
     for( i = 1; i < argc; ++i ){
         sprintf( name, "%d", i - 1);
-        HYBRIS_DEFINE_CONSTANT( this, name, gc_new_string(argv[i]) );
+        HYBRIS_DEFINE_CONSTANT( vm, name, gc_new_string(argv[i]) );
     }
     /* initialize misc constants */
-    HYBRIS_DEFINE_CONSTANT( this, "true",  gc_new_integer(1) );
-    HYBRIS_DEFINE_CONSTANT( this, "false", gc_new_integer(0) );
-    HYBRIS_DEFINE_CONSTANT( this, "null",  gc_new_integer(0) );
+    HYBRIS_DEFINE_CONSTANT( vm, "true",  gc_new_integer(1) );
+    HYBRIS_DEFINE_CONSTANT( vm, "false", gc_new_integer(0) );
+    HYBRIS_DEFINE_CONSTANT( vm, "null",  gc_new_integer(0) );
 
-    HYBRIS_DEFINE_CONSTANT( this, "__VERSION__",  gc_new_string(VERSION) );
-    HYBRIS_DEFINE_CONSTANT( this, "__LIB_PATH__", gc_new_string(LIB_PATH) );
-    HYBRIS_DEFINE_CONSTANT( this, "__INC_PATH__", gc_new_string(INC_PATH) );
+    HYBRIS_DEFINE_CONSTANT( vm, "__VERSION__",  gc_new_string(VERSION) );
+    HYBRIS_DEFINE_CONSTANT( vm, "__LIB_PATH__", gc_new_string(LIB_PATH) );
+    HYBRIS_DEFINE_CONSTANT( vm, "__INC_PATH__", gc_new_string(INC_PATH) );
 
-    env = envp;
+    vm->env = envp;
 }
 
-void VM::release(){
-	releasing = true;
+void vm_release( vm_t *vm ){
+	vm->releasing = true;
 
-    lock();
-        if( th_pool.size() > 0 ){
+    vm_lock( vm );
+        if( vm->th_pool.size() > 0 ){
             fprintf( stdout, "[WARNING] Hard killing remaining running threads ... " );
-            for( int pool_i = 0; pool_i < th_pool.size(); ++pool_i ){
-                pthread_kill( th_pool[pool_i], SIGTERM );
+            for( int pool_i = 0; pool_i < vm->th_pool.size(); ++pool_i ){
+                pthread_kill( vm->th_pool[pool_i], SIGTERM );
             }
-            th_pool.clear();
+            vm->th_pool.clear();
             fprintf( stdout, "done .\n" );
         }
-    unlock();
+    vm_unlock( vm );
 
     /*
      * Handle unhandled exceptions in the main memory frame.
      */
-    if( vmem.state.is(Exception) ){
-    	vmem.state.unset(Exception);
-    	assert( vmem.state.value != NULL );
-    	if( vmem.state.value->type->svalue ){
-    		fprintf( stderr, "\033[22;31mERROR : Unhandled exception : %s\n\033[00m", ob_svalue(vmem.state.value).c_str() );
+    if( vm->vmem.state.is(Exception) ){
+    	vm->vmem.state.unset(Exception);
+    	assert( vm->vmem.state.value != NULL );
+    	if( vm->vmem.state.value->type->svalue ){
+    		fprintf( stderr, "\033[22;31mERROR : Unhandled exception : %s\n\033[00m", ob_svalue(vm->vmem.state.value).c_str() );
     	}
     	else{
-    		fprintf( stderr, "\033[22;31mERROR : Unhandled '%s' exception .\n\033[00m", ob_typename(vmem.state.value) );
+    		fprintf( stderr, "\033[22;31mERROR : Unhandled '%s' exception .\n\033[00m", ob_typename(vm->vmem.state.value) );
     	}
     }
     /*
@@ -152,31 +156,31 @@ void VM::release(){
      */
     gc_release();
 
-    delete engine;
+    delete vm->engine;
 
     unsigned int i, j,
-                 ndyns( modules.size() ),
+                 ndyns( vm->modules.size() ),
                  nfuncs;
 
     for( i = 0; i < ndyns; ++i ){
-        nfuncs = modules[i]->functions.size();
+        nfuncs = vm->modules[i]->functions.size();
         for( j = 0; j < nfuncs; ++j ){
-			delete modules[i]->functions[j];
+			delete vm->modules[i]->functions[j];
         }
-        dlclose( modules[i]->handle );
-        delete modules[i];
+        dlclose( vm->modules[i]->handle );
+        delete vm->modules[i];
     }
 
-	modules.clear();
-	mcache.clear();
-    vmem.release();
-    vcode.release();
-    vtypes.release();
+    vm->modules.clear();
+    vm->mcache.clear();
+    vm->vmem.release();
+    vm->vcode.release();
+    vm->vtypes.release();
 
-    releasing = false;
+    vm->releasing = false;
 }
 
-void VM::loadNamespace( string path ){
+void vm_load_namespace( vm_t *vm, string path ){
     DIR           *dir;
     struct dirent *ent;
 
@@ -188,24 +192,24 @@ void VM::loadNamespace( string path ){
         /* recurse into directories */
         if( ent->d_type == DT_DIR && strcmp( ent->d_name, ".." ) && strcmp( ent->d_name, "." ) ){
             path = (path[path.size() - 1] == '/' ? path : path + '/');
-            loadNamespace( path + ent->d_name );
+            vm_load_namespace( vm, path + ent->d_name );
         }
         /* load .so dynamic module */
         else if( strstr( ent->d_name, ".so" ) ){
             string modname = string(ent->d_name);
             modname.replace( modname.find(".so"), 3, "" );
-            loadModule( path + '/' + ent->d_name, modname );
+            vm_load_module( vm, path + '/' + ent->d_name, modname );
         }
     }
 
     closedir(dir);
 }
 
-void VM::loadModule( string path, string name ){
+void vm_load_module( vm_t *vm, string path, string name ){
     /* check that the module isn't already loaded */
-    unsigned int i, sz(modules.size());
+    unsigned int i, sz(vm->modules.size());
     for( i = 0; i < sz; ++i ){
-        if( modules[i]->name == name ){
+        if( vm->modules[i]->name == name ){
             return;
         }
     }
@@ -226,8 +230,9 @@ void VM::loadModule( string path, string name ){
     /* load initialization routine, usually used for constants definition, etc */
     initializer_t initializer = (initializer_t)dlsym( hmodule, "hybris_module_init" );
     if(initializer){
-        initializer( this );
+        initializer( vm );
     }
+
     /* exported functions vector */
     named_function_t *functions = (named_function_t *)dlsym( hmodule, "hybris_module_functions" );
     if(!functions){
@@ -237,7 +242,7 @@ void VM::loadModule( string path, string name ){
     }
 
     module_t *hmod    = new module_t;
-    str_split( path, "/", hmod->tree );
+    vm_str_split( path, "/", hmod->tree );
     hmod->handle	  = hmodule;
     hmod->name        = name;
     hmod->initializer = initializer;
@@ -249,11 +254,48 @@ void VM::loadModule( string path, string name ){
         ++i;
     }
 
-    modules.push_back(hmod);
+    vm->modules.push_back(hmod);
 }
 
-void VM::printStackTrace( bool force /*= false*/ ){
-	if( args.stacktrace || force ){
+void vm_load_module( vm_t *vm, char *module ){
+    /* translate dotted module name to module path */
+    string         name(module),
+                   path(LIB_PATH),
+                   group;
+    vector<string> groups;
+    unsigned int   i, sz, last;
+
+    /* parse module path and name from dotted notation */
+    vm_str_split( name, ".", groups );
+    sz   = groups.size();
+    last = sz - 1;
+    for( i = 0; i < sz; ++i ){
+        group = groups[i];
+        if( i == last ){
+            /* load all modules in that group */
+            if( group == "*" ){
+                /* '*' not allowed as first namespace */
+                if( i == 0 ){
+                    hyb_error( H_ET_SYNTAX, "Could not use '*' as main namespace" );
+                }
+                return vm_load_namespace( vm, path );
+            }
+            else{
+                name = group;
+            }
+
+            path += name + ".so";
+        }
+        else {
+            path += group + "/";
+        }
+    }
+
+    vm_load_module( vm, path, name );
+}
+
+void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){
+	if( vm->args.stacktrace || force ){
 		list<vframe_t *>::iterator i;
 		unsigned int j, pad, k, args, last;
 		string name;
@@ -262,8 +304,8 @@ void VM::printStackTrace( bool force /*= false*/ ){
 
 		fprintf( stderr, "\nCall Stack [memory usage %d bytes] :\n\n", __gc.usage );
 
-		fprintf( stderr, "%s\n", vmem.owner.c_str() );
-		for( i = frames.begin(), j = 1; i != frames.end(); i++, ++j ){
+		fprintf( stderr, "%s\n", vm->vmem.owner.c_str() );
+		for( i = vm->frames.begin(), j = 1; i != vm->frames.end(); i++, ++j ){
 			frame = (*i);
 			args  = frame->size();
 			last  = args - 1;
@@ -278,41 +320,3 @@ void VM::printStackTrace( bool force /*= false*/ ){
 		fprintf( stderr, "\n" );
 	}
 }
-
-void VM::loadModule( char *module ){
-    /* translate dotted module name to module path */
-    string         name(module),
-                   path(LIB_PATH),
-                   group;
-    vector<string> groups;
-    unsigned int   i, sz, last;
-
-    /* parse module path and name from dotted notation */
-    str_split( name, ".", groups );
-    sz   = groups.size();
-    last = sz - 1;
-    for( i = 0; i < sz; ++i ){
-        group = groups[i];
-        if( i == last ){
-            /* load all modules in that group */
-            if( group == "*" ){
-                /* '*' not allowed as first namespace */
-                if( i == 0 ){
-                    hyb_error( H_ET_SYNTAX, "Could not use '*' as main namespace" );
-                }
-                return loadNamespace( path );
-            }
-            else{
-                name = group;
-            }
-
-            path += name + ".so";
-        }
-        else {
-            path += group + "/";
-        }
-    }
-
-    loadModule( path, name );
-}
-

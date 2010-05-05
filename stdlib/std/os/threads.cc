@@ -36,17 +36,17 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 
 typedef struct {
     vmem_t *data;
-    VM 	   *vmachine;
+    vm_t 	   *vm;
 }
 thread_args_t;
 
 void * hyb_pthread_worker( void *arg ){
     thread_args_t *args = (thread_args_t *)arg;
-    VM      	  *vmachine  = args->vmachine;
+    vm_t      	  *vm  = args->vm;
     vmem_t        *data = args->data,
 				   stack;
 
-    vmachine->pool();
+    vm_pool( vm );
 
     if( ob_argc() > 1 ){
 		unsigned int i;
@@ -55,11 +55,11 @@ void * hyb_pthread_worker( void *arg ){
 		}
 	}
 
-    vmachine->engine->onThreadedCall( string_argv(0), data, &stack );
+    engine_on_threaded_call( vm->engine, string_argv(0), data, &stack );
 
     delete args;
 
-    vmachine->depool();
+    vm_depool( vm );
 
     pthread_exit(NULL);
 }
@@ -75,7 +75,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
     thread_args_t *args = new thread_args_t;
 
     args->data = data->clone();
-    args->vmachine  = vmachine;
+    args->vm  = vm;
 
     if( (code = pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args )) == 0 ){
     	return ob_dcast( gc_new_integer(tid) );
@@ -115,7 +115,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create_argv){
     thread_args_t *args = new thread_args_t;
 
     args->data 	   = new vmem_t;
-    args->vmachine = vmachine;
+    args->vm = vm;
 
 	args->data->push( ob_argv(0) );
     for( i = 0; i < argc; ++i ){
@@ -149,7 +149,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create_argv){
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_exit){
-    vmachine->depool();
+	vm_depool( vm );
 
 	pthread_exit(NULL);
     return H_DEFAULT_RETURN;

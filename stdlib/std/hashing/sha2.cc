@@ -28,9 +28,9 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 #define SHA256 0
 #define SHA224 1
 
-extern "C" void hybris_module_init( VM * vmachine ){
-    HYBRIS_DEFINE_CONSTANT( vmachine, "SHA256", gc_new_integer(SHA256) );
-    HYBRIS_DEFINE_CONSTANT( vmachine, "SHA224", gc_new_integer(SHA224) );
+extern "C" void hybris_module_init( vm_t * vm ){
+    HYBRIS_DEFINE_CONSTANT( vm, "SHA256", gc_new_integer(SHA256) );
+    HYBRIS_DEFINE_CONSTANT( vm, "SHA224", gc_new_integer(SHA224) );
 }
 
 typedef struct
@@ -61,40 +61,40 @@ sha2_context;
     (b)[(i) + 3] = (unsigned char) ( (n)       );       \
 }
 
-void sha2_starts( sha2_context *vmachine, int is224 )
+void sha2_starts( sha2_context *vm, int is224 )
 {
-    vmachine->total[0] = 0;
-    vmachine->total[1] = 0;
+    vm->total[0] = 0;
+    vm->total[1] = 0;
 
     if( is224 == 0 )
     {
         /* SHA-256 */
-        vmachine->state[0] = 0x6A09E667;
-        vmachine->state[1] = 0xBB67AE85;
-        vmachine->state[2] = 0x3C6EF372;
-        vmachine->state[3] = 0xA54FF53A;
-        vmachine->state[4] = 0x510E527F;
-        vmachine->state[5] = 0x9B05688C;
-        vmachine->state[6] = 0x1F83D9AB;
-        vmachine->state[7] = 0x5BE0CD19;
+        vm->state[0] = 0x6A09E667;
+        vm->state[1] = 0xBB67AE85;
+        vm->state[2] = 0x3C6EF372;
+        vm->state[3] = 0xA54FF53A;
+        vm->state[4] = 0x510E527F;
+        vm->state[5] = 0x9B05688C;
+        vm->state[6] = 0x1F83D9AB;
+        vm->state[7] = 0x5BE0CD19;
     }
     else
     {
         /* SHA-224 */
-        vmachine->state[0] = 0xC1059ED8;
-        vmachine->state[1] = 0x367CD507;
-        vmachine->state[2] = 0x3070DD17;
-        vmachine->state[3] = 0xF70E5939;
-        vmachine->state[4] = 0xFFC00B31;
-        vmachine->state[5] = 0x68581511;
-        vmachine->state[6] = 0x64F98FA7;
-        vmachine->state[7] = 0xBEFA4FA4;
+        vm->state[0] = 0xC1059ED8;
+        vm->state[1] = 0x367CD507;
+        vm->state[2] = 0x3070DD17;
+        vm->state[3] = 0xF70E5939;
+        vm->state[4] = 0xFFC00B31;
+        vm->state[5] = 0x68581511;
+        vm->state[6] = 0x64F98FA7;
+        vm->state[7] = 0xBEFA4FA4;
     }
 
-    vmachine->is224 = is224;
+    vm->is224 = is224;
 }
 
-static void sha2_process( sha2_context *vmachine, const unsigned char data[64] )
+static void sha2_process( sha2_context *vm, const unsigned char data[64] )
 {
     unsigned long temp1, temp2, W[64];
     unsigned long A, B, C, D, E, F, G, H;
@@ -141,14 +141,14 @@ static void sha2_process( sha2_context *vmachine, const unsigned char data[64] )
     d += temp1; h = temp1 + temp2;              \
 }
 
-    A = vmachine->state[0];
-    B = vmachine->state[1];
-    C = vmachine->state[2];
-    D = vmachine->state[3];
-    E = vmachine->state[4];
-    F = vmachine->state[5];
-    G = vmachine->state[6];
-    H = vmachine->state[7];
+    A = vm->state[0];
+    B = vm->state[1];
+    C = vm->state[2];
+    D = vm->state[3];
+    E = vm->state[4];
+    F = vm->state[5];
+    G = vm->state[6];
+    H = vm->state[7];
 
     P( A, B, C, D, E, F, G, H, W[ 0], 0x428A2F98 );
     P( H, A, B, C, D, E, F, G, W[ 1], 0x71374491 );
@@ -215,17 +215,17 @@ static void sha2_process( sha2_context *vmachine, const unsigned char data[64] )
     P( C, D, E, F, G, H, A, B, R(62), 0xBEF9A3F7 );
     P( B, C, D, E, F, G, H, A, R(63), 0xC67178F2 );
 
-    vmachine->state[0] += A;
-    vmachine->state[1] += B;
-    vmachine->state[2] += C;
-    vmachine->state[3] += D;
-    vmachine->state[4] += E;
-    vmachine->state[5] += F;
-    vmachine->state[6] += G;
-    vmachine->state[7] += H;
+    vm->state[0] += A;
+    vm->state[1] += B;
+    vm->state[2] += C;
+    vm->state[3] += D;
+    vm->state[4] += E;
+    vm->state[5] += F;
+    vm->state[6] += G;
+    vm->state[7] += H;
 }
 
-void sha2_update( sha2_context *vmachine, const unsigned char *input, int ilen )
+void sha2_update( sha2_context *vm, const unsigned char *input, int ilen )
 {
     int fill;
     unsigned long left;
@@ -233,20 +233,20 @@ void sha2_update( sha2_context *vmachine, const unsigned char *input, int ilen )
     if( ilen <= 0 )
         return;
 
-    left = vmachine->total[0] & 0x3F;
+    left = vm->total[0] & 0x3F;
     fill = 64 - left;
 
-    vmachine->total[0] += ilen;
-    vmachine->total[0] &= 0xFFFFFFFF;
+    vm->total[0] += ilen;
+    vm->total[0] &= 0xFFFFFFFF;
 
-    if( vmachine->total[0] < (unsigned long) ilen )
-        vmachine->total[1]++;
+    if( vm->total[0] < (unsigned long) ilen )
+        vm->total[1]++;
 
     if( left && ilen >= fill )
     {
-        memcpy( (void *) (vmachine->buffer + left),
+        memcpy( (void *) (vm->buffer + left),
                 (void *) input, fill );
-        sha2_process( vmachine, vmachine->buffer );
+        sha2_process( vm, vm->buffer );
         input += fill;
         ilen  -= fill;
         left = 0;
@@ -254,14 +254,14 @@ void sha2_update( sha2_context *vmachine, const unsigned char *input, int ilen )
 
     while( ilen >= 64 )
     {
-        sha2_process( vmachine, input );
+        sha2_process( vm, input );
         input += 64;
         ilen  -= 64;
     }
 
     if( ilen > 0 )
     {
-        memcpy( (void *) (vmachine->buffer + left),
+        memcpy( (void *) (vm->buffer + left),
                 (void *) input, ilen );
     }
 }
@@ -274,35 +274,35 @@ static const unsigned char sha2_padding[64] =
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-void sha2_finish( sha2_context *vmachine, unsigned char output[32] )
+void sha2_finish( sha2_context *vm, unsigned char output[32] )
 {
     unsigned long last, padn;
     unsigned long high, low;
     unsigned char msglen[8];
 
-    high = ( vmachine->total[0] >> 29 )
-         | ( vmachine->total[1] <<  3 );
-    low  = ( vmachine->total[0] <<  3 );
+    high = ( vm->total[0] >> 29 )
+         | ( vm->total[1] <<  3 );
+    low  = ( vm->total[0] <<  3 );
 
     PUT_ULONG_BE( high, msglen, 0 );
     PUT_ULONG_BE( low,  msglen, 4 );
 
-    last = vmachine->total[0] & 0x3F;
+    last = vm->total[0] & 0x3F;
     padn = ( last < 56 ) ? ( 56 - last ) : ( 120 - last );
 
-    sha2_update( vmachine, (unsigned char *) sha2_padding, padn );
-    sha2_update( vmachine, msglen, 8 );
+    sha2_update( vm, (unsigned char *) sha2_padding, padn );
+    sha2_update( vm, msglen, 8 );
 
-    PUT_ULONG_BE( vmachine->state[0], output,  0 );
-    PUT_ULONG_BE( vmachine->state[1], output,  4 );
-    PUT_ULONG_BE( vmachine->state[2], output,  8 );
-    PUT_ULONG_BE( vmachine->state[3], output, 12 );
-    PUT_ULONG_BE( vmachine->state[4], output, 16 );
-    PUT_ULONG_BE( vmachine->state[5], output, 20 );
-    PUT_ULONG_BE( vmachine->state[6], output, 24 );
+    PUT_ULONG_BE( vm->state[0], output,  0 );
+    PUT_ULONG_BE( vm->state[1], output,  4 );
+    PUT_ULONG_BE( vm->state[2], output,  8 );
+    PUT_ULONG_BE( vm->state[3], output, 12 );
+    PUT_ULONG_BE( vm->state[4], output, 16 );
+    PUT_ULONG_BE( vm->state[5], output, 20 );
+    PUT_ULONG_BE( vm->state[6], output, 24 );
 
-    if( vmachine->is224 == 0 )
-        PUT_ULONG_BE( vmachine->state[7], output, 28 );
+    if( vm->is224 == 0 )
+        PUT_ULONG_BE( vm->state[7], output, 28 );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsha2){
@@ -325,11 +325,11 @@ HYBRIS_DEFINE_FUNCTION(hsha2){
 	unsigned char hash[32] = {0};
 	char		  hex[3]   = {0};
 	unsigned int  i, size( str.size() );
-	sha2_context  sha2_vmachine;
+	sha2_context  sha2_vm;
 
-	sha2_starts( &sha2_vmachine, is224 );
-    sha2_update( &sha2_vmachine, (const unsigned char *)str.c_str(), size );
-    sha2_finish( &sha2_vmachine, hash );
+	sha2_starts( &sha2_vm, is224 );
+    sha2_update( &sha2_vm, (const unsigned char *)str.c_str(), size );
+    sha2_finish( &sha2_vm, hash );
 
     for( i = 0; i < 32; ++i ){
 		sprintf( hex, "%.2x", hash[i] );

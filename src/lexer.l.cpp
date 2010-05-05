@@ -71,7 +71,7 @@ vector<string> __hyb_file_stack;
 vector<int>	   __hyb_line_stack;
 
 extern int     yylineno;
-extern VM   *__hyb_vm;
+extern vm_t   *__hyb_vm;
 
 %}
 
@@ -176,7 +176,7 @@ include          BEGIN(T_INCLUSION);
 
     yytext = sptr;
 
-    __hyb_vm->loadModule( (char *)module.c_str() );
+    vm_load_module( __hyb_vm, (char *)module.c_str() );
 }
 
 "#"             { hyb_lex_skip_line();    }
@@ -280,10 +280,10 @@ include          BEGIN(T_INCLUSION);
 
 "__FILE__" {
 	if( __hyb_file_stack.size() ){
-		strcpy( yylval.string, __hyb_file_stack.back().c_str() );
+		yylval.string = strdup( __hyb_file_stack.back().c_str() );
 	}
 	else{
-		strcpy( yylval.string, "<unknown>" );
+		yylval.string = strdup( "<unknown>" );
 	}
 	return T_STRING;
 }
@@ -413,7 +413,7 @@ matches_t hyb_pcre_matches( string pattern, char *subject ){
 	pcre 		*compiled;
 	matches_t    matches;
 
-	compiled = __hyb_vm->pcre_compile( pattern, PCRE_CASELESS|PCRE_MULTILINE, &error, &eoffset );
+	compiled = vm_pcre_compile( __hyb_vm, pattern, PCRE_CASELESS|PCRE_MULTILINE, &error, &eoffset );
 	rc 		 = pcre_fullinfo( compiled, 0, PCRE_INFO_CAPTURECOUNT, &ccount );
 
 	offsets = new int[ 3 * (ccount + 1) ];

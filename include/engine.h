@@ -21,159 +21,155 @@
 
 #include "hybris.h"
 
-class VM;
+typedef struct _vm_t vm_t;
 
 /*
- * Tnis is the main class that will execute the script tree.
+ * The main structure holding infos to execute the script tree.
  */
-class Engine {
-    private :
-		/*
-		 * Main context.
-		 */
-        VM *vmachine;
-        /*
-         * Memory segment.
-         */
-        vmem_t  *vm;
-        /*
-         * Code segment
-         */
-        vcode_t *vc;
-        /*
-         * Type definitions segment.
-         */
-        vmem_t  *vt;
+typedef struct _engine_t {
+	/*
+	 * Main context.
+	 */
+	vm_t *vm;
+	/*
+	 * Memory segment.
+	 */
+	vmem_t  *mem;
+	/*
+	 * Code segment
+	 */
+	vcode_t *code;
+	/*
+	 * Type definitions segment.
+	 */
+	vmem_t  *types;
+}
+engine_t;
 
-        /*
-         * Find the entry point (address) of a given user defined function.
-         */
-        Node   *findEntryPoint( vframe_t *frame, Node *call );
-        /*
-         * Handle hybris builtin function call.
-         */
-        Object *onBuiltinFunctionCall( vframe_t *, Node * );
-        /*
-         * Handle user defined function call.
-         */
-        Object *onUserFunctionCall( vframe_t *, Node *, int threaded = 0 );
-        /*
-         * Handle dynamic loaded function call.
-         */
-        Object *onDllFunctionCall( vframe_t *, Node *, int threaded = 0 );
-
-    public  :
-
-        Engine( VM *context );
-        ~Engine();
-
-        /*
-         * Methods to initialize a stack given its owner, arguments, identifiers
-         * and so on.
-         *
-         * Each prepare_stack method will increment by one the reference counter
-         * of each value pushed/inserted into it, then the dismiss_stack method
-         * will decrement them again.
-         */
-        void prepare_stack( vframe_t *root, vframe_t &stack, string owner, Object *cobj, int argc, Node *ids, Node *argv );
-        void prepare_stack( vframe_t &stack, string owner, Object *cobj, Node *ids, int argc, ... );
-        void prepare_stack( vframe_t *root, vframe_t &stack, string owner, vector<string> ids, vmem_t *argv );
-        void prepare_stack( vframe_t *root, vframe_t &stack, string owner, vector<string> ids, Node *argv );
-        void prepare_stack( vframe_t *root, vframe_t &stack, string owner, ExternObject *fn_pointer, Node *argv );
-        void prepare_stack( vframe_t *root, vframe_t &stack, string owner, Node *argv );
-        void dismiss_stack( vframe_t &stack );
-
-        /*
-		 * Node handler dispatcher.
-		 */
-		Object *exec( vframe_t *frame, Node *node );
-		/*
-		 * Special case to handle threaded function calls.
-		 */
-		Object *onThreadedCall( string function_name, vframe_t *frame, vmem_t *argv );
-        /*
-         * Node handlers for each type of node (statement, expression, ...).
-         *
-         * The handler will recieve the current memory frame and the node
-         * to execute or reduce.
-         */
-
-		/*
-		 * Special nodes.
-		 */
-        Object *onIdentifier( vframe_t *, Node * );
-        Object *onMemberRequest( vframe_t *, Node * );
-        Object *onConstant( vframe_t *, Node * );
-        Object *onFunctionDeclaration( vframe_t *, Node * );
-        Object *onStructureDeclaration( vframe_t *, Node * );
-        Object *onClassDeclaration( vframe_t *, Node * );
-        Object *onFunctionCall( vframe_t *, Node *, int threaded = 0 );
-        Object *onNewOperator( vframe_t *, Node * );
-        /*
-         * Statements.
-         */
-        Object *onReturn( vframe_t *, Node * );
-        Object *onThrow( vframe_t *, Node * );
-		Object *onTryCatch( vframe_t *, Node * );
-		Object *onWhile( vframe_t *, Node * );
-		Object *onDo( vframe_t *, Node * );
-		Object *onFor( vframe_t *, Node * );
-		Object *onForeach( vframe_t *, Node * );
-		Object *onForeachMapping( vframe_t *, Node * );
-		Object *onIf( vframe_t *, Node * );
-		Object *onQuestion( vframe_t *, Node * );
-		Object *onSwitch( vframe_t *, Node * );
-		/*
-		 * Expressions / Operators.
-		 */
-		/* misc */
-        Object *onDollar( vframe_t *, Node * );
-        Object *onRange( vframe_t *, Node * );
-        Object *onSubscriptAdd( vframe_t *, Node * );
-        Object *onSubscriptGet( vframe_t *, Node * );
-        Object *onSubscriptSet( vframe_t *, Node * );
-        Object *onEostmt( vframe_t *, Node * );
-        Object *onDot( vframe_t *, Node * );
-        Object *onInplaceDot( vframe_t *, Node * );
-        /* arithmetic */
-        Object *onAssign( vframe_t *, Node * );
-        Object *onUminus( vframe_t *, Node * );
-        Object *onRegex( vframe_t *, Node * );
-        Object *onAdd( vframe_t *, Node * );
-        Object *onInplaceAdd( vframe_t *, Node * );
-        Object *onSub( vframe_t *, Node * );
-        Object *onInplaceSub( vframe_t *, Node * );
-        Object *onMul( vframe_t *, Node * );
-        Object *onInplaceMul( vframe_t *, Node * );
-        Object *onDiv( vframe_t *, Node * );
-        Object *onInplaceDiv( vframe_t *, Node * );
-        Object *onMod( vframe_t *, Node * );
-        Object *onInplaceMod( vframe_t *, Node * );
-        Object *onInc( vframe_t *, Node * );
-        Object *onDec( vframe_t *, Node * );
-        Object *onFact( vframe_t *, Node * );
-        /* bitwise */
-        Object *onXor( vframe_t *, Node * );
-        Object *onInplaceXor( vframe_t *, Node * );
-        Object *onAnd( vframe_t *, Node * );
-        Object *onInplaceAnd( vframe_t *, Node * );
-        Object *onOr( vframe_t *, Node * );
-        Object *onInplaceOr( vframe_t *, Node * );
-        Object *onShiftl( vframe_t *, Node * );
-        Object *onInplaceShiftl( vframe_t *, Node * );
-        Object *onShiftr( vframe_t *, Node * );
-        Object *onInplaceShiftr( vframe_t *, Node * );
-        Object *onNot( vframe_t *, Node * );
-        /* logic */
-        Object *onLnot( vframe_t *, Node * );
-        Object *onLess( vframe_t *, Node * );
-        Object *onGreater( vframe_t *, Node * );
-        Object *onGe( vframe_t *, Node * );
-        Object *onLe( vframe_t *, Node * );
-        Object *onNe( vframe_t *, Node * );
-        Object *onEq( vframe_t *, Node * );
-        Object *onLand( vframe_t *, Node * );
-        Object *onLor( vframe_t *, Node * );
-};
+/*
+ * Alloc an instance of the engine.
+ */
+engine_t *engine_create( vm_t* vm );
+/*
+ * Methods to initialize a stack given its owner, arguments, identifiers
+ * and so on.
+ *
+ * Each prepare_stack method will increment by one the reference counter
+ * of each value pushed/inserted into it, then the dismiss_stack method
+ * will decrement them again.
+ */
+void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, Object *cobj, int argc, Node *ids, Node *argv );
+void 	  engine_prepare_stack( engine_t *engine, vframe_t &stack, string owner, Object *cobj, Node *ids, int argc, ... );
+void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, vmem_t *argv );
+void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, Node *argv );
+void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, ExternObject *fn_pointer, Node *argv );
+void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, Node *argv );
+void 	  engine_dismiss_stack( engine_t *engine, vframe_t &stack );
+/*
+ * Find the entry point (address) of a given user defined function.
+ */
+Node     *engine_find_function( engine_t *engine, vframe_t *frame, Node *call );
+/*
+ * Handle hybris builtin function call.
+ */
+Object   *engine_on_builtin_function_call( engine_t *engine, vframe_t *, Node * );
+/*
+ * Handle user defined function call.
+ */
+Object   *engine_on_user_function_call( engine_t *engine, vframe_t *, Node * );
+/*
+ * Handle dynamic loaded function call.
+ */
+Object   *engine_on_dll_function_call( engine_t *engine, vframe_t *, Node * );
+/*
+ * Special case to handle threaded function calls.
+ */
+Object   *engine_on_threaded_call( engine_t *engine, string function_name, vframe_t *frame, vmem_t *argv );
+/*
+ * Node handler dispatcher.
+ */
+Object 	 *engine_exec( engine_t *engine, vframe_t *frame, Node *node );
+/*
+ * Node handlers for each type of node ( engine_t *engine,statement, expression, ...).
+ *
+ * The handler will recieve the current memory frame and the node
+ * to execute or reduce.
+ */
+/*
+ * Special nodes.
+ */
+Object 	 *engine_on_identifier( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_member_request( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_constant( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_function_declaration( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_structure_declaration( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_class_declaration( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_function_call( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_new_operator( engine_t *engine, vframe_t *, Node * );
+/*
+ * Statements.
+ */
+Object   *engine_on_return( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_throw( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_try_catch( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_while( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_do( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_for( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_foreach( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_foreach_mapping( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_if( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_question( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_switch( engine_t *engine, vframe_t *, Node * );
+/*
+ * Expressions / Operators.
+ */
+/* misc */
+Object   *engine_on_dollar( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_range( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_subscript_add( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_subscript_get( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_subscript_set( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_eostmt( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_dot( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_inplace_dot( engine_t *engine, vframe_t *, Node * );
+/* arithmetic */
+Object   *engine_on_assign( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_uminus( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_regex( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_add( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_inplace_add( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_sub( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_inplace_sub( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_mul( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_inplace_mul( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_div( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_inplace_div( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_mod( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_inplace_mod( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_inc( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_dec( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_fact( engine_t *engine, vframe_t *, Node * );
+/* bitwise */
+Object   *engine_on_xor( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_inplace_xor( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_and( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_inplace_and( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_or( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_inplace_or( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_shiftl( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_inplace_shiftl( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_shiftr( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_inplace_shiftr( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_not( engine_t *engine, vframe_t *, Node * );
+/* logic */
+Object   *engine_on_lnot( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_less( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_greater( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_ge( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_le( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_ne( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_eq( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_land( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_lor( engine_t *engine, vframe_t *, Node * );
 
 #endif

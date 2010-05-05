@@ -33,7 +33,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 			*value  = H_UNDEFINED;
 	unsigned int i, op_argc;
 	va_list ap;
-	extern VM *__hyb_vm;
+	extern vm_t *__hyb_vm;
 
 	if( (op = ob_get_method( me, (char *)op_name, argc )) == H_UNDEFINED ){
 		hyb_error( H_ET_SYNTAX, "class %s does not overload '%s' operator", ob_typename(me), op_name );
@@ -65,12 +65,12 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	}
 	va_end(ap);
 
-	__hyb_vm->addFrame( &stack );
+	vm_add_frame( __hyb_vm, &stack );
 
 	/* call the operator */
-	result = __hyb_vm->engine->exec( &stack, op->callBody() );
+	result = engine_exec( __hyb_vm->engine, &stack, op->callBody() );
 
-	__hyb_vm->popFrame();
+	vm_pop_frame( __hyb_vm );
 
 	for( i = 0; i < stack.size(); ++i ){
 		ob_dec_ref( stack.at(i) );
@@ -81,7 +81,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	 * memory frame.
 	 */
 	if( stack.state.is(Exception) ){
-		__hyb_vm->frame()->state.set( Exception, stack.state.value );
+		vm_frame( __hyb_vm )->state.set( Exception, stack.state.value );
 	}
 
 	/* return method evaluation value */
@@ -100,7 +100,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 			*value  = H_UNDEFINED;
 	unsigned int i, ds_argc;
 	va_list ap;
-	extern VM *__hyb_vm;
+	extern vm_t *__hyb_vm;
 
 	if( (ds = ob_get_method( me, (char *)ds_name, argc )) == H_UNDEFINED ){
 		if( lazy == false ){
@@ -128,7 +128,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	 * Create the "me" reference to the class itself, used inside
 	 * methods for me->... calls.
 	 */
-	stack.owner = string(ob_typename(me)) + "::__method";
+	stack.owner = string(ob_typename(me)) + "::" + string(ds_name);
 
 	ob_inc_ref(me);
 	stack.insert( "me", me );
@@ -140,12 +140,12 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	}
 	va_end(ap);
 
-	__hyb_vm->addFrame( &stack );
+	vm_add_frame( __hyb_vm, &stack );
 
 	/* call the descriptor */
-	result = __hyb_vm->engine->exec( &stack, ds->callBody() );
+	result = engine_exec( __hyb_vm->engine, &stack, ds->callBody() );
 
-	__hyb_vm->popFrame();
+	vm_pop_frame( __hyb_vm );
 
 	/*
 	 * Decrement reference counters of all the objects
@@ -160,7 +160,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	 * memory frame.
 	 */
 	if( stack.state.is(Exception) ){
-		__hyb_vm->frame()->state.set( Exception, stack.state.value );
+		vm_frame( __hyb_vm )->state.set( Exception, stack.state.value );
 	}
 
 	/* return method evaluation value */
@@ -240,19 +240,19 @@ void class_free( Object *me ){
 		for( pi = method->prototypes.begin(); pi != method->prototypes.end(); pi++ ){
 			Node *dtor = (*pi);
 			vframe_t stack;
-			extern VM *__hyb_vm;
+			extern vm_t *__hyb_vm;
 
 			stack.owner = string(ob_typename(me)) + "::__expire";
 			ob_inc_ref(me);
 			stack.insert( "me", me );
 
-			__hyb_vm->addFrame( &stack );
+			vm_add_frame( __hyb_vm, &stack );
 
-			__hyb_vm->engine->exec( &stack, dtor->callBody() );
+			engine_exec( __hyb_vm->engine, &stack, dtor->callBody() );
 
 			ob_dec_ref(me);
 
-			__hyb_vm->popFrame();
+			vm_pop_frame( __hyb_vm );
 		}
     }
 	/*

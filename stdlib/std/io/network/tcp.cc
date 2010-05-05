@@ -45,11 +45,11 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "", NULL }
 };
 
-extern "C" void hybris_module_init( VM * vmachine ){
+extern "C" void hybris_module_init( vm_t * vm ){
 
-	HYBRIS_DEFINE_CONSTANT( vmachine, "STDOUT_FILENO", gc_new_integer(STDOUT_FILENO) );
-	HYBRIS_DEFINE_CONSTANT( vmachine, "STDERR_FILENO", gc_new_integer(STDERR_FILENO) );
-	HYBRIS_DEFINE_CONSTANT( vmachine, "STDIN_FILENO",  gc_new_integer(STDIN_FILENO) );
+	HYBRIS_DEFINE_CONSTANT( vm, "STDOUT_FILENO", gc_new_integer(STDOUT_FILENO) );
+	HYBRIS_DEFINE_CONSTANT( vm, "STDERR_FILENO", gc_new_integer(STDERR_FILENO) );
+	HYBRIS_DEFINE_CONSTANT( vm, "STDIN_FILENO",  gc_new_integer(STDIN_FILENO) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsettimeout){

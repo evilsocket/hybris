@@ -190,7 +190,7 @@ HYBRIS_DEFINE_FUNCTION(hdllcall_argv){
     	stack.push( ob_cl_at( ob_argv(1), (Object *)&index ) );
     }
 
-    return hdllcall( vmachine, &stack );
+    return hdllcall( vm, &stack );
 }
 
 HYBRIS_DEFINE_FUNCTION(hdllclose){

@@ -41,16 +41,16 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "", NULL }
 };
 
-extern "C" void hybris_module_init( VM * vmachine ){
-	extern VM  *__hyb_vm;
+extern "C" void hybris_module_init( vm_t * vm ){
+	extern vm_t  *__hyb_vm;
 
 	/*
 	 * This module is linked against libhybris.so.1 which contains a compiled
 	 * parser.cpp, which has an uninitialized __hyb_vm pointer.
-	 * The real VM is passed to this function by the core, so we have to initialize
+	 * The real vm_t is passed to this function by the core, so we have to initialize
 	 * the pointer with the right data.
 	 */
-	__hyb_vm = vmachine;
+	__hyb_vm = vm;
 }
 
 HYBRIS_DEFINE_FUNCTION(heval){
@@ -126,8 +126,8 @@ HYBRIS_DEFINE_FUNCTION(hload){
 HYBRIS_DEFINE_FUNCTION(hvar_names){
 	unsigned int i;
 	VectorObject *array = gc_new_vector();
-	for( i = 0; i < vmachine->vmem.size(); ++i ){
-		ob_cl_push_reference( ob_dcast(array), ob_dcast( gc_new_string(vmachine->vmem.label(i)) ) );
+	for( i = 0; i < vm->vmem.size(); ++i ){
+		ob_cl_push_reference( ob_dcast(array), ob_dcast( gc_new_string(vm->vmem.label(i)) ) );
 	}
 	return ob_dcast(array);
 }
@@ -135,8 +135,8 @@ HYBRIS_DEFINE_FUNCTION(hvar_names){
 HYBRIS_DEFINE_FUNCTION(hvar_values){
 	unsigned int i;
 	VectorObject *array = gc_new_vector();
-	for( i = 0; i < vmachine->vmem.size(); ++i ){
-		ob_cl_push( ob_dcast(array), vmachine->vmem.at(i) );
+	for( i = 0; i < vm->vmem.size(); ++i ){
+		ob_cl_push( ob_dcast(array), vm->vmem.at(i) );
 	}
 	return ob_dcast(array);
 }
@@ -144,18 +144,18 @@ HYBRIS_DEFINE_FUNCTION(hvar_values){
 HYBRIS_DEFINE_FUNCTION(huser_functions){
 	unsigned int i;
 	VectorObject *array = gc_new_vector();
-	for( i = 0; i < vmachine->vcode.size(); ++i ){
-		ob_cl_push_reference( ob_dcast(array), ob_dcast( gc_new_string(vmachine->vcode.label(i)) ) );
+	for( i = 0; i < vm->vcode.size(); ++i ){
+		ob_cl_push_reference( ob_dcast(array), ob_dcast( gc_new_string(vm->vcode.label(i)) ) );
 	}
 	return ob_dcast(array);
 }
 
 HYBRIS_DEFINE_FUNCTION(hdyn_functions){
-    unsigned int i, j, mods = vmachine->modules.size(), dyns;
+    unsigned int i, j, mods = vm->modules.size(), dyns;
 
     Object *map = ob_dcast( gc_new_map() );
     for( i = 0; i < mods; ++i ){
-        module_t *mod = vmachine->modules[i];
+        module_t *mod = vm->modules[i];
         Object   *dyn = ob_dcast( gc_new_vector() );
         dyns          = mod->functions.size();
         for( j = 0; j < dyns; ++j ){
@@ -207,7 +207,7 @@ HYBRIS_DEFINE_FUNCTION(hcall){
 		}
 	}
 
-	Object *_return = vmachine->engine->onFunctionCall( data, call, 0 );
+	Object *_return = engine_on_function_call( vm->engine, data, call );
 	delete call;
 
 	return _return;
@@ -224,6 +224,6 @@ HYBRIS_DEFINE_FUNCTION(hcall_method){
 	Object *classref   = ob_argv(0);
 	char   *methodname = (char *)((StringObject *)ob_argv(1))->value.c_str();
 
-	return ob_call_method( vmachine, classref, (char *)ob_typename(classref), methodname, ob_argv(2) );
+	return ob_call_method( vm, classref, (char *)ob_typename(classref), methodname, ob_argv(2) );
 }
 

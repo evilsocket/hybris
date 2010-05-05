@@ -276,7 +276,7 @@ Object *ob_assign( Object *a, Object *b ){
 	 * Every object has to implement its own assign.
      *
 	 * NOTE: If 'a' is already defined, the assign method will just replace
-	 * its value, then the VM will decrement old value reference counter.
+	 * its value, then the vm_t will decrement old value reference counter.
 	 */
 	return a->type->assign(a,b);
 }
@@ -753,10 +753,11 @@ Node *ob_get_method( Object *c, char *name, int argc /*= -1*/ ){
 	}
 }
 
-Object *ob_call_undefined_method( VM *vm, Object *c, char *c_name, char *method_name, Node *argv ){
+Object *ob_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *method_name, Node *argv ){
 	Node    *identifier = H_UNDEFINED,
 		    *method     = H_UNDEFINED;
-	vframe_t stack;
+	vframe_t stack,
+			*frame;
 	Object  *value  = H_UNDEFINED,
 			*result = H_UNDEFINED;
 	unsigned int i, j, argc(argv->children());
@@ -766,27 +767,29 @@ Object *ob_call_undefined_method( VM *vm, Object *c, char *c_name, char *method_
 		return H_UNDEFINED;
 	}
 
+	frame = vm_frame(vm);
+
 	VectorObject *args = gc_new_vector();
 
 	ob_inc_ref((Object *)args);
 
-	stack.owner = string(c_name) + "::" + method_name;
+	stack.owner = string(c_name) + "::" + string("__method");
 	ob_inc_ref(c);
 	stack.insert( "me", c );
 	stack.add( "name", (Object *)gc_new_string(method_name) );
 	for( i = 0; i < argc; ++i ){
-		value = vm->engine->exec( vm->vframe, argv->child(i) );
+		value = engine_exec( vm->engine, frame, argv->child(i) );
 		ob_inc_ref(value);
 		ob_cl_push( (Object *)args, value );
 	}
 	stack.add( "argv", (Object *)args );
 
-	vm->addFrame( &stack );
+	vm_add_frame( vm, &stack );
 
 	/* call the method */
-	result = vm->engine->exec( &stack, method->callBody() );
+	result = engine_exec( vm->engine, &stack, method->callBody() );
 
-	vm->popFrame();
+	vm_pop_frame( vm );
 
 	/*
 	 * Decrement reference counters of all the objects
@@ -801,14 +804,14 @@ Object *ob_call_undefined_method( VM *vm, Object *c, char *c_name, char *method_
 	 * memory frame.
 	 */
 	if( stack.state.is(Exception) ){
-		vm->frame()->state.set( Exception, stack.state.value );
+		vm_frame( vm )->state.set( Exception, stack.state.value );
 	}
 
 	/* return method evaluation value */
 	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
 }
 
-Object *ob_call_method( VM *vm, Object *c, char *c_name, char *method_name, Object *argv ){
+Object *ob_call_method( vm_t *vm, Object *c, char *c_name, char *method_name, Object *argv ){
 	Node    *identifier = H_UNDEFINED,
 		    *method     = H_UNDEFINED;
 	vframe_t stack;
@@ -830,12 +833,12 @@ Object *ob_call_method( VM *vm, Object *c, char *c_name, char *method_name, Obje
 		stack.insert( (char *)method->child(j)->value.m_identifier.c_str(), value  );
 	}
 
-	vm->addFrame( &stack );
+	vm_add_frame( vm, &stack );
 
 	/* call the method */
-	result = vm->engine->exec( &stack, method->callBody() );
+	result = engine_exec( vm->engine, &stack, method->callBody() );
 
-	vm->popFrame();
+	vm_pop_frame( vm );
 
 	/*
 	 * Decrement reference counters of all the objects
@@ -850,7 +853,7 @@ Object *ob_call_method( VM *vm, Object *c, char *c_name, char *method_name, Obje
 	 * memory frame.
 	 */
 	if( stack.state.is(Exception) ){
-		vm->frame()->state.set( Exception, stack.state.value );
+		vm_frame( vm )->state.set( Exception, stack.state.value );
 	}
 
 	/* return method evaluation value */

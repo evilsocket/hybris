@@ -25,7 +25,7 @@
 
 void yyerror( char *error ){
     extern int yylineno;
-    extern VM *__hyb_vm;
+    extern vm_t *__hyb_vm;
 
     /*
      * Make sure first character is uppercase.
@@ -56,7 +56,7 @@ void yyerror( char *error ){
 	* If the error was triggered by a SIGSEGV signal, force
 	* the stack trace to printed.
 	*/
-	__hyb_vm->printStackTrace( (strstr( error, "SIGSEGV Signal Catched" ) != NULL) );
+	vm_print_stack_trace( __hyb_vm, (strstr( error, "SIGSEGV Signal Catched" ) != NULL) );
 	/*
 	 * If an error occurred during releasing phase, an error in one class destructor
 	 * called from gc_release for instance, prevent to call those methods recursively.
@@ -66,8 +66,10 @@ void yyerror( char *error ){
 	 */
     if( __hyb_vm->releasing == false ){
 
-		__hyb_vm->closeFile();
-		__hyb_vm->release();
+		vm_fclose( __hyb_vm );
+		vm_release( __hyb_vm );
+
+		delete __hyb_vm;
 	}
 
 	exit(-1);
