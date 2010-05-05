@@ -41,6 +41,12 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	Object *value;
 
 	/*
+	 * Check for heavy recursions and/or nested calss.
+	 */
+	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+	}
+	/*
 	 * Set the stack owner
 	 */
 	stack.owner = owner;
@@ -68,8 +74,13 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t &stack, str
 	int i;
 	Object *value;
 
+	/*
+	 * Check for heavy recursions and/or nested calss.
+	 */
+	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+	}
 	stack.owner = owner;
-
 	/*
 	 * Increment references of the main class
 	 */
@@ -94,6 +105,12 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	Object *value;
 
 	/*
+	 * Check for heavy recursions and/or nested calss.
+	 */
+	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+	}
+	/*
 	 * Set the stack owner
 	 */
 	stack.owner = owner;
@@ -116,6 +133,12 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	Object *value;
 
 	/*
+	 * Check for heavy recursions and/or nested calss.
+	 */
+	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+	}
+	/*
 	 * Set the stack owner
 	 */
 	stack.owner = owner;
@@ -137,6 +160,12 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	int 	i, argc;
 	Object *value;
 
+	/*
+	 * Check for heavy recursions and/or nested calss.
+	 */
+	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+	}
 	/*
 	 * Set the stack owner
 	 */
@@ -161,6 +190,12 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	int 	i, argc;
 	Object *value;
 
+	/*
+	 * Check for heavy recursions and/or nested calss.
+	 */
+	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+	}
 	/*
 	 * Set the stack owner
 	 */

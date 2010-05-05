@@ -301,15 +301,17 @@ void vm_load_module( vm_t *vm, char *module ){
 void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){
 	if( vm->args.stacktrace || force ){
 		list<vframe_t *>::iterator i;
-		unsigned int j, pad, k, args, last;
+		unsigned int j, stop, pad, k, args, last;
 		string name;
 		vframe_t *frame;
 		extern gc_t __gc;
 
+		stop = (vm->frames.size() >= MAX_RECURSION_THRESHOLD ? 10 : vm->frames.size());
+
 		fprintf( stderr, "\nCall Stack [memory usage %d bytes] :\n\n", __gc.usage );
 
 		fprintf( stderr, "%s\n", vm->vmem.owner.c_str() );
-		for( i = vm->frames.begin(), j = 1; i != vm->frames.end(); i++, ++j ){
+		for( i = vm->frames.begin(), j = 1; i != vm->frames.end() && j < stop; i++, ++j ){
 			frame = (*i);
 			args  = frame->size();
 			last  = args - 1;
@@ -321,6 +323,16 @@ void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){
 
 			fprintf( stderr, "%s( )\n", frame->owner.c_str() );
 		}
+
+		if( vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+			pad = j;
+			while(pad--){
+				fprintf( stderr, "  " );
+			}
+
+			fprintf( stderr, "... (nested functions not shown)\n", frame->owner.c_str() );
+		}
+
 		fprintf( stderr, "\n" );
 	}
 }

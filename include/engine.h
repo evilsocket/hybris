@@ -21,6 +21,11 @@
 
 #include "hybris.h"
 
+/*
+ * Max recursions or nested functions calls.
+ */
+#define MAX_RECURSION_THRESHOLD 10000
+
 typedef struct _vm_t vm_t;
 
 /*
