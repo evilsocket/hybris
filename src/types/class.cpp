@@ -179,7 +179,7 @@ void class_set_references( Object *me, int ref ){
     me->ref += ref;
 
     for( ai = cme->c_attributes.begin(); ai != cme->c_attributes.end(); ai++ ){
-        ob_set_references( (*ai)->value->value, ref );
+    	ob_set_references( (*ai)->value->value, ref );
     }
 }
 

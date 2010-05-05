@@ -175,14 +175,78 @@ void gc_collect(){
     }
 }
 
+void gc_hierarchy_sort(){
+	gc_item_t *current, *cur;
+
+	for( current = __gc.pool_head; current->next; current = current->next ){
+		gc_item_t *max = current;
+		for( cur = current ; cur; cur = cur->next ){
+			if( max->pobj->type->code < cur->pobj->type->code ){
+				max = cur;
+			}
+		}
+
+		if( max != current ){
+			gc_item_t *current_prev, *current_next, *max_prev, *max_next;
+
+			current_next = current->next;
+			max_prev 	 = max->prev;
+			max_next 	 = max->next;
+			current_prev = current->prev;
+
+			if(!current_prev){
+				__gc.pool_head = max;
+			}
+			if( current->next == max ){
+				max->prev = current_prev;
+				max->next = current;
+
+				current->prev = max;
+				current->next = max_next;
+
+				if(max_next){
+					max_next->prev = current;
+				}
+				if(current_prev){
+					current_prev->next = max;
+				}
+			}
+			else {
+				max->prev = current_prev;
+				max->next = current_next;
+
+				current->prev = max_prev;
+				current->next = max_next;
+
+				if(current_next){
+					current_next->prev = max;
+				}
+				if(max_prev){
+					max_prev->next = current;
+				}
+				if(max_next){
+					max_next->prev = current;
+				}
+				if(current_prev){
+					current_prev->next = max;
+				}
+			}
+			current = max;
+		}
+	}
+}
+
 void gc_release(){
 	gc_item_t *item;
 
 	gc_lock();
 	/*
-	 * Loop backwards to release references first.
+	 * Make sure that the list is sorted so we find references, then
+	 * classes, then structures and so on.
 	 */
-	for( item = __gc.pool_tail; item; item = item->prev ){
+	gc_hierarchy_sort();
+
+	for( item = __gc.pool_head; item; item = item->next ){
         gc_free( item );
     }
 	gc_unlock();
