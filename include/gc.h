@@ -52,6 +52,13 @@
  * No manually deletion is necessary.
  */
 #define GC_DEFAULT_MEMORY_THRESHOLD 2048000
+/*
+ * Maximum allowed memory size usage, if this threshold is reached
+ * by __gc.usage counter, a fatal error will be triggered.
+ *
+ * Default value: 128M
+ */
+#define GC_ALLOWED_MEMORY_THRESHOLD	134217728
 
 struct _Object;
 /*

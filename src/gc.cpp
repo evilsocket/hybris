@@ -105,6 +105,12 @@ struct _Object *gc_track( struct _Object *o, size_t size ){
          */
         hyb_error( H_ET_GENERIC, "out of memory" );
     }
+    /*
+     * Check if maximum memory usage is reached.
+     */
+    else if( __gc.usage >= GC_ALLOWED_MEMORY_THRESHOLD ){
+    	hyb_error( H_ET_GENERIC, "Reached max allowed memory usage (%d bytes)", GC_ALLOWED_MEMORY_THRESHOLD );
+    }
 
     gc_lock();
 
