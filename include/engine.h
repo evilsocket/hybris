@@ -28,9 +28,9 @@ typedef struct _vm_t vm_t;
  */
 typedef struct _engine_t {
 	/*
-	 * Main context.
+	 * Virtual machine.
 	 */
-	vm_t *vm;
+	vm_t 	*vm;
 	/*
 	 * Memory segment.
 	 */
@@ -50,6 +50,10 @@ engine_t;
  * Alloc an instance of the engine.
  */
 engine_t *engine_create( vm_t* vm );
+/*
+ * Pretty self explainatory.
+ */
+#define   engine_free( e ) delete e
 /*
  * Methods to initialize a stack given its owner, arguments, identifiers
  * and so on.
@@ -90,21 +94,42 @@ Object   *engine_on_threaded_call( engine_t *engine, string function_name, vfram
  */
 Object 	 *engine_exec( engine_t *engine, vframe_t *frame, Node *node );
 /*
- * Node handlers for each type of node ( engine_t *engine,statement, expression, ...).
- *
- * The handler will recieve the current memory frame and the node
- * to execute or reduce.
- */
-/*
- * Special nodes.
+ * Identifier found, do a memory lookup for it.
  */
 Object 	 *engine_on_identifier( engine_t *engine, vframe_t *, Node * );
+/*
+ * expression->expression or expression->expression( ... ), evaluate
+ * first expression to find out if it's a class or a structure, and then
+ * lookup inside it the second one.
+ */
 Object   *engine_on_member_request( engine_t *engine, vframe_t *, Node * );
+/*
+ * Constant found, just return it from the evaluation tree.
+ */
 Object   *engine_on_constant( engine_t *engine, vframe_t *, Node * );
+/*
+ * Function declaration, add it to the code segment.
+ */
 Object   *engine_on_function_declaration( engine_t *engine, vframe_t *, Node * );
+/*
+ * Structure declaration, create the prototype instance and add it
+ * to the types segment.
+ */
 Object   *engine_on_structure_declaration( engine_t *engine, vframe_t *, Node * );
+/*
+ * Class declaration, create the prototype instance, and add it
+ * to the types segment.
+ */
 Object   *engine_on_class_declaration( engine_t *engine, vframe_t *, Node * );
+/*
+ * expression( ... ), evaluate each argument and the run the function.
+ */
 Object   *engine_on_function_call( engine_t *engine, vframe_t *, Node * );
+/*
+ * new type( ... ), execute type lookup, clone the instance and if it's
+ * a class and has a constructor, execute it, otherwise do default attributes
+ * initialization.
+ */
 Object   *engine_on_new_operator( engine_t *engine, vframe_t *, Node * );
 /*
  * Statements.
@@ -121,12 +146,12 @@ Object   *engine_on_if( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_question( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_switch( engine_t *engine, vframe_t *, Node * );
 /*
- * Expressions / Operators.
+ * Expressions and operators.
  */
 /* misc */
 Object   *engine_on_dollar( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_range( engine_t *engine, vframe_t *, Node * );
-Object   *engine_on_subscript_add( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_subscript_push( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_subscript_get( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_subscript_set( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_eostmt( engine_t *engine, vframe_t *, Node * );

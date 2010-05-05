@@ -92,8 +92,12 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
     vm->engine = engine_create( vm );
     /* save interpreter directory */
     getcwd( vm->args.rootpath, 0xFF );
-    /* initialize pthread mutex */
-    vm->th_mutex = PTHREAD_MUTEX_INITIALIZER;
+    /* initialize pthread mutexes */
+    vm->th_pool_mutex = PTHREAD_MUTEX_INITIALIZER;
+    vm->mm_pool_mutex = PTHREAD_MUTEX_INITIALIZER;
+    vm->mcache_mutex  = PTHREAD_MUTEX_INITIALIZER;
+    vm->pcre_mutex	  = PTHREAD_MUTEX_INITIALIZER;
+
     /* set signal handler */
     signal( SIGSEGV, vm_signal_handler );
 
@@ -126,7 +130,7 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
 void vm_release( vm_t *vm ){
 	vm->releasing = true;
 
-    vm_lock( vm );
+    vm_th_pool_lock( vm );
         if( vm->th_pool.size() > 0 ){
             fprintf( stdout, "[WARNING] Hard killing remaining running threads ... " );
             for( int pool_i = 0; pool_i < vm->th_pool.size(); ++pool_i ){
@@ -135,7 +139,7 @@ void vm_release( vm_t *vm ){
             vm->th_pool.clear();
             fprintf( stdout, "done .\n" );
         }
-    vm_unlock( vm );
+    vm_th_pool_unlock( vm );
 
     /*
      * Handle unhandled exceptions in the main memory frame.
@@ -156,7 +160,7 @@ void vm_release( vm_t *vm ){
      */
     gc_release();
 
-    delete vm->engine;
+    engine_free( vm->engine );
 
     unsigned int i, j,
                  ndyns( vm->modules.size() ),

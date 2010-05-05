@@ -127,7 +127,7 @@ int main( int argc, char *argv[], char* envp[] ){
 					hyb_error( H_ET_GENERIC, "Memory limit is too high." );
 				}
 				/*
-				 * Done, let's pass it to the context structure.
+				 * Done, let's pass it to the virtual machine arguments structure.
 				 */
 				__hyb_vm->args.gc_threshold = gc_threshold;
 			break;
@@ -185,8 +185,7 @@ int main( int argc, char *argv[], char* envp[] ){
 
     vm_fclose( __hyb_vm );
     vm_release( __hyb_vm );
-
-    delete __hyb_vm;
+    vm_free( __hyb_vm );
 
     return 0;
 }

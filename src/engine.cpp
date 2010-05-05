@@ -343,7 +343,7 @@ Object *engine_exec( engine_t *engine, vframe_t *frame, Node *node ){
                     return engine_on_range( engine, frame, node );
                 /* array[] = object; */
                 case T_SUBSCRIPTADD :
-                    return engine_on_subscript_add( engine, frame, node );
+                    return engine_on_subscript_push( engine, frame, node );
                 /* (identifier)? = object[ expression ]; */
                 case T_SUBSCRIPTGET :
                     return engine_on_subscript_get( engine, frame, node );
@@ -1086,7 +1086,7 @@ Object *engine_on_range( engine_t *engine, vframe_t *frame, Node *node ){
 	return range;
 }
 
-Object *engine_on_subscript_add( engine_t *engine, vframe_t *frame, Node *node ){
+Object *engine_on_subscript_push( engine_t *engine, vframe_t *frame, Node *node ){
     Object *array  = H_UNDEFINED,
            *object = H_UNDEFINED,
            *res    = H_UNDEFINED;

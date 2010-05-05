@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef _HCONTEXT_H_
-#   define _HCONTEXT_H_
+#ifndef _HVM_H_
+#   define _HVM_H_
 
 #include <vector>
 #include <string>
@@ -119,13 +119,17 @@ typedef struct _vm_t {
 	 */
 	vector<pthread_t> th_pool;
 	/*
-	 * Threads mutex, used on each write operation on the vm.
+	 * Threads pool mutex.
 	 */
-	pthread_mutex_t   th_mutex;
+	pthread_mutex_t   th_pool_mutex;
 	/*
 	 * The list of active memory frames.
 	 */
 	list<vframe_t *> frames;
+	/*
+	 * Frames list mutex.
+	 */
+	pthread_mutex_t  mm_pool_mutex;
 	/*
 	 * Source file handle
 	 */
@@ -156,6 +160,10 @@ typedef struct _vm_t {
 	 */
 	h_mcache_t	   mcache;
 	/*
+	 * Lookup cache mutex.
+	 */
+	pthread_mutex_t mcache_mutex;
+	/*
 	 * Dynamically loaded modules instances.
 	 */
 	h_modules_t    modules;
@@ -163,6 +171,10 @@ typedef struct _vm_t {
 	 * Compiled regular expressions cache.
 	 */
 	HashMap<pcre>  pcre_cache;
+	/*
+	 * Regexp cache mutex.
+	 */
+	pthread_mutex_t pcre_mutex;
 	/*
 	 * Code execution engine.
 	 */
@@ -174,18 +186,36 @@ typedef struct _vm_t {
 	bool 		   releasing;
 }
 vm_t;
+
+
+/*
+ * Macros to lock and unlock the vm mutexes.
+ */
+#define vm_th_pool_lock( vm )   pthread_mutex_lock( &vm->th_pool_mutex )
+#define vm_th_pool_unlock( vm ) pthread_mutex_unlock( &vm->th_pool_mutex )
+#define vm_mm_lock( vm )  	    pthread_mutex_lock( &vm->mm_pool_mutex )
+#define vm_mm_unlock( vm )   	pthread_mutex_unlock( &vm->mm_pool_mutex )
+#define vm_mcache_lock( vm )    pthread_mutex_lock( &vm->mcache_mutex )
+#define vm_mcache_unlock( vm )  pthread_mutex_unlock( &vm->mcache_mutex )
+#define vm_pcre_lock( vm )      pthread_mutex_lock( &vm->pcre_mutex )
+#define vm_pcre_unlock( vm )    pthread_mutex_unlock( &vm->pcre_mutex )
+
 /*
  * Alloc a virtual machine instance.
  */
 vm_t 	   *vm_create();
 /*
- * Initialize the context attributes and global constants.
+ * Initialize the virtual machine attributes and global constants.
  */
 void 	    vm_init( vm_t *vm, int argc, char *argv[], char *envp[] );
 /*
- * Release the context (free memory).
+ * Release the virtual machine content (free memory).
  */
 void 		vm_release( vm_t *vm );
+/*
+ * Pretty self explainatory.
+ */
+#define     vm_free( vm ) delete vm
 /*
  * Open the file given in 'args' structure by main, otherwise
  * return the stdin handler.
@@ -228,25 +258,13 @@ void   		vm_load_namespace( vm_t *vm, string path );
  */
 void 		vm_print_stack_trace( vm_t *vm, bool force = false );
 /*
- * Lock the vm pthread mutex.
- */
-__force_inline void vm_lock( vm_t *vm ){
-	pthread_mutex_lock( &vm->th_mutex );
-}
-/*
- * Release the pthread mutex.
- */
-__force_inline void vm_unlock( vm_t *vm ){
-	pthread_mutex_unlock( &vm->th_mutex );
-}
-/*
  * Add a thread to the threads pool.
  */
 __force_inline void vm_pool( vm_t *vm, pthread_t tid = 0 ){
 	tid = (tid == 0 ? pthread_self() : tid);
-	vm_lock(vm);
+	vm_th_pool_lock(vm);
 		vm->th_pool.push_back(tid);
-	vm_unlock(vm);
+	vm_th_pool_unlock(vm);
 }
 /*
  * Remove a thread from the threads pool.
@@ -254,44 +272,39 @@ __force_inline void vm_pool( vm_t *vm, pthread_t tid = 0 ){
 __force_inline void vm_depool( vm_t *vm, pthread_t tid = 0 ){
 	tid = (tid == 0 ? pthread_self() : tid);
 	int size( vm->th_pool.size() );
-	vm_lock( vm );
+	vm_th_pool_lock( vm );
 	for( int pool_i = 0; pool_i < size; ++pool_i ){
 		if( vm->th_pool[pool_i] == tid ){
 			vm->th_pool.erase( vm->th_pool.begin() + pool_i );
 			break;
 		}
 	}
-	vm_unlock( vm );
+	vm_th_pool_unlock( vm );
 }
+
 /*
  * Push a frame to the trace stack.
  */
-__force_inline void vm_add_frame( vm_t *vm, vframe_t *frame ){
-	vm_lock( vm );
-		vm->frames.push_back(frame);
-	vm_unlock( vm );
-}
+#define vm_add_frame( vm, frame ) vm_mm_lock( vm ); \
+								  vm->frames.push_back(frame); \
+								  vm_mm_unlock( vm )
 /*
  * Remove the last frame from the trace stack.
  */
-__force_inline void vm_pop_frame( vm_t *vm ){
-	vm_lock( vm );
-		vm->frames.pop_back();
-	vm_unlock( vm );
-}
+#define vm_pop_frame( vm ) vm_mm_lock( vm ); \
+						   vm->frames.pop_back(); \
+						   vm_mm_unlock( vm )
 /*
  * Set the active frame (from threaded calls).
  */
-__force_inline void vm_set_frame( vm_t *vm, vframe_t *frame ){
-	vm_pop_frame( vm );
-	vm_add_frame( vm, frame );
-}
+#define vm_set_frame( vm, frame ) vm_mm_lock( vm ); \
+								  vm->frames.pop_back(); \
+								  vm->frames.push_back(frame); \
+								  vm_mm_unlock( vm )
 /*
  * Return the active frame pointer (last in the list).
  */
-__force_inline vframe_t *vm_frame( vm_t *vm ){
-	return (vm->frames.size() ? vm->frames.back() : &vm->vmem);
-}
+#define vm_frame( vm ) (vm->frames.size() ? vm->frames.back() : &vm->vmem)
 /*
  * Compute execution time and print it.
  */
@@ -333,11 +346,11 @@ __force_inline function_t vm_get_function( vm_t *vm, char *identifier ){
 		for( j = 0; j < nfuncs; ++j ){
 			if( vm->modules[i]->functions[j]->identifier == identifier ){
 				// fix issue #0000014
-				vm_lock( vm );
+				vm_mcache_lock( vm );
 					/* found it, add to the cache and return */
 					cache = vm->modules[i]->functions[j];
 					vm->mcache.insert( identifier, cache );
-				vm_unlock( vm );
+				vm_mcache_unlock( vm );
 
 				return cache->function;
 			}
@@ -394,9 +407,9 @@ __force_inline pcre *vm_pcre_compile( vm_t *vm, string& pattern, int opts, const
 		 * If it's a valid regex, put the compilation result to the cache.
 		 */
 		if( compiled ){
-			vm_lock( vm );
+			vm_pcre_lock( vm );
 				vm->pcre_cache.insert( (char *)pattern.c_str(), compiled );
-			vm_unlock( vm );
+			vm_pcre_unlock( vm );
 		}
 	}
 	/*
