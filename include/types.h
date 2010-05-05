@@ -185,7 +185,8 @@ enum H_OBJECT_TYPE {
     otAlias,
     otExtern,
     otPointer,
-    otClass
+    otClass,
+    otReference
 };
 /*
  * Object type description structure .
@@ -977,6 +978,22 @@ typedef vector<Node *>::iterator	 		 ClassObjectPrototypesIterator;
 #define ob_is_class(o)    ob_is_typeof(o,Class)
 #define ob_class_ucast(o) ((ClassObject *)(o))
 #define ob_class_val(o)   ((ClassObject *)o)
+
+DECLARE_TYPE(Reference);
+
+typedef struct _ReferenceObject {
+    BASE_OBJECT_HEADER;
+    Object *value;
+
+    _ReferenceObject( Object *v ) : BASE_OBJECT_HEADER_INIT(Reference), value(v) {
+
+    }
+}
+ReferenceObject;
+
+#define ob_is_reference(o)    ob_is_typeof(o,Reference)
+#define ob_ref_ucast(o) ((ReferenceObject *)(o))
+#define ob_reference_val(o)   ((ReferenceObject *)o)
 
 #endif
 

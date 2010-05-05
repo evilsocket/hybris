@@ -150,6 +150,7 @@ Object   *engine_on_switch( engine_t *engine, vframe_t *, Node * );
  */
 /* misc */
 Object   *engine_on_dollar( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_reference( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_range( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_subscript_push( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_subscript_get( engine_t *engine, vframe_t *, Node * );

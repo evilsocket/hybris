@@ -55,11 +55,16 @@ Object *MemorySegment::add( char *identifier, Object *object ){
     }
     /* else set the new value */
     else{
-		replace( identifier, _old, _new );
+    	if( ob_is_reference(_old) ){
+    		_ret = ob_assign( _old, _new );
+    	}
+    	else{
+			replace( identifier, _old, _new );
 
-		ob_free(_old);
+			ob_free(_old);
 
-		_ret = _new;
+			_ret = _new;
+    	}
     }
     pthread_mutex_unlock( &mutex );
 

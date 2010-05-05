@@ -67,6 +67,7 @@
 #define MK_METHOD_NODE(a, b, c)   new MethodNode( a, b, 1, c )
 /* expressions */
 #define MK_EOSTMT_NODE(a, b)      new ExpressionNode( T_EOSTMT, 2, a, b )
+#define MK_REF_NODE(a)		  	  new ExpressionNode( T_REF, 1, a )
 #define MK_DOLLAR_NODE(a)		  new ExpressionNode( T_DOLLAR, 1, a )
 #define MK_ASSIGN_NODE(a, b)      new ExpressionNode( T_ASSIGN, 2, a, b )
 #define MK_SB_NODE(a, b)	      new ExpressionNode( T_SUBSCRIPTGET, 2, a, b )
@@ -176,8 +177,7 @@ vm_t *__hyb_vm;
 %token T_QUESTION
 %token T_DOLLAR
 %token T_GET_MEMBER
-%token T_PTR
-%token T_OBJ
+%token T_REF
 %token T_RETURN
 %token T_CALL
 %token T_NEW
@@ -435,6 +435,8 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            | T_IDENT                                          { $$ = MK_IDENT_NODE($1); }
            /* expression evaluation returns an identifier */
            | T_DOLLAR expression                              { $$ = MK_DOLLAR_NODE($2); }
+           /* object reference */
+           | T_AND expression								  { $$ = MK_REF_NODE($2); }
            /* attribute declaration/assignation */
            | expression T_ASSIGN expression                   { $$ = MK_ASSIGN_NODE( $1, $3 ); }
 		   /* identifier declaration/assignation */

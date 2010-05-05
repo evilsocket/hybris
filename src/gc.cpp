@@ -179,7 +179,10 @@ void gc_release(){
 	gc_item_t *item;
 
 	gc_lock();
-	for( item = __gc.pool_head; item; item = item->next ){
+	/*
+	 * Loop backwards to release references first.
+	 */
+	for( item = __gc.pool_tail; item; item = item->prev ){
         gc_free( item );
     }
 	gc_unlock();

@@ -335,6 +335,10 @@ Object *engine_exec( engine_t *engine, vframe_t *frame, Node *node ){
                 /* expression ; */
                 case T_EOSTMT  :
                     return engine_on_eostmt( engine, frame, node );
+                /* & expression */
+                case T_REF :
+                	return engine_on_reference( engine, frame, node );
+                break;
                 /* $ */
                 case T_DOLLAR :
                     return engine_on_dollar( engine, frame, node );
@@ -1043,6 +1047,18 @@ Object *engine_on_function_call( engine_t *engine, vframe_t *frame, Node *call )
     }
 
     return result;
+}
+
+Object *engine_on_reference( engine_t *engine, vframe_t *frame, Node *node ){
+    Object *o = H_UNDEFINED;
+
+    o = engine_exec( engine, frame, node->child(0) );
+    /*
+     * Kind of obvious, the object now has one more reference :)
+     */
+    ob_inc_ref(o);
+
+    return (Object *)gc_new_reference(o);
 }
 
 Object *engine_on_dollar( engine_t *engine, vframe_t *frame, Node *node ){
