@@ -64,7 +64,7 @@ HYBRIS_DEFINE_FUNCTION(hfopen){
 
     Object *_return = NULL;
     if( ob_argc() == 2 ){
-        _return = ob_dcast( PTR_TO_INT_OBJ( fopen( string_argv(0).c_str(), string_argv(1).c_str() ) ) );
+        _return = ob_dcast( gc_new_handle( fopen( string_argv(0).c_str(), string_argv(1).c_str() ) ) );
     }
 	else{
 		hyb_error( H_ET_SYNTAX, "function 'fopen' requires 2 parameters (called with %d)", ob_argc() );
@@ -76,28 +76,28 @@ HYBRIS_DEFINE_FUNCTION(hfseek){
 	if( ob_argc() != 3 ){
 		hyb_error( H_ET_SYNTAX, "function 'fseek' requires 3 parameters (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otInteger );
+	ob_type_assert( ob_argv(0), otHandle );
 	ob_type_assert( ob_argv(1), otInteger );
 	ob_type_assert( ob_argv(2), otInteger );
 
-	if( int_argv(0) == 0 ){
+	if( handle_argv(0) == 0 ){
 		return H_DEFAULT_ERROR;
 	}
 
-	return ob_dcast( gc_new_integer( fseek( (FILE *)int_argv(0), int_argv(1), int_argv(2) ) ) );
+	return ob_dcast( gc_new_integer( fseek( (FILE *)handle_argv(0), int_argv(1), int_argv(2) ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hftell){
 	if( ob_argc() != 1 ){
 		hyb_error( H_ET_SYNTAX, "function 'ftell' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otInteger );
+	ob_type_assert( ob_argv(0), otHandle );
 
-	if( int_argv(0) == 0 ){
+	if( handle_argv(0) == 0 ){
 		return H_DEFAULT_ERROR;
 	}
 
-    return ob_dcast( gc_new_integer( ftell( (FILE *)int_argv(0) ) ) );
+    return ob_dcast( gc_new_integer( ftell( (FILE *)handle_argv(0) ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfsize){
@@ -108,12 +108,12 @@ HYBRIS_DEFINE_FUNCTION(hfsize){
 	int size = 0, pos;
 	FILE *fp;
 
-	if( ob_argv(0)->type->code == otInteger ){
-		if( int_argv(0) == 0 ){
+	if( ob_argv(0)->type->code == otHandle ){
+		if( handle_argv(0) == 0 ){
 			return H_DEFAULT_ERROR;
 		}
 
-	    fp  = (FILE *)int_argv(0);
+	    fp  = (FILE *)handle_argv(0);
 		pos = ftell(fp);
 
 		fseek( fp, 0, SEEK_END );
@@ -137,13 +137,13 @@ HYBRIS_DEFINE_FUNCTION(hfread){
 	if( ob_argc() < 2 ){
 		hyb_error( H_ET_SYNTAX, "function 'fread' requires 2 or 3 parameters (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otInteger );
+	ob_type_assert( ob_argv(0), otHandle );
 
-	if( int_argv(0) == 0 ){
+	if( handle_argv(0) == 0 ){
 		return H_DEFAULT_ERROR;
 	}
 
-	FILE *fp = (FILE *)int_argv(0);
+	FILE *fp = (FILE *)handle_argv(0);
 	int fd = fileno(fp);
 	size_t size = 0;
 	Object *object   = ob_argv(1);
@@ -160,13 +160,13 @@ HYBRIS_DEFINE_FUNCTION(hfwrite){
 	if( ob_argc() < 2 ){
 		hyb_error( H_ET_SYNTAX, "function 'fwrite' requires 2 or 3 parameters (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otInteger );
+	ob_type_assert( ob_argv(0), otHandle );
 
-	if( int_argv(0) == 0 ){
+	if( handle_argv(0) == 0 ){
 		return H_DEFAULT_ERROR;
 	}
 
-	FILE *fp = (FILE *)int_argv(0);
+	FILE *fp = (FILE *)handle_argv(0);
 	int fd = fileno(fp);
 	size_t size = 0;
 	Object *object   = ob_argv(1);
@@ -183,15 +183,15 @@ HYBRIS_DEFINE_FUNCTION(hfgets){
 	if( ob_argc() != 1 ){
 		hyb_error( H_ET_SYNTAX, "function 'fgets' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otInteger );
+	ob_type_assert( ob_argv(0), otHandle );
 
-	if( int_argv(0) == 0 ){
+	if( handle_argv(0) == 0 ){
 		return H_DEFAULT_ERROR;
 	}
 
 	char line[0xFFFF] = {0};
 
-	if( fgets( line, 0xFFFF, (FILE *)int_argv(0) ) ){
+	if( fgets( line, 0xFFFF, (FILE *)handle_argv(0) ) ){
 		return ob_dcast( gc_new_string(line) );
 	}
 	else{
@@ -200,12 +200,12 @@ HYBRIS_DEFINE_FUNCTION(hfgets){
 }
 
 HYBRIS_DEFINE_FUNCTION(hfclose){
-	ob_type_assert( ob_argv(0), otInteger );
-	if( int_argv(0) == 0 ){
-		return H_DEFAULT_ERROR;
-	}
+	ob_type_assert( ob_argv(0), otHandle );
     if( ob_argc() ){
-		fclose( (FILE *)int_argv(0) );
+    	if( handle_argv(0) == 0 ){
+			return H_DEFAULT_ERROR;
+		}
+		fclose( (FILE *)handle_argv(0) );
     }
     return H_DEFAULT_RETURN;
 }

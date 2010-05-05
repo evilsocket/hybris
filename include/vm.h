@@ -70,13 +70,14 @@ typedef Object * (*function_t)( vm_t *, vmem_t * );
 #define matrix_argv(i) ob_matrix_val( data->at(i) )
 #define struct_argv(i) ob_struct_val( data->at(i) )
 #define class_argv(i)  ob_class_val( data->at(i) )
+#define handle_argv(i) ob_handle_val( data->at(i) )
 
 /* macros to assert an object type */
 #define ob_type_assert(o,t)      if( !(o->type->code == t) ){ \
-                                     hyb_error( H_ET_SYNTAX, "'%s' is not a valid variable type", o->type->name ); \
+                                     hyb_error( H_ET_SYNTAX, "Unexpected '%s' variable given", o->type->name ); \
                                   }
-#define ob_types_assert(o,t1,t2) if( !(o->type->code == t1) && !(o->type->code == t2) ){ \
-                                     hyb_error( H_ET_SYNTAX, "'%s' is not a valid variable type", o->type->name ); \
+#define ob_types_assert(o,t1,t2) if( o->type->code != t1 && o->type->code != t2 ){ \
+                                     hyb_error( H_ET_SYNTAX, "Unexpected '%s' variable given", o->type->name ); \
                                   }
 
 #define HYB_TIMER_START 1

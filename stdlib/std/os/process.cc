@@ -140,7 +140,7 @@ HYBRIS_DEFINE_FUNCTION(hpopen){
 	ob_type_assert( ob_argv(1), otString );
 
     if( ob_argc() == 2 ){
-        return  ob_dcast( PTR_TO_INT_OBJ( popen( string_argv(0).c_str(), string_argv(1).c_str() ) ) );
+        return ob_dcast( gc_new_handle( popen( string_argv(0).c_str(), string_argv(1).c_str() ) ) );
     }
 	else{
 		hyb_error( H_ET_SYNTAX, "function 'popen' requires 2 parameters (called with %d)", ob_argc() );
@@ -148,9 +148,9 @@ HYBRIS_DEFINE_FUNCTION(hpopen){
 }
 
 HYBRIS_DEFINE_FUNCTION(hpclose){
-	ob_type_assert( ob_argv(0), otInteger );
+	ob_type_assert( ob_argv(0), otHandle);
     if( ob_argc() ){
-		pclose( (FILE *)int_argv(0) );
+		pclose( (FILE *)handle_argv(0) );
     }
     return H_DEFAULT_RETURN;
 }

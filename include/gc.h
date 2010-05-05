@@ -156,5 +156,6 @@ void            gc_release();
 #define gc_new_struct()      ob_struct_ucast( gc_track( ob_dcast( new StructureObject() ),                     sizeof(StructureObject) ) )
 #define gc_new_class()       ob_class_ucast(  gc_track( ob_dcast( new ClassObject() ),                         sizeof(ClassObject) ) )
 #define gc_new_reference(o)  ob_ref_ucast(    gc_track( ob_dcast( new ReferenceObject(o) ),                    sizeof(ReferenceObject) ) )
+#define gc_new_handle(o)  	 ob_handle_ucast( gc_track( ob_dcast( new HandleObject(static_cast<void *>(o)) ),  sizeof(HandleObject) ) )
 
 #endif

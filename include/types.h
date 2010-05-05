@@ -169,7 +169,9 @@ typedef void     (*ob_set_attribute_function_t) ( Object *, char *, Object * );
 typedef void     (*ob_define_method_function_t) ( Object *, char *, Node * );
 typedef Node   * (*ob_get_method_function_t)	( Object *, char *, int );
 /*
- * Object type codes enumeration
+ * Object type codes enumeration.
+ *
+ * NOTE : References and classes HAVE to be last (see gc_hierarchy_sort).
  */
 enum H_OBJECT_TYPE {
     otVoid = 0,
@@ -181,10 +183,10 @@ enum H_OBJECT_TYPE {
     otVector,
     otMap,
     otMatrix,
-    otStructure,
     otAlias,
     otExtern,
-    otPointer,
+    otHandle,
+    otStructure,
     otClass,
     otReference
 };
@@ -994,6 +996,22 @@ ReferenceObject;
 #define ob_is_reference(o)    ob_is_typeof(o,Reference)
 #define ob_ref_ucast(o) ((ReferenceObject *)(o))
 #define ob_reference_val(o)   ((ReferenceObject *)o)
+
+DECLARE_TYPE(Handle);
+
+typedef struct _HandleObject {
+    BASE_OBJECT_HEADER;
+    void *value;
+
+    _HandleObject( void *v ) : BASE_OBJECT_HEADER_INIT(Handle), value(v) {
+
+    }
+}
+HandleObject;
+
+#define ob_is_handle(o)     ob_is_typeof(o,Handle)
+#define ob_handle_ucast(o)  ((HandleObject *)(o))
+#define ob_handle_val(o)    ((HandleObject *)o)->value
 
 #endif
 

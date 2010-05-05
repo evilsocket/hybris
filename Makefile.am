@@ -36,6 +36,7 @@ LIBOBJ=src/vm.lo \
 	   src/types/class.lo \
 	   src/types/vector.lo \
 	   src/types/reference.lo \
+	   src/types/handle.lo \
 	   src/hashtable.lo \
 	   src/memory.lo \
 	   src/code.lo \
@@ -62,6 +63,7 @@ SOURCES=src/common.cpp \
 		src/types/class.cpp \
 		src/types/vector.cpp \
 	    src/types/reference.cpp \
+		src/types/handle.cpp \
 	    src/engine.cpp \
 	    src/parser.cpp \
 		src/main.cpp
