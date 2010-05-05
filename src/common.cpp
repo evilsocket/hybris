@@ -23,6 +23,12 @@
 #include <time.h>
 #include <sys/time.h>
 
+#ifndef MAX_STRING_SIZE
+#	define MAX_STRING_SIZE 1024
+#endif
+
+#define MAX_MESSAGE_SIZE MAX_STRING_SIZE + 0xFF
+
 void yyerror( char *error ){
     extern int yylineno;
     extern vm_t *__hyb_vm;
@@ -76,13 +82,13 @@ void yyerror( char *error ){
 }
 
 void hyb_error( H_ERROR_TYPE type, const char *format, ... ){
-    char message[0xFF] = {0},
-         error[0xFF] = {0};
+    char message[MAX_MESSAGE_SIZE] = {0},
+         error[MAX_MESSAGE_SIZE] = {0};
     va_list ap;
     extern int yylineno;
 
     va_start( ap, format );
-        vsprintf( message, format, ap );
+        vsnprintf( message, MAX_MESSAGE_SIZE, format, ap );
     va_end(ap);
 
     switch( type ){
