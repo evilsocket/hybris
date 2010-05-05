@@ -175,77 +175,34 @@ void gc_collect(){
     }
 }
 
-void gc_hierarchy_sort(){
-	gc_item_t *current, *cur;
-
-	for( current = __gc.pool_head; current->next; current = current->next ){
-		gc_item_t *max = current;
-		for( cur = current ; cur; cur = cur->next ){
-			if( max->pobj->type->code < cur->pobj->type->code ){
-				max = cur;
-			}
-		}
-
-		if( max != current ){
-			gc_item_t *current_prev, *current_next, *max_prev, *max_next;
-
-			current_next = current->next;
-			max_prev 	 = max->prev;
-			max_next 	 = max->next;
-			current_prev = current->prev;
-
-			if(!current_prev){
-				__gc.pool_head = max;
-			}
-			if( current->next == max ){
-				max->prev = current_prev;
-				max->next = current;
-
-				current->prev = max;
-				current->next = max_next;
-
-				if(max_next){
-					max_next->prev = current;
-				}
-				if(current_prev){
-					current_prev->next = max;
-				}
-			}
-			else {
-				max->prev = current_prev;
-				max->next = current_next;
-
-				current->prev = max_prev;
-				current->next = max_next;
-
-				if(current_next){
-					current_next->prev = max;
-				}
-				if(max_prev){
-					max_prev->next = current;
-				}
-				if(max_next){
-					max_next->prev = current;
-				}
-				if(current_prev){
-					current_prev->next = max;
-				}
-			}
-			current = max;
-		}
-	}
-}
-
 void gc_release(){
+	/*
+	 * First we have to free references, then composed types, to make sure, for
+	 * instance, that a class attribute is not deleted before the class itself.
+	 *
+	 * TODO : I should implement a better method to check objects hierarchy,
+	 * 		  that's kinda of buggy, for instance if a class attribute is a
+	 * 		  class itself, we're screwed up :S.
+	 */
 	gc_item_t *item;
+	H_OBJECT_TYPE order[] = { otReference, otClass, otStructure, otMap, otMatrix, otVector, otBinary };
+	int i, types = sizeof(order) / sizeof(order[0]);
 
 	gc_lock();
-	/*
-	 * Make sure that the list is sorted so we find references, then
-	 * classes, then structures and so on.
-	 */
-	gc_hierarchy_sort();
 
+	/*
+	 * If there's some, free each object of a type.
+	 */
+	for( i = 0; i < types; ++i ){
+		for( item = __gc.pool_head; item; item = item->next ){
+			if( item->pobj->type->code == order[i] ){
+				gc_free( item );
+			}
+		}
+	}
+	/*
+	 * Free anything else.
+	 */
 	for( item = __gc.pool_head; item; item = item->next ){
         gc_free( item );
     }

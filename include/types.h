@@ -170,8 +170,6 @@ typedef void     (*ob_define_method_function_t) ( Object *, char *, Node * );
 typedef Node   * (*ob_get_method_function_t)	( Object *, char *, int );
 /*
  * Object type codes enumeration.
- *
- * NOTE : References and classes HAVE to be last (see gc_hierarchy_sort).
  */
 enum H_OBJECT_TYPE {
     otVoid = 0,
