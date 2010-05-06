@@ -1,21 +1,5 @@
-# IDE files
-hybris.cbp
-hybris.layout
 # Autotools generated files
-Makefile
-Makefile.in
-aclocal.m4
-autom4te.cache/
 include/config.h
-include/config.h.in
-config.log
-config.status
-configure
-install-sh
-ltmain.sh
-stdlib/Makefile
-stdlib/Makefile.in
-stamp-h1
 # Flex, bison and compiler generated files
 *.o
 *.lo
@@ -26,8 +10,8 @@ include/lexer.h
 src/lexer.cpp
 src/parser.cpp
 src/parser.hpp
-
+# Eclipse files and directories
 .cproject
 .project
 .settings
-hybris.tmp.*
+
