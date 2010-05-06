@@ -1432,24 +1432,48 @@ Object *engine_on_switch( engine_t *engine, vframe_t *frame, Node *node){
 }
 
 Object *engine_on_throw( engine_t *engine, vframe_t *frame, Node *node ){
-	frame->state.value = engine_exec( engine, frame, node->child(0) );
-	frame->state.set( Exception );
+	Object *exception = H_UNDEFINED;
 
-	return frame->state.value;
+	exception = engine_exec( engine, frame, node->child(0) );
+	/*
+	 * Make sure that this object will not be freed by the gc unless
+	 * someone catches the exception.
+	 */
+	ob_inc_ref( exception );
+
+	frame->state.set( Exception, exception );
+
+	return exception;
 }
 
 Object *engine_on_try_catch( engine_t *engine, vframe_t *frame, Node *node ){
-	Node *main_body    = node->child(0),
-		 *ex_ident     = node->child(1),
-		 *catch_body   = node->child(2),
-		 *finally_body = node->child(3);
+	Node   *main_body    = node->child(0),
+		   *ex_ident     = node->child(1),
+		   *catch_body   = node->child(2),
+		   *finally_body = node->child(3);
+	Object *exception    = H_UNDEFINED;
 
 	engine_exec( engine, frame, main_body );
 
 	if( frame->state.is(Exception) ){
-		assert( frame->state.value != H_UNDEFINED );
-		frame->add( (char *)ex_ident->value.m_identifier.c_str(), frame->state.value );
+		exception = frame->state.value;
+
+		assert( exception != H_UNDEFINED );
+		/*
+		 * In engine_on_throw we've incremented the exception reference
+		 * counter by one to make sure that the object would not be freed
+		 * by the garbage collector.
+		 *
+		 * Now we're about to declare the exception value as a variable,
+		 * therefore to increment its ref counter again, so decrement it
+		 * to balance the increment of engine_on_throw .
+		 */
+		ob_dec_ref( exception );
+
+		frame->add( (char *)ex_ident->value.m_identifier.c_str(), exception );
+
 		frame->state.unset(Exception);
+
 		engine_exec( engine, frame, catch_body );
 	}
 
