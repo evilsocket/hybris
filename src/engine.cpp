@@ -1257,13 +1257,17 @@ Object *engine_on_for( engine_t *engine, vframe_t *frame, Node *node ){
 		   *body;
     Object *result  = H_UNDEFINED;
 
-    engine_exec( engine, frame, node->child(0) );
-
     condition = node->child(1);
     increment = node->child(2);
     body      = node->child(3);
 
+    engine_exec( engine, frame, node->child(0) );
+
+    CHECK_FRAME_EXIT()
+
     for( ; ob_lvalue( engine_exec( engine, frame, condition ) ); engine_exec( engine, frame, increment ) ){
+
+    	CHECK_FRAME_EXIT()
 
     	result = engine_exec( engine, frame, body );
 

@@ -85,7 +85,10 @@ typedef struct _gc_list {
 	gc_item_t *head;
 	gc_item_t *tail;
 
-	_gc_list() : head(NULL), tail(NULL){ }
+	size_t	   items;
+	size_t	   usage;
+
+	_gc_list() : head(NULL), tail(NULL), items(0), usage(0){ }
 }
 gc_list_t;
 

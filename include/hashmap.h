@@ -130,8 +130,6 @@ public  :
 	}
 	/* Insert the value if it's not already mapped, otherwise change the old reference to this. */
     value_t *insert( char *label, value_t *value );
-    /* Insert the value with an anonymous unique identifier */
-    value_t *push( value_t *value );
     /* Find the item mappeb with 'label', or return NULL if it's not here */
     value_t *find( char *label );
     /* Replace the value if it already exists */
@@ -165,16 +163,6 @@ H_TEMPLATE_T value_t * HashMap<value_t>::insert( char *label, value_t *value ){
     ht_insert( m_table, (u_long)label, (u_long)pair );
     m_elements++;
     return value;
-}
-
-H_TEMPLATE_T value_t * HashMap<value_t>::push( value_t *value ){
-	char label[0xFF] = {0};
-	sprintf( label, "HANONYMOUSIDENTIFIER%d", m_elements );
-	pair_t *pair = new pair_t( label, value );
-	m_map.push_back( pair );
-	ht_insert( m_table, (u_long)label, (u_long)pair );
-	m_elements++;
-	return value;
 }
 
 H_TEMPLATE_T value_t * HashMap<value_t>::find( char *label ){

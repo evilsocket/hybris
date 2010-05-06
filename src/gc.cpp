@@ -46,6 +46,9 @@ __force_inline void gc_pool_append( gc_list_t *list, gc_item_t *item ){
 
 	list->tail = item;
 	item->next 	   = NULL;
+
+	list->items++;
+	list->usage += item->size;
 }
 
 __force_inline void gc_pool_remove( gc_list_t *list, gc_item_t *item ) {
@@ -61,6 +64,10 @@ __force_inline void gc_pool_remove( gc_list_t *list, gc_item_t *item ) {
 	else{
 		item->next->prev = item->prev;
 	}
+
+	list->items--;
+	list->usage -= item->size;
+
 	delete item;
 }
 
@@ -197,7 +204,6 @@ void gc_collect(){
 					}
 				}
 			}
-
 		}
 
         gc_unlock();

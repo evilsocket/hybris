@@ -138,12 +138,12 @@ end
 #----------------------------- Linking ----------------------------
 
 file TARGET => OBJECTS[:BIN]  do
-	BIN_OBJECTS = (OBJECTS[:BIN] - ['src/lexer.cpp', 'src/parser.cpp']).join(' ')
+	BIN_OBJECTS = (OBJECTS[:BIN].uniq - ['src/lexer.cpp', 'src/parser.cpp']).join(' ')
     sh "#{CXX} #{CXXFLAGS} -o #{TARGET} #{BIN_OBJECTS} #{LDFLAGS}"
 end
 
 file "lib#{TARGET}.so.1.0" => OBJECTS[:LIB] do
-	LIB_OBJECTS = (OBJECTS[:LIB] - ['src/lexer.cpp', 'src/parser.cpp']).join(' ')
+	LIB_OBJECTS = (OBJECTS[:LIB].uniq - ['src/lexer.cpp', 'src/parser.cpp']).join(' ')
 	sh "#{CXX} -shared -Wl,-soname,lib#{TARGET}.so.1 -o lib#{TARGET}.so.1.0 #{LIB_OBJECTS} #{STDLIB_LFLAGS}"
 	sh "ln -sf lib#{TARGET}.so.1.0 lib#{TARGET}.so"
 	sh "ln -sf lib#{TARGET}.so.1.0 lib#{TARGET}.so.1"	
