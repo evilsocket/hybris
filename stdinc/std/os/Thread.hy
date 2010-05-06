@@ -29,7 +29,7 @@ class Thread  {
 	
 	public method start( args ){
 		me->id = pthread_create_argv( me->function_name, args );
-		
+	
 		return (me->id > 0);
 	}
 

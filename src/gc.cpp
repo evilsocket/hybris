@@ -86,11 +86,21 @@ void gc_free( gc_item_t *item ){
     gc_pool_remove(item);
 }
 
-size_t gc_set_threshold( size_t threshold ){
-	size_t old = __gc.threshold;
+size_t gc_set_collect_threshold( size_t threshold ){
+	size_t old = __gc.gc_threshold;
 
 	gc_lock();
-	__gc.threshold = threshold;
+	__gc.gc_threshold = threshold;
+	gc_unlock();
+
+	return old;
+}
+
+size_t gc_set_mm_threshold( size_t threshold ){
+	size_t old = __gc.mm_threshold;
+
+	gc_lock();
+	__gc.mm_threshold = threshold;
 	gc_unlock();
 
 	return old;
@@ -108,8 +118,8 @@ struct _Object *gc_track( struct _Object *o, size_t size ){
     /*
      * Check if maximum memory usage is reached.
      */
-    else if( __gc.usage >= GC_ALLOWED_MEMORY_THRESHOLD ){
-    	hyb_error( H_ET_GENERIC, "Reached max allowed memory usage (%d bytes)", GC_ALLOWED_MEMORY_THRESHOLD );
+    else if( __gc.usage >= __gc.mm_threshold ){
+    	hyb_error( H_ET_GENERIC, "Reached max allowed memory usage (%d bytes)", __gc.mm_threshold );
     }
 
     gc_lock();
@@ -137,8 +147,12 @@ size_t gc_mm_usage(){
 	return __gc.usage;
 }
 
+size_t gc_collect_threshold(){
+	return __gc.gc_threshold;
+}
+
 size_t gc_mm_threshold(){
-	return __gc.threshold;
+	return __gc.mm_threshold;
 }
 
 void gc_collect(){
@@ -146,11 +160,11 @@ void gc_collect(){
      * Execute garbage collection loop only if used memory has reaced the
      * threshold.
      */
-    if( __gc.usage >= __gc.threshold ){
+    if( __gc.usage >= __gc.gc_threshold ){
     	gc_lock();
 
 		#ifdef MEM_DEBUG
-			printf( "[MEM DEBUG] GC quota (%d bytes) reached with %d bytes, collecting ...\n", __gc.threshold, __gc.usage );
+			printf( "[MEM DEBUG] GC quota (%d bytes) reached with %d bytes, collecting ...\n", __gc.gc_threshold, __gc.usage );
 		#endif
         gc_item_t *item;
         for( item = __gc.pool_head; item; item = item->next ){

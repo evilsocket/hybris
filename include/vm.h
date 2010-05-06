@@ -74,10 +74,10 @@ typedef Object * (*function_t)( vm_t *, vmem_t * );
 
 /* macros to assert an object type */
 #define ob_type_assert(o,t)      if( !(o->type->code == t) ){ \
-                                     hyb_error( H_ET_SYNTAX, "Unexpected '%s' variable given", o->type->name ); \
+                                     hyb_error( H_ET_SYNTAX, "Unexpected '%s' variable, expected '%s'", o->type->name, ob_type_to_string(t) ); \
                                   }
 #define ob_types_assert(o,t1,t2) if( o->type->code != t1 && o->type->code != t2 ){ \
-                                     hyb_error( H_ET_SYNTAX, "Unexpected '%s' variable given", o->type->name ); \
+                                     hyb_error( H_ET_SYNTAX, "Unexpected '%s' variable, expected '%s' or '%s'", o->type->name, ob_type_to_string(t1), ob_type_to_string(t2) ); \
                                   }
 
 #define HYB_TIMER_START 1

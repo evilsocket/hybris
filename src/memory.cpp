@@ -55,9 +55,17 @@ Object *MemorySegment::add( char *identifier, Object *object ){
     }
     /* else set the new value */
     else{
+    	/*
+    	 * If the old value is just a reference to something else (otReference type),
+    	 * don't replace it in memory, but assign a new value to the object it
+    	 * references.
+    	 */
     	if( ob_is_reference(_old) ){
     		_ret = ob_assign( _old, _new );
     	}
+    	/*
+    	 * Plain object, do a normal memory replacement and ob_free the old value.
+    	 */
     	else{
 			replace( identifier, _old, _new );
 

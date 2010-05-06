@@ -188,6 +188,31 @@ enum H_OBJECT_TYPE {
     otClass,
     otReference
 };
+
+__force_inline const char *ob_type_to_string( H_OBJECT_TYPE type ){
+	switch(type){
+		case otVoid      : return "void";
+		case otInteger   : return "integer";
+		case otFloat     : return "float";
+		case otChar      : return "char";
+		case otString    : return "string";
+		case otBinary    : return "binary";
+		case otVector    : return "vector";
+		case otMap       : return "map";
+		case otMatrix    : return "matrix";
+		case otAlias     : return "alias";
+		case otExtern    : return "extern";
+		case otHandle    : return "handle";
+		case otStructure : return "structure";
+		case otClass     : return "class";
+		case otReference : return "reference";
+	}
+	/*
+	 * We should never get here!
+	 */
+	assert(false);
+}
+
 /*
  * Object type description structure .
  *

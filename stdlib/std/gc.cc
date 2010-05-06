@@ -21,13 +21,13 @@
 HYBRIS_DEFINE_FUNCTION(hgc_collect);
 HYBRIS_DEFINE_FUNCTION(hgc_mm_items);
 HYBRIS_DEFINE_FUNCTION(hgc_mm_usage);
-HYBRIS_DEFINE_FUNCTION(hgc_mm_threshold);
+HYBRIS_DEFINE_FUNCTION(hgc_collect_threshold);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "gc_collect",	 hgc_collect },
     { "gc_mm_items", hgc_mm_items },
     { "gc_mm_usage", hgc_mm_usage },
-    { "gc_mm_threshold", hgc_mm_threshold },
+    { "gc_collect_threshold", hgc_collect_threshold },
     { "", NULL }
 };
 
@@ -44,6 +44,6 @@ HYBRIS_DEFINE_FUNCTION(hgc_mm_usage){
 	return ob_dcast( gc_new_integer(gc_mm_usage()) );
 }
 
-HYBRIS_DEFINE_FUNCTION(hgc_mm_threshold){
-	return ob_dcast( gc_new_integer(gc_mm_threshold()) );
+HYBRIS_DEFINE_FUNCTION(hgc_collect_threshold){
+	return ob_dcast( gc_new_integer(gc_collect_threshold()) );
 }

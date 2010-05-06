@@ -38,7 +38,8 @@ int hyb_usage( char *argvz ){
     fprintf( stdout, "\nUsage: %s <options> <file>\n\n"
     		"Where <options> is one or more among followring values :\n"
     		"\t-h (--help)    : Print this menu and exit.\n"
-    		"\t-g (--gc)      : Set the garbage collection memory threshold, expressend in bytes, \n"
+    		"\t-m (--mem)     : Set the allocation memory limit expressed in bytes (see --gc, default is 128MB). \n"
+    		"\t-g (--gc)      : Set the garbage collection memory threshold, expressed in bytes, \n"
     		"\t                 kilobytes (with K postfix) or megabytes (with M postfix).\n"
     		"\t                 i.e. -g 10K or -g 1024 or --gc=100M\n"
     		"\t-c (--cgi)     : Run in CGI mode (stderr will be redirected to stdout).\n"
@@ -49,6 +50,7 @@ int hyb_usage( char *argvz ){
 
 int main( int argc, char *argv[], char* envp[] ){
     static struct option options[] = {
+    		{ "mem",     1, 0, 'm' },
             { "gc",      1, 0, 'g' },
             { "cgi",	 0, 0, 'c' },
             { "time",    0, 0, 't' },
@@ -64,9 +66,10 @@ int main( int argc, char *argv[], char* envp[] ){
 
     int index = 0;
     char c, multiplier, *p;
-    long gc_threshold;
+    long gc_threshold,
+		 mm_threshold;
 
-    while( (c = getopt_long( argc, argv, "g:ctsh", options, &index)) != -1 ){
+    while( (c = getopt_long( argc, argv, "m:g:ctsh", options, &index)) != -1 ){
         switch (c) {
 			/*
 			 * Handle garbage collection threshold argument.
@@ -130,6 +133,70 @@ int main( int argc, char *argv[], char* envp[] ){
 				 * Done, let's pass it to the virtual machine arguments structure.
 				 */
 				__hyb_vm->args.gc_threshold = gc_threshold;
+			break;
+
+			/*
+			 * Handle memory usage threshold argument.
+			 * Allowed values are :
+			 *
+			 * nnn  (bytes)
+			 * nnnK (kilo bytes)
+			 * nnnM (mega bytes)
+			 *
+			 * Where nnn is the number of bytes, K is the kilo multiplier (1024),
+			 * and M the mega multiplier (1024^2).
+			 */
+			case 'm':
+				p = optarg;
+				/*
+				 * Shift the pointer until first non digit character is reached
+				 * or the end of the string is reached.
+				 */
+				while( *(++p) != 0x00 && *p >= '0' && *p <= '9' );
+
+				multiplier = *p;
+				/*
+				 * Optarg now contains only the integer part of the argument.
+				 */
+				optarg[ p - optarg ] = 0x00;
+
+				mm_threshold = atol(optarg);
+				/*
+				 * Check for valid integer values.
+				 */
+				if( mm_threshold == 0 ){
+					hyb_error( H_ET_GENERIC, "Invalid memory size %s given.", optarg );
+				}
+				/*
+				 * Check for a valid multiplier.
+				 */
+				else if( multiplier != 0x00 && strchr( "kKmM", multiplier ) == 0 ){
+					hyb_error( H_ET_GENERIC, "Invalid multiplier %c given.", multiplier );
+				}
+				/*
+				 * Perform multiplication if multiplier was specified (multiplier != 0x00)
+				 */
+				switch(multiplier){
+					case 'K' :
+					case 'k' :
+						mm_threshold *= 1024;
+					break;
+
+					case 'M' :
+					case 'm' :
+						mm_threshold *= 1048576;
+					break;
+				}
+				/*
+				 * Check for integer overflow.
+				 */
+				if( mm_threshold <= 0 ){
+					hyb_error( H_ET_GENERIC, "Memory limit is too high." );
+				}
+				/*
+				 * Done, let's pass it to the virtual machine arguments structure.
+				 */
+				__hyb_vm->args.mm_threshold = mm_threshold;
 			break;
 
         	case 't':

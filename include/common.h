@@ -66,6 +66,7 @@ typedef struct {
 	bool  cgi_mode;
 
     ulong gc_threshold;
+    ulong mm_threshold;
 }
 h_args_t;
 /*

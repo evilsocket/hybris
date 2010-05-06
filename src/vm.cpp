@@ -102,8 +102,11 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
     signal( SIGSEGV, vm_signal_handler );
 
     if( vm->args.gc_threshold > 0 ){
-    	gc_set_threshold(vm->args.gc_threshold);
+    	gc_set_collect_threshold(vm->args.gc_threshold);
     }
+    if( vm->args.mm_threshold > 0 ){
+		gc_set_mm_threshold(vm->args.mm_threshold);
+	}
 
     vm->vmem.owner = (argc > 1 ? argv[1] : "<stdin>");
 

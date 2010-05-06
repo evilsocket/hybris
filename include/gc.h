@@ -84,35 +84,43 @@ gc_item_t;
 /*
  * Main gc structure, kind of the "head" of the pool.
  *
- * pool_*     : Tracked objects list head and tail pointers .
- * items	  : Number of items in the pool.
- * usage	  : Global memory usage, in bytes.
- * threshold  : If usage >= this, the gc is triggered.
- * mutex      : Mutex to lock the pool while collecting.
+ * pool_*       : Tracked objects list head and tail pointers .
+ * items	    : Number of items in the pool.
+ * usage	    : Global memory usage, in bytes.
+ * gc_threshold : If usage >= this, the gc is triggered.
+ * mm_threshold : If usage >= this, a memory exhausted error is triggered.
+ * mutex        : Mutex to lock the pool while collecting.
  */
 typedef struct _gc {
 	gc_item_t 	   *pool_head;
     gc_item_t 	   *pool_tail;
     size_t     		items;
     size_t     		usage;
-    size_t     	 	threshold;
+    size_t     	 	gc_threshold;
+    size_t			mm_threshold;
 	pthread_mutex_t mutex;
 
     _gc() : pool_head(NULL),
     		pool_tail(NULL),
 			items(0),
 			usage(0),
-			threshold(GC_DEFAULT_MEMORY_THRESHOLD),
+			gc_threshold(GC_DEFAULT_MEMORY_THRESHOLD),
+			mm_threshold(GC_ALLOWED_MEMORY_THRESHOLD),
 			mutex(PTHREAD_MUTEX_INITIALIZER)
 	{ }
 }
 gc_t;
 
 /*
- * Set the 'threshold' attribute of the gc structure.
+ * Set the 'gc_threshold' attribute of the gc structure.
  * Return the old threshold value.
  */
-size_t			gc_set_threshold( size_t threshold );
+size_t			gc_set_collect_threshold( size_t threshold );
+/*
+ * Set the 'mm_threshold' attribute of the gc structure.
+ * Return the old threshold value.
+ */
+size_t			gc_set_mm_threshold( size_t threshold );
 /* 
  * Add an object to the gc pool and start to track
  * it for reference changes.
@@ -129,8 +137,12 @@ size_t			gc_mm_items();
  */
 size_t          gc_mm_usage();
 /*
- * Return the threshold value upon wich the gc the collect routine
+ * Return the threshold value upon which the gc the collect routine
  * will be triggered.
+ */
+size_t			gc_collect_threshold();
+/*
+ * Return the maximum allowed memory usage threshold.
  */
 size_t			gc_mm_threshold();
 /*
@@ -150,19 +162,19 @@ void            gc_release();
  * 2 .: Downcast to Object * and let the gc track it.
  * 3 .: Upcast back to specialized type pointer and return to user.
  */
-#define gc_new_integer(v)    ob_int_ucast(    gc_track( ob_dcast( new IntegerObject( static_cast<long>(v) ) ), sizeof(IntegerObject) ) )
-#define gc_new_alias(v)      ob_alias_ucast(  gc_track( ob_dcast( new AliasObject( static_cast<long>(v) ) ),   sizeof(AliasObject) ) )
-#define gc_new_extern(v)     ob_extern_ucast( gc_track( ob_dcast( new ExternObject( static_cast<long>(v) ) ),  sizeof(ExternObject) ) )
-#define gc_new_float(v)      ob_float_ucast(  gc_track( ob_dcast( new FloatObject( static_cast<double>(v) ) ), sizeof(FloatObject) ) )
-#define gc_new_char(v)       ob_char_ucast(   gc_track( ob_dcast( new CharObject( static_cast<char>(v) ) ),    sizeof(CharObject) ) )
-#define gc_new_string(v)     ob_string_ucast( gc_track( ob_dcast( new StringObject( (char *)(v) ) ),           sizeof(StringObject) ) )
-#define gc_new_binary(d)     ob_binary_ucast( gc_track( ob_dcast( new BinaryObject(d) ),                       sizeof(BinaryObject) ) )
-#define gc_new_vector()      ob_vector_ucast( gc_track( ob_dcast( new VectorObject() ),                        sizeof(VectorObject) ) )
-#define gc_new_map()         ob_map_ucast(    gc_track( ob_dcast( new MapObject() ),                           sizeof(MapObject) ) )
-#define gc_new_matrix(r,c,v) ob_matrix_ucast( gc_track( ob_dcast( new MatrixObject(r,c,v) ),                   sizeof(MatrixObject) ) )
-#define gc_new_struct()      ob_struct_ucast( gc_track( ob_dcast( new StructureObject() ),                     sizeof(StructureObject) ) )
-#define gc_new_class()       ob_class_ucast(  gc_track( ob_dcast( new ClassObject() ),                         sizeof(ClassObject) ) )
-#define gc_new_reference(o)  ob_ref_ucast(    gc_track( ob_dcast( new ReferenceObject(o) ),                    sizeof(ReferenceObject) ) )
-#define gc_new_handle(o)  	 ob_handle_ucast( gc_track( ob_dcast( new HandleObject(static_cast<void *>(o)) ),  sizeof(HandleObject) ) )
+#define gc_new_integer(v)    ob_int_ucast(    gc_track( ob_dcast( new IntegerObject( static_cast<long>(v) ) ), 	    sizeof(IntegerObject) ) )
+#define gc_new_alias(v)      ob_alias_ucast(  gc_track( ob_dcast( new AliasObject( static_cast<long>(v) ) ),   	    sizeof(AliasObject) ) )
+#define gc_new_extern(v)     ob_extern_ucast( gc_track( ob_dcast( new ExternObject( static_cast<long>(v) ) ),  	    sizeof(ExternObject) ) )
+#define gc_new_float(v)      ob_float_ucast(  gc_track( ob_dcast( new FloatObject( static_cast<double>(v) ) ), 	    sizeof(FloatObject) ) )
+#define gc_new_char(v)       ob_char_ucast(   gc_track( ob_dcast( new CharObject( static_cast<char>(v) ) ),    	    sizeof(CharObject) ) )
+#define gc_new_string(v)     ob_string_ucast( gc_track( ob_dcast( new StringObject( (char *)(v) ) ),           	    sizeof(StringObject) ) )
+#define gc_new_binary(d)     ob_binary_ucast( gc_track( ob_dcast( new BinaryObject(d) ),                       	    sizeof(BinaryObject) ) )
+#define gc_new_vector()      ob_vector_ucast( gc_track( ob_dcast( new VectorObject() ),                        	    sizeof(VectorObject) ) )
+#define gc_new_map()         ob_map_ucast(    gc_track( ob_dcast( new MapObject() ),                           	    sizeof(MapObject) ) )
+#define gc_new_matrix(r,c,v) ob_matrix_ucast( gc_track( ob_dcast( new MatrixObject(r,c,v) ),                   	    sizeof(MatrixObject) ) )
+#define gc_new_struct()      ob_struct_ucast( gc_track( ob_dcast( new StructureObject() ),                     	    sizeof(StructureObject) ) )
+#define gc_new_class()       ob_class_ucast(  gc_track( ob_dcast( new ClassObject() ),                              sizeof(ClassObject) ) )
+#define gc_new_reference(o)  ob_ref_ucast(    gc_track( ob_dcast( new ReferenceObject(o) ),                         sizeof(ReferenceObject) ) )
+#define gc_new_handle(o)     ob_handle_ucast( gc_track( ob_dcast( new HandleObject( reinterpret_cast<void *>(o)) ), sizeof(HandleObject) ) )
 
 #endif
