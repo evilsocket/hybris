@@ -81,10 +81,38 @@ typedef struct _gc_item {
 }
 gc_item_t;
 
+typedef struct _gc_list {
+	gc_item_t *head;
+	gc_item_t *tail;
+
+	_gc_list() : head(NULL), tail(NULL){ }
+}
+gc_list_t;
+
+/*
+ * GC number of layers, this value MUST be the same
+ * as the number of elements of H_OBJECT_TYPE enum defined
+ * inside types.h due to the fact that each layer holds
+ * objects of a type.
+ */
+#define GC_LAYERS_NUM 15
+/*
+ * Those macros represent the layer collecting order.
+ * First we have to free references, then composed types, to make sure, for
+ * instance, that a class attribute is not deleted before the class itself.
+ *
+ * TODO : I should implement a better method to check objects hierarchy,
+ * 		  that's kinda of buggy, for instance if a class attribute is a
+ * 		  class itself, we're screwed up :S.
+ */
+#define GC_FIRST_LAYER(i) i = otReference
+#define GC_LAST_LAYER(i)  i >= 0
+#define GC_NEXT_LAYER(i)  --i
+
 /*
  * Main gc structure, kind of the "head" of the pool.
  *
- * pool_*       : Tracked objects list head and tail pointers .
+ * layers       : Each layer holds allocated objects of a type.
  * items	    : Number of items in the pool.
  * usage	    : Global memory usage, in bytes.
  * gc_threshold : If usage >= this, the gc is triggered.
@@ -92,22 +120,21 @@ gc_item_t;
  * mutex        : Mutex to lock the pool while collecting.
  */
 typedef struct _gc {
-	gc_item_t 	   *pool_head;
-    gc_item_t 	   *pool_tail;
+	gc_list_t		layers[GC_LAYERS_NUM];
     size_t     		items;
     size_t     		usage;
     size_t     	 	gc_threshold;
     size_t			mm_threshold;
 	pthread_mutex_t mutex;
 
-    _gc() : pool_head(NULL),
-    		pool_tail(NULL),
-			items(0),
+    _gc() : items(0),
 			usage(0),
 			gc_threshold(GC_DEFAULT_MEMORY_THRESHOLD),
 			mm_threshold(GC_ALLOWED_MEMORY_THRESHOLD),
 			mutex(PTHREAD_MUTEX_INITIALIZER)
-	{ }
+	{
+
+	}
 }
 gc_t;
 

@@ -34,29 +34,29 @@ __force_inline void gc_unlock(){
 	pthread_mutex_unlock( &__gc.mutex );
 }
 
-__force_inline void gc_pool_append( gc_item_t *item ){
-	if( __gc.pool_head == NULL ){
-		__gc.pool_head = item;
-		item->prev     = NULL;
+__force_inline void gc_pool_append( gc_list_t *list, gc_item_t *item ){
+	if( list->head == NULL ){
+		list->head = item;
+		item->prev = NULL;
 	}
 	else{
-		__gc.pool_tail->next = item;
-		item->prev 			 = __gc.pool_tail;
+		list->tail->next = item;
+		item->prev 	     = list->tail;
 	}
 
-	__gc.pool_tail = item;
+	list->tail = item;
 	item->next 	   = NULL;
 }
 
-__force_inline void gc_pool_remove( gc_item_t *item ) {
+__force_inline void gc_pool_remove( gc_list_t *list, gc_item_t *item ) {
 	if( item->prev == NULL ){
-		__gc.pool_head = item->next;
+		list->head = item->next;
 	}
 	else{
 		item->prev->next = item->next;
 	}
 	if( item->next == NULL ){
-		__gc.pool_tail = item->prev;
+		list->tail = item->prev;
 	}
 	else{
 		item->next->prev = item->prev;
@@ -65,7 +65,7 @@ __force_inline void gc_pool_remove( gc_item_t *item ) {
 }
 
 
-void gc_free( gc_item_t *item ){
+void gc_free( gc_list_t *list, gc_item_t *item ){
     __gc.items--;
     __gc.usage -= item->size;
 
@@ -83,7 +83,7 @@ void gc_free( gc_item_t *item ){
     /*
      * And remove the item from the gc pool.
      */
-    gc_pool_remove(item);
+    gc_pool_remove( list, item );
 }
 
 size_t gc_set_collect_threshold( size_t threshold ){
@@ -132,7 +132,7 @@ struct _Object *gc_track( struct _Object *o, size_t size ){
     /*
      * Append the item to the gc pool.
      */
-    gc_pool_append( new gc_item_t(o,size) );
+    gc_pool_append( &__gc.layers[ o->type->code ], new gc_item_t(o,size) );
 
     gc_unlock();
 
@@ -166,65 +166,56 @@ void gc_collect(){
 		#ifdef MEM_DEBUG
 			printf( "[MEM DEBUG] GC quota (%d bytes) reached with %d bytes, collecting ...\n", __gc.gc_threshold, __gc.usage );
 		#endif
-        gc_item_t *item;
-        for( item = __gc.pool_head; item; item = item->next ){
-			/*
-			 * Skip constant objects because they are part of the execution tree nodes.
-			 */
-			struct _Object *o = item->pobj;
-			if( (o->attributes & H_OA_CONSTANT) != H_OA_CONSTANT ){
+
+		int i;
+		/*
+		 * Loop each gc layer using the order determined by GC_* macros.
+		 */
+		for( GC_FIRST_LAYER(i); GC_LAST_LAYER(i); GC_NEXT_LAYER(i) ){
+			gc_list_t *list = &__gc.layers[i];
+			gc_item_t *item;
+			for( item = list->head; item; item = item->next ){
 				/*
-				 * Skip objects that are still referenced somewhere.
+				 * Skip constant objects because they are part of the execution tree nodes.
 				 */
-				if( o->ref <= 0 ){
-					#ifdef MEM_DEBUG
-						fprintf( stdout, "[MEM DEBUG] Releasing %p [%s] [%d references] .\n",
-								item->pobj,
-								item->pobj->type->name,
-								item->pobj->ref );
-					#endif
-					/**
-					 * Finally execute garbage collection
+				struct _Object *o = item->pobj;
+				if( (o->attributes & H_OA_CONSTANT) != H_OA_CONSTANT ){
+					/*
+					 * Skip objects that are still referenced somewhere.
 					 */
-					gc_free( item );
+					if( o->ref <= 0 ){
+						#ifdef MEM_DEBUG
+							fprintf( stdout, "[MEM DEBUG] Releasing %p [%s] [%d references] .\n",
+									item->pobj,
+									item->pobj->type->name,
+									item->pobj->ref );
+						#endif
+						/**
+						 * Finally execute garbage collection
+						 */
+						gc_free( list, item );
+					}
 				}
 			}
-        }
+
+		}
 
         gc_unlock();
     }
 }
 
 void gc_release(){
-	/*
-	 * First we have to free references, then composed types, to make sure, for
-	 * instance, that a class attribute is not deleted before the class itself.
-	 *
-	 * TODO : I should implement a better method to check objects hierarchy,
-	 * 		  that's kinda of buggy, for instance if a class attribute is a
-	 * 		  class itself, we're screwed up :S.
-	 */
 	gc_item_t *item;
-	H_OBJECT_TYPE order[] = { otReference, otClass, otStructure, otMap, otMatrix, otVector, otBinary };
-	int i, types = sizeof(order) / sizeof(order[0]);
+	int i;
 
 	gc_lock();
 
-	/*
-	 * If there's some, free each object of a type.
-	 */
-	for( i = 0; i < types; ++i ){
-		for( item = __gc.pool_head; item; item = item->next ){
-			if( item->pobj->type->code == order[i] ){
-				gc_free( item );
-			}
+	for( GC_FIRST_LAYER(i); GC_LAST_LAYER(i); GC_NEXT_LAYER(i) ){
+		gc_list_t *list = &__gc.layers[i];
+		for( item = list->head; item; item = item->next ){
+			gc_free( list, item );
 		}
 	}
-	/*
-	 * Free anything else.
-	 */
-	for( item = __gc.pool_head; item; item = item->next ){
-        gc_free( item );
-    }
+
 	gc_unlock();
 }
