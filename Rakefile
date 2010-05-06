@@ -2,6 +2,8 @@ require 'rake'
 require 'rake/clean'
 require 'mkmf'
 
+verbose(false)
+
 TARGET  	  = 'hybris'
 RELEASE 	  = '1.0b2'
 
@@ -50,7 +52,8 @@ task :interpreter => TARGET
 task :library     => "lib#{TARGET}.so.1.0"
 task :modules     => OBJECTS[:STD]
 
-task :all => [ :checkdeps, :config_h, :interpreter, :library, :modules ]
+task :exec    => [ :checkdeps, :config_h, :interpreter, :library ]
+task :all     => [ :exec, :modules ]
 task :default => [ :all ]
 
 task :checkdeps do
@@ -68,6 +71,7 @@ task :checkdeps do
 end
 
 task :config_h do
+	puts "@ Creating config.h"
 	File.open("include/config.h", "w+t") do |config|
 	      config.puts "
 #define AUTHOR \"The Hybris Dev Team http://www.hybris-lang.org/\"
@@ -113,36 +117,43 @@ end
 #----------------------------- Compiling ----------------------------
 
 rule 'src/lexer.cpp' => 'src/lexer.l.cpp' do |t|
+	puts "@ Creating #{t.name}"
     sh "#{FLEX} -o#{t.name} #{t.source}"
 end
 
 rule 'src/parser.cpp' => 'src/parser.y.cpp' do |t|
+	puts "@ Creating #{t.name}"
     sh "#{BISON} -y -d -o#{t.name} #{t.source}"
 end
 
 rule '.lo' => '.cpp' do |t|
+	puts "@ Compiling #{t.source}"
     sh "#{CXX} #{CXXFLAGS} -fPIC -o #{t.name} -c #{t.source}"
 end
 
 rule '.o' => '.cpp' do |t|
+	puts "@ Compiling #{t.source}"
     sh "#{CXX} #{CXXFLAGS} -o #{t.name} -c #{t.source}"
 end
 
 rule '.so' => '.cc' do |t|
-	OUTPUT = t.source.ext("so")
-	OUTPUT['stdlib'] = 'build'
-	sh "mkdir -p #{File.dirname(OUTPUT)}"
-	sh "#{CXX} #{t.source} -o#{OUTPUT} #{STDLIB_CFLAGS} #{STDLIB_LFLAGS}"
+	puts "@ Compiling #{t.source}"
+	output = t.source.ext("so")
+	output['stdlib'] = 'build'
+	sh "mkdir -p #{File.dirname(output)}"
+	sh "#{CXX} #{t.source} -o#{output} #{STDLIB_CFLAGS} #{STDLIB_LFLAGS}"
 end
 
 #----------------------------- Linking ----------------------------
 
 file TARGET => OBJECTS[:BIN]  do
+	puts "@ Linking #{TARGET}"
 	BIN_OBJECTS = (OBJECTS[:BIN].uniq - ['src/lexer.cpp', 'src/parser.cpp']).join(' ')
     sh "#{CXX} #{CXXFLAGS} -o #{TARGET} #{BIN_OBJECTS} #{LDFLAGS}"
 end
 
 file "lib#{TARGET}.so.1.0" => OBJECTS[:LIB] do
+	puts "@ Linking lib#{TARGET}.so.1.0"
 	LIB_OBJECTS = (OBJECTS[:LIB].uniq - ['src/lexer.cpp', 'src/parser.cpp']).join(' ')
 	sh "#{CXX} -shared -Wl,-soname,lib#{TARGET}.so.1 -o lib#{TARGET}.so.1.0 #{LIB_OBJECTS} #{STDLIB_LFLAGS}"
 	sh "ln -sf lib#{TARGET}.so.1.0 lib#{TARGET}.so"
