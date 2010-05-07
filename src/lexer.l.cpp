@@ -237,6 +237,7 @@ include          BEGIN(T_INCLUSION);
 "for"		    return T_FOR;
 "foreach"       return T_FOREACH;
 "of"            return T_OF;
+"unless"		return T_UNLESS;
 "if"            return T_IF;
 "else"          return T_ELSE;
 

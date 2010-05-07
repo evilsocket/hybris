@@ -56,6 +56,7 @@
 #define MK_BREAK_NODE()		  	  new StatementNode( T_BREAK, 0 )
 #define MK_NEXT_NODE()		  	  new StatementNode( T_NEXT, 0 )
 #define MK_RETURN_NODE(a)         new StatementNode( T_RETURN, 1, a )
+#define MK_UNLESS_NODE(a,b)		  new StatementNode( T_UNLESS, 2, a, b )
 #define MK_IF_NODE(a, b)          new StatementNode( T_IF, 2, a, b )
 #define MK_IF_ELSE_NODE(a, b, c)  new StatementNode( T_IF, 3, a, b, c )
 #define MK_SWITCH_NODE(a, b)      new StatementNode( T_SWITCH, a, b )
@@ -172,6 +173,7 @@ vm_t *__hyb_vm;
 %token T_FOREACHM
 %token T_OF
 %token T_TO
+%token T_UNLESS
 %token T_IF
 %token T_SWITCH
 %token T_CASE
@@ -343,6 +345,7 @@ statement  : T_EOSTMT                                                   { $$ = M
 		   		free($3);
 		   		free($5);
 		   }
+		   | statement T_UNLESS expression								{ $$ = MK_UNLESS_NODE( $1, $3 ); }
            | T_IF '(' expression ')' statement %prec T_IF_END           { $$ = MK_IF_NODE( $3, $5 ); }
            | T_IF '(' expression ')' statement T_ELSE statement         { $$ = MK_IF_ELSE_NODE( $3, $5, $7 ); }
            | T_SWITCH '(' expression ')' '{'

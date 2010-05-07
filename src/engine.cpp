@@ -342,6 +342,9 @@ Object *engine_exec( engine_t *engine, vframe_t *frame, Node *node ){
         	gc_collect();
 
             switch( node->value.m_statement ){
+				/* statement unless expression */
+				case T_UNLESS :
+					return engine_on_unless( engine, frame, node );
                 /* if( condition ) */
                 case T_IF     :
                     return engine_on_if( engine, frame, node );
@@ -1435,6 +1438,21 @@ Object *engine_on_foreach_mapping( engine_t *engine, vframe_t *frame, Node *node
     ob_dec_ref(map);
 
     return result;
+}
+
+Object *engine_on_unless( engine_t *engine, vframe_t *frame, Node *node ){
+	Object *boolean = H_UNDEFINED,
+		   *result  = H_UNDEFINED;
+
+	boolean = engine_exec( engine, frame, node->child(1) );
+
+	if( !ob_lvalue(boolean) ){
+		result = engine_exec( engine, frame, node->child(0) );
+	}
+
+	engine_check_frame_exit(frame)
+
+	return H_UNDEFINED;
 }
 
 Object *engine_on_if( engine_t *engine, vframe_t *frame, Node *node ){

@@ -148,6 +148,7 @@ Object   *engine_on_do( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_for( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_foreach( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_foreach_mapping( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_unless( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_if( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_question( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_switch( engine_t *engine, vframe_t *, Node * );
