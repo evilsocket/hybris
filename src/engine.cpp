@@ -42,7 +42,7 @@ engine_t *engine_create( vm_t* vm ){
 
 
 __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner,  Object *cobj, int argc, Node *ids, Node *argv ){
-	int 	i;
+	int 	i, n_ids(ids->children());
 	Object *value;
 
 	/*
@@ -66,7 +66,12 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->child(i) );
 		ob_inc_ref(value);
-		stack.insert( (char *)ids->child(i)->value.m_identifier.c_str(), value );
+		if( i >= n_ids ){
+			stack.push( value );
+		}
+		else{
+			stack.insert( (char *)ids->child(i)->value.m_identifier.c_str(), value );
+		}
 	}
 	/*
 	 * Add this frame as the active stack
@@ -76,7 +81,7 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 
 __force_inline void engine_prepare_stack( engine_t *engine, vframe_t &stack, string owner, Object *cobj, Node *ids, int argc, ... ){
 	va_list ap;
-	int i;
+	int i, n_ids(ids->children());
 	Object *value;
 
 	/*
@@ -98,7 +103,12 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t &stack, str
 	for( i = 0; i < argc; ++i ){
 		value = va_arg( ap, Object * );
 		ob_inc_ref(value);
-		stack.insert( (char *)ids->child(i)->value.m_identifier.c_str(), value );
+		if( i >= n_ids ){
+			stack.push( value );
+		}
+		else{
+			stack.insert( (char *)ids->child(i)->value.m_identifier.c_str(), value );
+		}
 	}
 	va_end(ap);
 
@@ -673,11 +683,21 @@ Object *engine_on_member_request( engine_t *engine, vframe_t *frame, Node *node 
 		method_argc = method->children() - 1;
 		method_argc = (method_argc < 0 ? 0 : method_argc);
 
-		if( argc != method_argc ){
-			hyb_error( H_ET_SYNTAX, "method '%s' requires %d parameters (called with %d)",
-									 name,
-									 method_argc,
-									 argc );
+		if( method->value.m_vargs ){
+			if( argc < method_argc ){
+				hyb_error( H_ET_SYNTAX, "method '%s' requires at least %d parameters (called with %d)",
+										name,
+										method_argc,
+										argc );
+		   }
+		}
+		else{
+			if( argc != method_argc ){
+				hyb_error( H_ET_SYNTAX, "method '%s' requires %d parameters (called with %d)",
+										 name,
+										 method_argc,
+										 argc );
+			}
 		}
 
 		engine_prepare_stack( engine, frame, stack, ob_typename(cobj) + string("::") + name, cobj, argc, method, member );
@@ -1023,12 +1043,23 @@ Object *engine_on_new_operator( engine_t *engine, vframe_t *frame, Node *type ){
 		 */
 		Node *ctor = ob_get_method( newtype, type_name, children );
 		if( ctor != H_UNDEFINED ){
-			if( children > ctor->callDefinedArgc() ){
-				hyb_error( H_ET_SYNTAX, "class '%s' constructor requires %d arguments, called with %d",
-										 type_name,
-										 ctor->callDefinedArgc(),
-										 children );
+			if( ctor->value.m_vargs ){
+				if( children < ctor->callDefinedArgc() ){
+					hyb_error( H_ET_SYNTAX, "class '%s' constructor requires at least %d arguments, called with %d",
+											 type_name,
+											 ctor->callDefinedArgc(),
+											 children );
+			   }
 			}
+			else{
+				if( children > ctor->callDefinedArgc() ){
+					hyb_error( H_ET_SYNTAX, "class '%s' constructor requires %d arguments, called with %d",
+											 type_name,
+											 ctor->callDefinedArgc(),
+											 children );
+				}
+			}
+
 			vframe_t stack;
 
 			engine_prepare_stack( engine, frame,
@@ -1167,7 +1198,9 @@ Object *engine_on_vargs( engine_t *engine, vframe_t *frame, Node *node ){
 	int i, argc( frame->size() );
 
 	for( i = 0; i < argc; ++i ){
-		ob_cl_push( vargs, frame->at(i) );
+		if( strcmp( frame->label(i), "me" ) != 0 ){
+			ob_cl_push( vargs, frame->at(i) );
+		}
 	}
 
 	return vargs;
@@ -1489,11 +1522,7 @@ Object *engine_on_explode( engine_t *engine, vframe_t *frame, Node *node ){
 
 	expr  = node->child(0);
 	value = engine_exec( engine, frame, expr );
-	/*
-	if( ob_is_vector(value) == false ){
-		hyb_error( H_ET_SYNTAX, "Expected array expression")
-	}
-	*/
+
 	IntegerObject index(0);
 
 	for( ; index.value < n_ids; ++index.value ){
@@ -1623,7 +1652,7 @@ Object *engine_on_assign( engine_t *engine, vframe_t *frame, Node *node ){
     }
     /*
      * If not, we evaluate the first node as a "owner->child->..." sequence,
-     * just like the onMemberRequest handler.
+     * just like the engine_on_member_request handler.
      */
     else{
     	Node *member    = lexpr,

@@ -612,7 +612,7 @@ Object *ob_cl_push( Object *a, Object *b ){
 		return a->type->cl_push(a,b);
 	}
 	else{
-		hyb_error( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", ob_typename(a) );
+		hyb_error( H_ET_SYNTAX, "'%s' not iterable or not editable object type", ob_typename(a) );
 	}
 }
 
@@ -622,7 +622,7 @@ Object *ob_cl_push_reference( Object *a, Object *b ){
 		return a->type->cl_push_reference(a,b);
 	}
 	else{
-		hyb_error( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", ob_typename(a) );
+		hyb_error( H_ET_SYNTAX, "'%s' not iterable or not editable object type", ob_typename(a) );
 	}
 }
 
@@ -633,7 +633,7 @@ Object *ob_cl_pop( Object *o ){
 		return item;
 	}
 	else{
-		hyb_error( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", ob_typename(o) );
+		hyb_error( H_ET_SYNTAX, "'%s' not iterable or not editable object type", ob_typename(o) );
 	}
 }
 
@@ -644,7 +644,7 @@ Object *ob_cl_remove( Object *a, Object *b ){
 		return item;
 	}
 	else{
-		hyb_error( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", ob_typename(a) );
+		hyb_error( H_ET_SYNTAX, "'%s' not iterable or not editable object type", ob_typename(a) );
 	}
 }
 
@@ -653,7 +653,7 @@ Object *ob_cl_at( Object *a, Object *b ){
 		return a->type->cl_at(a,b);
 	}
 	else{
-		hyb_error( H_ET_SYNTAX, "invalid '[]' operator for object type '%s'", ob_typename(a) );
+		hyb_error( H_ET_SYNTAX, "'%s' not iterable object type", ob_typename(a) );
 	}
 }
 
@@ -662,7 +662,7 @@ Object *ob_cl_set( Object *a, Object *b, Object *c ){
 		return a->type->cl_set(a,b,c);
 	}
 	else{
-		hyb_error( H_ET_SYNTAX, "invalid '[] =' operator for object type '%s'", ob_typename(a) );
+		hyb_error( H_ET_SYNTAX, "'%s' not iterable or not editable object type", ob_typename(a) );
 	}
 }
 
@@ -672,7 +672,7 @@ Object *ob_cl_set_reference( Object *a, Object *b, Object *c ){
 		return a->type->cl_set_reference(a,b,c);
 	}
 	else{
-		hyb_error( H_ET_SYNTAX, "invalid '[] =' operator for object type '%s'", ob_typename(a) );
+		hyb_error( H_ET_SYNTAX, "'%s' not iterable or not editable object type", ob_typename(a) );
 	}
 }
 

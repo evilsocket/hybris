@@ -50,6 +50,7 @@ typedef struct {
     char method[0xFF];
     int  argc;
     char argv[HMAXARGS][0xFF];
+    bool vargs;
 }
 method_decl_t;
 /*

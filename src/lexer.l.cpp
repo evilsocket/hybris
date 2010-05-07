@@ -269,7 +269,7 @@ include          BEGIN(T_INCLUSION);
 	return T_FUNCTION_PROTOTYPE;
 }
 
-"method"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*")" {
+"method"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*([ \n\t]*\.\.\.)?[ \n\t]*")" {
 	yylval.method = hyb_lex_method(yytext);
 	return T_METHOD_PROTOTYPE;
 }
@@ -469,19 +469,27 @@ method_decl_t *hyb_lex_method( char * text ){
 	string			 identifier  = "[a-zA-Z_][a-zA-Z0-9_]*",
 					 pattern     = "method[\\s]+("+identifier+")[\\s]*\\(([^\\)]*)\\)";
 	matches_t 		 tokens;
-	int 			 i;
+	int 			 i, argc;
 
 	tokens = hyb_pcre_matches( pattern, text );
 
 	strcpy( declaration->method, tokens[0].c_str() );
 
-	pattern = "("+identifier+")";
+	pattern = "(" + identifier + "|\\.\\.\\.)";
 
 	tokens = hyb_pcre_matches( pattern, (char *)tokens[1].c_str() );
 
-	declaration->argc = tokens.size();
+	declaration->argc  = tokens.size();
+	declaration->vargs = false;
+	argc			   = declaration->argc;
 	for( i = 0; i < declaration->argc; ++i ){
-		strcpy( declaration->argv[i], tokens[i].c_str() );
+		if( tokens[i] != "..." ){
+			strcpy( declaration->argv[i], tokens[i].c_str() );
+		}
+		else{
+			declaration->vargs = true;
+			declaration->argc--;
+		}
 	}
 
 	return declaration;

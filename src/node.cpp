@@ -379,6 +379,7 @@ StructureNode::StructureNode( char *s_name, NodeList *attributes ) : Node(H_NT_S
 /* methods */
 MethodNode::MethodNode( access_t access, method_decl_t *declaration, int argc, ... ) : Node(H_NT_METHOD) {
     value.m_method = declaration->method;
+    value.m_vargs  = declaration->vargs;
     value.m_access = access;
 
     va_list ap;
