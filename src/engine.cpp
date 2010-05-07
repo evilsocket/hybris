@@ -1672,7 +1672,7 @@ Object *engine_on_assign( engine_t *engine, vframe_t *frame, Node *node ){
      * If not, we evaluate the first node as a "owner->child->..." sequence,
      * just like the engine_on_member_request handler.
      */
-    else{
+    else if( lexpr->type() == H_NT_MEMBER ){
     	Node *member    = lexpr,
 			 *owner     = member->value.m_owner,
 			 *attribute = member->value.m_member;
@@ -1689,6 +1689,9 @@ Object *engine_on_assign( engine_t *engine, vframe_t *frame, Node *node ){
     	ob_set_attribute( obj, (char *)attribute->value.m_identifier.c_str(), value );
 
     	return obj;
+    }
+    else{
+    	hyb_error( H_ET_SYNTAX, "Unexpected constant expression for = operator" );
     }
 }
 
