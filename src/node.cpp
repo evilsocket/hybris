@@ -111,6 +111,7 @@ Node *Node::clone(){
 
         case H_NT_FUNCTION   :
             clone = new FunctionNode( value.m_function.c_str() );
+            clone->value.m_vargs = value.m_vargs;
             for( i = 0; i < sz; ++i ){
             	if( child(i) ){
             		clone->push_back( child(i)->clone() );
@@ -134,6 +135,7 @@ Node *Node::clone(){
 
         case H_NT_METHOD :
 			clone = new MethodNode( value.m_method.c_str(), value.m_access );
+			clone->value.m_vargs = value.m_vargs;
 			for( i = 0; i < sz; ++i ){
 				if( child(i) ){
 					clone->push_back( child(i)->clone() );
@@ -223,6 +225,22 @@ StatementNode::StatementNode( int statement, int argc, ... ) : Node(H_NT_STATEME
 	va_end(ap);
 }
 
+StatementNode::StatementNode( int statement, NodeList *identList, Node *expr ) : Node(H_NT_STATEMENT) {
+    value.m_statement = statement;
+    va_list ap;
+	int i;
+
+	reserve( identList->size() + 1 );
+
+	push_back(expr);
+
+	for( NodeList::iterator ni = identList->begin(); ni != identList->end(); ni++ ){
+		push_back( *ni );
+	}
+
+	delete identList;
+}
+
 StatementNode::StatementNode( int statement, Node *sw, NodeList *caselist ) : Node(H_NT_STATEMENT) {
     value.m_statement = statement;
     value.m_switch    = sw;
@@ -276,6 +294,7 @@ MemberRequestNode::MemberRequestNode( Node *owner, Node *member ) : Node(H_NT_ME
 /* functions */
 FunctionNode::FunctionNode( function_decl_t *declaration ) : Node(H_NT_FUNCTION) {
     value.m_function = declaration->function;
+    value.m_vargs 	 = declaration->vargs;
 
     reserve(declaration->argc);
 
@@ -287,6 +306,8 @@ FunctionNode::FunctionNode( function_decl_t *declaration ) : Node(H_NT_FUNCTION)
 
 FunctionNode::FunctionNode( function_decl_t *declaration, int argc, ... ) : Node(H_NT_FUNCTION) {
     value.m_function = declaration->function;
+    value.m_vargs 	 = declaration->vargs;
+
     va_list ap;
 	int i;
 

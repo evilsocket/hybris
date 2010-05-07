@@ -139,6 +139,7 @@ Object   *engine_on_new_operator( engine_t *engine, vframe_t *, Node * );
 /*
  * Statements.
  */
+Object   *engine_on_explode( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_return( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_throw( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_try_catch( engine_t *engine, vframe_t *, Node * );
@@ -154,6 +155,7 @@ Object   *engine_on_switch( engine_t *engine, vframe_t *, Node * );
  * Expressions and operators.
  */
 /* misc */
+Object   *engine_on_vargs( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_dollar( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_reference( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_range( engine_t *engine, vframe_t *, Node * );

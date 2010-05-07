@@ -94,6 +94,7 @@ class NodeValue {
         Node    *m_switch;
         Node    *m_default;
         string   m_function;
+        bool	 m_vargs;
         access_t m_access;
         string   m_method;
         string   m_call;
@@ -187,6 +188,7 @@ class StatementNode : public Node {
 
         StatementNode( int statement );
         StatementNode( int statement, int argc, ... );
+        StatementNode( int statement, NodeList *identList, Node *expr );
         StatementNode( int statement, Node *sw, NodeList *caselist );
         StatementNode( int statement, Node *sw, NodeList *caselist, Node *deflt );
 };

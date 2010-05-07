@@ -40,6 +40,7 @@ typedef struct {
     char function[0xFF];
     int  argc;
     char argv[HMAXARGS][0xFF];
+    bool vargs;
 }
 function_decl_t;
 /*

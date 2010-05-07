@@ -19,12 +19,15 @@
 #include "engine.h"
 #include "parser.hpp"
 
-#define CHECK_FRAME_EXIT() if( frame->state.is(Exception) ){ \
-							   return frame->state.value; \
-						   } \
-						   else if( frame->state.is(Return) ){ \
-							   return frame->state.value; \
-						   }
+#define engine_on_break_state( frame ) frame->state.set(Break)
+#define engine_on_next_state( frame )  frame->state.set(Next)
+
+#define engine_check_frame_exit(frame) if( frame->state.is(Exception) ){ \
+										   return frame->state.value; \
+									   } \
+									   else if( frame->state.is(Return) ){ \
+										   return frame->state.value; \
+									   }
 
 engine_t *engine_create( vm_t* vm ){
 	engine_t *engine = new engine_t;
@@ -33,6 +36,8 @@ engine_t *engine_create( vm_t* vm ){
 	engine->mem   = &vm->vmem;
 	engine->code  = &vm->vcode;
 	engine->types = &vm->vtypes;
+
+	return engine;
 }
 
 
@@ -41,7 +46,7 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	Object *value;
 
 	/*
-	 * Check for heavy recursions and/or nested calss.
+	 * Check for heavy recursions and/or nested calls.
 	 */
 	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
@@ -56,7 +61,7 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	ob_inc_ref(cobj);
 	stack.insert( "me", cobj );
 	/*
-	 * Evaluate each object and incremente references
+	 * Evaluate each object and increment references
 	 */
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->child(i) );
@@ -75,7 +80,7 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t &stack, str
 	Object *value;
 
 	/*
-	 * Check for heavy recursions and/or nested calss.
+	 * Check for heavy recursions and/or nested calls.
 	 */
 	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
@@ -87,7 +92,7 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t &stack, str
 	ob_inc_ref( cobj );
 	stack.insert( "me", cobj );
 	/*
-	 * Evaluate each object and incremente references
+	 * Evaluate each object and increment references
 	 */
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
@@ -101,11 +106,11 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t &stack, str
 }
 
 __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, vmem_t *argv ){
-	int 	i, argc;
+	int 	i, n_ids( ids.size() ), argc;
 	Object *value;
 
 	/*
-	 * Check for heavy recursions and/or nested calss.
+	 * Check for heavy recursions and/or nested calls.
 	 */
 	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
@@ -119,7 +124,12 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	for( i = 0; i < argc; ++i ){
 		value = argv->at(i);
 		ob_inc_ref(value);
-		stack.insert( (char *)ids[i].c_str(), value );
+		if( i >= n_ids ){
+			stack.push( value );
+		}
+		else{
+			stack.insert( (char *)ids[i].c_str(), value );
+		}
 	}
 
 	/*
@@ -129,11 +139,11 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 }
 
 __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, Node *argv ){
-	int 	i, argc;
+	int 	i, n_ids( ids.size() ), argc;
 	Object *value;
 
 	/*
-	 * Check for heavy recursions and/or nested calss.
+	 * Check for heavy recursions and/or nested calls.
 	 */
 	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
@@ -147,7 +157,12 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->at(i) );
 		ob_inc_ref(value);
-		stack.insert( (char *)ids[i].c_str(), value );
+		if( i >= n_ids ){
+			stack.push( value );
+		}
+		else{
+			stack.insert( (char *)ids[i].c_str(), value );
+		}
 	}
 
 	/*
@@ -191,7 +206,7 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	Object *value;
 
 	/*
-	 * Check for heavy recursions and/or nested calss.
+	 * Check for heavy recursions and/or nested calls.
 	 */
 	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
@@ -337,11 +352,11 @@ Object *engine_exec( engine_t *engine, vframe_t *frame, Node *node ){
                     return engine_on_foreach_mapping( engine, frame, node );
 				/* break; */
 				case T_BREAK :
-					frame->state.set(Break);
+					engine_on_break_state( frame );
 				break;
 				/* next; */
 				case T_NEXT :
-					frame->state.set(Next);
+					engine_on_next_state( frame );
 				break;
 				/* return */
 				case T_RETURN :
@@ -352,6 +367,8 @@ Object *engine_exec( engine_t *engine, vframe_t *frame, Node *node ){
 				/* switch statement */
                 case T_SWITCH :
                     return engine_on_switch( engine, frame, node );
+                case T_EXPLODE :
+                	return engine_on_explode( engine, frame, node );
                 /* throw expression; */
                 case T_THROW :
 					return engine_on_throw( engine, frame, node );
@@ -377,6 +394,9 @@ Object *engine_exec( engine_t *engine, vframe_t *frame, Node *node ){
                 /* $ */
                 case T_DOLLAR :
                     return engine_on_dollar( engine, frame, node );
+                /* @ */
+                case T_VARGS :
+                	return engine_on_vargs( engine, frame, node );
                 /* expression .. expression */
                 case T_RANGE :
                     return engine_on_range( engine, frame, node );
@@ -864,11 +884,21 @@ Object *engine_on_threaded_call( engine_t *engine, string function_name, vframe_
     	}
     }
 
-	if( identifiers.size() != argv->size() ){
-	   hyb_error( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
-						       function_name.c_str(),
-						       identifiers.size(),
-						       argv->size() );
+    if( function->value.m_vargs ){
+    	if( argv->size() < identifiers.size() ){
+			hyb_error( H_ET_SYNTAX, "function '%s' requires at least %d parameters (called with %d)",
+									function_name.c_str(),
+									identifiers.size(),
+									argv->size() );
+    	}
+    }
+    else{
+    	if( identifiers.size() != argv->size() ){
+			hyb_error( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
+								   function_name.c_str(),
+								   identifiers.size(),
+								   argv->size() );
+    	}
 	}
 
 	engine_prepare_stack( engine, frame, stack, function_name, identifiers, argv );
@@ -909,11 +939,21 @@ Object *engine_on_user_function_call( engine_t *engine, vframe_t *frame, Node *c
     	}
     }
 
-    if( identifiers.size() != call->children() ){
-        hyb_error( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
-                             function->value.m_function.c_str(),
-                             identifiers.size(),
-                             call->children() );
+    if( function->value.m_vargs ){
+    	if( call->children() < identifiers.size() ){
+   			hyb_error( H_ET_SYNTAX, "function '%s' requires at least %d parameters (called with %d)",
+									function->value.m_function.c_str(),
+   									identifiers.size(),
+   									call->children() );
+       }
+   	}
+    else{
+		if( identifiers.size() != call->children() ){
+			hyb_error( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
+									function->value.m_function.c_str(),
+									identifiers.size(),
+									call->children() );
+		}
     }
 
     engine_prepare_stack( engine, frame, stack, function->value.m_function, identifiers, call );
@@ -1122,6 +1162,17 @@ Object *engine_on_return( engine_t *engine, vframe_t *frame, Node *node ){
     return frame->state.value;
 }
 
+Object *engine_on_vargs( engine_t *engine, vframe_t *frame, Node *node ){
+	Object *vargs = (Object *)gc_new_vector();
+	int i, argc( frame->size() );
+
+	for( i = 0; i < argc; ++i ){
+		ob_cl_push( vargs, frame->at(i) );
+	}
+
+	return vargs;
+}
+
 Object *engine_on_range( engine_t *engine, vframe_t *frame, Node *node ){
     Object *range = H_UNDEFINED,
            *from  = H_UNDEFINED,
@@ -1130,7 +1181,7 @@ Object *engine_on_range( engine_t *engine, vframe_t *frame, Node *node ){
     from  = engine_exec( engine, frame, node->child(0) );
    	to    = engine_exec( engine, frame, node->child(1) );
 
-   	CHECK_FRAME_EXIT()
+   	engine_check_frame_exit(frame)
 
 	range = ob_range( from, to );
 
@@ -1150,7 +1201,7 @@ Object *engine_on_subscript_push( engine_t *engine, vframe_t *frame, Node *node 
 
 	ob_dec_ref( array );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	res    = ob_cl_push( array, object );
 
@@ -1168,7 +1219,7 @@ Object *engine_on_subscript_get( engine_t *engine, vframe_t *frame, Node *node )
 		identifier = engine_exec( engine, frame, node->child(0) );
 		index      = engine_exec( engine, frame, node->child(2) );
 
-		CHECK_FRAME_EXIT()
+		engine_check_frame_exit(frame)
 
 		ob_assign( identifier,
 					ob_cl_at( array, index )
@@ -1180,7 +1231,7 @@ Object *engine_on_subscript_get( engine_t *engine, vframe_t *frame, Node *node )
 		array  = engine_exec( engine, frame, node->child(0) );
 		index  = engine_exec( engine, frame, node->child(1) );
 
-		CHECK_FRAME_EXIT()
+		engine_check_frame_exit(frame)
 
 		result = ob_cl_at( array, index );
 	}
@@ -1197,7 +1248,7 @@ Object *engine_on_subscript_set( engine_t *engine, vframe_t *frame, Node *node )
    	index  = engine_exec( engine, frame, node->child(1) );
    	object = engine_exec( engine, frame, node->child(2) );
 
-   	CHECK_FRAME_EXIT()
+   	engine_check_frame_exit(frame)
 
    	ob_cl_set( array, index, object );
 
@@ -1215,7 +1266,7 @@ Object *engine_on_while( engine_t *engine, vframe_t *frame, Node *node ){
     while( ob_lvalue( engine_exec( engine, frame, condition ) ) ){
    		result = engine_exec( engine, frame, body );
 
-   		CHECK_FRAME_EXIT()
+   		engine_check_frame_exit(frame)
 
    		frame->state.unset(Next);
         if( frame->state.is(Break) ){
@@ -1238,7 +1289,7 @@ Object *engine_on_do( engine_t *engine, vframe_t *frame, Node *node ){
     do{
 		result = engine_exec( engine, frame, body );
 
-		CHECK_FRAME_EXIT()
+		engine_check_frame_exit(frame)
 
 		frame->state.unset(Next);
 		if( frame->state.is(Break) ){
@@ -1263,15 +1314,15 @@ Object *engine_on_for( engine_t *engine, vframe_t *frame, Node *node ){
 
     engine_exec( engine, frame, node->child(0) );
 
-    CHECK_FRAME_EXIT()
+    engine_check_frame_exit(frame)
 
     for( ; ob_lvalue( engine_exec( engine, frame, condition ) ); engine_exec( engine, frame, increment ) ){
 
-    	CHECK_FRAME_EXIT()
+    	engine_check_frame_exit(frame)
 
     	result = engine_exec( engine, frame, body );
 
-		CHECK_FRAME_EXIT()
+		engine_check_frame_exit(frame)
 
 		frame->state.unset(Next);
 		if( frame->state.is(Break) ){
@@ -1303,7 +1354,7 @@ Object *engine_on_foreach( engine_t *engine, vframe_t *frame, Node *node ){
 
         result = engine_exec( engine, frame, body );
 
-        CHECK_FRAME_EXIT()
+        engine_check_frame_exit(frame)
 
         frame->state.unset(Next);
 		if( frame->state.is(Break) ){
@@ -1339,7 +1390,7 @@ Object *engine_on_foreach_mapping( engine_t *engine, vframe_t *frame, Node *node
 
         result = engine_exec( engine, frame, body );
 
-        CHECK_FRAME_EXIT()
+        engine_check_frame_exit(frame)
 
         frame->state.unset(Next);
 		if( frame->state.is(Break) ){
@@ -1367,7 +1418,7 @@ Object *engine_on_if( engine_t *engine, vframe_t *frame, Node *node ){
         result = engine_exec( engine, frame, node->child(2) );
     }
 
-    CHECK_FRAME_EXIT()
+    engine_check_frame_exit(frame)
 
     return H_UNDEFINED;
 }
@@ -1385,7 +1436,7 @@ Object *engine_on_question( engine_t *engine, vframe_t *frame, Node *node ){
         result = engine_exec( engine, frame, node->child(2) );
     }
 
-    CHECK_FRAME_EXIT()
+    engine_check_frame_exit(frame)
 
     return result;
 }
@@ -1409,7 +1460,7 @@ Object *engine_on_switch( engine_t *engine, vframe_t *frame, Node *node){
         if( case_node != H_UNDEFINED && stmt_node != H_UNDEFINED ){
             compare = engine_exec( engine, frame, case_node );
 
-            CHECK_FRAME_EXIT()
+            engine_check_frame_exit(frame)
 
             ob_inc_ref(compare);
 
@@ -1425,10 +1476,31 @@ Object *engine_on_switch( engine_t *engine, vframe_t *frame, Node *node){
     if( node->value.m_default != H_UNDEFINED ){
         result = engine_exec( engine, frame, node->value.m_default );
 
-        CHECK_FRAME_EXIT()
+        engine_check_frame_exit(frame)
     }
 
     return result;
+}
+
+Object *engine_on_explode( engine_t *engine, vframe_t *frame, Node *node ){
+	Node   *expr  = H_UNDEFINED;
+	Object *value = H_UNDEFINED;
+	int n_ids = node->children() - 1;
+
+	expr  = node->child(0);
+	value = engine_exec( engine, frame, expr );
+	/*
+	if( ob_is_vector(value) == false ){
+		hyb_error( H_ET_SYNTAX, "Expected array expression")
+	}
+	*/
+	IntegerObject index(0);
+
+	for( ; index.value < n_ids; ++index.value ){
+		frame->add( (char *)node->child(index.value + 1)->value.m_identifier.c_str(), ob_cl_at( value, (Object *)&index ) );
+	}
+
+	return value;
 }
 
 Object *engine_on_throw( engine_t *engine, vframe_t *frame, Node *node ){
@@ -1491,7 +1563,7 @@ Object *engine_on_eostmt( engine_t *engine, vframe_t *frame, Node *node ){
     res_1 = engine_exec( engine, frame, node->child(0) );
     res_2 = engine_exec( engine, frame, node->child(1) );
 
-    CHECK_FRAME_EXIT()
+    engine_check_frame_exit(frame)
 
     return res_2;
 }
@@ -1504,7 +1576,7 @@ Object *engine_on_dot( engine_t *engine, vframe_t *frame, Node *node ){
     a      = engine_exec( engine, frame, node->child(0) );
     b      = engine_exec( engine, frame, node->child(1) );
 
-    CHECK_FRAME_EXIT()
+    engine_check_frame_exit(frame)
 
     result = ob_cl_concat( a, b );
 
@@ -1519,7 +1591,7 @@ Object *engine_on_inplace_dot( engine_t *engine, vframe_t *frame, Node *node ){
     a      = engine_exec( engine, frame, node->child(0) );
     b      = engine_exec( engine, frame, node->child(1) );
 
-    CHECK_FRAME_EXIT()
+    engine_check_frame_exit(frame)
 
     result = ob_cl_inplace_concat( a, b );
 
@@ -1543,7 +1615,7 @@ Object *engine_on_assign( engine_t *engine, vframe_t *frame, Node *node ){
 
     	value  = engine_exec( engine, frame, node->child(1) );
 
-    	CHECK_FRAME_EXIT()
+    	engine_check_frame_exit(frame)
 
 		object = frame->add( (char *)lexpr->value.m_identifier.c_str(), value );
 
@@ -1561,11 +1633,11 @@ Object *engine_on_assign( engine_t *engine, vframe_t *frame, Node *node ){
     	Object *obj = engine_exec( engine, frame, owner ),
     		   *value;
 
-    	CHECK_FRAME_EXIT()
+    	engine_check_frame_exit(frame)
 
 		value = engine_exec( engine, frame, node->child(1) );
 
-    	CHECK_FRAME_EXIT()
+    	engine_check_frame_exit(frame)
 
     	ob_set_attribute( obj, (char *)attribute->value.m_identifier.c_str(), value );
 
@@ -1579,7 +1651,7 @@ Object *engine_on_uminus( engine_t *engine, vframe_t *frame, Node *node ){
 
     o = engine_exec( engine, frame, node->child(0) );
 
-    CHECK_FRAME_EXIT()
+    engine_check_frame_exit(frame)
 
     result = ob_uminus(o);
 
@@ -1594,7 +1666,7 @@ Object *engine_on_regex( engine_t *engine, vframe_t *frame, Node *node ){
     o = engine_exec( engine, frame, node->child(0) );
 	regexp = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	result = ob_apply_regexp( o, regexp );
 
@@ -1609,7 +1681,7 @@ Object *engine_on_add( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_add( a, b );
 
@@ -1623,7 +1695,7 @@ Object *engine_on_inplace_add( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	ob_inplace_add( a, b );
 
@@ -1638,7 +1710,7 @@ Object *engine_on_sub( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_sub( a, b );
 
@@ -1652,7 +1724,7 @@ Object *engine_on_inplace_sub( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	ob_inplace_sub( a, b );
 
@@ -1667,7 +1739,7 @@ Object *engine_on_mul( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_mul( a, b );
 
@@ -1681,7 +1753,7 @@ Object *engine_on_inplace_mul( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	ob_inplace_mul( a, b );
 
@@ -1696,7 +1768,7 @@ Object *engine_on_div( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_div( a, b );
 
@@ -1710,7 +1782,7 @@ Object *engine_on_inplace_div( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	ob_inplace_div( a, b );
 
@@ -1725,7 +1797,7 @@ Object *engine_on_mod( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_mod( a, b );
 
@@ -1739,7 +1811,7 @@ Object *engine_on_inplace_mod( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	ob_inplace_mod( a, b );
 
@@ -1751,7 +1823,7 @@ Object *engine_on_inc( engine_t *engine, vframe_t *frame, Node *node ){
 
     o = engine_exec( engine, frame, node->child(0) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	return ob_increment(o);
 }
@@ -1761,7 +1833,7 @@ Object *engine_on_dec( engine_t *engine, vframe_t *frame, Node *node ){
 
     o = engine_exec( engine, frame, node->child(0) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	return ob_decrement(o);
 }
@@ -1774,7 +1846,7 @@ Object *engine_on_xor( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_bw_xor( a, b );
 
@@ -1788,7 +1860,7 @@ Object *engine_on_inplace_xor( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	ob_bw_inplace_xor( a, b );
 
@@ -1803,7 +1875,7 @@ Object *engine_on_and( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_bw_and( a, b );
 
@@ -1817,7 +1889,7 @@ Object *engine_on_inplace_and( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	ob_bw_inplace_and( a, b );
 
@@ -1832,7 +1904,7 @@ Object *engine_on_or( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_bw_or( a, b );
 
@@ -1846,7 +1918,7 @@ Object *engine_on_inplace_or( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	ob_bw_inplace_or( a, b );
 
@@ -1865,7 +1937,7 @@ Object *engine_on_shiftl( engine_t *engine, vframe_t *frame, Node *node ){
 		return frame->state.value;
 	}
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_bw_lshift( a, b );
 
@@ -1879,7 +1951,7 @@ Object *engine_on_inplace_shiftl( engine_t *engine, vframe_t *frame, Node *node 
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	ob_bw_inplace_lshift( a, b );
 
@@ -1894,7 +1966,7 @@ Object *engine_on_shiftr( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_bw_rshift( a, b );
 
@@ -1908,7 +1980,7 @@ Object *engine_on_inplace_shiftr( engine_t *engine, vframe_t *frame, Node *node 
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	ob_bw_inplace_rshift( a, b );
 
@@ -1921,7 +1993,7 @@ Object *engine_on_fact( engine_t *engine, vframe_t *frame, Node *node ){
 
     o = engine_exec( engine, frame, node->child(0) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
     r = ob_factorial(o);
 
@@ -1934,7 +2006,7 @@ Object *engine_on_not( engine_t *engine, vframe_t *frame, Node *node ){
 
     o = engine_exec( engine, frame, node->child(0) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
    	r = ob_bw_not(o);
 
@@ -1947,7 +2019,7 @@ Object *engine_on_lnot( engine_t *engine, vframe_t *frame, Node *node ){
 
     o = engine_exec( engine, frame, node->child(0) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	r = ob_l_not(o);
 
@@ -1962,7 +2034,7 @@ Object *engine_on_less( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_l_less( a, b );
 
@@ -1977,7 +2049,7 @@ Object *engine_on_greater( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_l_greater( a, b );
 
@@ -1992,7 +2064,7 @@ Object *engine_on_ge( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_l_greater_or_same( a, b );
 
@@ -2007,7 +2079,7 @@ Object *engine_on_le( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_l_less_or_same( a, b );
 
@@ -2022,7 +2094,7 @@ Object *engine_on_ne( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_l_diff( a, b );
 
@@ -2037,7 +2109,7 @@ Object *engine_on_eq( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_l_same( a, b );
 
@@ -2052,7 +2124,7 @@ Object *engine_on_land( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_l_and( a, b );
 
@@ -2067,7 +2139,7 @@ Object *engine_on_lor( engine_t *engine, vframe_t *frame, Node *node ){
     a = engine_exec( engine, frame, node->child(0) );
 	b = engine_exec( engine, frame, node->child(1) );
 
-	CHECK_FRAME_EXIT()
+	engine_check_frame_exit(frame)
 
 	c = ob_l_or( a, b );
 

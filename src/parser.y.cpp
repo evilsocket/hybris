@@ -47,6 +47,7 @@
 #define MK_CONST_NODE(a)          new ConstantNode(a)
 #define MK_MREQ_NODE(a,b)         new MemberRequestNode(a,b)
 /* statements */
+#define MK_EXPLODE_NODE(a,b)	  new StatementNode( T_EXPLODE, a, b )
 #define MK_WHILE_NODE(a, b)       new StatementNode( T_WHILE, 2, a, b )
 #define MK_DO_NODE(a, b)          new StatementNode( T_DO, 2, a, b )
 #define MK_FOR_NODE(a,b,c,d)      new StatementNode( T_FOR, 4, a, b, c, d )
@@ -73,6 +74,7 @@
 #define MK_SB_NODE(a, b)	      new ExpressionNode( T_SUBSCRIPTGET, 2, a, b )
 #define MK_SB_PUSH_NODE(a, b)     new ExpressionNode( T_SUBSCRIPTADD, 2, a, b )
 #define MK_SB_SET_NODE(a, b, c)   new ExpressionNode( T_SUBSCRIPTSET, 3, a, b, c )
+#define MK_VARGS_NODE()			  new ExpressionNode( T_VARGS, 0 )
 #define MK_RANGE_NODE(a, b)		  new ExpressionNode( T_RANGE, 2, a, b )
 #define MK_UMINUS_NODE(a)		  new ExpressionNode( T_UMINUS, 1, a )
 #define MK_DOT_NODE(a, b)		  new ExpressionNode( T_DOT, 2, a, b )
@@ -157,6 +159,8 @@ vm_t *__hyb_vm;
 
 %token T_EOSTMT
 %token T_ASSIGN
+%token T_EXPLODE
+%token T_VARGS
 %token T_RANGE
 %token T_SUBSCRIPTADD
 %token T_SUBSCRIPTSET
@@ -327,6 +331,8 @@ statement  : T_EOSTMT                                                   { $$ = M
            /* subscript operator special cases */
 		   | expression '[' ']' T_ASSIGN expression T_EOSTMT            { $$ = MK_SB_PUSH_NODE( $1, $5 ); }
            | expression '[' expression ']' T_ASSIGN expression T_EOSTMT { $$ = MK_SB_SET_NODE( $1, $3, $6 ); }
+           /* ( a, b, c ) = array; */
+           | '(' identList ')' T_ASSIGN expression T_EOSTMT             { $$ = MK_EXPLODE_NODE( $2, $5 ); }
            /* conditional and loops */
            | T_WHILE '(' expression ')' statement                       { $$ = MK_WHILE_NODE( $3, $5 ); }
            | T_DO statement T_WHILE '(' expression ')' T_EOSTMT         { $$ = MK_DO_NODE( $2, $5 ); }
@@ -433,6 +439,8 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            | expression T_GET_MEMBER T_IDENT 				  { $$ = MK_MREQ_NODE( $1, MK_IDENT_NODE($3) ); free($3); }
            /* identifier */
            | T_IDENT                                          { $$ = MK_IDENT_NODE($1); }
+           /* @ arguments vector */
+           | T_VARGS										  { $$ = MK_VARGS_NODE(); }
            /* expression evaluation returns an identifier */
            | T_DOLLAR expression                              { $$ = MK_DOLLAR_NODE($2); }
            /* object reference */

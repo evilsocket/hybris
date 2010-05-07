@@ -185,6 +185,7 @@ include          BEGIN(T_INCLUSION);
 
 ";" 		    return T_EOSTMT;
 
+"@"				return T_VARGS;
 ".."            return T_RANGE;
 "."             return T_DOT;
 ".="            return T_DOTE;
@@ -263,7 +264,7 @@ include          BEGIN(T_INCLUSION);
 
 "return"        return T_RETURN;
 
-"function"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*")" {
+"function"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*([ \n\t]*\.\.\.)?[ \n\t]*")" {
 	yylval.function   = hyb_lex_function(yytext);
 	return T_FUNCTION_PROTOTYPE;
 }
@@ -437,19 +438,27 @@ function_decl_t *hyb_lex_function( char * text ){
     string			 identifier  = "[a-zA-Z_][a-zA-Z0-9_]*",
 					 pattern     = "function[\\s]+("+identifier+")[\\s]*\\(([^\\)]*)\\)";
 	matches_t 		 tokens;
-	int 			 i;
+	int 			 i, argc;
 
 	tokens = hyb_pcre_matches( pattern, text );
 
 	strcpy( declaration->function, tokens[0].c_str() );
 
-	pattern = "("+identifier+")";
+	pattern = "(" + identifier + "|\\.\\.\\.)";
 
 	tokens = hyb_pcre_matches( pattern, (char *)tokens[1].c_str() );
 
-	declaration->argc = tokens.size();
-	for( i = 0; i < declaration->argc; ++i ){
-		strcpy( declaration->argv[i], tokens[i].c_str() );
+	declaration->argc  = tokens.size();
+	declaration->vargs = false;
+	argc			   = declaration->argc;
+	for( i = 0; i < argc; ++i ){
+		if( tokens[i] != "..." ){
+			strcpy( declaration->argv[i], tokens[i].c_str() );
+		}
+		else{
+			declaration->vargs = true;
+			declaration->argc--;
+		}
 	}
 
 	return declaration;
