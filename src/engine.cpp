@@ -786,12 +786,8 @@ Object *engine_on_class_declaration( engine_t *engine, vframe_t *frame, Node *no
 	int        i, j, members( node->children() );
 	char      *classname = (char *)node->value.m_identifier.c_str(),
 			  *attrname;
-	Object 	  *type;
 
-	/*
-	 * TODO : Double check for definition, this is a BUG of hashtable!!!
-	 */
-	if( (type = engine->types->find(classname)) != H_UNDEFINED && strcmp( ob_typename(type), classname ) == 0 ){
+	if( engine->types->find(classname) != H_UNDEFINED ){
 		hyb_error( H_ET_SYNTAX, "Class '%s' already defined", classname );
 	}
 

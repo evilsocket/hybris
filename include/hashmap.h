@@ -19,7 +19,7 @@
 #ifndef _HMAP_H_
 #	define _HMAP_H_
 
-#include "hashtable.h"
+#include "asciitree.h"
 
 /* from vmem.h */
 #ifndef H_UNDEFINED
@@ -48,7 +48,7 @@ using std::string;
  * HashMap has two main containers.
  *
  * m_map   : A vector to have items fast access by index.
- * m_table : An hash table to have fast access by label.
+ * m_table : An ascii tree to have fast access by label.
  *
  * They points to the same objects so, changing the value of an item in
  * the vector will change that value inside the table, and viceversa.
@@ -72,7 +72,7 @@ protected :
 
     unsigned int     m_elements;
     vector<pair_t *> m_map;
-    hash_table_t    *m_table;
+    ascii_tree_t     m_tree;
 
 public  :
 
@@ -139,45 +139,35 @@ public  :
 };
 
 H_TEMPLATE_T HashMap<value_t>::HashMap(){
-    m_table    = ht_alloc( 0, 1 );
+	at_init_tree(m_tree);
     m_elements = 0;
 }
 
 H_TEMPLATE_T HashMap<value_t>::~HashMap(){
-	/*
-	 * No need to clear here.
-	 * Table will be freed by ht_free and objects will be
-	 * garbage collected.
-	 */
-    // clear();
-	unsigned int i, size(m_elements);
-	for( i = 0; i < size; ++i ){
-		delete m_map[i];
-	}
-    ht_free(m_table);
+	clear();
 }
 
 H_TEMPLATE_T value_t * HashMap<value_t>::insert( char *label, value_t *value ){
 	pair_t *pair = new pair_t( label, value );
 	m_map.push_back( pair );
-    ht_insert( m_table, (u_long)label, (u_long)pair );
+    at_insert( &m_tree, label, strlen(label), pair );
     m_elements++;
     return value;
 }
 
 H_TEMPLATE_T value_t * HashMap<value_t>::find( char *label ){
-    hash_item_t *item = ht_find( m_table, (u_long)label );
+	pair_t *item = (pair_t *)at_find( &m_tree, label, strlen(label) );
     if( item ){
-        return ((pair_t *)item->data)->value;
+        return item->value;
     }
     return H_UNDEFINED;
 }
 
 H_TEMPLATE_T value_t * HashMap<value_t>::replace( char *label, value_t *old_value, value_t *new_value ){
-	hash_item_t *item;
+	pair_t *item;
 
-	if( (item = ht_find( m_table, (u_long)label )) != NULL ){
-		((pair_t *)item->data)->value = new_value;
+	if( (item = (pair_t *)at_find( &m_tree, label, strlen(label) )) != NULL ){
+		item->value = new_value;
 	}
 
 	return old_value;
@@ -190,7 +180,7 @@ H_TEMPLATE_T void HashMap<value_t>::clear(){
     }
     m_map.clear();
     m_elements = 0;
-    ht_clear( m_table );
+    at_clear( &m_tree );
 }
 
 #endif
