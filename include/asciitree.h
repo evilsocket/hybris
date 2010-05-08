@@ -27,9 +27,21 @@
  * by a char of a key and its links by next chars.
  */
 typedef struct _ascii_tree {
+	/*
+	 * The byte value of this link.
+	 */
 	char    	  ascii;
+	/*
+	 * Value of the link (end marker of a chain).
+	 */
 	void*   	  e_marker;
+	/*
+	 * Number of sub links.
+	 */
 	char    	  n_links;
+	/*
+	 * Sub links dynamic array.
+	 */
 	_ascii_tree **links;
 }
 ascii_tree_t;
@@ -49,18 +61,14 @@ typedef ascii_tree_t ascii_item_t;
 /*
  * Allocate and initialize a link of the tree.
  */
-#define at_init_link( l, k ) l = (ascii_tree_t *)malloc( sizeof(ascii_tree_t) ); \
-							 l->n_links  = 0; \
-							 l->e_marker = NULL; \
-							 l->links    = 0; \
-						     l->ascii    = k[0]
+#define at_init_link( l, k ) l = (ascii_tree_t *)calloc( 1, sizeof(ascii_tree_t) ); \
+						     l->ascii = k[0]
 /*
  * Append a link to 'at' tree, realloc its links and
  * increment link counter.
  */
 #define at_append_link( at, l ) at->links = (ascii_tree_t **)realloc( at->links, sizeof(ascii_tree_t **) * at->n_links + 1 ); \
-								at->links[ at->n_links ] = l; \
-								at->n_links++;
+								at->links[ at->n_links++ ] = l
 
 #define at_clear at_free
 

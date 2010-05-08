@@ -36,7 +36,7 @@ __force_inline ascii_item_t *at_find_next_link( ascii_tree_t *at, char ascii ){
 
 void at_insert( ascii_tree_t *at, char *key, int len, void *value ){
 	/*
-	 * End of the key, set the marker value and exit the recursion.
+	 * End of the chain, set the marker value and exit the recursion.
 	 */
 	if(!len){ at->e_marker = value; return; }
 
@@ -67,12 +67,21 @@ void at_insert( ascii_tree_t *at, char *key, int len, void *value ){
 }
 
 void *at_find( ascii_tree_t *at, char *key, int len ){
+	/*
+	 * End of the chain, if e_marker is NULL this chain is not complete,
+	 * therefore 'key' does not map any alive object.
+	 */
 	if(!len){ return at->e_marker; }
-
+	/*
+	 * Find next link ad continue recursion.
+	 */
 	ascii_item_t *link = at_find_next_link( at, key[0] );
 	if( link ){
 		return at_find( link, key + 1, len - 1 );
 	}
+	/*
+	 * Nothing found! Not an alive key.
+	 */
 	else{
 		return NULL;
 	}
@@ -80,14 +89,26 @@ void *at_find( ascii_tree_t *at, char *key, int len ){
 
 void at_free( ascii_tree_t *at ){
 	int i, n_links(at->n_links);
-
+	/*
+	 * Better be safe than sorry ;)
+	 */
 	if( at->links ){
-		for( i = 0; i < n_links; ++i ){
+		/*
+		 * First of all, loop all the sub links.
+		 */
+		for( i = 0; i < n_links; ++i, --at->n_links ){
+			/*
+			 * Free this link sub-links.
+			 */
 			at_free( at->links[i] );
+			/*
+			 * Free the link itself.
+			 */
 			free( at->links[i] );
-			at->n_links--;
 		}
-
+		/*
+		 * Finally free the array.
+		 */
 		free( at->links );
 		at->links = NULL;
 	}
