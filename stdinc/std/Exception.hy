@@ -48,5 +48,9 @@ class Exception {
 	public method print(){
 		println( me );
 	}
+
+	method __size(){
+		return 1;
+	}
 }
 

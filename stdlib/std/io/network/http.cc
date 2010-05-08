@@ -24,26 +24,60 @@
 HYBRIS_DEFINE_FUNCTION(hhttp_get);
 HYBRIS_DEFINE_FUNCTION(hhttp_post);
 HYBRIS_DEFINE_FUNCTION(hhttp);
+HYBRIS_DEFINE_FUNCTION(hhttp_download);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "http_get", hhttp_get },
 	{ "http_post", hhttp_post },
 	{ "http", hhttp },
+	{ "http_download", hhttp_download },
 	{ "", NULL }
 };
 
 #define HTTP_GET  0
 #define HTTP_POST 1
 
+typedef struct {
+    Node   *handler;
+    vmem_t *data;
+}
+http_progress_callback_data_t;
+
+static vm_t *__vm;
+
 extern "C" void hybris_module_init( vm_t * vm ){
+	__vm = vm;
+
     HYBRIS_DEFINE_CONSTANT( vm, "GET",  gc_new_integer(HTTP_GET) );
     HYBRIS_DEFINE_CONSTANT( vm, "POST", gc_new_integer(HTTP_POST) );
+
+    curl_global_init(CURL_GLOBAL_ALL);
 }
 
 static size_t http_append_callback( void *ptr, size_t size, size_t nmemb, void *data ){
 	string *buffer = (string *)data;
 	(*buffer) += (char *)ptr;
 	return size * nmemb;
+}
+
+static size_t http_download_callback( void *ptr, size_t size, size_t nmemb, FILE *stream){
+	return fwrite( ptr, size, nmemb, stream );
+}
+
+static size_t http_progress_callback( http_progress_callback_data_t *http_data, double dltotal, double dlnow, double ultotal, double ulnow ){
+	vmem_t  stack;
+	Object *h_dltotal,
+		   *h_dlnow;
+
+	h_dltotal = (Object *)gc_new_float(dltotal);
+	h_dlnow   = (Object *)gc_new_float(dlnow);
+
+	stack.push( h_dltotal );
+	stack.push( h_dlnow );
+
+	engine_on_threaded_call( __vm->engine, http_data->handler, http_data->data, &stack );
+
+	return 0;
 }
 
 HYBRIS_DEFINE_FUNCTION(hhttp_get){
@@ -67,7 +101,6 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 	unsigned int dohead = (ob_argc() >= 3 ? ob_lvalue( ob_argv(2) ) : 0),
 				 https  = !strncmp( "https://", host.c_str(), 8 );
 
-	curl_global_init(CURL_GLOBAL_ALL);
 	cd = curl_easy_init();
 
 	if( strncmp( "http://", host.c_str(), 7 ) != 0 && !https ){
@@ -115,8 +148,6 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 
 	curl_easy_cleanup(cd);
 
-	curl_global_cleanup();
-
 	if( headerlist != NULL ){
 		curl_slist_free_all(headerlist);
 	}
@@ -160,7 +191,6 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 				 dohead = (ob_argc() >= 3 ? ob_lvalue( ob_argv(3) ) : 0),
 				 https  = !strncmp( "https://", host.c_str(), 8 );
 
-	curl_global_init(CURL_GLOBAL_ALL);
 	cd = curl_easy_init();
 
 	if( strncmp( "http://", host.c_str(), 7 ) != 0 && !https ){
@@ -218,8 +248,6 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 
 	curl_easy_cleanup(cd);
 
-	curl_global_cleanup();
-
 	if( formpost != NULL ){
 		curl_formfree(formpost);
 	}
@@ -270,4 +298,51 @@ HYBRIS_DEFINE_FUNCTION(hhttp){
     else{
         hyb_error( H_ET_SYNTAX, "function 'http', unknown method" );
     }
+}
+
+HYBRIS_DEFINE_FUNCTION(hhttp_download){
+	if( ob_argc() < 2 ){
+		hyb_error( H_ET_SYNTAX, "function 'http_download' requires at least 2 parameters (called with %d)", ob_argc() );
+	}
+	ob_type_assert( ob_argv(0), otString );
+	ob_type_assert( ob_argv(1), otHandle );
+
+	http_progress_callback_data_t *http_data = NULL;
+	string  file = string_argv(0);
+	FILE    *fp   = (FILE *)handle_argv(1);
+	CURL    *curl;
+	CURLcode res;
+
+	if(!fp){
+		hyb_error( H_ET_SYNTAX, "invalid file handle given" );
+	}
+
+	curl = curl_easy_init();
+
+	curl_easy_setopt( curl, CURLOPT_URL, file.c_str() );
+	curl_easy_setopt( curl, CURLOPT_WRITEDATA, fp );
+	curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, http_download_callback );
+
+	if( ob_argc() > 2 ){
+		ob_type_assert( ob_argv(2), otAlias );
+
+		http_data = new http_progress_callback_data_t;
+
+		http_data->handler = (Node *)alias_argv(2);
+		http_data->data    = data;
+
+		curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 0L );
+		curl_easy_setopt( curl, CURLOPT_PROGRESSFUNCTION, http_progress_callback );
+		curl_easy_setopt( curl, CURLOPT_PROGRESSDATA, http_data );
+	}
+
+	res = curl_easy_perform(curl);
+
+	curl_easy_cleanup(curl);
+
+	if( http_data != NULL ){
+		delete http_data;
+	}
+
+	return (Object *)gc_new_integer(res);
 }

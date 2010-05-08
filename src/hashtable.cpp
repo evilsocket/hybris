@@ -305,58 +305,59 @@ __force_inline static ulong Hash(hash_table_t *ht, char *key, ulong cBuckets)
    a = b = c = 0xfe3779b9;
 
    for( cchKey = cchKeyOrig; cchKey >= sizeof_ulong_3; cchKey -= sizeof_ulong_3, key += sizeof_ulong_3 ) {
-      a += WORD_AT(key);
-      b += WORD_AT(key + sizeof(ulong) );
-      c += WORD_AT(key + sizeof_ulong_2 );
+	  a += WORD_AT(key);
+	  b += WORD_AT(key + sizeof(ulong) );
+	  c += WORD_AT(key + sizeof_ulong_2 );
 
-      mix(a,b,c);
+	  mix(a,b,c);
    }
 
    c += cchKeyOrig;
    switch ( cchKey ) {           /* deal with rest.  Cases fall through */
 #if LOG_WORD_SIZE == 5
-      case 11: c += (ulong)key[10]<<24;
-      case 10: c += (ulong)key[9]<<16;
-      case 9 : c += (ulong)key[8]<<8;
-               /* the first byte of c is reserved for the length */
-      case 8 : b += WORD_AT(key+4);  a+= WORD_AT(key);  break;
-      case 7 : b += (ulong)key[6]<<16;
-      case 6 : b += (ulong)key[5]<<8;
-      case 5 : b += key[4];
-      case 4 : a += WORD_AT(key);  break;
-      case 3 : a += (ulong)key[2]<<16;
-      case 2 : a += (ulong)key[1]<<8;
-      case 1 : a += key[0];
+	  case 11: c += (ulong)key[10]<<24;
+	  case 10: c += (ulong)key[9]<<16;
+	  case 9 : c += (ulong)key[8]<<8;
+			   /* the first byte of c is reserved for the length */
+	  case 8 : b += WORD_AT(key+4);  a+= WORD_AT(key);  break;
+	  case 7 : b += (ulong)key[6]<<16;
+	  case 6 : b += (ulong)key[5]<<8;
+	  case 5 : b += key[4];
+	  case 4 : a += WORD_AT(key);  break;
+	  case 3 : a += (ulong)key[2]<<16;
+	  case 2 : a += (ulong)key[1]<<8;
+	  case 1 : a += key[0];
    /* case 0 : nothing left to add */
 #elif LOG_WORD_SIZE == 6
-      case 23: c += (ulong)key[22]<<56;
-      case 22: c += (ulong)key[21]<<48;
-      case 21: c += (ulong)key[20]<<40;
-      case 20: c += (ulong)key[19]<<32;
-      case 19: c += (ulong)key[18]<<24;
-      case 18: c += (ulong)key[17]<<16;
-      case 17: c += (ulong)key[16]<<8;
-               /* the first byte of c is reserved for the length */
-      case 16: b += WORD_AT(key+8);  a+= WORD_AT(key);  break;
-      case 15: b += (ulong)key[14]<<48;
-      case 14: b += (ulong)key[13]<<40;
-      case 13: b += (ulong)key[12]<<32;
-      case 12: b += (ulong)key[11]<<24;
-      case 11: b += (ulong)key[10]<<16;
-      case 10: b += (ulong)key[ 9]<<8;
-      case  9: b += (ulong)key[ 8];
-      case  8: a += WORD_AT(key);  break;
-      case  7: a += (ulong)key[ 6]<<48;
-      case  6: a += (ulong)key[ 5]<<40;
-      case  5: a += (ulong)key[ 4]<<32;
-      case  4: a += (ulong)key[ 3]<<24;
-      case  3: a += (ulong)key[ 2]<<16;
-      case  2: a += (ulong)key[ 1]<<8;
-      case  1: a += (ulong)key[ 0];
+	  case 23: c += (ulong)key[22]<<56;
+	  case 22: c += (ulong)key[21]<<48;
+	  case 21: c += (ulong)key[20]<<40;
+	  case 20: c += (ulong)key[19]<<32;
+	  case 19: c += (ulong)key[18]<<24;
+	  case 18: c += (ulong)key[17]<<16;
+	  case 17: c += (ulong)key[16]<<8;
+			   /* the first byte of c is reserved for the length */
+	  case 16: b += WORD_AT(key+8);  a+= WORD_AT(key);  break;
+	  case 15: b += (ulong)key[14]<<48;
+	  case 14: b += (ulong)key[13]<<40;
+	  case 13: b += (ulong)key[12]<<32;
+	  case 12: b += (ulong)key[11]<<24;
+	  case 11: b += (ulong)key[10]<<16;
+	  case 10: b += (ulong)key[ 9]<<8;
+	  case  9: b += (ulong)key[ 8];
+	  case  8: a += WORD_AT(key);  break;
+	  case  7: a += (ulong)key[ 6]<<48;
+	  case  6: a += (ulong)key[ 5]<<40;
+	  case  5: a += (ulong)key[ 4]<<32;
+	  case  4: a += (ulong)key[ 3]<<24;
+	  case  3: a += (ulong)key[ 2]<<16;
+	  case  2: a += (ulong)key[ 1]<<8;
+	  case  1: a += (ulong)key[ 0];
    /* case 0: nothing left to add */
 #endif
    }
    mix(a,b,c);
+
    return c & (cBuckets-1);
 }
 

@@ -19,9 +19,11 @@
 #include <hybris.h>
 
 HYBRIS_DEFINE_FUNCTION(hmd5);
+HYBRIS_DEFINE_FUNCTION(hmd5_file);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
     {"md5", hmd5 },
+    {"md5_file", hmd5_file },
     { "", NULL }
 };
 
@@ -278,6 +280,44 @@ HYBRIS_DEFINE_FUNCTION(hmd5){
     md5_finish( &md5_vm, hash );
 
     for( i = 0; i < 16; ++i ){
+		sprintf( hex, "%.2x", hash[i] );
+		str_hash += hex;
+	}
+
+	return ob_dcast( gc_new_string( str_hash.c_str() ) );
+}
+
+HYBRIS_DEFINE_FUNCTION(hmd5_file){
+	if( ob_argc() != 1 ){
+		hyb_error( H_ET_SYNTAX, "function 'md5_file' requires 1 parameter (called with %d)", ob_argc() );
+	}
+	ob_type_assert( ob_argv(0), otString );
+
+	string        fname	   = string_argv(0),
+				  str_hash("");
+	FILE		 *fp = NULL;
+	unsigned char hash[16] = {0},
+				  buffer[1024];
+	char          hex[3]   = {0};
+	unsigned int  i, n;
+	md5_context   md5_vm;
+
+	fp = fopen( fname.c_str(), "rb" );
+	if( !fp ){
+		hyb_error( H_ET_SYNTAX, "Could not open '%s' for reading", fname.c_str() );
+	}
+
+	md5_starts( &md5_vm );
+
+    while( (n = fread( buffer, 1, sizeof( buffer ), fp ) ) > 0 ){
+    	md5_update( &md5_vm, buffer, n );
+    }
+
+    md5_finish( &md5_vm, hash );
+
+    fclose(fp);
+
+	for( i = 0; i < 16; ++i ){
 		sprintf( hex, "%.2x", hash[i] );
 		str_hash += hex;
 	}

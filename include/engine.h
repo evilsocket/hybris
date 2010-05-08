@@ -91,9 +91,10 @@ Object   *engine_on_user_function_call( engine_t *engine, vframe_t *, Node * );
  */
 Object   *engine_on_dll_function_call( engine_t *engine, vframe_t *, Node * );
 /*
- * Special case to handle threaded function calls.
+ * Special case to handle threaded function calls by name and by alias.
  */
 Object   *engine_on_threaded_call( engine_t *engine, string function_name, vframe_t *frame, vmem_t *argv );
+Object   *engine_on_threaded_call( engine_t *engine, Node *function, vframe_t *frame, vmem_t *argv );
 /*
  * Node handler dispatcher.
  */

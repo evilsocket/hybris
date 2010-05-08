@@ -36,7 +36,7 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 
 typedef struct {
     vmem_t *data;
-    vm_t 	   *vm;
+    vm_t   *vm;
 }
 thread_args_t;
 

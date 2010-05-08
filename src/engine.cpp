@@ -786,8 +786,12 @@ Object *engine_on_class_declaration( engine_t *engine, vframe_t *frame, Node *no
 	int        i, j, members( node->children() );
 	char      *classname = (char *)node->value.m_identifier.c_str(),
 			  *attrname;
+	Object 	  *type;
 
-	if( engine->types->find(classname) != H_UNDEFINED ){
+	/*
+	 * TODO : Double check for definition, this is a BUG of hashtable!!!
+	 */
+	if( (type = engine->types->find(classname)) != H_UNDEFINED && strcmp( ob_typename(type), classname ) == 0 ){
 		hyb_error( H_ET_SYNTAX, "Class '%s' already defined", classname );
 	}
 
@@ -925,6 +929,45 @@ Object *engine_on_threaded_call( engine_t *engine, string function_name, vframe_
 	}
 
 	engine_prepare_stack( engine, frame, stack, function_name, identifiers, argv );
+
+	/* call the function */
+	result = engine_exec( engine, &stack, body );
+
+	engine_dismiss_stack( engine, stack );
+
+	/* return function evaluation value */
+	return result;
+}
+
+Object *engine_on_threaded_call( engine_t *engine, Node *function, vframe_t *frame, vmem_t *argv ){
+	Node    *identifier           = H_UNDEFINED;
+	vframe_t stack;
+	Object  *value                = H_UNDEFINED,
+			*result               = H_UNDEFINED;
+	Node    *body                 = H_UNDEFINED;
+
+	vector<string> identifiers;
+	unsigned int i(0), children;
+
+    children = function->children();
+    for( i = 0, body = function->child(0); i < children; ++i ){
+    	body = function->child(i);
+    	if( body->type() == H_NT_IDENTIFIER ){
+    		identifiers.push_back( body->value.m_identifier );
+    	}
+    	else{
+    		break;
+    	}
+    }
+
+	if( identifiers.size() != argv->size() ){
+		hyb_error( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
+							    function->value.m_function.c_str(),
+							    identifiers.size(),
+							    argv->size() );
+	}
+
+	engine_prepare_stack( engine, frame, stack, function->value.m_function, identifiers, argv );
 
 	/* call the function */
 	result = engine_exec( engine, &stack, body );
