@@ -192,6 +192,18 @@ ExpressionNode::ExpressionNode( int expression ) : Node(H_NT_EXPRESSION) {
     value.m_expression = expression;
 }
 
+ExpressionNode::ExpressionNode( int expression, NodeList *list ) : Node(H_NT_EXPRESSION) {
+    value.m_expression = expression;
+
+    if( list != NULL ){
+		reserve( list->size() );
+		for( NodeList::iterator ni = list->begin(); ni != list->end(); ni++ ){
+			push_back( *ni );
+		}
+		delete list;
+	}
+}
+
 ExpressionNode::ExpressionNode( int expression, int argc, ... ) : Node(H_NT_EXPRESSION) {
     value.m_expression = expression;
     va_list ap;

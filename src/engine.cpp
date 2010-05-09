@@ -378,6 +378,12 @@ Object *engine_exec( engine_t *engine, vframe_t *frame, Node *node ){
                 /* expression ; */
                 case T_EOSTMT  :
                     return engine_on_eostmt( engine, frame, node );
+                /* [ a, b, c, d ] */
+                case T_ARRAY :
+					return engine_on_array( engine, frame, node );
+				/* [ a : b, c : d ] */
+                case T_MAP :
+					return engine_on_map( engine, frame, node );
                 /* & expression */
                 case T_REF :
                 	return engine_on_reference( engine, frame, node );
@@ -1621,6 +1627,30 @@ Object *engine_on_eostmt( engine_t *engine, vframe_t *frame, Node *node ){
     engine_check_frame_exit(frame)
 
     return res_2;
+}
+
+Object *engine_on_array( engine_t *engine, vframe_t *frame, Node *node ){
+	VectorObject *v = gc_new_vector();
+	size_t i, items( node->children() );
+
+	for( i = 0; i < items; ++i ){
+		ob_cl_push_reference( (Object *)v, engine_exec( engine, frame, node->child(i) ) );
+	}
+
+	return (Object *)v;
+}
+
+Object *engine_on_map( engine_t *engine, vframe_t *frame, Node *node ){
+	MapObject *m = gc_new_map();
+	size_t i, items( node->children() );
+
+	for( i = 0; i < items; i += 2 ){
+		ob_cl_set_reference( (Object *)m,
+							 engine_exec( engine, frame, node->child(i) ),
+							 engine_exec( engine, frame, node->child(i + 1) ) );
+	}
+
+	return (Object *)m;
 }
 
 Object *engine_on_dot( engine_t *engine, vframe_t *frame, Node *node ){

@@ -179,6 +179,7 @@ class ExpressionNode : public Node {
     public :
 
         ExpressionNode( int expression );
+        ExpressionNode( int expression, NodeList *list );
         ExpressionNode( int expression, int argc, ... );
 };
 

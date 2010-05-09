@@ -45,6 +45,8 @@
 #define MK_IDENT_NODE(a)          new IdentifierNode(a)
 #define MK_ATTR_NODE(a,b)		  new IdentifierNode(a,b)
 #define MK_CONST_NODE(a)          new ConstantNode(a)
+#define MK_ARRAY_NODE(a)		  new ExpressionNode( T_ARRAY, a )
+#define MK_MAP_NODE(a)			  new ExpressionNode( T_MAP, a )
 #define MK_MREQ_NODE(a,b)         new MemberRequestNode(a,b)
 /* statements */
 #define MK_EXPLODE_NODE(a,b)	  new StatementNode( T_EXPLODE, a, b )
@@ -159,6 +161,8 @@ vm_t *__hyb_vm;
 %token <method>   	T_METHOD_PROTOTYPE;
 
 %token T_EOSTMT
+%token T_ARRAY
+%token T_MAP
 %token T_ASSIGN
 %token T_EXPLODE
 %token T_VARGS
@@ -223,6 +227,8 @@ vm_t *__hyb_vm;
 %nonassoc T_INC T_DEC
 
 %type <node>   statement arithmeticExpression bitwiseExpression logicExpression callExpression expression statements
+%type <list>   mapList
+%type <list>   itemList
 %type <list>   argumentList
 %type <list>   caseCascade
 %type <list>   attrList
@@ -242,6 +248,13 @@ body       : body statement { vm_timer( __hyb_vm, HYB_TIMER_START );
                             }
            | /* empty */ ;
 
+mapList : expression ':' expression ',' mapList { $$ = MK_NODE($5);    $$->head($1,$3); }
+	    | expression ':' expression 			{ $$ = MK_NODE_LIST(); $$->tail($1,$3); }
+		| /* empty */            			    { $$ = MK_NODE_LIST(); };
+
+itemList : expression ',' itemList { $$ = MK_NODE($3);    $$->head($1); }
+ 		 | expression              { $$ = MK_NODE_LIST(); $$->tail($1); }
+		 | /* empty */             { $$ = MK_NODE_LIST(); };
 
 argumentList : expression ':' argumentList { $$ = MK_NODE($3);    $$->head($1); }
 			 | expression ',' argumentList { $$ = MK_NODE($3);    $$->head($1); }
@@ -438,6 +451,8 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            | T_REAL                                           { $$ = MK_CONST_NODE($1); }
            | T_CHAR                                           { $$ = MK_CONST_NODE($1); }
            | T_STRING                                         { $$ = MK_CONST_NODE($1); free($1); }
+           | '[' itemList ']'                                 { $$ = MK_ARRAY_NODE($2); }
+           | '[' mapList ']'								  { $$ = MK_MAP_NODE($2); }
            /* expression -> <identifier> */
            | expression T_GET_MEMBER T_IDENT 				  { $$ = MK_MREQ_NODE( $1, MK_IDENT_NODE($3) ); free($3); }
            /* identifier */

@@ -114,6 +114,14 @@ Object   *engine_on_member_request( engine_t *engine, vframe_t *, Node * );
  */
 Object   *engine_on_constant( engine_t *engine, vframe_t *, Node * );
 /*
+ * Create an array.
+ */
+Object   *engine_on_array( engine_t *engine, vframe_t *, Node * );
+/*
+ * Create a map.
+ */
+Object   *engine_on_map( engine_t *engine, vframe_t *, Node * );
+/*
  * Function declaration, add it to the code segment.
  */
 Object   *engine_on_function_declaration( engine_t *engine, vframe_t *, Node * );
