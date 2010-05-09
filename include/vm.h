@@ -305,7 +305,7 @@ __force_inline void vm_depool( vm_t *vm, pthread_t tid = 0 ){
 /*
  * Return the active frame pointer (last in the list).
  */
-#define vm_frame( vm ) (vm->frames.size() ? vm->frames.back() : &vm->vmem)
+#define vm_frame( vm ) vm->frames.back()
 /*
  * Compute execution time and print it.
  */
