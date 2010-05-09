@@ -59,7 +59,7 @@ Object *MemorySegment::add( char *identifier, Object *object ){
 		 * Overwriting a constant object, print a warning.
 		 */
     	if( (_old->attributes & H_OA_CONSTANT) == H_OA_CONSTANT ){
-			hyb_error( H_ET_WARNING, "Overwriting constant value '%s'.", identifier );
+			hyb_error( H_ET_WARNING, "Overwriting constant value '%s'", identifier );
 		}
     	
     	/*
