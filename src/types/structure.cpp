@@ -173,8 +173,6 @@ IMPLEMENT_TYPE(Structure) {
 	0, // scanf
 	0, // to_string
 	0, // to_int
-	0, // from_int
-	0, // from_float
 	0, // range
 	0, // regexp
 

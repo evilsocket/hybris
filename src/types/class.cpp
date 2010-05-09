@@ -631,8 +631,6 @@ IMPLEMENT_TYPE(Class) {
 	0, // scanf
 	0, // to_string
 	0, // to_int
-	0, // from_int
-	0, // from_float
 	class_range, // range
 	class_regexp, // regexp
 

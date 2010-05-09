@@ -218,24 +218,6 @@ Object *ob_to_int( Object *o ){
 	}
 }
 
-Object *ob_from_int( Object *o ){
-	if( o->type->from_int != HYB_UNIMPLEMENTED_FUNCTION ){
-		return o->type->from_int(o);
-	}
-	else{
-		hyb_error( H_ET_SYNTAX, "couldn't convert object type '%s' from int", ob_typename(o) );
-	}
-}
-
-Object *ob_from_float( Object *o ){
-    if( o->type->from_float != HYB_UNIMPLEMENTED_FUNCTION ){
-		return o->type->from_float(o);
-	}
-	else{
-		hyb_error( H_ET_SYNTAX, "couldn't convert object type '%s' from float", ob_typename(o) );
-	}
-}
-
 Object *ob_range( Object *a, Object *b ){
 	/*
 	 * Range ( '..' ) operator admits only integer and char operands,
