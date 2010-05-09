@@ -137,21 +137,11 @@ void int_scanf( Object *me ){
 }
 
 Object * int_to_string( Object *me ){
-    DECLARE_TYPE(String);
-
-    return String_Type.from_int(me);
+    return (Object *)gc_new_string( ob_svalue(me).c_str() );
 }
 
 Object * int_to_int( Object *me ){
     return me;
-}
-
-Object * int_from_int( Object *i ){
-    return i;
-}
-
-Object * int_from_float( Object *f ){
-    return (Object *)gc_new_integer( ob_float_ucast(f)->value );
 }
 
 Object *int_range( Object *a, Object *b ){
@@ -468,8 +458,6 @@ IMPLEMENT_TYPE(Integer) {
 	int_scanf, // scanf
 	int_to_string, // to_string
 	int_to_int, // to_int
-	int_from_int, // from_int
-	int_from_float, // from_float
 	int_range, // range
 	0, // regexp
 
@@ -562,8 +550,6 @@ IMPLEMENT_TYPE(Alias) {
 	int_scanf, // scanf
 	int_to_string, // to_string
 	int_to_int, // to_int
-	int_from_int, // from_int
-	int_from_float, // from_float
 	int_range, // range
 	0, // regexp
 
@@ -656,8 +642,6 @@ IMPLEMENT_TYPE(Extern) {
 	int_scanf, // scanf
 	int_to_string, // to_string
 	int_to_int, // to_int
-	int_from_int, // from_int
-	int_from_float, // from_float
 	int_range, // range
 	0, // regexp
 

@@ -121,21 +121,11 @@ void float_scanf( Object *me ){
 }
 
 Object * float_to_string( Object *me ){
-    DECLARE_TYPE(String);
-
-    return String_Type.from_float(me);
+    return (Object *)gc_new_string( ob_svalue(me).c_str() );
 }
 
 Object * float_to_int( Object *me ){
     return (Object *)gc_new_integer( ob_float_ucast(me)->value );
-}
-
-Object * float_from_int( Object *me ){
-    return (Object *)gc_new_float( (ob_int_ucast(me))->value );
-}
-
-Object * float_from_float( Object *me ){
-    return me;
 }
 
 /** arithmetic operators **/
@@ -409,8 +399,6 @@ IMPLEMENT_TYPE(Float) {
 	float_scanf, // scanf
 	float_to_string, // to_string
 	float_to_int, // to_int
-	float_from_int, // from_int
-	float_from_float, // from_float
 	0, // range
 	0, // regexp
 

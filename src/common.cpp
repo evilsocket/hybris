@@ -94,7 +94,8 @@ void hyb_error( H_ERROR_TYPE type, const char *format, ... ){
     switch( type ){
         // simple warning
         case H_ET_WARNING :
-            sprintf( error, "\033[01;33mWARNING : %s .\033[00m", message );
+            fprintf( stderr, "\033[01;33mWARNING : %s .\033[00m\n", message );
+            return;
         break;
         // generic error (file not found, module not found, ecc)
         case H_ET_GENERIC :

@@ -72,11 +72,13 @@ task :checkdeps do
 	raise "[ERROR] pthread.h not found !\n" unless have_header( "pthread.h" )
 	raise "[ERROR] libffi not found !\n" unless have_library( "ffi", "ffi_call" ) 
 	raise "[ERROR] libxml2 not found !\n" unless have_library( "xml2", "xmlReadFile" )
+	raise "[ERROR] libcurl not found !\n" unless have_library( "curl", "curl_easy_init" )
+	raise "[ERROR] curl.h not found !\n" unless have_header( "curl/curl.h" )
 end
 
 task :config_h do
 	puts "@ Creating config.h"
-	File.open("include/config.h", "w+t") do |config|
+	File.open("include/config.h", "w+") do |config|
 	      config.puts "
 #define AUTHOR \"The Hybris Dev Team http://www.hybris-lang.org/\"
 /* system path for hybris global scripts */

@@ -109,6 +109,10 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
 	}
 
     vm->vmem.owner = (argc > 1 ? argv[1] : "<stdin>");
+    /*
+     * The first frame is always the main one.
+     */
+    vm->frames.push_back(&vm->vmem);
 
     int h_argc = argc - 1;
 

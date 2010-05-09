@@ -55,6 +55,13 @@ Object *MemorySegment::add( char *identifier, Object *object ){
     }
     /* else set the new value */
     else{
+		/*
+		 * Overwriting a constant object, print a warning.
+		 */
+    	if( (_old->attributes & H_OA_CONSTANT) == H_OA_CONSTANT ){
+			hyb_error( H_ET_WARNING, "Overwriting constant value '%s'.", identifier );
+		}
+    	
     	/*
     	 * If the old value is just a reference to something else (otReference type),
     	 * don't replace it in memory, but assign a new value to the object it

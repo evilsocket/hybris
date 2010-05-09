@@ -257,8 +257,6 @@ typedef struct _object_type_t {
     ob_scanf_function_t         scanf;
     ob_unary_function_t         to_string;
     ob_unary_function_t         to_int;
-    ob_unary_function_t         from_int;
-    ob_unary_function_t         from_float;
     ob_binary_function_t        range;
     ob_binary_function_t        regexp;
 
@@ -423,14 +421,6 @@ Object *ob_to_string( Object *o );
  * Convert an object to integer type.
  */
 Object *ob_to_int( Object *o );
-/*
- * Create an object from an integer type.
- */
-Object *ob_from_int( Object *o );
-/*
- * Create an object from a double type.
- */
-Object *ob_from_float( Object *o );
 /*
  * Create a vector representing the range [a,b].
  */

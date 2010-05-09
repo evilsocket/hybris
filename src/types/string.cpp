@@ -214,24 +214,6 @@ Object * string_to_int( Object *me ){
     return (Object *)gc_new_integer( atol(ob_string_ucast(me)->value.c_str()) );
 }
 
-Object * string_from_int( Object *i ){
-    char tmp[0xFF] = {0};
-    long ivalue    = ob_ivalue(i);
-
-    sprintf( tmp, "%ld", ivalue );
-
-    return (Object *)gc_new_string( tmp );
-}
-
-Object * string_from_float( Object *f ){
-    char   tmp[0xFF] = {0};
-    double fvalue    = ob_fvalue(f);
-
-    sprintf( tmp, "%lf", fvalue );
-
-    return (Object *)gc_new_string( tmp );
-}
-
 void string_parse_pcre( string& raw, string& regex, int& opts ){
     int i, ccount, rc,
 	   *offsets,
@@ -417,8 +399,6 @@ IMPLEMENT_TYPE(String) {
 	string_scanf, // scanf
 	string_to_string, // to_string
 	string_to_int, // to_int
-	string_from_int, // from_int
-	string_from_float, // from_float
 	0, // range
 	string_regexp, // regexp
 

@@ -119,23 +119,11 @@ void char_scanf( Object *me ){
 }
 
 Object * char_to_string( Object *me ){
-    DECLARE_TYPE(String);
-
-    IntegerObject tmp( ob_char_ucast(me)->value );
-
-    return String_Type.from_int((Object *)&tmp);
+    return (Object *)gc_new_string( ob_svalue(me).c_str() );
 }
 
 Object * char_to_int( Object *me ){
     return (Object *)gc_new_integer( ob_char_ucast(me)->value );
-}
-
-Object * char_from_int( Object *i ){
-    return (Object *)gc_new_char( (ob_int_ucast(i))->value );
-}
-
-Object * char_from_float( Object *f ){
-    return (Object *)gc_new_char( ob_float_ucast(f)->value );
 }
 
 Object *char_range( Object *a, Object *b ){
@@ -442,8 +430,6 @@ IMPLEMENT_TYPE(Char) {
 	char_scanf, // scanf
 	char_to_string, // to_string
 	char_to_int, // to_int
-	char_from_int, // from_int
-	char_from_float, // from_float
 	char_range, // range
 	0, // regexp
 

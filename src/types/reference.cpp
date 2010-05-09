@@ -356,8 +356,6 @@ IMPLEMENT_TYPE(Reference) {
 	ref_scanf, // scanf
 	ref_to_string, // to_string
 	ref_to_int, // to_int
-	0, // from_int
-	0, // from_float
 	ref_range, // range
 	ref_regexp, // regexp
 

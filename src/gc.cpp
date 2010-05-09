@@ -18,6 +18,8 @@
 */
 #include "common.h"
 #include "gc.h"
+#include "vm.h"
+
 
 extern void hyb_error( H_ERROR_TYPE type, const char *format, ... );
 
@@ -45,7 +47,7 @@ __force_inline void gc_pool_append( gc_list_t *list, gc_item_t *item ){
 	}
 
 	list->tail = item;
-	item->next 	   = NULL;
+	item->next = NULL;
 
 	list->items++;
 	list->usage += item->size;
@@ -174,10 +176,10 @@ void gc_collect(){
 			printf( "[MEM DEBUG] GC quota (%d bytes) reached with %d bytes, collecting ...\n", __gc.gc_threshold, __gc.usage );
 		#endif
 
-		int i;
 		/*
 		 * Loop each gc layer using the order determined by GC_* macros.
 		 */
+		int i;
 		for( GC_FIRST_LAYER(i); GC_LAST_LAYER(i); GC_NEXT_LAYER(i) ){
 			gc_list_t *list = &__gc.layers[i];
 			gc_item_t *item;

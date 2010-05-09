@@ -78,11 +78,7 @@ void handle_print( Object *me, int tabs ){
 }
 
 Object * handle_to_string( Object *me ){
-    DECLARE_TYPE(String);
-
-    IntegerObject tmp( H_ADDRESS_OF(ob_handle_ucast(me)->value) );
-
-    return String_Type.from_int((Object *)&tmp);
+    return (Object *)gc_new_string( ob_svalue(me).c_str() );
 }
 
 Object * handle_to_int( Object *me ){
@@ -169,8 +165,6 @@ IMPLEMENT_TYPE(Handle) {
 	0, // scanf
 	handle_to_string, // to_string
 	handle_to_int, // to_int
-	0, // from_int
-	0, // from_float
 	0, // range
 	0, // regexp
 
