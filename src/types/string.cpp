@@ -78,8 +78,8 @@ const char *string_typename( Object *o ){
 	return o->type->name;
 }
 
-void string_set_references( Object *me, int ref ){
-    me->ref += ref;
+Object *string_get_ref( Object *me, int index ){
+	return NULL;
 }
 
 Object *string_clone( Object *me ){
@@ -315,8 +315,6 @@ Object *string_assign( Object *me, Object *op ){
     else {
         Object *clone = ob_clone(op);
 
-        ob_set_references( clone, +1 );
-
         me = clone;
     }
 
@@ -382,7 +380,7 @@ IMPLEMENT_TYPE(String) {
 
 	/** generic function pointers **/
     string_typename, // type_name
-	string_set_references, // set_references
+    string_get_ref, // get_ref
 	string_clone, // clone
 	0, // free
 	string_get_size, // get_size

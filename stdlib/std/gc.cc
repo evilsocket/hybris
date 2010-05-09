@@ -32,7 +32,7 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 };
 
 HYBRIS_DEFINE_FUNCTION(hgc_collect){
-	gc_collect();
+	gc_collect( vm );
 	return ob_dcast( H_DEFAULT_RETURN );
 }
 

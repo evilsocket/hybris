@@ -55,17 +55,13 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	 * Set the stack owner
 	 */
 	stack.owner = owner;
-	/*
-	 * Increment references of the main class
-	 */
-	ob_inc_ref(cobj);
+
 	stack.insert( "me", cobj );
 	/*
 	 * Evaluate each object and increment references
 	 */
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->child(i) );
-		ob_inc_ref(value);
 		if( i >= n_ids ){
 			stack.push( value );
 		}
@@ -91,10 +87,7 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t &stack, str
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
 	}
 	stack.owner = owner;
-	/*
-	 * Increment references of the main class
-	 */
-	ob_inc_ref( cobj );
+
 	stack.insert( "me", cobj );
 	/*
 	 * Evaluate each object and increment references
@@ -102,7 +95,6 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t &stack, str
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
 		value = va_arg( ap, Object * );
-		ob_inc_ref(value);
 		if( i >= n_ids ){
 			stack.push( value );
 		}
@@ -133,7 +125,6 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	argc = argv->size();
 	for( i = 0; i < argc; ++i ){
 		value = argv->at(i);
-		ob_inc_ref(value);
 		if( i >= n_ids ){
 			stack.push( value );
 		}
@@ -166,7 +157,6 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	argc = argv->children();
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->at(i) );
-		ob_inc_ref(value);
 		if( i >= n_ids ){
 			stack.push( value );
 		}
@@ -196,12 +186,10 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	 */
 	stack.owner = owner;
 
-	ob_inc_ref( (Object *)fn_pointer);
 	stack.push( (Object *)fn_pointer );
 	argc = argv->children();
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->child(i) );
-		ob_inc_ref(value);
 		stack.push( value );
 	}
 
@@ -228,7 +216,6 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	argc = argv->children();
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->child(i) );
-		ob_inc_ref(value);
 		stack.push( value );
 	}
 
@@ -239,16 +226,7 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 }
 
 __force_inline void engine_dismiss_stack( engine_t *engine, vframe_t &stack ){
-	int i, size( stack.size() );
-
 	vm_pop_frame( engine->vm );
-	/*
-	 * Decrement reference counters of all the objects
-	 * this frame owns.
-	 */
-	for( i = 0; i < size; ++i ){
-		ob_dec_ref( stack.at(i) );
-	}
 }
 
 Node * engine_find_function( engine_t *engine, vframe_t *frame, Node *call ){
@@ -339,7 +317,7 @@ Object *engine_exec( engine_t *engine, vframe_t *frame, Node *node ){
         	 * If the routine would be called on expressions too, there would be a high
         	 * risk of loosing tmp values such as evaluations, ecc.
         	 */
-        	gc_collect();
+        	gc_collect( engine->vm );
 
             switch( node->value.m_statement ){
 				/* statement unless expression */
@@ -1201,10 +1179,6 @@ Object *engine_on_reference( engine_t *engine, vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
     o = engine_exec( engine, frame, node->child(0) );
-    /*
-     * Kind of obvious, the object now has one more reference :)
-     */
-    ob_inc_ref(o);
 
     return (Object *)gc_new_reference(o);
 }
@@ -1270,11 +1244,7 @@ Object *engine_on_subscript_push( engine_t *engine, vframe_t *frame, Node *node 
 
     array  = engine_exec( engine, frame, node->child(0) );
 
-    ob_inc_ref( array );
-
 	object = engine_exec( engine, frame, node->child(1) );
-
-	ob_dec_ref( array );
 
 	engine_check_frame_exit(frame)
 
@@ -1422,14 +1392,23 @@ Object *engine_on_foreach( engine_t *engine, vframe_t *frame, Node *node ){
     body       = node->child(2);
     size       = ob_get_size(v);
 
-    ob_inc_ref(v);
+    /*
+     * Prevent the vector from being garbage collected, because may cause
+     * seg faults in situations like :
+     *
+     * 		foreach( i of 1..10 )
+     */
+    GC_SET_UNTOUCHABLE(v);
 
     for( ; index.value < size; ++index.value ){
         frame->add( identifier, ob_cl_at( v, (Object *)&index ) );
 
         result = engine_exec( engine, frame, body );
 
-        engine_check_frame_exit(frame)
+        if( frame->state.is(Exception) || frame->state.is(Return) ){
+        	GC_RESET(v);
+        	return frame->state.value;
+	    }
 
         frame->state.unset(Next);
 		if( frame->state.is(Break) ){
@@ -1438,7 +1417,7 @@ Object *engine_on_foreach( engine_t *engine, vframe_t *frame, Node *node ){
 		}
     }
 
-    ob_dec_ref(v);
+    GC_RESET(v);
 
     return result;
 }
@@ -1457,7 +1436,13 @@ Object *engine_on_foreach_mapping( engine_t *engine, vframe_t *frame, Node *node
     body             = node->child(3);
     size             = ob_get_size(map);
 
-    ob_inc_ref(map);
+    /*
+     * Prevent the map from being garbage collected, because may cause
+     * seg faults in situations like :
+     *
+     * 		foreach( i of map( ... ) )
+     */
+    GC_SET_UNTOUCHABLE(map);
 
     for( i = 0; i < size; ++i ){
         frame->add( key_identifier,   ob_map_ucast(map)->keys[i] );
@@ -1465,7 +1450,10 @@ Object *engine_on_foreach_mapping( engine_t *engine, vframe_t *frame, Node *node
 
         result = engine_exec( engine, frame, body );
 
-        engine_check_frame_exit(frame)
+        if( frame->state.is(Exception) || frame->state.is(Return) ){
+			GC_RESET(map);
+			return frame->state.value;
+		}
 
         frame->state.unset(Next);
 		if( frame->state.is(Break) ){
@@ -1474,7 +1462,7 @@ Object *engine_on_foreach_mapping( engine_t *engine, vframe_t *frame, Node *node
 		}
     }
 
-    ob_dec_ref(map);
+    GC_RESET(map);
 
     return result;
 }
@@ -1552,13 +1540,9 @@ Object *engine_on_switch( engine_t *engine, vframe_t *frame, Node *node){
 
             engine_check_frame_exit(frame)
 
-            ob_inc_ref(compare);
-
             if( ob_cmp( target, compare ) == 0 ){
                 return engine_exec( engine, frame, stmt_node );
             }
-
-            ob_dec_ref(compare);
         }
     }
 
@@ -1593,11 +1577,6 @@ Object *engine_on_throw( engine_t *engine, vframe_t *frame, Node *node ){
 	Object *exception = H_UNDEFINED;
 
 	exception = engine_exec( engine, frame, node->child(0) );
-	/*
-	 * Make sure that this object will not be freed by the gc unless
-	 * someone catches the exception.
-	 */
-	ob_inc_ref( exception );
 
 	frame->state.set( Exception, exception );
 
@@ -1617,16 +1596,6 @@ Object *engine_on_try_catch( engine_t *engine, vframe_t *frame, Node *node ){
 		exception = frame->state.value;
 
 		assert( exception != H_UNDEFINED );
-		/*
-		 * In engine_on_throw we've incremented the exception reference
-		 * counter by one to make sure that the object would not be freed
-		 * by the garbage collector.
-		 *
-		 * Now we're about to declare the exception value as a variable,
-		 * therefore to increment its ref counter again, so decrement it
-		 * to balance the increment of engine_on_throw .
-		 */
-		ob_dec_ref( exception );
 
 		frame->add( (char *)ex_ident->value.m_identifier.c_str(), exception );
 

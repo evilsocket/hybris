@@ -26,15 +26,8 @@ const char *binary_typename( Object *o ){
 	return o->type->name;
 }
 
-void binary_set_references( Object *me, int ref ){
-    BinaryObjectIterator i;
-    BinaryObject *bme = (BinaryObject *)me;
-
-    me->ref += ref;
-
-    for( i = bme->value.begin(); i != bme->value.end(); i++ ){
-        ob_set_references( *i, ref );
-    }
+Object *binary_get_ref( Object *me, int index ){
+	return (index >= ((BinaryObject *)me)->value.size() ? NULL : ((BinaryObject *)me)->value.at(index));
 }
 
 Object *binary_clone( Object *me ){
@@ -162,14 +155,9 @@ void binary_print( Object *me, int tabs ){
 
 /** arithmetic operators **/
 Object *binary_assign( Object *me, Object *op ){
-    /*
-     * Decrement my items reference count (not mine).
-     */
     binary_free(me);
 
     Object *clone = ob_clone(op);
-
-    ob_set_references( clone, +1 );
 
     return clone;
 }
@@ -242,7 +230,7 @@ IMPLEMENT_TYPE(Binary) {
 
 	/** generic function pointers **/
     binary_typename, // type_name
-	binary_set_references, // set_references
+    binary_get_ref, // get_ref
 	binary_clone, // clone
 	binary_free, // free
 	binary_get_size, // get_size

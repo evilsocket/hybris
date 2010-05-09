@@ -24,14 +24,8 @@ const char *struct_typename( Object *o ){
 	return o->type->name;
 }
 
-void struct_set_references( Object *me, int ref ){
-	StructureObjectAttributeIterator ai;
-    StructureObject *sme = ob_struct_ucast(me);
-
-    me->ref += ref;
-    for( ai = sme->s_attributes.begin(); ai != sme->s_attributes.end(); ai++ ){
-        ob_set_references( (*ai)->value, ref );
-    }
+Object *struct_get_ref( Object *me, int index ){
+	return (index >= ((StructureObject *)me)->s_attributes.size() ? NULL : ((StructureObject *)me)->s_attributes.at(index));
 }
 
 Object *struct_clone( Object *me ){
@@ -106,8 +100,6 @@ Object *struct_assign( Object *me, Object *op ){
 
     Object *clone = ob_clone(op);
 
-    ob_set_references( clone, +1 );
-
     return (me = clone);
 }
 
@@ -156,7 +148,7 @@ IMPLEMENT_TYPE(Structure) {
 
 	/** generic function pointers **/
     struct_typename, // type_name
-	struct_set_references, // set_references
+    struct_get_ref, // get_ref
 	struct_clone, // clone
 	struct_free, // free
 	struct_get_size, // get_size

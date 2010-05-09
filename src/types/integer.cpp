@@ -24,16 +24,16 @@ const char *int_typename( Object *o ){
 	return o->type->name;
 }
 
+Object *int_get_ref( Object *me, int index ){
+	return NULL;
+}
+
 const char *alias_typename( Object *o ){
 	return o->type->name;
 }
 
 const char *extern_typename( Object *o ){
 	return o->type->name;
-}
-
-void int_set_references( Object *me, int ref ){
-    me->ref += ref;
 }
 
 Object *int_clone( Object *me ){
@@ -172,8 +172,6 @@ Object *int_assign( Object *me, Object *op ){
     }
     else {
         Object *clone = ob_clone(op);
-
-        ob_set_references( clone, +1 );
 
         return (me = clone);
     }
@@ -441,7 +439,7 @@ IMPLEMENT_TYPE(Integer) {
 
 	/** generic function pointers **/
     int_typename, // type_name
-	int_set_references, // set_references
+    int_get_ref, // get_ref
 	int_clone, // clone
 	0, // free
 	int_get_size, // get_size
@@ -533,7 +531,7 @@ IMPLEMENT_TYPE(Alias) {
 
 	/** generic function pointers **/
     alias_typename, // type_name
-	int_set_references, // set_references
+    int_get_ref, // get_ref
 	alias_clone, // clone
 	0, // free
 	int_get_size, // get_size
@@ -625,7 +623,7 @@ IMPLEMENT_TYPE(Extern) {
 
 	/** generic function pointers **/
     extern_typename, // type_name
-	int_set_references, // set_references
+    int_get_ref, // get_ref
 	extern_clone, // clone
 	0, // free
 	int_get_size, // get_size

@@ -24,17 +24,21 @@ const char *matrix_typename( Object *o ){
 	return o->type->name;
 }
 
-void matrix_set_references( Object *me, int ref ){
-    size_t x, y;
-    MatrixObject *mme = ob_matrix_ucast(me);
+Object *matrix_get_ref( Object *me, int index ){
+	MatrixObject *mme  = (MatrixObject *)me;
+	size_t        size = mme->rows * mme->columns;
 
-    me->ref += ref;
+	if( index >= size ){
+		return NULL;
+	}
+	else{
+		size_t min = mme->rows < index ? mme->rows : index,
+			   max = mme->rows > index ? mme->rows : index,
+			   x   = max % min,
+			   y   = (int)(max / min);
 
-    for( x = 0; x < mme->rows; ++x ){
-        for( y = 0; y < mme->columns; ++y ){
-            ob_set_references( mme->matrix[x][y], ref );
-        }
-    }
+		return mme->matrix[x][y];
+	}
 }
 
 Object *matrix_clone( Object *me ){
@@ -162,8 +166,6 @@ Object *matrix_assign( Object *me, Object *op ){
     matrix_free(me);
 
     Object *clone = ob_clone(op);
-
-    ob_set_references( clone, +1 );
 
     return me = clone;
 }
@@ -397,7 +399,7 @@ IMPLEMENT_TYPE(Matrix) {
 
 	/** generic function pointers **/
     matrix_typename, // type_name
-	matrix_set_references, // set_references
+    matrix_get_ref, // get_ref
 	matrix_clone, // clone
 	matrix_free, // free
 	matrix_get_size, // get_size

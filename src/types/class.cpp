@@ -55,12 +55,10 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 
 	stack.owner = string(ob_typename(me)) + ":: operator " + string(op_name);
 
-	ob_inc_ref(me);
 	stack.insert( "me", me );
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
 		value = va_arg( ap, Object * );
-		ob_inc_ref(value);
 		stack.insert( (char *)op->child(i)->value.m_identifier.c_str(), value );
 	}
 	va_end(ap);
@@ -71,10 +69,6 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	result = engine_exec( __hyb_vm->engine, &stack, op->callBody() );
 
 	vm_pop_frame( __hyb_vm );
-
-	for( i = 0; i < stack.size(); ++i ){
-		ob_dec_ref( stack.at(i) );
-	}
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
@@ -130,12 +124,10 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	 */
 	stack.owner = string(ob_typename(me)) + "::" + string(ds_name);
 
-	ob_inc_ref(me);
 	stack.insert( "me", me );
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
 		value = va_arg( ap, Object * );
-		ob_inc_ref(value);
 		stack.insert( (char *)ds->child(i)->value.m_identifier.c_str(), value );
 	}
 	va_end(ap);
@@ -146,14 +138,6 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	result = engine_exec( __hyb_vm->engine, &stack, ds->callBody() );
 
 	vm_pop_frame( __hyb_vm );
-
-	/*
-	 * Decrement reference counters of all the objects
-	 * this frame owns.
-	 */
-	for( i = 0; i < stack.size(); ++i ){
-		ob_dec_ref( stack.at(i) );
-	}
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
@@ -172,15 +156,8 @@ const char *class_typename( Object *o ){
 	return ob_class_ucast(o)->name.c_str();
 }
 
-void class_set_references( Object *me, int ref ){
-    ClassObjectAttributeIterator ai;
-    ClassObject *cme = ob_class_ucast(me);
-
-    me->ref += ref;
-
-    for( ai = cme->c_attributes.begin(); ai != cme->c_attributes.end(); ai++ ){
-    	ob_set_references( (*ai)->value->value, ref );
-    }
+Object *class_get_ref( Object *me, int index ){
+	return (index >= ((ClassObject *)me)->c_attributes.size() ? NULL : ((ClassObject *)me)->c_attributes.at(index)->value);
 }
 
 Object *class_clone( Object *me ){
@@ -243,14 +220,11 @@ void class_free( Object *me ){
 			extern vm_t *__hyb_vm;
 
 			stack.owner = string(ob_typename(me)) + "::__expire";
-			ob_inc_ref(me);
 			stack.insert( "me", me );
 
 			vm_add_frame( __hyb_vm, &stack );
 
 			engine_exec( __hyb_vm->engine, &stack, dtor->callBody() );
-
-			ob_dec_ref(me);
 
 			vm_pop_frame( __hyb_vm );
 		}
@@ -319,8 +293,6 @@ Object *class_assign( Object *me, Object *op ){
     class_free(me);
 
     Object *clone = ob_clone(op);
-
-    ob_set_references( clone, +1 );
 
     return (me = clone);
 }
@@ -614,7 +586,7 @@ IMPLEMENT_TYPE(Class) {
 
 	/** generic function pointers **/
     class_typename, // type_name
-	class_set_references, // set_references
+    class_get_ref, // get_ref
 	class_clone, // clone
 	class_free, // free
 	class_get_size, // get_size

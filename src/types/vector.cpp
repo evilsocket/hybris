@@ -23,15 +23,8 @@ const char *vector_typename( Object *o ){
 	return o->type->name;
 }
 
-void vector_set_references( Object *me, int ref ){
-    VectorObjectIterator i;
-    VectorObject *vme = ob_vector_ucast(me);
-
-    me->ref += ref;
-
-    for( i = vme->value.begin(); i != vme->value.end(); i++ ){
-        ob_set_references( *i, ref );
-    }
+Object *vector_get_ref( Object *me, int index ){
+	return (index >= ((VectorObject *)me)->value.size() ? NULL : ((VectorObject *)me)->value.at(index));
 }
 
 /** generic function pointers **/
@@ -154,8 +147,6 @@ Object *vector_assign( Object *me, Object *op ){
 
     Object *clone = ob_clone(op);
 
-    ob_set_references( clone, +1 );
-
     return clone;
 }
 
@@ -239,7 +230,7 @@ IMPLEMENT_TYPE(Vector) {
 
 	/** generic function pointers **/
     vector_typename, // type_name
-	vector_set_references, // set_references
+    vector_get_ref, // get_ref
 	vector_clone, // clone
 	vector_free, // free
 	vector_get_size, // get_size

@@ -23,8 +23,8 @@ const char *handle_typename( Object *o ){
 	return o->type->name;
 }
 
-void handle_set_references( Object *me, int ref ){
-    me->ref += ref;
+Object *handle_get_ref( Object *me, int index ){
+	return (index > 0 ? NULL : (Object *)((HandleObject *)me)->value);
 }
 
 Object *handle_clone( Object *me ){
@@ -148,7 +148,7 @@ IMPLEMENT_TYPE(Handle) {
 
 	/** generic function pointers **/
     handle_typename, // type_name
-	handle_set_references, // set_references
+    handle_get_ref, // get_ref
 	handle_clone, // clone
 	0, // free
 	handle_get_size, // get_size

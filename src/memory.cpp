@@ -29,23 +29,7 @@ Object *MemorySegment::add( char *identifier, Object *object ){
            *_ret = H_UNDEFINED;
 
     if( object != H_UNDEFINED ){
-    	/*
-    	 * Only constants and referenced objects shall be cloned.
-    	 */
-    	if( (object->attributes & H_OA_CONSTANT) == H_OA_CONSTANT || object->ref > 0 ){
-    		_new = ob_clone(object);
-    	}
-    	/*
-    	 * Non constant and no references.
-    	 */
-    	else{
-    		_new = object;
-    	}
-    	/*
-    	 * This object is going to have a new reference inside this memory
-    	 * segment, so in any case increment its reference counter.
-    	 */
-    	ob_set_references( _new, +1 );
+    	_new = ob_clone(object);
     }
 
     pthread_mutex_lock( &mutex );

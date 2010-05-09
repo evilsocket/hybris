@@ -52,11 +52,11 @@ const char *ob_typename( Object * o ){
 	}
 }
 
-void ob_set_references( Object *o, int ref ){
+Object *ob_get_ref( Object *o, int index ){
 	/*
-	 * Every object has to implement its own set_reference.
+	 * Every object has to implement its own get_ref.
 	 */
-	return o->type->set_references(o,ref);
+	return o->type->get_ref(o,index);
 }
 
 Object* ob_clone( Object *o ){
@@ -67,17 +67,10 @@ Object* ob_clone( Object *o ){
 }
 
 bool ob_free( Object *o ){
-    /*
-     * In any case, decrement object reference counter.
-     */
-    ob_set_references( o, -1 );
-
     if( o->type->free != HYB_UNIMPLEMENTED_FUNCTION ){
     	/*
     	 * The free function is defined only for collection types or
     	 * types that handles pointers anyway.
-    	 * Basically, instead of licterally freeing its items, the object
-    	 * will just decrement their reference counters.
     	 */
         o->type->free(o);
 
@@ -260,7 +253,7 @@ Object *ob_assign( Object *a, Object *b ){
 	 * Every object has to implement its own assign.
      *
 	 * NOTE: If 'a' is already defined, the assign method will just replace
-	 * its value, then the vm_t will decrement old value reference counter.
+	 * its value.
 	 */
 	return a->type->assign(a,b);
 }
@@ -600,7 +593,6 @@ Object *ob_cl_push( Object *a, Object *b ){
 
 Object *ob_cl_push_reference( Object *a, Object *b ){
 	if( a->type->cl_push_reference != HYB_UNIMPLEMENTED_FUNCTION ){
-	    ob_set_references( b, +1 );
 		return a->type->cl_push_reference(a,b);
 	}
 	else{
@@ -611,7 +603,6 @@ Object *ob_cl_push_reference( Object *a, Object *b ){
 Object *ob_cl_pop( Object *o ){
 	if( o->type->cl_pop != HYB_UNIMPLEMENTED_FUNCTION ){
 		Object *item = o->type->cl_pop(o);
-		ob_set_references( item, -1 );
 		return item;
 	}
 	else{
@@ -622,7 +613,6 @@ Object *ob_cl_pop( Object *o ){
 Object *ob_cl_remove( Object *a, Object *b ){
 	if( a->type->cl_remove != HYB_UNIMPLEMENTED_FUNCTION ){
 		Object *item = a->type->cl_remove(a,b);
-		ob_set_references( item, -1 );
 		return item;
 	}
 	else{
@@ -650,7 +640,6 @@ Object *ob_cl_set( Object *a, Object *b, Object *c ){
 
 Object *ob_cl_set_reference( Object *a, Object *b, Object *c ){
     if( a->type->cl_set_reference != HYB_UNIMPLEMENTED_FUNCTION ){
-        ob_set_references( c, +1 );
 		return a->type->cl_set_reference(a,b,c);
 	}
 	else{
@@ -711,7 +700,6 @@ void ob_set_attribute( Object *s, char *a, Object *v ){
 
 void ob_set_attribute_reference( Object *s, char *a, Object *v ){
     if( s->type->set_attribute_reference != HYB_UNIMPLEMENTED_FUNCTION ){
-        ob_set_references( v, +1 );
 		return s->type->set_attribute_reference(s,a,v);
 	}
 	else{
@@ -755,15 +743,12 @@ Object *ob_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *metho
 
 	VectorObject *args = gc_new_vector();
 
-	ob_inc_ref((Object *)args);
-
 	stack.owner = string(c_name) + "::" + string("__method");
-	ob_inc_ref(c);
+
 	stack.insert( "me", c );
 	stack.add( "name", (Object *)gc_new_string(method_name) );
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( vm->engine, frame, argv->child(i) );
-		ob_inc_ref(value);
 		ob_cl_push( (Object *)args, value );
 	}
 	stack.add( "argv", (Object *)args );
@@ -774,14 +759,6 @@ Object *ob_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *metho
 	result = engine_exec( vm->engine, &stack, method->callBody() );
 
 	vm_pop_frame( vm );
-
-	/*
-	 * Decrement reference counters of all the objects
-	 * this frame owns.
-	 */
-	for( i = 0; i < stack.size(); ++i ){
-		ob_dec_ref( stack.at(i) );
-	}
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
@@ -809,11 +786,9 @@ Object *ob_call_method( vm_t *vm, Object *c, char *c_name, char *method_name, Ob
 		hyb_error( H_ET_SYNTAX, "'%s' does not name a method neither an attribute of '%s'", method_name, c_name );
 	}
 	stack.owner = string(c_name) + "::" + method_name;
-	ob_inc_ref(c);
 	stack.insert( "me", c );
 	for( ; index.value < argc; ++index.value ){
 		value = ob_cl_at( argv, (Object *)&index );
-		ob_inc_ref(value);
 		stack.insert( (char *)method->child(j)->value.m_identifier.c_str(), value  );
 	}
 
@@ -823,14 +798,6 @@ Object *ob_call_method( vm_t *vm, Object *c, char *c_name, char *method_name, Ob
 	result = engine_exec( vm->engine, &stack, method->callBody() );
 
 	vm_pop_frame( vm );
-
-	/*
-	 * Decrement reference counters of all the objects
-	 * this frame owns.
-	 */
-	for( i = 0; i < argc; ++i ){
-		ob_dec_ref( stack.at(i) );
-	}
 
 	/*
 	 * Check for unhandled exceptions and put them on the root

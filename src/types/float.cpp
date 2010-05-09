@@ -24,8 +24,8 @@ const char *float_typename( Object *o ){
 	return o->type->name;
 }
 
-void float_set_references( Object *me, int ref ){
-    me->ref += ref;
+Object *float_get_ref( Object *me, int index ){
+	return NULL;
 }
 
 Object *float_clone( Object *me ){
@@ -135,8 +135,6 @@ Object *float_assign( Object *me, Object *op ){
     }
     else {
         Object *clone = ob_clone(op);
-
-        ob_set_references( clone, +1 );
 
         me = ob_clone(op);
     }
@@ -382,7 +380,7 @@ IMPLEMENT_TYPE(Float) {
 
 	/** generic function pointers **/
     float_typename, // type_name
-	float_set_references, // set_references
+    float_get_ref, // get_ref
 	float_clone, // clone
 	0, // free
 	float_get_size, // get_size

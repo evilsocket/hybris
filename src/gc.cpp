@@ -20,7 +20,6 @@
 #include "gc.h"
 #include "vm.h"
 
-
 extern void hyb_error( H_ERROR_TYPE type, const char *format, ... );
 
 /*
@@ -141,7 +140,7 @@ struct _Object *gc_track( struct _Object *o, size_t size ){
     /*
      * Append the item to the gc pool.
      */
-    gc_pool_append( &__gc.layers[ o->type->code ], new gc_item_t(o,size) );
+    gc_pool_append( &__gc.list, new gc_item_t(o,size) );
 
     gc_unlock();
 
@@ -164,51 +163,97 @@ size_t gc_mm_threshold(){
 	return __gc.mm_threshold;
 }
 
-void gc_collect(){
+void gc_mark( Object *o ){
+	/*
+	 * Already marked?
+	 */
+	if( !o->gc_mark ){
+		/*
+		 * This object is not collectable right now.
+		 */
+		GC_SET_REFERENCED(o);
+		/*
+		 * Loop all the objects it 'contains' (such as vector items) and
+		 * call gc_mark recursively on each one.
+		 */
+		Object *referenced = NULL;
+		int i = 0;
+		while( (referenced = ob_get_ref( o, i++ )) != NULL ){
+			gc_mark(referenced);
+		}
+	}
+}
+
+void gc_collect( vm_t *vm ){
     /**
      * Execute garbage collection loop only if used memory has reaced the
      * threshold.
      */
     if( __gc.usage >= __gc.gc_threshold ){
-    	gc_lock();
+    	/*
+    	 * Lock the virtual machine to prevent new frames to be added.
+    	 */
+    	vm_mm_lock( vm );
 
 		#ifdef MEM_DEBUG
 			printf( "[MEM DEBUG] GC quota (%d bytes) reached with %d bytes, collecting ...\n", __gc.gc_threshold, __gc.usage );
 		#endif
 
 		/*
-		 * Loop each gc layer using the order determined by GC_* macros.
+		 * Loop each active memory frame.
 		 */
-		int i;
-		for( GC_FIRST_LAYER(i); GC_LAST_LAYER(i); GC_NEXT_LAYER(i) ){
-			gc_list_t *list = &__gc.layers[i];
-			gc_item_t *item;
-			for( item = list->head; item; item = item->next ){
+		list<vframe_t *>::iterator i;
+		for( i = vm->frames.begin(); i != vm->frames.end(); i++ ){
+			vframe_t *frame = *i;
+			size_t j, size( frame->size() );
+			/*
+			 * Loop each object defined into this frame.
+			 */
+			for( j = 0; j < size; ++j ){
 				/*
-				 * Skip constant objects because they are part of the execution tree nodes.
+				 * Mark the object and its referenced objects as live objects.
 				 */
-				struct _Object *o = item->pobj;
-				if( (o->attributes & H_OA_CONSTANT) != H_OA_CONSTANT ){
-					/*
-					 * Skip objects that are still referenced somewhere.
-					 */
-					if( o->ref <= 0 ){
-						#ifdef MEM_DEBUG
-							fprintf( stdout, "[MEM DEBUG] Releasing %p [%s] [%d references] .\n",
-									item->pobj,
-									item->pobj->type->name,
-									item->pobj->ref );
-						#endif
-						/**
-						 * Finally execute garbage collection
-						 */
-						gc_free( list, item );
-					}
-				}
+				gc_mark( frame->at(j) );
 			}
 		}
 
-        gc_unlock();
+		/*
+		 * Loop each object on the heap.
+		 */
+		gc_item_t *item;
+		for( item = __gc.list.head; item; item = item->next ){
+			/*
+			 * Skip constant objects because they are part of the execution tree nodes.
+			 */
+			struct _Object *o = item->pobj;
+			if( (o->attributes & H_OA_CONSTANT) != H_OA_CONSTANT ){
+				/*
+				 * This object was marked so it's not garbage.
+				 * Reset its gc_marked flag to false.
+				 */
+				if( o->gc_mark ){
+					GC_RESET(o);
+				}
+				/*
+				 * Not marked object!
+				 * This object is not reachable anymore from any of the memory frames,
+				 * therefore is garbage and will be freed.
+				 */
+				else{
+					#ifdef MEM_DEBUG
+						fprintf( stdout, "[MEM DEBUG] Releasing %p [%s] .\n",
+								item->pobj,
+								item->pobj->type->name );
+					#endif
+
+					gc_free( &__gc.list, item );
+				}
+			}
+		}
+		/*
+		 * Unlock the virtual machine frames vector.
+		 */
+		vm_mm_unlock( vm );
     }
 }
 
@@ -218,11 +263,8 @@ void gc_release(){
 
 	gc_lock();
 
-	for( GC_FIRST_LAYER(i); GC_LAST_LAYER(i); GC_NEXT_LAYER(i) ){
-		gc_list_t *list = &__gc.layers[i];
-		for( item = list->head; item; item = item->next ){
-			gc_free( list, item );
-		}
+	for( item = __gc.list.head; item; item = item->next ){
+		gc_free( &__gc.list, item );
 	}
 
 	gc_unlock();

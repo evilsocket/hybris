@@ -60,7 +60,14 @@
  */
 #define GC_ALLOWED_MEMORY_THRESHOLD	134217728
 
+#define GC_SET_UNTOUCHABLE(o) (o)->gc_mark = true
+#define GC_SET_REFERENCED	  GC_SET_UNTOUCHABLE
+#define GC_SET_GARBAGE(o) 	  (o)->gc_mark = false
+#define GC_RESET              GC_SET_GARBAGE
+
 struct _Object;
+struct _vm_t;
+
 /*
  * This structure represent an item in the gc 
  * pool.
@@ -93,29 +100,9 @@ typedef struct _gc_list {
 gc_list_t;
 
 /*
- * GC number of layers, this value MUST be the same
- * as the number of elements of H_OBJECT_TYPE enum defined
- * inside types.h due to the fact that each layer holds
- * objects of a type.
- */
-#define GC_LAYERS_NUM 15
-/*
- * Those macros represent the layer collecting order.
- * First we have to free references, then composed types, to make sure, for
- * instance, that a class attribute is not deleted before the class itself.
- *
- * TODO : I should implement a better method to check objects hierarchy,
- * 		  that's kinda of buggy, for instance if a class attribute is a
- * 		  class itself, we're screwed up :S.
- */
-#define GC_FIRST_LAYER(i) i = otReference
-#define GC_LAST_LAYER(i)  i >= 0
-#define GC_NEXT_LAYER(i)  --i
-
-/*
  * Main gc structure, kind of the "head" of the pool.
  *
- * layers       : Each layer holds allocated objects of a type.
+ * list         : Heap objects list.
  * items	    : Number of items in the pool.
  * usage	    : Global memory usage, in bytes.
  * gc_threshold : If usage >= this, the gc is triggered.
@@ -123,7 +110,7 @@ gc_list_t;
  * mutex        : Mutex to lock the pool while collecting.
  */
 typedef struct _gc {
-	gc_list_t		layers[GC_LAYERS_NUM];
+	gc_list_t		list;
     size_t     		items;
     size_t     		usage;
     size_t     	 	gc_threshold;
@@ -179,7 +166,7 @@ size_t			gc_mm_threshold();
  * Fire the collection routines if the memory usage is
  * above the threshold.
  */
-void            gc_collect();
+void            gc_collect( struct _vm_t *vm );
 /*
  * Release all the pool and its contents, should be
  * used when the program is exiting, not before.

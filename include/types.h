@@ -53,16 +53,16 @@ typedef unsigned char byte;
  * of the object structure itself to be down-casted to a base object.
  *
  * type       : type descriptor as pointer (for type checking)
- * ref        : reference counter (for garbage collection)
+ * gc_mark    : mark-&-sweep gc flag
  * attributes : object memory attributes mask
  */
 #define BASE_OBJECT_HEADER struct _object_type_t *type;       \
-                           int                    ref;        \
+                           bool                   gc_mark;  \
                            size_t                 attributes
 /*
  * Default object header initialization macro .
  */
-#define BASE_OBJECT_HEADER_INIT(t) ref(0), \
+#define BASE_OBJECT_HEADER_INIT(t) gc_mark(false), \
                                    attributes(H_OA_NONE), \
                                    type(&t ## _Type)
 /*
@@ -124,8 +124,8 @@ typedef struct _vm_t vm_t;
  */
 // get the type name of the object
 typedef const char *(*ob_typename_function_t)	( Object * );
-// used to set garbage collection attributes for an object
-typedef void     (*ob_set_references_function_t)( Object *, int );
+// get the n-th object referenced by this
+typedef Object * (*ob_get_ref_function_t)       ( Object *, int );
 // free object inner buffer if any
 typedef void     (*ob_free_function_t)          ( Object * );
 // return the size of the object, or its items if it's a collection
@@ -240,7 +240,7 @@ typedef struct _object_type_t {
 
     /** generic function pointers **/
     ob_typename_function_t      type_name;
-    ob_set_references_function_t set_references;
+    ob_get_ref_function_t		get_ref;
     ob_unary_function_t         clone;
     ob_free_function_t          free;
     ob_size_function_t			get_size;
@@ -342,13 +342,9 @@ bool    ob_is_type_in( Object *o, ... );
  */
 const char *ob_typename( Object * o );
 /*
- * Increment the object references by 'ref' (i.e. ob_set_references(o,-1) will decrement them).
+ * Get the n-th object referenced by 'o'.
  */
-void    ob_set_references( Object *o, int ref );
-
-#define ob_inc_ref(o) ob_set_references( o, +1 )
-#define ob_dec_ref(o) ob_set_references( o, -1 )
-
+Object *ob_get_ref( Object *o, int index );
 /*
  * Create a clone of the object.
  */

@@ -37,16 +37,18 @@ const char *map_typename( Object *o ){
 	return o->type->name;
 }
 
-void map_set_references( Object *me, int ref ){
-    MapObjectIterator ki, vi;
-    MapObject *mme = (MapObject *)me;
+Object *map_get_ref( Object *me, int index ){
+	MapObject *mme = (MapObject *)me;
 
-    me->ref += ref;
-
-    for( ki = mme->keys.begin(), vi = mme->values.begin(); ki != mme->keys.end() && vi != mme->values.end(); ki++, vi++ ){
-        ob_set_references( *ki, ref );
-        ob_set_references( *vi, ref );
-    }
+	if( index < mme->keys.size() ){
+		return mme->keys.at(index);
+	}
+	else if( index < mme->values.size() ){
+		return mme->values.at(index);
+	}
+	else{
+		return NULL;
+	}
 }
 
 Object *map_clone( Object *me ){
@@ -180,8 +182,6 @@ Object *map_assign( Object *me, Object *op ){
 
     Object *clone = ob_clone(op);
 
-    ob_set_references( clone, +1 );
-
     return me = clone;
 }
 
@@ -266,7 +266,7 @@ IMPLEMENT_TYPE(Map) {
 
 	/** generic function pointers **/
     map_typename, // type_name
-	map_set_references, // set_references
+    map_get_ref, // get_ref
 	map_clone, // clone
 	map_free, // free
 	map_get_size, // get_size

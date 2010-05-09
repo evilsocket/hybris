@@ -24,8 +24,8 @@ const char *char_typename( Object *o ){
 	return o->type->name;
 }
 
-void char_set_references( Object *me, int ref ){
-    me->ref += ref;
+Object *char_get_ref( Object *me, int index ){
+	return NULL;
 }
 
 Object *char_clone( Object *me ){
@@ -154,7 +154,6 @@ Object *char_assign( Object *me, Object *op ){
     }
     else {
         Object *clone = ob_clone(op);
-        ob_set_references( clone, +1 );
 
         me = clone;
     }
@@ -413,7 +412,7 @@ IMPLEMENT_TYPE(Char) {
 
 	/** generic function pointers **/
     char_typename, // type_name
-	char_set_references, // set_references
+    char_get_ref, // get_ref
 	char_clone, // clone
 	0, // free
 	char_get_size, // get_size

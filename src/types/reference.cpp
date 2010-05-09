@@ -23,29 +23,15 @@ const char *ref_typename( Object *o ){
 	return ("reference<" + string( ob_typename( ob_ref_ucast(o)->value ) ) + ">").c_str();
 }
 
-void ref_set_references( Object *me, int ref ){
-	ReferenceObject *rme = ob_ref_ucast(me);
-
-    rme->ref += ref;
-
-    ob_set_references( rme->value, ref );
+Object *ref_get_ref( Object *me, int index ){
+	return (index > 0 ? NULL : ((ReferenceObject *)me)->value);
 }
 
 Object *ref_clone( Object *me ){
 	ReferenceObject *rme	= ob_ref_ucast(me),
 					*rclone = gc_new_reference( rme->value );
 
-	ob_inc_ref(rclone->value);
-
-    return (Object *)(rclone);
-}
-
-void ref_free( Object *me ){
-	/*
-	 * We do not want to free the referenced object, but just
-	 * to decrement its reference counter.
-	 */
-	ob_dec_ref( ob_ref_ucast(me)->value );
+    return (me = (Object *)(rclone));
 }
 
 size_t ref_get_size( Object *me ){
@@ -339,9 +325,9 @@ IMPLEMENT_TYPE(Reference) {
 
 	/** generic function pointers **/
     ref_typename, // type_name
-	ref_set_references, // set_references
+    ref_get_ref, // get_ref
 	ref_clone, // clone
-	ref_free, // free
+	0, // free
 	ref_get_size, // get_size
 	ref_serialize, // serialize
 	ref_deserialize, // deserialize
