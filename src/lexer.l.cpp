@@ -28,9 +28,6 @@
 #include <vector>
 #include <pcre.h>
 
-#define MAX_STRING_SIZE 1024
-#define MAX_IDENT_SIZE  100
-
 using std::vector;
 using std::string;
 
@@ -50,7 +47,7 @@ void             hyb_lex_skip_comment();
 // handle multi line comments
 void             hyb_lex_skip_line();
 // handle string constants
-char *           hyb_lex_string( char delimiter );
+char *           hyb_lex_string( char delimiter, char *buffer );
 // handle char constants
 char             hyb_lex_char( char delimiter );
 // extract tokens from a string give a regular expression
@@ -283,10 +280,10 @@ include          BEGIN(T_INCLUSION);
 
 "__FILE__" {
 	if( __hyb_file_stack.size() ){
-		yylval.string = strdup( __hyb_file_stack.back().c_str() );
+		strncpy( yylval.string, __hyb_file_stack.back().c_str(), MAX_STRING_SIZE );
 	}
 	else{
-		yylval.string = strdup( "<unknown>" );
+		strncpy( yylval.string,  "<unknown>", MAX_STRING_SIZE );
 	}
 	return T_STRING;
 }
@@ -306,7 +303,7 @@ include          BEGIN(T_INCLUSION);
 -?0x[A-Fa-f0-9]+                       { yylval.integer = strtol(yytext,0,16);      return T_INTEGER; }
 -?([0-9]+|([0-9]*\.[0-9]+){exponent}?) { yylval.real    = atof(yytext);             return T_REAL; }
 "'"                                    { yylval.byte    = hyb_lex_char('\'');    	return T_CHAR; }
-"\""                                   { yylval.string  = hyb_lex_string( '"' ); 	return T_STRING; }
+"\""                                   { hyb_lex_string( '"', yylval.string ); 		return T_STRING; }
 
 {identifier} {
 	if( strlen(yytext) > MAX_IDENT_SIZE ){
@@ -379,13 +376,12 @@ char hyb_lex_char( char delimiter ){
 	}
 }
 
-char *hyb_lex_string( char delimiter ){
-    char *ptr,
-		 *buffer;
-    int  size = 0xFF, offset = 0, c, prev = 0x00;
+char *hyb_lex_string( char delimiter, char *buffer ){
+    char *ptr  = NULL;
+    int offset = 0, c, prev = 0x00;
 
-    buffer = (char *)calloc( size, sizeof(char) );
-    ptr    = buffer;
+    memset( buffer, 0x00, MAX_STRING_SIZE );
+    ptr = buffer;
 
 	for(;;){
 		/* break on non-escaped delimiter */
@@ -393,15 +389,11 @@ char *hyb_lex_string( char delimiter ){
 			break;
 		}
 		else{
-			if( offset >= size ){
-				if( offset > MAX_STRING_SIZE ){
-					hyb_error( H_ET_GENERIC, "String constant above max size" );
-				}
-				size += 0xFF;
-				buffer = (char *)realloc( buffer, size );
+			if( ++offset >= MAX_STRING_SIZE ){
+				hyb_error( H_ET_GENERIC, "String constant above max size %d", MAX_STRING_SIZE );
 			}
+
 			*ptr++ = prev = c;
-			offset++;
 		}
 	}
     *ptr = 0x00;

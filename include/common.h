@@ -31,6 +31,9 @@
 
 #include "types.h"
 
+#define MAX_STRING_SIZE 1024
+#define MAX_IDENT_SIZE  100
+
 #define HMAXARGS 200
 
 /*

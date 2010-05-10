@@ -138,7 +138,7 @@ vm_t *__hyb_vm;
     long    integer;
     double  real;
     char    byte;
-    char   *string;
+    char    string[MAX_STRING_SIZE];
     /* variable identifier */
     char   *identifier;
     /* function prototype declaration */
@@ -468,7 +468,7 @@ expression : T_BOOLEAN										  { $$ = MK_CONST_NODE($1); }
 		   | T_INTEGER                                        { $$ = MK_CONST_NODE($1); }
            | T_REAL                                           { $$ = MK_CONST_NODE($1); }
            | T_CHAR                                           { $$ = MK_CONST_NODE($1); }
-           | T_STRING                                         { $$ = MK_CONST_NODE($1); free($1); }
+           | T_STRING                                         { $$ = MK_CONST_NODE($1); }
            | '[' itemList ']'                                 { $$ = MK_ARRAY_NODE($2); }
            | '[' mapList ']'								  { $$ = MK_MAP_NODE($2); }
            /* expression -> <identifier> */
