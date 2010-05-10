@@ -119,6 +119,7 @@ gc_list_t;
  * 				  amount of collections, it's going to be moved to this
  * 				  lag space.
  * heap         : Heap objects list.
+ * collections  : Collection cycles counter.
  * items	    : Number of items in the pool.
  * usage	    : Global memory usage, in bytes.
  * gc_threshold : If usage >= this, the gc is triggered.

@@ -187,6 +187,11 @@ ConstantNode::ConstantNode( char *v ) : Node(H_NT_CONSTANT) {
     value.m_constant->attributes |= H_OA_CONSTANT;
 }
 
+ConstantNode::ConstantNode( bool v ) : Node(H_NT_CONSTANT) {
+	value.m_constant = (Object *)gc_new_boolean(v);
+	value.m_constant->attributes |= H_OA_CONSTANT;
+}
+
 /* expressions */
 ExpressionNode::ExpressionNode( int expression ) : Node(H_NT_EXPRESSION) {
     value.m_expression = expression;

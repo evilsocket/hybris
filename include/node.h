@@ -172,6 +172,7 @@ class ConstantNode : public Node {
         ConstantNode( double v );
         ConstantNode( char v );
         ConstantNode( char *v );
+        ConstantNode( bool v );
 };
 
 /* expressions */

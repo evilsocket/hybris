@@ -132,6 +132,7 @@ vm_t *__hyb_vm;
 
 %union {
     /* base types */
+	bool    boolean;
     long    integer;
     double  real;
     char    byte;
@@ -152,7 +153,8 @@ vm_t *__hyb_vm;
 
 %locations
 
-%token <integer>    T_INTEGER
+%token <boolean>    T_BOOLEAN;
+%token <integer>    T_INTEGER;
 %token <real>       T_REAL;
 %token <byte>       T_CHAR;
 %token <string>     T_STRING;
@@ -445,7 +447,8 @@ callExpression : /* expression -> <identifier>( ... ) */
 			     /* expression ( ... ) */
 			   | expression '(' argumentList ')'                      { $$ = MK_CALL_NODE( $1, $3 ); };
 
-expression : T_INTEGER                                        { $$ = MK_CONST_NODE($1); }
+expression : T_BOOLEAN										  { $$ = MK_CONST_NODE($1); }
+		   | T_INTEGER                                        { $$ = MK_CONST_NODE($1); }
            | T_REAL                                           { $$ = MK_CONST_NODE($1); }
            | T_CHAR                                           { $$ = MK_CONST_NODE($1); }
            | T_STRING                                         { $$ = MK_CONST_NODE($1); free($1); }
@@ -464,7 +467,7 @@ expression : T_INTEGER                                        { $$ = MK_CONST_NO
            /* attribute declaration/assignation */
            | expression T_ASSIGN expression                   { $$ = MK_ASSIGN_NODE( $1, $3 ); }
 		   /* identifier declaration/assignation */
-		   | T_IDENT T_ASSIGN expression                      { $$ = MK_ASSIGN_NODE( MK_IDENT_NODE($1), $3 ); free($1); }
+		   | T_IDENT T_ASSIGN expression       				  { $$ = MK_ASSIGN_NODE( MK_IDENT_NODE($1), $3 ); free($1); }
            /* a single subscript could be an expression itself */
            | expression '[' expression ']' %prec T_SB_END     { $$ = MK_SB_NODE( $1, $3 ); }
            /* range evaluation */

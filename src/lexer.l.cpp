@@ -300,6 +300,13 @@ include          BEGIN(T_INCLUSION);
 	return T_INTEGER;
 }
 
+"true"|"false"						   { yylval.boolean = !strcmp( yytext, "true"); return T_BOOLEAN; }
+-?[0-9]+                               { yylval.integer = atol(yytext);             return T_INTEGER; }
+-?0x[A-Fa-f0-9]+                       { yylval.integer = strtol(yytext,0,16);      return T_INTEGER; }
+-?([0-9]+|([0-9]*\.[0-9]+){exponent}?) { yylval.real    = atof(yytext);             return T_REAL; }
+"'"                                    { yylval.byte    = hyb_lex_char('\'');    	return T_CHAR; }
+"\""                                   { yylval.string  = hyb_lex_string( '"' ); 	return T_STRING; }
+
 {identifier} {
 	if( strlen(yytext) > MAX_IDENT_SIZE ){
 		hyb_error( H_ET_GENERIC, "Identifier name above max size" );
@@ -309,12 +316,6 @@ include          BEGIN(T_INCLUSION);
 
 	return T_IDENT;
 }
-
--?[0-9]+                               { yylval.integer = atol(yytext);          return T_INTEGER; }
--?0x[A-Fa-f0-9]+                       { yylval.integer = strtol(yytext,0,16);   return T_INTEGER; }
--?([0-9]+|([0-9]*\.[0-9]+){exponent}?) { yylval.real    = atof(yytext);          return T_REAL; }
-"'"                                    { yylval.byte    = hyb_lex_char('\'');    return T_CHAR; }
-"\""                                   { yylval.string  = hyb_lex_string( '"' ); return T_STRING; }
 
 . { hyb_error( H_ET_SYNTAX, "Unexpected token '%s'", yytext ); }
 
