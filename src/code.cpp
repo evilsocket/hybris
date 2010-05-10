@@ -19,9 +19,7 @@
 #include "code.h"
 
 CodeSegment::CodeSegment() : HashMap<Node>() {
-    #ifdef MEM_DEBUG
-    fprintf( stdout, "[MEM DEBUG] !!! Virtual code table initialized .\n" );
-    #endif
+
 }
 
 CodeSegment::~CodeSegment(){
@@ -31,11 +29,12 @@ CodeSegment::~CodeSegment(){
 Node *CodeSegment::add( char *identifier, Node *node ){
     char *function_name = (char *)node->value.m_function.c_str();
 
-    /* if object does not exist yet, create a new one */
+    /*
+     * Functions can be defined only once!
+     */
     if( get( function_name ) == H_UNDEFINED ){
         return insert( function_name, node->clone() );
     }
-    /* else set the new value */
     else{
         hyb_error( H_ET_SYNTAX, "Function %s already defined", identifier );
     }
@@ -45,10 +44,6 @@ Node *CodeSegment::add( char *identifier, Node *node ){
 
 void CodeSegment::release(){
     unsigned int i;
-
-    #ifdef MEM_DEBUG
-        fprintf( stdout, "[MEM DEBUG] !!! releasing code table\n" );
-    #endif
 
     for( i = 0; i < m_elements; ++i ){
         Node *item = at(i);

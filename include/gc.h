@@ -32,18 +32,14 @@
 #endif
 
 /*
- * This is the new (and hopefully the last one) garbage
- * collector implementation.
- * The algorithm it's easy and to its job, simply tracks
- * every referencing to an object or deferencing to it,
- * thant increments or decrements the 'ref' value of the
- * object_type_t structure.
+ * This is a mark-and-sweep garbage collector implementation.
  *
- * When the global memory usage is >= the threshold down 
- * below, the gc will be triggered and will loop the entire 
- * allocated objects collection searching for objects with
- * "ref" <= 0 that are not constants, then the gc dealloc's
- * them and removes them from its pool.
+ * When the global memory usage is >= the threshold defined
+ * down below, or with command line parameter, the gc will be
+ * triggered and will mark all alive objects (the ones in alive
+ * memory frames) and their children if any (for collections),
+ * then it will loop every object in the heap and free unmarked
+ * objects.
  *
  * NOTE:
  * To make this work, ALL the new objects should be passed
@@ -59,9 +55,11 @@
  * Default value: 128M
  */
 #define GC_ALLOWED_MEMORY_THRESHOLD	134217728
-
+/*
+ * Macros to set object state.
+ */
 #define GC_SET_UNTOUCHABLE(o) (o)->gc_mark = true
-#define GC_SET_REFERENCED	  GC_SET_UNTOUCHABLE
+#define GC_SET_ALIVE		  GC_SET_UNTOUCHABLE
 #define GC_SET_GARBAGE(o) 	  (o)->gc_mark = false
 #define GC_RESET              GC_SET_GARBAGE
 
@@ -72,19 +70,22 @@ struct _vm_t;
  * This structure represent an item in the gc 
  * pool.
  *
- * pobj : Is a pointer to the object to track.
- * size : The size of the object itself.
- * next : Pointer to the next item in the pool.
- * prev : Pointer to the previous item in the pool.
+ * pobj 	: Is a pointer to the object to track.
+ * size     : The size of the object itself.
+ * gc_count : Incremented when an object is not freed after a
+ * 		      gc_collect cycle (for future multi generation gc).
+ * next 	: Pointer to the next item in the pool.
+ * prev 	: Pointer to the previous item in the pool.
  */
 typedef struct _gc_item {
     struct _Object *pobj;
     size_t          size;
+    size_t			gc_count;
 
     _gc_item       *next;
     _gc_item       *prev;
 
-    _gc_item( struct _Object *p, size_t s ) : pobj(p), size(s) { }
+    _gc_item( struct _Object *p, size_t s ) : pobj(p), size(s), gc_count(0) { }
 }
 gc_item_t;
 
@@ -102,7 +103,8 @@ gc_list_t;
 /*
  * Main gc structure, kind of the "head" of the pool.
  *
- * list         : Heap objects list.
+ * constants    : Constant objects list (will be freed at the end).
+ * heap         : Heap objects list.
  * items	    : Number of items in the pool.
  * usage	    : Global memory usage, in bytes.
  * gc_threshold : If usage >= this, the gc is triggered.
@@ -110,7 +112,8 @@ gc_list_t;
  * mutex        : Mutex to lock the pool while collecting.
  */
 typedef struct _gc {
-	gc_list_t		list;
+	gc_list_t		constants;
+	gc_list_t		heap;
     size_t     		items;
     size_t     		usage;
     size_t     	 	gc_threshold;

@@ -27,14 +27,21 @@ extern void hyb_error( H_ERROR_TYPE type, const char *format, ... );
  */
 gc_t __gc;
 
+/*
+ * Lock the gc mutex.
+ */
 __force_inline void gc_lock(){
 	pthread_mutex_lock( &__gc.mutex );
 }
-
+/*
+ * Unlock the gc mutex.
+ */
 __force_inline void gc_unlock(){
 	pthread_mutex_unlock( &__gc.mutex );
 }
-
+/*
+ * Append 'item' to 'list'.
+ */
 __force_inline void gc_pool_append( gc_list_t *list, gc_item_t *item ){
 	if( list->head == NULL ){
 		list->head = item;
@@ -51,7 +58,9 @@ __force_inline void gc_pool_append( gc_list_t *list, gc_item_t *item ){
 	list->items++;
 	list->usage += item->size;
 }
-
+/*
+ * Remove 'item' from 'list' and free the structure that holds it.
+ */
 __force_inline void gc_pool_remove( gc_list_t *list, gc_item_t *item ) {
 	if( item->prev == NULL ){
 		list->head = item->next;
@@ -71,8 +80,43 @@ __force_inline void gc_pool_remove( gc_list_t *list, gc_item_t *item ) {
 
 	delete item;
 }
+/*
+ * Move 'item' from 'src' list to 'dst' list.
+ */
+__force_inline void gc_pool_migrate( gc_list_t *src, gc_list_t *dst, gc_item_t *item ) {
+	if( item->prev == NULL ){
+		src->head = item->next;
+	}
+	else{
+		item->prev->next = item->next;
+	}
+	if( item->next == NULL ){
+		src->tail = item->prev;
+	}
+	else{
+		item->next->prev = item->prev;
+	}
 
+	if( dst->head == NULL ){
+		dst->head = item;
+		item->prev = NULL;
+	}
+	else{
+		dst->tail->next = item;
+		item->prev 	    = dst->tail;
+	}
 
+	dst->tail  = item;
+	item->next = NULL;
+
+	src->items--;
+	src->usage -= item->size;
+	dst->items++;
+	dst->usage += item->size;
+}
+/*
+ * Free 'item' and remove it from 'list'.
+ */
 void gc_free( gc_list_t *list, gc_item_t *item ){
     __gc.items--;
     __gc.usage -= item->size;
@@ -92,7 +136,9 @@ void gc_free( gc_list_t *list, gc_item_t *item ){
      */
     gc_pool_remove( list, item );
 }
-
+/*
+ * Set collection threshold.
+ */
 size_t gc_set_collect_threshold( size_t threshold ){
 	size_t old = __gc.gc_threshold;
 
@@ -102,7 +148,9 @@ size_t gc_set_collect_threshold( size_t threshold ){
 
 	return old;
 }
-
+/*
+ * Set allowed memory threshold.
+ */
 size_t gc_set_mm_threshold( size_t threshold ){
 	size_t old = __gc.mm_threshold;
 
@@ -112,14 +160,19 @@ size_t gc_set_mm_threshold( size_t threshold ){
 
 	return old;
 }
-
+/*
+ * Add an object to the gc pool and start to track
+ * it for reference changes.
+ * Size must be passed explicitly due to the downcasting
+ * possibility.
+ */
 struct _Object *gc_track( struct _Object *o, size_t size ){
-    if( o == NULL ){
-        /*
-         * We assume that 'o' was previously allocated with one of the gc_new_*
-         * macros, therefore, if its pointer is null, most of it there was a memory
-         * allocation problem.
-         */
+	/*
+	 * We assume that 'o' was previously allocated with one of the gc_new_*
+	 * macros, therefore, if its pointer is null, most of it there was a memory
+	 * allocation problem.
+	 */
+	if( o == NULL ){
         hyb_error( H_ET_GENERIC, "out of memory" );
     }
     /*
@@ -139,7 +192,7 @@ struct _Object *gc_track( struct _Object *o, size_t size ){
     /*
      * Append the item to the gc pool.
      */
-    gc_pool_append( &__gc.list, new gc_item_t(o,size) );
+    gc_pool_append( &__gc.heap, new gc_item_t(o,size) );
 
     gc_unlock();
 
@@ -161,7 +214,9 @@ size_t gc_collect_threshold(){
 size_t gc_mm_threshold(){
 	return __gc.mm_threshold;
 }
-
+/*
+ * Recursively mark an object (and its inner items) as alive.
+ */
 void gc_mark( Object *o ){
 	/*
 	 * Already marked?
@@ -170,19 +225,21 @@ void gc_mark( Object *o ){
 		/*
 		 * This object is not collectable right now.
 		 */
-		GC_SET_REFERENCED(o);
+		GC_SET_ALIVE(o);
 		/*
 		 * Loop all the objects it 'contains' (such as vector items) and
 		 * call gc_mark recursively on each one.
 		 */
-		Object *referenced = NULL;
+		Object *child = NULL;
 		int i = 0;
-		while( (referenced = ob_traverse( o, i++ )) != NULL ){
-			gc_mark(referenced);
+		while( (child = ob_traverse( o, i++ )) != NULL ){
+			gc_mark(child);
 		}
 	}
 }
-
+/*
+ * The main collection routine.
+ */
 void gc_collect( vm_t *vm ){
     /**
      * Execute garbage collection loop only if used memory has reaced the
@@ -194,14 +251,14 @@ void gc_collect( vm_t *vm ){
     	 */
     	vm_mm_lock( vm );
 
-		#ifdef MEM_DEBUG
-			printf( "[MEM DEBUG] GC quota (%d bytes) reached with %d bytes, collecting ...\n", __gc.gc_threshold, __gc.usage );
+		#ifdef GC_DEBUG
+			printf( "[GC DEBUG] GC quota (%d bytes) reached with %d bytes, collecting ...\n", __gc.gc_threshold, __gc.usage );
 		#endif
 
 		/*
 		 * Loop each active memory frame.
 		 */
-		list<vframe_t *>::iterator i;
+		std::list<vframe_t *>::iterator i;
 		for( i = vm->frames.begin(); i != vm->frames.end(); i++ ){
 			vframe_t *frame = *i;
 			size_t j, size( frame->size() );
@@ -220,30 +277,41 @@ void gc_collect( vm_t *vm ){
 		 * Loop each object on the heap.
 		 */
 		gc_item_t *item;
-		for( item = __gc.list.head; item; item = item->next ){
+		for( item = __gc.heap.head; item; item = item->next ){
+			Object *o = item->pobj;
 			/*
-			 * Skip constant objects because they are part of the execution tree nodes.
+			 * Constant object, move it from the heap structure to the
+			 * appropriate one to be freed at the end.
+			 * This will make heap list less fragmented and smaller.
 			 */
-			struct _Object *o = item->pobj;
-			if( (o->attributes & H_OA_CONSTANT) != H_OA_CONSTANT ){
+			if( (o->attributes & H_OA_CONSTANT) == H_OA_CONSTANT ){
+				#ifdef GC_DEBUG
+					fprintf( stdout, "[GC DEBUG] Migrating %p [%s] to constants list.\n", item->pobj, item->pobj->type->name );
+				#endif
+
+				gc_pool_migrate( &__gc.heap, &__gc.constants, item );
+			}
+			else{
 				/*
-				 * This object was marked so it's not garbage.
-				 * Reset its gc_marked flag to false.
+				 * This object was marked as alive so it's not garbage.
+				 * Reset its gc_marked flag to false and increment its
+				 * collection counter.
 				 */
 				if( o->gc_mark ){
+					item->gc_count++;
 					GC_RESET(o);
 				}
 				/*
-				 * Not marked object!
+				 * Object not marked (dead object).
 				 * This object is not reachable anymore from any of the memory frames,
 				 * therefore is garbage and will be freed.
 				 */
 				else{
-					#ifdef MEM_DEBUG
-						fprintf( stdout, "[MEM DEBUG] Releasing %p [%s] .\n", item->pobj, item->pobj->type->name );
+					#ifdef GC_DEBUG
+						fprintf( stdout, "[GC DEBUG] Releasing %p [%s] .\n", item->pobj, item->pobj->type->name );
 					#endif
 
-					gc_free( &__gc.list, item );
+					gc_free( &__gc.heap, item );
 				}
 			}
 		}
@@ -253,16 +321,27 @@ void gc_collect( vm_t *vm ){
 		vm_mm_unlock( vm );
     }
 }
-
+/*
+ * Release every object (heap objects and constants), called
+ * when program ends.
+ */
 void gc_release(){
 	gc_item_t *item;
 	int i;
 
 	gc_lock();
 
-	for( item = __gc.list.head; item; item = item->next ){
-		gc_free( &__gc.list, item );
+	/*
+	 * Free every object in the heap.
+	 */
+	for( item = __gc.heap.head; item; item = item->next ){
+		gc_free( &__gc.heap, item );
 	}
-
+	/*
+	 * Free every constant object if any.
+	 */
+	for( item = __gc.constants.head; item; item = item->next ){
+		gc_free( &__gc.constants, item );
+	}
 	gc_unlock();
 }

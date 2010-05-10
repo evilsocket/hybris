@@ -50,6 +50,9 @@ const char *ob_typename( Object * o ){
 	if( o->type->type_name != HYB_UNIMPLEMENTED_FUNCTION ){
 		return o->type->type_name(o);
 	}
+	else{
+		return "NULL";
+	}
 }
 
 Object *ob_traverse( Object *o, int index ){

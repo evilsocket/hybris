@@ -20,7 +20,7 @@
 
 /** generic function pointers **/
 const char *ref_typename( Object *o ){
-	return ("reference<" + string( ob_typename( ob_ref_ucast(o)->value ) ) + ">").c_str();
+	return ("reference<" + string( ob_ref_ucast(o)->value ? ob_typename( ob_ref_ucast(o)->value ) : "NULL" ) + ">").c_str();
 }
 
 Object *ref_traverse( Object *me, int index ){
