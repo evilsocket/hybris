@@ -1,0 +1,56 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="it"
+ lang="it" dir="ltr">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<!-- metadata -->
+<meta name="generator" content="Offline" />
+<meta name="version" content="Offline 0.1" />
+<!-- style sheet links -->
+<link rel="stylesheet" media="all" type="text/css" href="../css/all.css" />
+<link rel="stylesheet" media="screen" type="text/css" href="../css/screen.css" />
+<link rel="stylesheet" media="print" type="text/css" href="../css/print.css" />
+
+</head>
+<body>
+<div class="dokuwiki export">
+
+
+<p>
+Il ciclo <strong>foreach</strong> funge come abbreviazione del ciclo <a href="for.html" class="wikilink1" title="for">for</a> quando si deve operare velocemente su variabili di tipo <a href="array.html" class="wikilink1" title="array">array</a> o <a href="mappa.html" class="wikilink1" title="mappa">mappa</a> e accedere agli elementi della loro collezione senza dover specificare un indice <sup><a href="#fn__1" name="fnt__1" id="fnt__1" class="fn_top">1)</a></sup>.
+</p>
+
+<p>
+La sintassi (nel caso di una variabile di tipo <a href="array.html" class="wikilink1" title="array">array</a>) é :
+</p>
+<pre class="code hybris"><span class="kw1">foreach</span><span class="br0">&#40;</span> <span class="co2">/* elemento */</span> <span class="kw1">of</span> <span class="co2">/* array */</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
+    <span class="co1">// operazioni</span>
+<span class="br0">&#125;</span></pre>
+
+<p>
+Ad esempio, per stampare ogni elemento di un <a href="array.html" class="wikilink1" title="array">array</a> :
+</p>
+<pre class="code hybris">foo <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span> 1<span class="sy0">,</span> 2<span class="sy0">,</span> 3<span class="sy0">,</span> 4<span class="sy0">,</span> 5<span class="sy0">,</span> 6 <span class="br0">&#41;</span><span class="sy0">;</span>
+<span class="kw1">foreach</span><span class="br0">&#40;</span> item <span class="kw1">of</span> foo <span class="br0">&#41;</span><span class="br0">&#123;</span>
+    <span class="kw3">println</span><span class="br0">&#40;</span>item<span class="br0">&#41;</span><span class="sy0">;</span>
+<span class="br0">&#125;</span></pre>
+
+<p>
+Se invece volessimo stampare ogni chiave e relativo elemento di una <a href="mappa.html" class="wikilink1" title="mappa">mappa</a> :
+</p>
+<pre class="code hybris">foo <span class="sy0">=</span> <span class="kw3">map</span><span class="br0">&#40;</span> <span class="st0">&quot;nome&quot;</span>    <span class="sy0">:</span> <span class="st0">&quot;Mario&quot;</span><span class="sy0">,</span>
+           <span class="st0">&quot;cognome&quot;</span> <span class="sy0">:</span> <span class="st0">&quot;Rossi&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+&nbsp;
+<span class="kw1">foreach</span><span class="br0">&#40;</span> chiave <span class="sy0">-&gt;</span> elemento <span class="kw1">of</span> foo <span class="br0">&#41;</span><span class="br0">&#123;</span>
+     <span class="kw3">println</span><span class="br0">&#40;</span> chiave.<span class="st0">&quot; -&gt; &quot;</span>.<span class="me1">elemento</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+<span class="br0">&#125;</span></pre>
+<div class="footnotes">
+<div class="fn"><sup><a href="#fnt__1" id="fn__1" name="fn__1" class="fn_bot">1)</a></sup> 
+In questo ciclo, la variabile viene impostata per copia e non per riferimento, quindi cambiarla non significa cambiare anche l&#039;elemento della collezione.<br/>
+Se si desidera accedere in scrittura agli elementi della collezione si deve usare il ciclo <a href="for.html" class="wikilink1" title="for">for</a> con un indice.</div>
+</div>
+</div><!-- closes <div class="dokuwiki export">-->

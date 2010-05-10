@@ -1,0 +1,123 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="it"
+ lang="it" dir="ltr">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<!-- metadata -->
+<meta name="generator" content="Offline" />
+<meta name="version" content="Offline 0.1" />
+<!-- style sheet links -->
+<link rel="stylesheet" media="all" type="text/css" href="../css/all.css" />
+<link rel="stylesheet" media="screen" type="text/css" href="../css/screen.css" />
+<link rel="stylesheet" media="print" type="text/css" href="../css/print.css" />
+
+</head>
+<body>
+<div class="dokuwiki export">
+
+
+<p>
+Hybris comprende un set di funzioni integrate nella sua libreria standard, suddivise in moduli dinamici raggruppati in namespace in base al loro campo di utilizzo.
+</p>
+
+<p>
+Per caricare uno di questi moduli e utilizzarne le funzionalità, è necessario utilizzare la direttiva import all&#039;interno di uno script, ad esempio, uno script che utilizza la funzione println della libreria standard, riporterà nella prima riga :
+</p>
+<pre class="code hybris"><span class="kw2">import</span> std.<span class="me1">io</span>.<span class="me1">console</span><span class="sy0">;</span></pre>
+
+<p>
+Alternativamente, se si volesse importare un intero namespace, è possibile utilizzare insieme alla direttiva import l&#039;operatore &#039;*&#039;, ad esempio :
+</p>
+<pre class="code hybris"><span class="kw2">import</span> std.<span class="me1">io</span>.<span class="sy0">*;</span></pre>
+
+<p>
+Importerà tutti i moduli contenuti nel namespace std.io.
+</p>
+
+<p>
+La libreria standard è composta dai seguenti moduli :
+
+</p>
+<ul>
+<li class="level1"><div class="li"> std</div>
+<ul>
+<li class="level2"><div class="li"> math : Funzionalità matematiche</div>
+</li>
+<li class="level2"><div class="li"> pcre : Supporto alle espressioni regolari</div>
+</li>
+<li class="level2"><div class="li"> encoding : Funzionalità di encoding</div>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="level1"><div class="li"> io</div>
+<ul>
+<li class="level3"><div class="li"> console : I/O su console</div>
+</li>
+<li class="level3"><div class="li"> file : I/O su file</div>
+</li>
+<li class="level3"><div class="li"> xml : I/O su flussi <acronym title="Extensible Markup Language">XML</acronym></div>
+</li>
+<li class="level3"><div class="li"> network</div>
+<ul>
+<li class="level4"><div class="li"> tcp : Primitive per i socket tcp/ip</div>
+</li>
+<li class="level4"><div class="li"> http : Funzionalità <acronym title="Hyper Text Transfer Protocol">HTTP</acronym> e HTTPS</div>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="level1"><div class="li"> type</div>
+<ul>
+<li class="level3"><div class="li"> string : Gestione stringhe</div>
+</li>
+<li class="level3"><div class="li"> array  : Gestione array</div>
+</li>
+<li class="level3"><div class="li"> matrix : Gestione matrici</div>
+</li>
+<li class="level3"><div class="li"> binary : Gestione flussi binari</div>
+</li>
+<li class="level3"><div class="li"> map    : Gestione mappe associative</div>
+</li>
+<li class="level3"><div class="li"> type   : Gestione dei tipi</div>
+</li>
+<li class="level3"><div class="li"> reflection : Introspezione dei tipi</div>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="level1"><div class="li"> os</div>
+<ul>
+<li class="level3"><div class="li"> dll     : Caricamento ed esecuzione di funzioni da dll di sistema</div>
+</li>
+<li class="level3"><div class="li"> threads : Multithreading</div>
+</li>
+<li class="level3"><div class="li"> time    : Gestione del tempo e della data</div>
+</li>
+<li class="level3"><div class="li"> process : Gestione multi processo</div>
+</li>
+</ul>
+</li>
+<li class="level2"><div class="li"> hashing</div>
+<ul>
+<li class="level3"><div class="li"> crc32 : Calcolo del checksum crc32</div>
+</li>
+<li class="level3"><div class="li"> md5   : Calcolo dell&#039;hash md5</div>
+</li>
+<li class="level3"><div class="li"> sha1  : Calcolo dell&#039;hash sha1</div>
+</li>
+<li class="level3"><div class="li"> sha2  : Calcolo dell&#039;hash sha2 (sia 256 che 224)</div>
+</li>
+</ul>
+</li>
+</ul>
+</div><!-- closes <div class="dokuwiki export">-->
