@@ -169,13 +169,24 @@ Object *class_clone( Object *me ){
     prototypes_t 				  prototypes;
 
     for( ai = cme->c_attributes.begin(); ai != cme->c_attributes.end(); ai++ ){
-    	cclone->c_attributes.insert( (char *)(*ai)->value->name.c_str(),
-									 new class_attribute_t(
-									   (*ai)->value->name,
-									   (*ai)->value->access,
-									   ob_clone((*ai)->value->value)
-							         )
-								   );
+    	/*
+    	 * If the attribute is not static, clone the entire structure.
+    	 */
+    	if( (*ai)->value->is_static == false ){
+			cclone->c_attributes.insert( (char *)(*ai)->value->name.c_str(),
+										 new class_attribute_t(
+												 (*ai)->value->name,
+												 (*ai)->value->access,
+												 ob_clone((*ai)->value->value)
+										 )
+									   );
+    	}
+    	/*
+    	 * Otherwise, insert a reference to the static attribute structure.
+    	 */
+    	else{
+			cclone->c_attributes.insert( (char *)(*ai)->value->name.c_str(), (*ai)->value );
+    	}
     }
 
     for( mi = cme->c_methods.begin(); mi != cme->c_methods.end(); mi++ ){
@@ -186,8 +197,8 @@ Object *class_clone( Object *me ){
 
     	cclone->c_methods.insert( (char *)(*mi)->value->name.c_str(),
 								  new class_method_t(
-									(*mi)->value->name,
-									prototypes
+										  (*mi)->value->name,
+										  prototypes
 								  )
 							    );
     }
@@ -242,10 +253,17 @@ void class_free( Object *me ){
 	 */
 	for( ai = cme->c_attributes.begin(); ai != cme->c_attributes.end(); ai++ ){
 		attribute = (*ai)->value;
-		if( attribute->value ){
-			ob_free( attribute->value );
+		/*
+		 * Static attributes are just references to the main prototype that is
+		 * not garbage collected, but it's goin to be freed manually at the end
+		 * of the program.
+		 */
+		if( attribute->is_static == false ){
+			if( attribute->value ){
+				ob_free( attribute->value );
+			}
+			delete attribute;
 		}
-		delete attribute;
 	}
 	cme->c_attributes.clear();
 }
@@ -441,10 +459,10 @@ Object *class_cl_set( Object *me, Object *index, Object *op ){
 }
 
 /** class operators **/
-void class_define_attribute( Object *me, char *name, access_t access ){
+void class_define_attribute( Object *me, char *name, access_t access, bool is_static /*= false*/ ){
 	ClassObject   *cme = ob_class_ucast(me);
 
-	cme->c_attributes.insert( name, new class_attribute_t( name, access, H_VOID_VALUE ) );
+	cme->c_attributes.insert( name, new class_attribute_t( name, access, H_VOID_VALUE, is_static ) );
 }
 
 access_t class_attribute_access( Object *me, char *name ){
@@ -458,6 +476,17 @@ access_t class_attribute_access( Object *me, char *name ){
 	return asPublic;
 }
 
+bool class_attribute_is_static( Object *me, char *name ){
+	ClassObject *cme = ob_class_ucast(me);
+	class_attribute_t *attribute;
+
+	if( (attribute = cme->c_attributes.find(name)) != NULL ){
+		return attribute->is_static;
+	}
+
+	return false;
+}
+
 void class_set_attribute_access( Object *me, char *name, access_t access ){
 	ClassObject *cme = ob_class_ucast(me);
 	class_attribute_t *attribute;
@@ -468,7 +497,7 @@ void class_set_attribute_access( Object *me, char *name, access_t access ){
 }
 
 void class_add_attribute( Object *me, char *name ){
-	class_define_attribute( me, name, asPublic );
+	class_define_attribute( me, name, asPublic, false );
 }
 
 Object *class_get_attribute( Object *me, char *name, bool with_descriptor /* = true */ ){
@@ -502,10 +531,18 @@ void class_set_attribute_reference( Object *me, char *name, Object *value ){
 
 	if( (attribute = cme->c_attributes.find(name)) != NULL ){
 		/*
+		 * Lock the attribute in case it's static.
+		 */
+		attribute->lock();
+		/*
 		 * Set the new value, ob_assign will decrement old value
 		 * reference counter.
 		 */
 		attribute->value = ob_assign( attribute->value, value );
+		/*
+		 * Unlock it.
+		 */
+		attribute->unlock();
 	}
 	else{
 		class_call_overloaded_descriptor( me, "__attribute", false, 2, (Object *)gc_new_string(name), value );
@@ -519,6 +556,7 @@ void class_set_attribute( Object *me, char *name, Object *value ){
 void class_define_method( Object *me, char *name, Node *code ){
 	ClassObject *cme = ob_class_ucast(me);
 	class_method_t *method;
+
 	/*
 	 * Check if there's already a method with that name, in this case
 	 * push the node to the variations vector.
@@ -661,6 +699,7 @@ IMPLEMENT_TYPE(Class) {
 	/** structure operators **/
 	class_define_attribute, // define_attribute
 	class_attribute_access, // attribute_access
+	class_attribute_is_static, // attribute_is_static
 	class_set_attribute_access, // set_attribute_access
     class_add_attribute, // add_attribute
     class_get_attribute, // get_attribute

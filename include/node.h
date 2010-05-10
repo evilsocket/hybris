@@ -96,6 +96,7 @@ class NodeValue {
         string   m_function;
         bool	 m_vargs;
         access_t m_access;
+        bool	 m_static;
         string   m_method;
         string   m_call;
         Node    *m_alias_call;
@@ -202,6 +203,7 @@ class IdentifierNode : public Node {
         IdentifierNode( char *identifier );
         IdentifierNode( access_t access, Node *i );
         IdentifierNode( access_t access, char *identifier );
+        IdentifierNode( access_t access, bool is_static, char *identifier, Node *v );
 };
 
 /* structure attribute expression */
@@ -246,6 +248,7 @@ class StructureNode : public Node {
 class MethodNode : public Node {
 	public :
 		MethodNode( access_t access, method_decl_t *declaration, int argc, ... );
+		MethodNode( access_t access, method_decl_t *declaration, bool is_static, int argc, ... );
 		MethodNode( const char *name, access_t access );
 };
 

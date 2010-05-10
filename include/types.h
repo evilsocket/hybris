@@ -125,7 +125,7 @@ typedef struct _vm_t vm_t;
 // get the type name of the object
 typedef const char *(*ob_typename_function_t)	( Object * );
 // get the n-th object referenced by this
-typedef Object * (*ob_traverse_function_t)       ( Object *, int );
+typedef Object * (*ob_traverse_function_t)      ( Object *, int );
 // free object inner buffer if any
 typedef void     (*ob_free_function_t)          ( Object * );
 // return the size of the object, or its items if it's a collection
@@ -159,8 +159,9 @@ typedef Object * (*ob_binary_function_t)        ( Object *, Object * );
 // {a}<operator{b} '=' {c}
 typedef Object * (*ob_ternary_function_t)       ( Object *, Object *, Object * );
 // functions to manage structure and class attributes
-typedef void     (*ob_define_attribute_function_t) ( Object *, char *, access_t );
+typedef void     (*ob_define_attribute_function_t) ( Object *, char *, access_t, bool );
 typedef access_t (*ob_attribute_access_function_t) ( Object *, char * );
+typedef bool	 (*ob_attribute_is_static_function_t) ( Object *, char * );
 typedef void     (*ob_set_attribute_access_function_t) ( Object *, char *, access_t );
 typedef void     (*ob_add_attribute_function_t) ( Object *, char * );
 typedef Object * (*ob_get_attribute_function_t) ( Object *, char *, bool );
@@ -317,6 +318,7 @@ typedef struct _object_type_t {
     /** structure and class operators **/
     ob_define_attribute_function_t define_attribute;
     ob_attribute_access_function_t attribute_access;
+    ob_attribute_is_static_function_t attribute_is_static;
     ob_set_attribute_access_function_t set_attribute_access;
     ob_add_attribute_function_t add_attribute;
     ob_get_attribute_function_t get_attribute;
@@ -614,9 +616,14 @@ Object *ob_cl_set_reference( Object *a, Object *b, Object *c );
  */
 access_t ob_attribute_access( Object *o, char * a );
 /*
+ * Return true if the given attribute exists and it's static,
+ * otherwise return false.
+ */
+bool	 ob_attribute_is_static( Object *o, char *a );
+/*
  * Define a new attribute inside the structure or the class.
  */
-void     ob_define_attribute( Object *o, char *name, access_t a );
+void     ob_define_attribute( Object *o, char *name, access_t a, bool is_static = false );
 /*
  * Set the access level for a given attribute.
  */
@@ -955,15 +962,27 @@ typedef HashMap<Object>::iterator StructureObjectAttributeIterator;
 DECLARE_TYPE(Class);
 
 typedef struct _class_attribute_t {
-	string	 name;
-	access_t access;
-	Object  *value;
+	string	 		name;
+	bool	 	    is_static;
+	access_t 	    access;
+	Object  	   *value;
+	pthread_mutex_t mutex;
 
-	_class_attribute_t( string n, access_t a, Object *v ) :
+	_class_attribute_t( string n, access_t a, Object *v, bool _static = false ) :
 		name(n),
 		access(a),
-		value(v){
+		value(v),
+		is_static(_static),
+		mutex(PTHREAD_MUTEX_INITIALIZER){
 
+	}
+
+	__force_inline void lock(){
+		if( is_static ){ pthread_mutex_lock(&mutex); }
+	}
+
+	__force_inline void unlock(){
+		if( is_static ){ pthread_mutex_unlock(&mutex); }
 	}
 }
 class_attribute_t;
@@ -971,7 +990,7 @@ class_attribute_t;
 typedef vector<Node *> prototypes_t;
 
 typedef struct _class_method_t {
-	string		   name;
+	string		 name;
 	/*
 	 * A class could have more methods with the same name but
 	 * different parameters, so we have to hold a vector of Nodes.

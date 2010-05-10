@@ -104,7 +104,7 @@ Object *struct_assign( Object *me, Object *op ){
 }
 
 /** structure operators **/
-void struct_define_attribute( Object *me, char *name, access_t a ){
+void struct_define_attribute( Object *me, char *name, access_t a, bool is_static /*= false*/ ){
 	StructureObject *sme = ob_struct_ucast(me);
 
 	sme->s_attributes.insert( name, (Object *)gc_new_integer(0) );
@@ -112,7 +112,7 @@ void struct_define_attribute( Object *me, char *name, access_t a ){
 }
 
 void struct_add_attribute( Object *me, char *name ){
-	struct_define_attribute( me, name, asPublic );
+	struct_define_attribute( me, name, asPublic, false );
 }
 
 Object *struct_get_attribute( Object *me, char *name, bool with_descriptor ){
@@ -223,6 +223,7 @@ IMPLEMENT_TYPE(Structure) {
 	/** structure operators **/
 	struct_define_attribute, // define_attribute
 	0, // attribute_access
+	0, // attribute_is_static
 	0, // set_attribute_access
     struct_add_attribute, // add_attribute
     struct_get_attribute, // get_attribute

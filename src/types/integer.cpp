@@ -512,6 +512,7 @@ IMPLEMENT_TYPE(Integer) {
 	/** structure operators **/
 	0, // define_attribute
 	0, // attribute_access
+	0, // attribute_is_static
 	0, // set_attribute_access
     0, // add_attribute;
     0, // get_attribute;
@@ -604,6 +605,7 @@ IMPLEMENT_TYPE(Alias) {
     /** structure operators **/
 	0, // define_attribute
 	0, // attribute_access
+	0, // attribute_is_static
 	0, // set_attribute_access
     0, // add_attribute;
     0, // get_attribute;
@@ -698,6 +700,7 @@ IMPLEMENT_TYPE(Extern) {
     /** structure operators **/
 	0, // define_attribute
 	0, // attribute_access
+	0, // attribute_is_static
 	0, // set_attribute_access
     0, // add_attribute;
     0, // get_attribute;

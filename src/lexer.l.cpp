@@ -254,6 +254,7 @@ include          BEGIN(T_INCLUSION);
 "class"         return T_CLASS;
 "extends"		return T_EXTENDS;
 
+"static"		return T_STATIC;
 "public"		return T_PUBLIC;
 "private"		return T_PRIVATE;
 "protected"		return T_PROTECTED;

@@ -41,8 +41,8 @@ engine_t *engine_create( vm_t* vm ){
 }
 
 
-__force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner,  Object *cobj, int argc, Node *ids, Node *argv ){
-	int 	i, n_ids(ids->children());
+__force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner,  Object *cobj, int argc, Node *prototype, Node *argv ){
+	int 	i, n_ids(prototype->children());
 	Object *value;
 
 	/*
@@ -55,8 +55,12 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	 * Set the stack owner
 	 */
 	stack.owner = owner;
-
-	stack.insert( "me", cobj );
+	/*
+	 * Static methods can not use 'me' instance.
+	 */
+	if( prototype->value.m_static == false ){
+		stack.insert( "me", cobj );
+	}
 	/*
 	 * Evaluate each object and increment references
 	 */
@@ -66,7 +70,7 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 			stack.push( value );
 		}
 		else{
-			stack.insert( (char *)ids->child(i)->value.m_identifier.c_str(), value );
+			stack.insert( (char *)prototype->child(i)->value.m_identifier.c_str(), value );
 		}
 	}
 	/*
@@ -545,6 +549,12 @@ Object *engine_on_identifier( engine_t *engine, vframe_t *frame, Node *node ){
 		return o;
 	}
 	/*
+	 * Check for an user defined object (structure or class) name.
+	 */
+	else if( (o = engine->types->get(identifier)) != H_UNDEFINED ){
+		return o;
+	}
+	/*
 	 * So, it's neither defined on local frame nor in the global one,
 	 * let's search for it in the engine->code frame.
 	 */
@@ -558,7 +568,17 @@ Object *engine_on_identifier( engine_t *engine, vframe_t *frame, Node *node ){
 	 * Ok ok, got it! It's undefined, raise an error.
 	 */
 	else{
-		hyb_error( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
+		/*
+		 * Check for the special 'me' keyword.
+		 * If 'me' instance is not defined anywhere, we are in the
+		 * main program body or inside a static method.
+		 */
+		if( strcmp( identifier, "me" ) != 0 ){
+			hyb_error( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
+		}
+		else{
+			hyb_error( H_ET_SYNTAX, "couldn't use 'me' instance inside a global or static scope" );
+		}
 	}
 }
 
@@ -770,6 +790,8 @@ Object *engine_on_class_declaration( engine_t *engine, vframe_t *frame, Node *no
 	int        i, j, members( node->children() );
 	char      *classname = (char *)node->value.m_identifier.c_str(),
 			  *attrname;
+	Node      *attribute;
+	Object    *static_attr_value;
 
 	if( engine->types->find(classname) != H_UNDEFINED ){
 		hyb_error( H_ET_SYNTAX, "Class '%s' already defined", classname );
@@ -777,13 +799,31 @@ Object *engine_on_class_declaration( engine_t *engine, vframe_t *frame, Node *no
 
 	/* class prototypes are not garbage collected */
 	Object *c = (Object *)(new ClassObject());
+	/*
+	 * Set specific class name.
+	 */
+	((ClassObject *)c)->name = classname;
 
 	for( i = 0; i < members; ++i ){
 		/*
 		 * Define an attribute
 		 */
 		if( node->child(i)->type() == H_NT_IDENTIFIER ){
-			ob_define_attribute( c, node->child(i)->id(), node->child(i)->value.m_access );
+			attribute = node->child(i);
+			ob_define_attribute( c, attribute->id(), attribute->value.m_access, attribute->value.m_static );
+			/*
+			 * Initialize static attributes.
+			 */
+			if( attribute->value.m_static ){
+				static_attr_value = engine_exec( engine, frame, attribute->child(0) );
+				/*
+				 * Static attributes are not garbage collectable until the end of
+				 * the program is reached because they reside in a global scope.
+				 */
+				GC_SET_UNTOUCHABLE(static_attr_value);
+
+				ob_set_attribute_reference( c, attribute->id(), static_attr_value );
+			}
 		}
 		/*
 		 * Define a method
@@ -822,7 +862,7 @@ Object *engine_on_class_declaration( engine_t *engine, vframe_t *frame, Node *no
 			for( ai = cobj->c_attributes.begin(); ai != cobj->c_attributes.end(); ai++ ){
 				attrname = (char *)(*ai)->label.c_str();
 
-				ob_define_attribute( c, attrname, (*ai)->value->access );
+				ob_define_attribute( c, attrname, (*ai)->value->access, (*ai)->value->is_static );
 			}
 
 			for( mi = cobj->c_methods.begin(); mi != cobj->c_methods.end(); mi++ ){

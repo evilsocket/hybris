@@ -650,9 +650,9 @@ Object *ob_cl_set_reference( Object *a, Object *b, Object *c ){
 	}
 }
 
-void ob_define_attribute( Object *o, char *name, access_t a ){
+void ob_define_attribute( Object *o, char *name, access_t a, bool is_static /*= false*/  ){
 	if( o->type->define_attribute != HYB_UNIMPLEMENTED_FUNCTION ){
-		return o->type->define_attribute(o,name,a);
+		return o->type->define_attribute(o,name,a,is_static);
 	}
 	else{
 		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", ob_typename(o) );
@@ -665,6 +665,15 @@ access_t ob_attribute_access( Object *o, char * a ){
 	}
 	else{
 		return asPublic;
+	}
+}
+
+bool ob_attribute_is_static( Object *o, char *a ){
+	if( o->type->attribute_is_static != HYB_UNIMPLEMENTED_FUNCTION ){
+		return o->type->attribute_is_static(o,a);
+	}
+	else{
+		return false;
 	}
 }
 

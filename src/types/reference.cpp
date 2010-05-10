@@ -279,12 +279,16 @@ Object *ref_cl_set_reference( Object *me, Object *i, Object *v ){
 }
 
 /** class operators **/
-void ref_define_attribute( Object *me, char *name, access_t access ){
-	ob_define_attribute( ob_ref_ucast(me)->value, name, access );
+void ref_define_attribute( Object *me, char *name, access_t access, bool is_static /*= false*/ ){
+	ob_define_attribute( ob_ref_ucast(me)->value, name, access, is_static );
 }
 
 access_t ref_attribute_access( Object *me, char *name ){
 	return ob_attribute_access( ob_ref_ucast(me)->value, name );
+}
+
+bool ref_attribute_is_static( Object *me, char *name ){
+	return ob_attribute_is_static( ob_ref_ucast(me)->value, name );
 }
 
 void ref_set_attribute_access( Object *me, char *name, access_t access ){
@@ -400,6 +404,7 @@ IMPLEMENT_TYPE(Reference) {
 	/** structure operators **/
 	ref_define_attribute, // define_attribute
 	ref_attribute_access, // attribute_access
+	ref_attribute_is_static, // attribute_is_static
 	ref_set_attribute_access, // set_attribute_access
     ref_add_attribute, // add_attribute
     ref_get_attribute, // get_attribute

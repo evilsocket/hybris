@@ -44,6 +44,7 @@
 /* identifiers, attributes and constants */
 #define MK_IDENT_NODE(a)          new IdentifierNode(a)
 #define MK_ATTR_NODE(a,b)		  new IdentifierNode(a,b)
+#define MK_STATIC_ATTR_NODE(a,b)  new IdentifierNode( asPublic, true, a, b )
 #define MK_CONST_NODE(a)          new ConstantNode(a)
 #define MK_ARRAY_NODE(a)		  new ExpressionNode( T_ARRAY, a )
 #define MK_MAP_NODE(a)			  new ExpressionNode( T_MAP, a )
@@ -69,6 +70,7 @@
 #define MK_STRUCT_NODE(a, b)      new StructureNode( a, b )
 #define MK_CLASS_NODE(a, b, c)    new ClassNode( a, b, c )
 #define MK_METHOD_NODE(a, b, c)   new MethodNode( a, b, 1, c )
+#define MK_STATIC_METHOD_NODE(a,b) new MethodNode( asPublic, a, true, 1, b )
 /* expressions */
 #define MK_EOSTMT_NODE(a, b)      new ExpressionNode( T_EOSTMT, 2, a, b )
 #define MK_REF_NODE(a)		  	  new ExpressionNode( T_REF, 1, a )
@@ -196,6 +198,7 @@ vm_t *__hyb_vm;
 %token T_STRUCT
 %token T_CLASS
 %token T_EXTENDS
+%token T_STATIC
 %token T_PUBLIC
 %token T_PRIVATE
 %token T_PROTECTED
@@ -294,6 +297,16 @@ attrList  : accessSpecifier identList T_EOSTMT attrList {
 			  }
 			  delete $2;
 		  }
+		  | T_STATIC T_IDENT T_ASSIGN expression T_EOSTMT attrList {
+			  $$ = MK_NODE($6);
+			  $$->head( MK_STATIC_ATTR_NODE( $2, MK_NODE($4) ) );
+			  free($2);
+		  }
+		  | T_STATIC T_IDENT T_ASSIGN expression T_EOSTMT {
+			  $$ = MK_NODE_LIST();
+			  $$->head( MK_STATIC_ATTR_NODE( $2, MK_NODE($4) ) );
+			  free($2);
+		  }
 		  | methodList { $$ = MK_NODE($1); }
 
 methodList : accessSpecifier T_METHOD_PROTOTYPE '{' statements '}' methodList {
@@ -303,6 +316,10 @@ methodList : accessSpecifier T_METHOD_PROTOTYPE '{' statements '}' methodList {
 		   | accessSpecifier T_METHOD_PROTOTYPE '{' statements '}' {
 				 $$ = MK_NODE_LIST();
 				 $$->head( MK_METHOD_NODE( $1, $2, $4 ) );
+		   }
+		   | T_STATIC T_METHOD_PROTOTYPE '{' statements '}' {
+				 $$ = MK_NODE_LIST();
+				 $$->head( MK_STATIC_METHOD_NODE( $2, $4 ) );
 		   };
 
 classMembers : attrList methodList classMembers {

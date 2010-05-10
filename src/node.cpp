@@ -28,6 +28,7 @@ NodeValue::NodeValue() :
     m_function(""),
     m_method(""),
     m_access(asPublic),
+    m_static(false),
     m_call(""),
     m_alias_call(NULL),
     m_switch(NULL),
@@ -135,7 +136,8 @@ Node *Node::clone(){
 
         case H_NT_METHOD :
 			clone = new MethodNode( value.m_method.c_str(), value.m_access );
-			clone->value.m_vargs = value.m_vargs;
+			clone->value.m_static = value.m_static;
+			clone->value.m_vargs  = value.m_vargs;
 			for( i = 0; i < sz; ++i ){
 				if( child(i) ){
 					clone->push_back( child(i)->clone() );
@@ -299,7 +301,16 @@ IdentifierNode::IdentifierNode( access_t access, Node *i ) : Node(H_NT_IDENTIFIE
 
 IdentifierNode::IdentifierNode( access_t access, char *identifier ) : Node(H_NT_IDENTIFIER) {
     value.m_access     = access;
+    value.m_static	   = false;
 	value.m_identifier = identifier;
+}
+
+IdentifierNode::IdentifierNode( access_t access, bool is_static, char *identifier, Node *v ) : Node(H_NT_IDENTIFIER) {
+    value.m_access     = access;
+    value.m_static	   = is_static;
+	value.m_identifier = identifier;
+
+	push_back(v);
 }
 
 /* structure or class member request */
@@ -398,6 +409,28 @@ MethodNode::MethodNode( access_t access, method_decl_t *declaration, int argc, .
     value.m_method = declaration->method;
     value.m_vargs  = declaration->vargs;
     value.m_access = access;
+
+    va_list ap;
+	int i;
+
+    reserve( declaration->argc + argc );
+	/* add method prototype args children */
+	for( i = 0; i < declaration->argc; ++i ){
+		push_back( new IdentifierNode( declaration->argv[i] ) );
+	}
+	/* add method body statements node */
+	va_start( ap, argc );
+	for( i = 0; i < argc; ++i ){
+		push_back( va_arg( ap, Node * ) );
+	}
+	va_end(ap);
+}
+
+MethodNode::MethodNode( access_t access, method_decl_t *declaration, bool is_static, int argc, ... ) : Node(H_NT_METHOD) {
+    value.m_method = declaration->method;
+    value.m_vargs  = declaration->vargs;
+    value.m_access = access;
+    value.m_static = is_static;
 
     va_list ap;
 	int i;

@@ -67,7 +67,7 @@ engine_t *engine_create( vm_t* vm );
  * of each value pushed/inserted into it, then the dismiss_stack method
  * will decrement them again.
  */
-void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, Object *cobj, int argc, Node *ids, Node *argv );
+void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, Object *cobj, int argc, Node *prototype, Node *argv );
 void 	  engine_prepare_stack( engine_t *engine, vframe_t &stack, string owner, Object *cobj, Node *ids, int argc, ... );
 void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, vmem_t *argv );
 void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, Node *argv );

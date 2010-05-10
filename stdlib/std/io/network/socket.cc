@@ -58,9 +58,9 @@ HYBRIS_DEFINE_FUNCTION(hsend);
 HYBRIS_DEFINE_FUNCTION(hclose);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "socket",		hsocket },
-	{ "bind",		hbind },
-	{ "listen",		hlisten },
+	{ "socket", hsocket },
+	{ "bind", hbind },
+	{ "listen", hlisten },
 	{ "accept", haccept },
 	{ "getsockname", hgetsockname },
 	{ "getpeername", hgetpeername },
