@@ -18,6 +18,14 @@
 */
 #include "types.h"
 
+#define REF_IS_NULL_PTR(r) if( ob_ref_ucast(r)->value == NULL ){ \
+							   return (Object *)r; \
+						   }
+
+#define REF_IS_NULL_PTR_RET(r,v) if( ob_ref_ucast(r)->value == NULL ){ \
+								   return v; \
+								 }
+
 /** generic function pointers **/
 const char *ref_typename( Object *o ){
 	return ("reference<" + string( ob_ref_ucast(o)->value ? ob_typename( ob_ref_ucast(o)->value ) : "NULL" ) + ">").c_str();
@@ -43,31 +51,40 @@ byte *ref_serialize( Object *me, size_t size ){
 }
 
 Object *ref_deserialize( Object *me, byte *buffer, size_t size ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_deserialize( ob_ref_ucast(me)->value, buffer, size );
 }
 
 Object *ref_to_fd( Object *me, int fd, size_t size ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_to_fd( ob_ref_ucast(me)->value, fd, size );
 }
 
 Object *ref_from_fd( Object *me, int fd, size_t size ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_from_fd( ob_ref_ucast(me)->value, fd, size );
 }
 
 int ref_cmp( Object *me, Object *cmp ){
-	return ob_cmp( ob_ref_ucast(me)->value, cmp );
+	if( ob_is_reference(cmp) && ob_ref_ucast(me)->value == ob_ref_ucast(cmp)->value ){
+		return 0;
+	}
+	return -1;
 }
 
 long ref_ivalue( Object *me ){
-    return ob_ivalue( ob_ref_ucast(me)->value );
+    return ob_ref_ucast(me)->value ? ob_ivalue( ob_ref_ucast(me)->value ) : 0;
 }
 
 double ref_fvalue( Object *me ){
-    return ob_fvalue( ob_ref_ucast(me)->value );
+    return ob_ref_ucast(me)->value ? ob_fvalue( ob_ref_ucast(me)->value ) : 0.0f;
 }
 
 bool ref_lvalue( Object *me ){
-    return ob_lvalue( ob_ref_ucast(me)->value );
+    return ob_ref_ucast(me)->value ? ob_lvalue( ob_ref_ucast(me)->value ) : false;
 }
 
 string ref_svalue( Object *me ){
@@ -75,96 +92,137 @@ string ref_svalue( Object *me ){
 }
 
 void ref_print( Object *me, int tabs ){
-	ob_print( ob_ref_ucast(me)->value, tabs );
+	if( ob_ref_ucast(me)->value ){
+		ob_print( ob_ref_ucast(me)->value, tabs );
+	}
+	else{
+		ob_print( (Object *)gc_new_string("<null>"), tabs );
+	}
 }
 
 void ref_scanf( Object *me ){
-    ob_input( ob_ref_ucast(me)->value );
+    if( ob_ref_ucast(me)->value ){
+    	ob_input( ob_ref_ucast(me)->value );
+    }
 }
 
 Object * ref_to_string( Object *me ){
-	return ob_to_string( ob_ref_ucast(me)->value );
+	return ob_ref_ucast(me)->value ? ob_to_string( ob_ref_ucast(me)->value ) : (Object *)gc_new_string("<null>");
 }
 
 Object * ref_to_int( Object *me ){
-    return ob_to_int( ob_ref_ucast(me)->value );
+    return ob_ref_ucast(me)->value ? ob_to_int( ob_ref_ucast(me)->value ) : (Object *)gc_new_integer(0);
 }
 
 Object *ref_range( Object *me, Object *op ){
-	return ob_range( ob_ref_ucast(me)->value, op );
+	return ob_ref_ucast(me)->value ? ob_range( ob_ref_ucast(me)->value, op ) : (Object *)gc_new_vector();
 }
 
 Object *ref_regexp( Object *me, Object *op ){
-	return ob_apply_regexp( ob_ref_ucast(me)->value, op );
+	return ob_ref_ucast(me)->value ? ob_apply_regexp( ob_ref_ucast(me)->value, op ) : (Object *)gc_new_vector();
 }
 
 /** arithmetic operators **/
 Object *ref_assign( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
     return ob_assign( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_factorial( Object *me ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_factorial( ob_ref_ucast(me)->value );
 }
 
 Object *ref_increment( Object *me ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_increment( ob_ref_ucast(me)->value );
 }
 
 Object *ref_decrement( Object *me ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_decrement( ob_ref_ucast(me)->value );
 }
 
 Object *ref_minus( Object *me ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_uminus( ob_ref_ucast(me)->value );
 }
 
 Object *ref_add( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_add( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_sub( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_sub( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_mul( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_mul( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_div( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_div( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_mod( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_mod( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_inplace_add( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_inplace_add( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_inplace_sub( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_inplace_sub( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_inplace_mul( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_inplace_mul( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_inplace_div( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_inplace_div( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_inplace_mod( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_inplace_mod( ob_ref_ucast(me)->value, op );
 }
 
 /** bitwise operators **/
 Object *ref_bw_and( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_bw_and( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_bw_or( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_bw_or( ob_ref_ucast(me)->value, op );
 }
 
@@ -173,149 +231,221 @@ Object *ref_bw_not( Object *me ){
 }
 
 Object *ref_bw_xor( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_bw_xor( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_bw_lshift( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_bw_lshift( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_bw_rshift( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_bw_rshift( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_bw_inplace_and( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_bw_inplace_and( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_bw_inplace_or( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_bw_inplace_or( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_bw_inplace_xor( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_bw_inplace_xor( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_bw_inplace_lshift( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_bw_inplace_lshift( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_bw_inplace_rshift( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_bw_inplace_rshift( ob_ref_ucast(me)->value, op );
 }
 
 /** logic operators **/
 Object *ref_l_not( Object *me ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_l_not( ob_ref_ucast(me)->value );
 }
 
 Object *ref_l_same( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_l_same( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_l_diff( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_l_diff( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_l_less( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_l_less( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_l_greater( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_l_greater( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_l_less_or_same( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_l_less_or_same( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_l_greater_or_same( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_l_greater_or_same( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_l_or( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_l_or( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_l_and( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_l_and( ob_ref_ucast(me)->value, op );
 }
 
 /* collection operators */
 Object *ref_cl_concat( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_cl_concat( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_cl_inplace_concat( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_cl_inplace_concat( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_cl_push( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_cl_push( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_cl_push_reference( Object *me, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_cl_push_reference( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_cl_pop( Object *me ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_cl_pop( ob_ref_ucast(me)->value );
 }
 
 Object *ref_cl_remove( Object *me, Object *i ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_cl_remove( ob_ref_ucast(me)->value, i );
 }
 
 Object *ref_cl_at( Object *me, Object *index ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_cl_at( ob_ref_ucast(me)->value, index );
 }
 
 Object *ref_cl_set( Object *me, Object *index, Object *op ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_cl_set( ob_ref_ucast(me)->value, index, op );
 }
 
 Object *ref_cl_set_reference( Object *me, Object *i, Object *v ){
+	REF_IS_NULL_PTR(me);
+
 	return ob_cl_set_reference( ob_ref_ucast(me)->value, i, v );
 }
 
 /** class operators **/
 void ref_define_attribute( Object *me, char *name, access_t access, bool is_static /*= false*/ ){
+	REF_IS_NULL_PTR_RET(me,/**/);
+
 	ob_define_attribute( ob_ref_ucast(me)->value, name, access, is_static );
 }
 
 access_t ref_attribute_access( Object *me, char *name ){
+	REF_IS_NULL_PTR_RET(me,asPublic);
+
 	return ob_attribute_access( ob_ref_ucast(me)->value, name );
 }
 
 bool ref_attribute_is_static( Object *me, char *name ){
+	REF_IS_NULL_PTR_RET(me,false);
+
 	return ob_attribute_is_static( ob_ref_ucast(me)->value, name );
 }
 
 void ref_set_attribute_access( Object *me, char *name, access_t access ){
+	REF_IS_NULL_PTR_RET(me,/**/);
+
 	ob_set_attribute_access( ob_ref_ucast(me)->value, name, access );
 }
 
 void ref_add_attribute( Object *me, char *name ){
+	REF_IS_NULL_PTR_RET(me,/**/);
+
 	ob_add_attribute( ob_ref_ucast(me)->value, name );
 }
 
 Object *ref_get_attribute( Object *me, char *name, bool with_descriptor /* = true */ ){
+	REF_IS_NULL_PTR(me);
+
     return ob_get_attribute( ob_ref_ucast(me)->value, name, with_descriptor );
 }
 
 void ref_set_attribute_reference( Object *me, char *name, Object *value ){
+	REF_IS_NULL_PTR_RET(me,/**/);
+
     ob_set_attribute_reference( ob_ref_ucast(me)->value, name, value );
 }
 
 void ref_set_attribute( Object *me, char *name, Object *value ){
+	REF_IS_NULL_PTR_RET(me,/**/);
+
     return ob_set_attribute_reference( ob_ref_ucast(me)->value, name, ob_clone(value) );
 }
 
 void ref_define_method( Object *me, char *name, Node *code ){
+	REF_IS_NULL_PTR_RET(me,/**/);
+
 	ob_define_method( ob_ref_ucast(me)->value, name, code );
 }
 
 Node *ref_get_method( Object *me, char *name, int argc ){
+	REF_IS_NULL_PTR_RET(me,NULL);
+
 	return ob_get_method( ob_ref_ucast(me)->value, name, argc );
 }
 

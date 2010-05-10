@@ -1612,14 +1612,27 @@ Object *engine_on_switch( engine_t *engine, vframe_t *frame, Node *node){
 Object *engine_on_explode( engine_t *engine, vframe_t *frame, Node *node ){
 	Node   *expr  = H_UNDEFINED;
 	Object *value = H_UNDEFINED;
-	int n_ids = node->children() - 1;
 
 	expr  = node->child(0);
 	value = engine_exec( engine, frame, expr );
 
-	IntegerObject index(0);
+	size_t n_ids   = node->children() - 1,
+		   n_items = ob_get_size(value),
+		   n_end   = (n_ids > n_items ? n_items : n_ids),
+		   i;
 
-	for( ; index.value < n_ids; ++index.value ){
+	/*
+	 * Initialize all the identifiers with a <null>.
+	 */
+	for( i = 0; i < n_ids; ++i ){
+		frame->add( (char *)node->child(i + 1)->value.m_identifier.c_str(), (Object *)gc_new_reference(NULL) );
+	}
+	/*
+	 * Fill initializers until the iterable object ends, leave
+	 * the rest of them to <null>.
+	 */
+	IntegerObject index(0);
+	for( ; index.value < n_end; ++index.value ){
 		frame->add( (char *)node->child(index.value + 1)->value.m_identifier.c_str(), ob_cl_at( value, (Object *)&index ) );
 	}
 

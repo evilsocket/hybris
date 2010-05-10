@@ -52,7 +52,7 @@ Object *MemorySegment::add( char *identifier, Object *object ){
     	 * don't replace it in memory, but assign a new value to the object it
     	 * references.
     	 */
-    	if( ob_is_reference(_old) ){
+    	if( ob_is_reference(_old) && ob_ref_ucast(_old)->value != NULL ){
     		_ret = ob_assign( _old, _new );
     	}
     	/*
