@@ -238,6 +238,67 @@ void gc_mark( Object *o ){
 	}
 }
 /*
+ * Sweep dead objects from a given generation list.
+ */
+void gc_sweep_generation( gc_list_t *generation ){
+	gc_item_t *item;
+	Object    *o;
+
+	/*
+	 * Loop each object on the generation list.
+	 */
+	for( item = generation->head; item; item = item->next ){
+		o = item->pobj;
+		/*
+		 * Constant object, move it from the heap structure to the
+		 * appropriate one to be freed at the end.
+		 * This will make heap list less fragmented and smaller.
+		 */
+		if( (o->attributes & H_OA_CONSTANT) == H_OA_CONSTANT ){
+			#ifdef GC_DEBUG
+				fprintf( stdout, "[GC DEBUG] Migrating %p [%s] to constants list.\n", item->pobj, item->pobj->type->name );
+			#endif
+
+			gc_pool_migrate( generation, &__gc.constants, item );
+		}
+		else{
+			/*
+			 * This object was marked as alive so it's not garbage.
+			 * Reset its gc_marked flag to false.
+			 */
+			if( o->gc_mark ){
+				GC_RESET(o);
+				/*
+				 * If this generation is not the lag space, check if the object
+				 * has to be moved to the lag space.
+				 */
+				if( generation != &__gc.lag && GC_IS_LAGGING(++item->gc_count) ){
+					#ifdef GC_DEBUG
+						fprintf( stdout, "[GC DEBUG] Migrating %p (collected %d times) to the lag space.\n", item->pobj, item->gc_count );
+					#endif
+					/*
+					 * Migrate the object.
+					 */
+					gc_pool_migrate( generation, &__gc.lag, item );
+				}
+			}
+			/*
+			 * Object not marked (dead object).
+			 * This object is not reachable anymore from any of the memory frames,
+			 * therefore is garbage and will be freed.
+			 */
+			else{
+				#ifdef GC_DEBUG
+					fprintf( stdout, "[GC DEBUG] Releasing %p [%s] .\n", item->pobj, item->pobj->type->name );
+				#endif
+
+				gc_free( generation, item );
+			}
+		}
+	}
+}
+
+/*
  * The main collection routine.
  */
 void gc_collect( vm_t *vm ){
@@ -246,6 +307,11 @@ void gc_collect( vm_t *vm ){
      * threshold.
      */
     if( __gc.usage >= __gc.gc_threshold ){
+		std::list<vframe_t *>::iterator i;
+    	vframe_t *frame;
+    	size_t j, size;
+
+
     	/*
     	 * Lock the virtual machine to prevent new frames to be added.
     	 */
@@ -256,12 +322,11 @@ void gc_collect( vm_t *vm ){
 		#endif
 
 		/*
-		 * Loop each active memory frame.
+		 * Loop each active memory frame and mark alive objects.
 		 */
-		std::list<vframe_t *>::iterator i;
 		for( i = vm->frames.begin(); i != vm->frames.end(); i++ ){
-			vframe_t *frame = *i;
-			size_t j, size( frame->size() );
+			frame = *i;
+			size  = frame->size();
 			/*
 			 * Loop each object defined into this frame.
 			 */
@@ -272,49 +337,27 @@ void gc_collect( vm_t *vm ){
 				gc_mark( frame->at(j) );
 			}
 		}
-
 		/*
-		 * Loop each object on the heap.
+		 * New collection, increment global collections counter.
 		 */
-		gc_item_t *item;
-		for( item = __gc.heap.head; item; item = item->next ){
-			Object *o = item->pobj;
-			/*
-			 * Constant object, move it from the heap structure to the
-			 * appropriate one to be freed at the end.
-			 * This will make heap list less fragmented and smaller.
-			 */
-			if( (o->attributes & H_OA_CONSTANT) == H_OA_CONSTANT ){
-				#ifdef GC_DEBUG
-					fprintf( stdout, "[GC DEBUG] Migrating %p [%s] to constants list.\n", item->pobj, item->pobj->type->name );
-				#endif
+		__gc.collections++;
+		/*
+		 * The lag space is bigger than the heap, let's sweep it first.
+		 */
+		if( __gc.lag.items > __gc.heap.items ){
+			#ifdef GC_DEBUG
+				fprintf( stdout, "[GC DEBUG] Lag space (%d items) is bigger than heap space (%d items), collecting it.\n",
+								 __gc.lag.items,
+								 __gc.heap.items );
+			#endif
 
-				gc_pool_migrate( &__gc.heap, &__gc.constants, item );
-			}
-			else{
-				/*
-				 * This object was marked as alive so it's not garbage.
-				 * Reset its gc_marked flag to false and increment its
-				 * collection counter.
-				 */
-				if( o->gc_mark ){
-					item->gc_count++;
-					GC_RESET(o);
-				}
-				/*
-				 * Object not marked (dead object).
-				 * This object is not reachable anymore from any of the memory frames,
-				 * therefore is garbage and will be freed.
-				 */
-				else{
-					#ifdef GC_DEBUG
-						fprintf( stdout, "[GC DEBUG] Releasing %p [%s] .\n", item->pobj, item->pobj->type->name );
-					#endif
-
-					gc_free( &__gc.heap, item );
-				}
-			}
+			gc_sweep_generation( &__gc.lag );
 		}
+		/*
+		 * Sweep younger objects in the heap space.
+		 */
+		gc_sweep_generation( &__gc.heap );
+
 		/*
 		 * Unlock the virtual machine frames vector.
 		 */
@@ -336,6 +379,12 @@ void gc_release(){
 	 */
 	for( item = __gc.heap.head; item; item = item->next ){
 		gc_free( &__gc.heap, item );
+	}
+	/*
+	 * Free every object in the lag space.
+	 */
+	for( item = __gc.lag.head; item; item = item->next ){
+		gc_free( &__gc.lag, item );
 	}
 	/*
 	 * Free every constant object if any.

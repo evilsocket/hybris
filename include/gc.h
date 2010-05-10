@@ -101,9 +101,23 @@ typedef struct _gc_list {
 gc_list_t;
 
 /*
+ * Threshold upon which an object is moved from the heap
+ * space to the lag space, where 0.7 is 70% object collections
+ * on the total collections counter
+ */
+#define GC_LAGGING_THRESHOLD 		  0.7f
+/*
+ * Determine if an object has to be moved to the lag space.
+ */
+#define GC_IS_LAGGING(v)     		  v / (double)__gc.collections >= GC_LAGGING_THRESHOLD
+
+/*
  * Main gc structure, kind of the "head" of the pool.
  *
  * constants    : Constant objects list (will be freed at the end).
+ * lag			: When an object remains alive in the heap for a given
+ * 				  amount of collections, it's going to be moved to this
+ * 				  lag space.
  * heap         : Heap objects list.
  * items	    : Number of items in the pool.
  * usage	    : Global memory usage, in bytes.
@@ -113,14 +127,17 @@ gc_list_t;
  */
 typedef struct _gc {
 	gc_list_t		constants;
+	gc_list_t		lag;
 	gc_list_t		heap;
+	size_t			collections;
     size_t     		items;
     size_t     		usage;
     size_t     	 	gc_threshold;
     size_t			mm_threshold;
 	pthread_mutex_t mutex;
 
-    _gc() : items(0),
+    _gc() : collections(0),
+			items(0),
 			usage(0),
 			gc_threshold(GC_DEFAULT_MEMORY_THRESHOLD),
 			mm_threshold(GC_ALLOWED_MEMORY_THRESHOLD),
