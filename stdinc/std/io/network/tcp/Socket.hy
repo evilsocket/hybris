@@ -16,21 +16,53 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-import std.io.network.tcp;
+import std.io.network.socket;
 
 class Socket {
 	protected sd;
+
+	public method Socket( domain, type ){
+		me->sd = socket( domain, type );
+	}
 	
 	public method Socket( sd ){
 		me->sd = sd;
 	}
-
+	
 	public method Socket(){
 		me->sd = null;
 	}
 
 	private method __expire(){
 		me->close();
+	}
+
+	public method bind( address, port ){
+		return bind( me->sd, address, port );
+	}
+
+	public method bind( port ){
+		return bind( me->sd, "0.0.0.0", port );
+	}
+
+	public method listen( backlog ){
+		return listen( me->sd, backlog );
+	}
+
+	public method listen(){
+		return listen( me->sd );
+	}
+
+	public method accept(){
+		return new Socket( accept(me->sd) );
+	}
+
+	public method sockname( address, port ){
+		return getsockname( me->sd, address, port );
+	}
+
+	public method peername( address, port ){
+		return getpeername( me->sd, address, port );
 	}
 
 	public method close(){
