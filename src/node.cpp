@@ -84,6 +84,15 @@ Node *Node::clone(){
             else if( ob_is_string(value.m_constant) ){
                 clone = new ConstantNode( (char *)ob_string_ucast(value.m_constant)->value.c_str() );
             }
+            else if( ob_is_boolean(value.m_constant) ){
+            	clone = new ConstantNode( ob_bool_ucast(value.m_constant)->value );
+            }
+            else{
+            	/*
+				 * THIS SHOULD NEVER HAPPEN!
+				 */
+				assert(false);
+            }
 
         break;
 
