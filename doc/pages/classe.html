@@ -208,6 +208,75 @@ Questo può tornare utile quando una classe, ad esempio, apre una connessione re
 
 </div>
 <!-- SECTION "Costruttori e Distruttori" [4449-5600] -->
+<h1><a name="membri_statici" id="membri_statici">Membri Statici</a></h1>
+<div class="level1">
+
+<p>
+
+Per <strong>membro statico</strong>, dichiarato con la keyword <strong>static</strong> si intende un attributo o un metodo che esiste a prescindere dall&#039;istanza della classe, poichè risiede direttamente nel prototipo della classe stessa.
+Sono valori o metodi che in pratica possono essere utilizzati tramite il nome della classe e non necessariamente da un istanza di essa, ad esempio :
+</p>
+<pre class="code hybris"><span class="kw2">class</span> Foo <span class="br0">&#123;</span>
+    <span class="kw2">static</span> bar <span class="sy0">=</span> <span class="st0">&quot;Hello World&quot;</span><span class="sy0">;</span>
+<span class="br0">&#125;</span>
+&nbsp;
+<span class="kw3">println</span><span class="br0">&#40;</span> Foo<span class="sy0">-&gt;</span>bar <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+
+<p>
+Come è possibile vedere, non è stata creata un istanza della classe per accedere all&#039;attributo &#039;bar&#039;, ma direttamente il nome della classe (che in memoria mappa il prototipo stesso della classe.
+</p>
+
+<p>
+Analogamente per un metodo statico :
+</p>
+<pre class="code hybris"><span class="kw2">class</span> Foo <span class="br0">&#123;</span>
+    <span class="kw2">static</span> bar <span class="sy0">=</span> <span class="st0">&quot;Hello World&quot;</span><span class="sy0">;</span>
+&nbsp;
+    <span class="kw2">static</span> <span class="kw2">method</span> say_bar<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
+        <span class="kw3">println</span><span class="br0">&#40;</span> Foo<span class="sy0">-&gt;</span>bar <span class="br0">&#41;</span><span class="sy0">;</span>
+    <span class="br0">&#125;</span>
+<span class="br0">&#125;</span>
+&nbsp;
+Foo<span class="sy0">-&gt;</span>say_bar<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span></pre>
+
+<p>
+Inoltre si può notare da quest&#039;ultimo esempio, che dall&#039;interno di un metodo statico non è possibile utilizzare l&#039;istanza <strong>me</strong>, proprio perchè un metodo statico prescinde da qualsivoglia istanza della classe.
+Se un metodo statico deve accedere ad un dato attributo della classe, anche l&#039;attributo deve essere dichiarato come statico.
+Viceversa, un istanza della classe può accedere liberamente ad un qualunque suo metodo statico anche tramite l&#039;istanza <strong>me</strong> :
+</p>
+<pre class="code hybris"><span class="kw2">class</span> Foo <span class="br0">&#123;</span>
+    <span class="kw2">static</span> bar <span class="sy0">=</span> <span class="st0">&quot;Hello World&quot;</span><span class="sy0">;</span>
+&nbsp;
+    <span class="kw2">public</span> <span class="kw2">method</span> say_bar<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
+        <span class="kw3">println</span><span class="br0">&#40;</span> me<span class="sy0">-&gt;</span>bar <span class="br0">&#41;</span><span class="sy0">;</span>
+    <span class="br0">&#125;</span>
+<span class="br0">&#125;</span>
+&nbsp;
+foo <span class="sy0">=</span> <span class="kw2">new</span> Foo<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
+foo<span class="sy0">-&gt;</span>say_bar<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span></pre>
+
+<p>
+<strong>Nota 1</strong>
+</p>
+<pre class="code">  Attributi e metodi dichiarati statici, automaticamente diventano anche pubblici.</pre>
+
+<p>
+
+<strong>Nota 2</strong>
+</p>
+<pre class="code">  In tutto il processo esiste una sola istanza di un attributo statico, questo significa che un thread, un processo o una funzione che dovessero
+  cambiare il valore di un attributo statico, farebbero in modo che la sola istanza di quell&#039;attributo cambi valore, risultando di conseguenza
+  diverso per ogni altro accesso successivo.</pre>
+
+<p>
+
+<strong>Nota 3</strong>
+</p>
+<pre class="code">  Date le sue caratteristiche, un membro statico non viene gestito dal garbage collector fino al termine del programma, di conseguenza rimarrà
+  residente nella memoria dell&#039;interprete fino alla fine.</pre>
+
+</div>
+<!-- SECTION "Membri Statici" [5601-7781] -->
 <h1><a name="ereditarieta" id="ereditarieta">Ereditarietà</a></h1>
 <div class="level1">
 
@@ -262,7 +331,7 @@ Per estendere più di una classe, basta elencarne i nomi dopo la direttiva <stro
 <span class="br0">&#125;</span></pre>
 
 </div>
-<!-- SECTION "Ereditarietà" [5601-7449] -->
+<!-- SECTION "Ereditarietà" [7782-9630] -->
 <h1><a name="overloading_degli_operatori" id="overloading_degli_operatori">Overloading degli Operatori</a></h1>
 <div class="level1">
 
@@ -319,7 +388,7 @@ a<span class="br0">&#91;</span><span class="nu0">2</span><span class="br0">&#93;
 <span class="kw3">println</span><span class="br0">&#40;</span> a<span class="br0">&#91;</span>1<span class="br0">&#93;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 
 </div>
-<!-- SECTION "Overloading degli Operatori" [7450-8681] -->
+<!-- SECTION "Overloading degli Operatori" [9631-10862] -->
 <h1><a name="overloading_dei_descrittori" id="overloading_dei_descrittori">Overloading dei Descrittori</a></h1>
 <div class="level1">
 
@@ -329,7 +398,7 @@ Così come gli operatori, esistono dei <strong>descrittori</strong> standard dei
 </p>
 
 </div>
-<!-- SECTION "Overloading dei Descrittori" [8682-8944] -->
+<!-- SECTION "Overloading dei Descrittori" [10863-11125] -->
 <h2><a name="descrittore_size" id="descrittore_size">Descrittore size</a></h2>
 <div class="level2">
 
@@ -404,7 +473,7 @@ Questo stamperà l&#039;output :
 <pre class="code">Hello World!</pre>
 
 </div>
-<!-- SECTION "Descrittore size" [8945-10513] -->
+<!-- SECTION "Descrittore size" [11126-12694] -->
 <h2><a name="descrittore_to_string" id="descrittore_to_string">Descrittore to_string</a></h2>
 <div class="level2">
 
@@ -463,7 +532,7 @@ La println, cercherà una rappresentazione sotto forma di stringa della classe <
 <pre class="code">( 1, 2, 3 )</pre>
 
 </div>
-<!-- SECTION "Descrittore to_string" [10514-11586] -->
+<!-- SECTION "Descrittore to_string" [12695-13767] -->
 <h2><a name="descrittore_attribute" id="descrittore_attribute">Descrittore attribute</a></h2>
 <div class="level2">
 
@@ -511,7 +580,7 @@ Che stamperebbe l&#039;output :
 Non esistendo &#039;foo&#039;, non puoi istanziarlo con il valore bar !!!</pre>
 
 </div>
-<!-- SECTION "Descrittore attribute" [11587-12548] -->
+<!-- SECTION "Descrittore attribute" [13768-14729] -->
 <h2><a name="descrittore_method" id="descrittore_method">Descrittore method</a></h2>
 <div class="level2">
 
@@ -545,7 +614,7 @@ Che genererebbe l&#039;output :
 <pre class="code">Hai tentato di usare il metodo metodo_inesistente passandogli i seguenti argomenti : foo, bar, 12345</pre>
 
 </div>
-<!-- SECTION "Descrittore method" [12549-] --><div class="footnotes">
+<!-- SECTION "Descrittore method" [14730-] --><div class="footnotes">
 <div class="fn"><sup><a href="#fnt__1" id="fn__1" name="fn__1" class="fn_bot">1)</a></sup> 
 vedere paragrafo su costruttori e distruttori</div>
 <div class="fn"><sup><a href="#fnt__2" id="fn__2" name="fn__2" class="fn_bot">2)</a></sup> 
