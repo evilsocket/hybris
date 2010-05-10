@@ -84,7 +84,7 @@ HYBRIS_DEFINE_FUNCTION(hfseek){
 	ob_type_assert( ob_argv(1), otInteger );
 	ob_type_assert( ob_argv(2), otInteger );
 
-	if( handle_argv(0) == 0 ){
+	if( handle_argv(0) == NULL ){
 		return H_DEFAULT_ERROR;
 	}
 
@@ -97,7 +97,7 @@ HYBRIS_DEFINE_FUNCTION(hftell){
 	}
 	ob_type_assert( ob_argv(0), otHandle );
 
-	if( handle_argv(0) == 0 ){
+	if( handle_argv(0) == NULL ){
 		return H_DEFAULT_ERROR;
 	}
 
@@ -113,7 +113,7 @@ HYBRIS_DEFINE_FUNCTION(hfsize){
 	FILE *fp;
 
 	if( ob_argv(0)->type->code == otHandle ){
-		if( handle_argv(0) == 0 ){
+		if( handle_argv(0) == NULL ){
 			return H_DEFAULT_ERROR;
 		}
 
@@ -143,7 +143,7 @@ HYBRIS_DEFINE_FUNCTION(hfread){
 	}
 	ob_type_assert( ob_argv(0), otHandle );
 
-	if( handle_argv(0) == 0 ){
+	if( handle_argv(0) == NULL ){
 		return H_DEFAULT_ERROR;
 	}
 
@@ -166,7 +166,7 @@ HYBRIS_DEFINE_FUNCTION(hfwrite){
 	}
 	ob_type_assert( ob_argv(0), otHandle );
 
-	if( handle_argv(0) == 0 ){
+	if( handle_argv(0) == NULL ){
 		return H_DEFAULT_ERROR;
 	}
 
@@ -189,7 +189,7 @@ HYBRIS_DEFINE_FUNCTION(hfgets){
 	}
 	ob_type_assert( ob_argv(0), otHandle );
 
-	if( handle_argv(0) == 0 ){
+	if( handle_argv(0) == NULL ){
 		return H_DEFAULT_ERROR;
 	}
 
@@ -206,10 +206,16 @@ HYBRIS_DEFINE_FUNCTION(hfgets){
 HYBRIS_DEFINE_FUNCTION(hfclose){
 	ob_type_assert( ob_argv(0), otHandle );
     if( ob_argc() ){
-    	if( handle_argv(0) == 0 ){
+    	if( handle_argv(0) == NULL ){
 			return H_DEFAULT_ERROR;
 		}
+
 		fclose( (FILE *)handle_argv(0) );
+		/*
+		 * Make sure the handle is set to NULL to prevent SIGSEGV
+		 * when file functions try to use this file handle.
+		 */
+		ob_ref_ucast( ob_argv(0) )->value = NULL;
     }
     return H_DEFAULT_RETURN;
 }
