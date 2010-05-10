@@ -78,10 +78,9 @@ void gc_free( gc_list_t *list, gc_item_t *item ){
     __gc.usage -= item->size;
 
     /*
-     * If the object is a collection, ob_free is needed to
-     * decrement its items reference counter too so, if they were
-     * referenced only by this collection they will be freed upon
-     * the next gc_collect trigger.
+     * If the object is a collection, ob_free is needed to free its elements,
+     * because gc_free isn't applied recursively on each object as gc_mark, so
+     * basically each root object has to deallocate its elements if any.
      */
 	ob_free( item->pobj );
 	/*

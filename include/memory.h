@@ -107,27 +107,64 @@ class MemorySegment : public HashMap<Object> {
 
 		MemorySegment();
 
+		/*
+		 * Return an object instance if defined as 'identifier',
+		 * otherwise return H_UNDEFINED (NULL).
+		 */
         __force_inline Object *get( char *identifier ){
         	return find(identifier);
         }
-
+        /*
+         * Clone the object, define it as 'identifier' if it's not
+         * defined yet, otherwise replace the old value with this one.
+         *
+         * NOTE 1 : If the old value is a reference type, it won't be replaced,
+         * 		    instead the object it references will be replaced.
+         *
+         * NOTE 2 : If the old value is marked as constant, a warning will
+         * 			be printed to let the user know he's overwrinting a
+         * 			constant value.
+         */
         Object *add( char *identifier, Object *object );
-
+        /*
+         * Unlikely ::add, this method will not clone the object, but just
+         * define it and mark it as a constant value.
+         */
         __force_inline Object *addConstant( char *identifier, Object *object ){
-        	Object *o = add(identifier,object);
+        	/*
+        	 * Insert the object.
+        	 */
+        	Object *o = insert( identifier, object );
+			/*
+			 * Make sure it's marked as constant.
+			 */
         	o->attributes |= H_OA_CONSTANT;
+        	/*
+        	 * Return the instance.
+        	 */
         	return o;
         }
-
-
+        /*
+         * This method will push 'value' onto the stack, with an anonymous identifier.
+         *
+         * NOTE 1 : The object will not be cloned because this method is used with
+         * 			builtin functions, so we do not care about reference overwriting
+         * 			or issues like that.
+         */
         __force_inline Object *push( Object *value ){
         	char label[0xFF] = {0};
         	sprintf( label, "HANONYMOUSIDENTIFIER%d", m_elements );
         	return insert( label, value );
         }
-
+        /*
+         * Create a clone of this memory segment.
+         */
         MemorySegment *clone();
-
+        /*
+         * Release the structure that holds this memory segment.
+         * Inner objects will not be freed until the next gc_collect
+         * is called.
+         */
         __force_inline void release(){
         	clear();
         }

@@ -1584,6 +1584,12 @@ Object *engine_on_throw( engine_t *engine, vframe_t *frame, Node *node ){
 
 	exception = engine_exec( engine, frame, node->child(0) );
 
+	/*
+	 * Make sure the exception object will not be freed until someone
+	 * catches it or the program ends.
+	 */
+	GC_SET_UNTOUCHABLE(exception);
+
 	frame->state.set( Exception, exception );
 
 	return exception;
@@ -1608,6 +1614,13 @@ Object *engine_on_try_catch( engine_t *engine, vframe_t *frame, Node *node ){
 		frame->state.unset(Exception);
 
 		engine_exec( engine, frame, catch_body );
+
+		/*
+		 * See engine_on_throw for more details about this.
+		 *
+		 * Now the exception is garbage collectable.
+		 */
+		GC_RESET(exception);
 	}
 
 	if( finally_body != NULL ){

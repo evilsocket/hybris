@@ -28,9 +28,10 @@ Object *MemorySegment::add( char *identifier, Object *object ){
            *_old = H_UNDEFINED,
            *_ret = H_UNDEFINED;
 
-    if( object != H_UNDEFINED ){
-    	_new = ob_clone(object);
-    }
+    /*
+     * First of all, create a clone of the object instance.
+     */
+    _new = ob_clone(object);
 
     pthread_mutex_lock( &mutex );
     /* if object does not exist yet, insert as a new one */

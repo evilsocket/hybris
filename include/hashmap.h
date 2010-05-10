@@ -62,9 +62,7 @@ protected :
         string        label;
         value_t      *value;
 
-        map_pair( char *l, value_t *v ) :
-            label(l),
-            value(v) {
+        map_pair( char *l, value_t *v ) : label(l), value(v) {
 
         }
     }
