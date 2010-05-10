@@ -123,9 +123,9 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
         HYBRIS_DEFINE_CONSTANT( vm, name, gc_new_string(argv[i]) );
     }
     /* initialize misc constants */
-    HYBRIS_DEFINE_CONSTANT( vm, "true",  gc_new_integer(1) );
-    HYBRIS_DEFINE_CONSTANT( vm, "false", gc_new_integer(0) );
-    HYBRIS_DEFINE_CONSTANT( vm, "null",  gc_new_integer(0) );
+    HYBRIS_DEFINE_CONSTANT( vm, "true",  gc_new_boolean(true)   );
+    HYBRIS_DEFINE_CONSTANT( vm, "false", gc_new_boolean(false)  );
+    HYBRIS_DEFINE_CONSTANT( vm, "null",  gc_new_reference(NULL) );
 
     HYBRIS_DEFINE_CONSTANT( vm, "__VERSION__",  gc_new_string(VERSION) );
     HYBRIS_DEFINE_CONSTANT( vm, "__LIB_PATH__", gc_new_string(LIB_PATH) );

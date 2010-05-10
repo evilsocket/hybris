@@ -178,7 +178,7 @@ void gc_mark( Object *o ){
 		 */
 		Object *referenced = NULL;
 		int i = 0;
-		while( (referenced = ob_get_ref( o, i++ )) != NULL ){
+		while( (referenced = ob_traverse( o, i++ )) != NULL ){
 			gc_mark(referenced);
 		}
 	}
@@ -241,9 +241,7 @@ void gc_collect( vm_t *vm ){
 				 */
 				else{
 					#ifdef MEM_DEBUG
-						fprintf( stdout, "[MEM DEBUG] Releasing %p [%s] .\n",
-								item->pobj,
-								item->pobj->type->name );
+						fprintf( stdout, "[MEM DEBUG] Releasing %p [%s] .\n", item->pobj, item->pobj->type->name );
 					#endif
 
 					gc_free( &__gc.list, item );

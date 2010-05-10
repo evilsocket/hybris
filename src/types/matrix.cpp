@@ -24,7 +24,7 @@ const char *matrix_typename( Object *o ){
 	return o->type->name;
 }
 
-Object *matrix_get_ref( Object *me, int index ){
+Object *matrix_traverse( Object *me, int index ){
 	MatrixObject *mme  = (MatrixObject *)me;
 	size_t        size = mme->rows * mme->columns;
 
@@ -399,7 +399,7 @@ IMPLEMENT_TYPE(Matrix) {
 
 	/** generic function pointers **/
     matrix_typename, // type_name
-    matrix_get_ref, // get_ref
+    matrix_traverse, // traverse
 	matrix_clone, // clone
 	matrix_free, // free
 	matrix_get_size, // get_size

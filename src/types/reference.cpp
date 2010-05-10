@@ -23,7 +23,7 @@ const char *ref_typename( Object *o ){
 	return ("reference<" + string( ob_typename( ob_ref_ucast(o)->value ) ) + ">").c_str();
 }
 
-Object *ref_get_ref( Object *me, int index ){
+Object *ref_traverse( Object *me, int index ){
 	return (index > 0 ? NULL : ((ReferenceObject *)me)->value);
 }
 
@@ -71,7 +71,7 @@ bool ref_lvalue( Object *me ){
 }
 
 string ref_svalue( Object *me ){
-	return ob_svalue( ob_ref_ucast(me)->value );
+	return ob_ref_ucast(me)->value ? ob_svalue( ob_ref_ucast(me)->value ) : string("<null>");
 }
 
 void ref_print( Object *me, int tabs ){
@@ -325,7 +325,7 @@ IMPLEMENT_TYPE(Reference) {
 
 	/** generic function pointers **/
     ref_typename, // type_name
-    ref_get_ref, // get_ref
+    ref_traverse, // traverse
 	ref_clone, // clone
 	0, // free
 	ref_get_size, // get_size

@@ -78,7 +78,7 @@ const char *string_typename( Object *o ){
 	return o->type->name;
 }
 
-Object *string_get_ref( Object *me, int index ){
+Object *string_traverse( Object *me, int index ){
 	return NULL;
 }
 
@@ -380,7 +380,7 @@ IMPLEMENT_TYPE(String) {
 
 	/** generic function pointers **/
     string_typename, // type_name
-    string_get_ref, // get_ref
+    string_traverse, // traverse
 	string_clone, // clone
 	0, // free
 	string_get_size, // get_size

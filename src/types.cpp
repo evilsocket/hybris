@@ -52,11 +52,11 @@ const char *ob_typename( Object * o ){
 	}
 }
 
-Object *ob_get_ref( Object *o, int index ){
+Object *ob_traverse( Object *o, int index ){
 	/*
-	 * Every object has to implement its own get_ref.
+	 * Every object has to implement its own traverse.
 	 */
-	return o->type->get_ref(o,index);
+	return o->type->traverse(o,index);
 }
 
 Object* ob_clone( Object *o ){

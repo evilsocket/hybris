@@ -37,7 +37,7 @@ const char *map_typename( Object *o ){
 	return o->type->name;
 }
 
-Object *map_get_ref( Object *me, int index ){
+Object *map_traverse( Object *me, int index ){
 	MapObject *mme = (MapObject *)me;
 
 	if( index < mme->keys.size() ){
@@ -266,7 +266,7 @@ IMPLEMENT_TYPE(Map) {
 
 	/** generic function pointers **/
     map_typename, // type_name
-    map_get_ref, // get_ref
+    map_traverse, // traverse
 	map_clone, // clone
 	map_free, // free
 	map_get_size, // get_size

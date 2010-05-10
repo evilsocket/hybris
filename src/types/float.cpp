@@ -24,7 +24,7 @@ const char *float_typename( Object *o ){
 	return o->type->name;
 }
 
-Object *float_get_ref( Object *me, int index ){
+Object *float_traverse( Object *me, int index ){
 	return NULL;
 }
 
@@ -380,7 +380,7 @@ IMPLEMENT_TYPE(Float) {
 
 	/** generic function pointers **/
     float_typename, // type_name
-    float_get_ref, // get_ref
+    float_traverse, // traverse
 	float_clone, // clone
 	0, // free
 	float_get_size, // get_size

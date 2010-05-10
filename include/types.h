@@ -125,7 +125,7 @@ typedef struct _vm_t vm_t;
 // get the type name of the object
 typedef const char *(*ob_typename_function_t)	( Object * );
 // get the n-th object referenced by this
-typedef Object * (*ob_get_ref_function_t)       ( Object *, int );
+typedef Object * (*ob_traverse_function_t)       ( Object *, int );
 // free object inner buffer if any
 typedef void     (*ob_free_function_t)          ( Object * );
 // return the size of the object, or its items if it's a collection
@@ -173,6 +173,7 @@ typedef Node   * (*ob_get_method_function_t)	( Object *, char *, int );
  */
 enum H_OBJECT_TYPE {
     otVoid = 0,
+    otBoolean,
     otInteger,
     otFloat,
     otChar,
@@ -192,6 +193,7 @@ enum H_OBJECT_TYPE {
 __force_inline const char *ob_type_to_string( H_OBJECT_TYPE type ){
 	switch(type){
 		case otVoid      : return "void";
+		case otBoolean   : return "boolean";
 		case otInteger   : return "integer";
 		case otFloat     : return "float";
 		case otChar      : return "char";
@@ -240,7 +242,7 @@ typedef struct _object_type_t {
 
     /** generic function pointers **/
     ob_typename_function_t      type_name;
-    ob_get_ref_function_t		get_ref;
+    ob_traverse_function_t		traverse;
     ob_unary_function_t         clone;
     ob_free_function_t          free;
     ob_size_function_t			get_size;
@@ -344,7 +346,7 @@ const char *ob_typename( Object * o );
 /*
  * Get the n-th object referenced by 'o'.
  */
-Object *ob_get_ref( Object *o, int index );
+Object *ob_traverse( Object *o, int index );
 /*
  * Create a clone of the object.
  */
@@ -660,6 +662,22 @@ Object *ob_call_method( vm_t *vm, Object *c, char *c_name, char *method_name, Ob
 /**
  * Types definition.
  */
+DECLARE_TYPE(Boolean);
+
+typedef struct _BooleanObject {
+    BASE_OBJECT_HEADER;
+    bool value;
+
+    _BooleanObject( bool v ) : BASE_OBJECT_HEADER_INIT(Boolean), value(v) {
+
+    }
+}
+BooleanObject;
+
+#define ob_is_boolean(o) ob_is_typeof(o,Boolean)
+#define ob_bool_ucast(o) ((BooleanObject *)(o))
+#define ob_bool_val(o)   (((BooleanObject *)(o))->value)
+
 DECLARE_TYPE(Integer);
 
 typedef struct _IntegerObject {

@@ -23,7 +23,7 @@ const char *vector_typename( Object *o ){
 	return o->type->name;
 }
 
-Object *vector_get_ref( Object *me, int index ){
+Object *vector_traverse( Object *me, int index ){
 	return (index >= ((VectorObject *)me)->value.size() ? NULL : ((VectorObject *)me)->value.at(index));
 }
 
@@ -230,7 +230,7 @@ IMPLEMENT_TYPE(Vector) {
 
 	/** generic function pointers **/
     vector_typename, // type_name
-    vector_get_ref, // get_ref
+    vector_traverse, // traverse
 	vector_clone, // clone
 	vector_free, // free
 	vector_get_size, // get_size

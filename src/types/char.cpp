@@ -24,7 +24,7 @@ const char *char_typename( Object *o ){
 	return o->type->name;
 }
 
-Object *char_get_ref( Object *me, int index ){
+Object *char_traverse( Object *me, int index ){
 	return NULL;
 }
 
@@ -412,7 +412,7 @@ IMPLEMENT_TYPE(Char) {
 
 	/** generic function pointers **/
     char_typename, // type_name
-    char_get_ref, // get_ref
+    char_traverse, // traverse
 	char_clone, // clone
 	0, // free
 	char_get_size, // get_size

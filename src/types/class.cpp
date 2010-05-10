@@ -156,7 +156,7 @@ const char *class_typename( Object *o ){
 	return ob_class_ucast(o)->name.c_str();
 }
 
-Object *class_get_ref( Object *me, int index ){
+Object *class_traverse( Object *me, int index ){
 	return (index >= ((ClassObject *)me)->c_attributes.size() ? NULL : ((ClassObject *)me)->c_attributes.at(index)->value);
 }
 
@@ -586,7 +586,7 @@ IMPLEMENT_TYPE(Class) {
 
 	/** generic function pointers **/
     class_typename, // type_name
-    class_get_ref, // get_ref
+    class_traverse, // traverse
 	class_clone, // clone
 	class_free, // free
 	class_get_size, // get_size

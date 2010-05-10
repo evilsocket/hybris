@@ -24,7 +24,7 @@ const char *int_typename( Object *o ){
 	return o->type->name;
 }
 
-Object *int_get_ref( Object *me, int index ){
+Object *int_traverse( Object *me, int index ){
 	return NULL;
 }
 
@@ -439,7 +439,7 @@ IMPLEMENT_TYPE(Integer) {
 
 	/** generic function pointers **/
     int_typename, // type_name
-    int_get_ref, // get_ref
+    int_traverse, // traverse
 	int_clone, // clone
 	0, // free
 	int_get_size, // get_size
@@ -531,7 +531,7 @@ IMPLEMENT_TYPE(Alias) {
 
 	/** generic function pointers **/
     alias_typename, // type_name
-    int_get_ref, // get_ref
+    int_traverse, // traverse
 	alias_clone, // clone
 	0, // free
 	int_get_size, // get_size
@@ -623,7 +623,7 @@ IMPLEMENT_TYPE(Extern) {
 
 	/** generic function pointers **/
     extern_typename, // type_name
-    int_get_ref, // get_ref
+    int_traverse, // traverse
 	extern_clone, // clone
 	0, // free
 	int_get_size, // get_size

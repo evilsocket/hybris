@@ -26,7 +26,7 @@ const char *binary_typename( Object *o ){
 	return o->type->name;
 }
 
-Object *binary_get_ref( Object *me, int index ){
+Object *binary_traverse( Object *me, int index ){
 	return (index >= ((BinaryObject *)me)->value.size() ? NULL : ((BinaryObject *)me)->value.at(index));
 }
 
@@ -230,7 +230,7 @@ IMPLEMENT_TYPE(Binary) {
 
 	/** generic function pointers **/
     binary_typename, // type_name
-    binary_get_ref, // get_ref
+    binary_traverse, // traverse
 	binary_clone, // clone
 	binary_free, // free
 	binary_get_size, // get_size

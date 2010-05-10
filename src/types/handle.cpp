@@ -23,7 +23,7 @@ const char *handle_typename( Object *o ){
 	return o->type->name;
 }
 
-Object *handle_get_ref( Object *me, int index ){
+Object *handle_traverse( Object *me, int index ){
 	return (index > 0 ? NULL : (Object *)((HandleObject *)me)->value);
 }
 
@@ -148,7 +148,7 @@ IMPLEMENT_TYPE(Handle) {
 
 	/** generic function pointers **/
     handle_typename, // type_name
-    handle_get_ref, // get_ref
+    handle_traverse, // traverse
 	handle_clone, // clone
 	0, // free
 	handle_get_size, // get_size

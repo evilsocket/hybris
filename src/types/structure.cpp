@@ -24,7 +24,7 @@ const char *struct_typename( Object *o ){
 	return o->type->name;
 }
 
-Object *struct_get_ref( Object *me, int index ){
+Object *struct_traverse( Object *me, int index ){
 	return (index >= ((StructureObject *)me)->s_attributes.size() ? NULL : ((StructureObject *)me)->s_attributes.at(index));
 }
 
@@ -148,7 +148,7 @@ IMPLEMENT_TYPE(Structure) {
 
 	/** generic function pointers **/
     struct_typename, // type_name
-    struct_get_ref, // get_ref
+    struct_traverse, // traverse
 	struct_clone, // clone
 	struct_free, // free
 	struct_get_size, // get_size

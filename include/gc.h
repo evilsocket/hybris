@@ -179,6 +179,7 @@ void            gc_release();
  * 2 .: Downcast to Object * and let the gc track it.
  * 3 .: Upcast back to specialized type pointer and return to user.
  */
+#define gc_new_boolean(v)    ob_bool_ucast(   gc_track( ob_dcast( new BooleanObject( static_cast<bool>(v) ) ), 	    sizeof(BooleanObject) ) )
 #define gc_new_integer(v)    ob_int_ucast(    gc_track( ob_dcast( new IntegerObject( static_cast<long>(v) ) ), 	    sizeof(IntegerObject) ) )
 #define gc_new_alias(v)      ob_alias_ucast(  gc_track( ob_dcast( new AliasObject( static_cast<long>(v) ) ),   	    sizeof(AliasObject) ) )
 #define gc_new_extern(v)     ob_extern_ucast( gc_track( ob_dcast( new ExternObject( static_cast<long>(v) ) ),  	    sizeof(ExternObject) ) )
