@@ -860,9 +860,16 @@ Object *engine_on_class_declaration( engine_t *engine, vframe_t *frame, Node *no
 			ClassObjectPrototypesIterator pi;
 
 			for( ai = cobj->c_attributes.begin(); ai != cobj->c_attributes.end(); ai++ ){
-				attrname = (char *)(*ai)->label.c_str();
+				attrname  = (char *)(*ai)->label.c_str();
 
 				ob_define_attribute( c, attrname, (*ai)->value->access, (*ai)->value->is_static );
+
+				/*
+				 * Initialize static attributes.
+				 */
+				if( (*ai)->value->is_static){
+					ob_set_attribute_reference( c, attrname, (*ai)->value->value );
+				}
 			}
 
 			for( mi = cobj->c_methods.begin(); mi != cobj->c_methods.end(); mi++ ){
