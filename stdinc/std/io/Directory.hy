@@ -22,31 +22,31 @@ class Directory {
 	protected root, directories, files;
 
 	public method Directory(){
-		me->root 		= "";
-		me->directories = array();
-		me->files       = array();
+		me.root 		= "";
+		me.directories = array();
+		me.files       = array();
 	}
 
 	public method Directory( root ){
-		me->Directory();
-		me->root = root;
+		me.Directory();
+		me.root = root;
 
-		items = readdir( me->root, 1 );
+		items = readdir( me.root, 1 );
 		foreach( item of items ){
 			if( item["type"] == DT_DIR ){
-				me->directories[] = item["name"];
+				me.directories[] = item["name"];
 			}
 			else{
-				me->files[] = item["name"];
+				me.files[] = item["name"];
 			}
 		}
 	}
 
 	public method __size(){
-		return sizeof(me->files);
+		return sizeof(me.files);
 	}
 
 	public operator [] ( index ){
-		return me->files[index];
+		return me.files[index];
 	}
 }

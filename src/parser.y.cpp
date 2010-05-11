@@ -82,8 +82,6 @@
 #define MK_VARGS_NODE()			  new ExpressionNode( T_VARGS, 0 )
 #define MK_RANGE_NODE(a, b)		  new ExpressionNode( T_RANGE, 2, a, b )
 #define MK_UMINUS_NODE(a)		  new ExpressionNode( T_UMINUS, 1, a )
-#define MK_DOT_NODE(a, b)		  new ExpressionNode( T_DOT, 2, a, b )
-#define MK_DOTE_NODE(a, b)		  new ExpressionNode( T_DOTE, 2, a, b )
 #define MK_PLUS_NODE(a, b)		  new ExpressionNode( T_PLUS, 2, a, b )
 #define MK_PLUSE_NODE(a, b)		  new ExpressionNode( T_PLUSE, 2, a, b )
 #define MK_MINUS_NODE(a, b)		  new ExpressionNode( T_MINUS, 2, a, b )
@@ -190,6 +188,7 @@ vm_t *__hyb_vm;
 %token T_DEFAULT
 %token T_QUESTION
 %token T_DOLLAR
+%token T_MAPS
 %token T_GET_MEMBER
 %token T_REF
 %token T_RETURN
@@ -212,18 +211,15 @@ vm_t *__hyb_vm;
 %nonassoc T_SWITCH_END
 %nonassoc T_CALL_END
 %nonassoc T_ELSE
-%nonassoc T_DOT_END
-%nonassoc T_NEW_END
-%nonassoc T_METHOD_END
 
 %left T_L_NOT T_L_AND T_L_OR
 %left T_LESS T_GREATER T_SAME T_NOT_SAME T_LESS_EQ T_GREATER_EQ
 %left T_RANGE T_REGEX_OP
-%left T_PLUSE T_MINUSE T_DOTE T_XORE
+%left T_PLUSE T_MINUSE T_XORE
 %left T_DIVE T_MULE T_ANDE T_ORE
 %left T_PLUS T_MINUS T_XOR
 %left T_DIV T_MUL T_AND T_OR
-%left T_MOD T_MODE T_DOT
+%left T_MOD T_MODE
 %left T_SHIFTL T_SHIFTLE T_SHIFTR T_SHIFTRE T_DOLLAR
 
 %nonassoc T_UMINUS
@@ -370,7 +366,7 @@ statement  : T_EOSTMT                                                   { $$ = M
            | T_DO statement T_WHILE '(' expression ')' T_EOSTMT         { $$ = MK_DO_NODE( $2, $5 ); }
 		   | T_FOR '(' statement statement expression ')' statement     { $$ = MK_FOR_NODE( $3, $4, $5, $7 ); }
 		   | T_FOREACH '(' T_IDENT T_OF expression ')' statement        { $$ = MK_FOREACH_NODE( $3, $5, $7 ); free($3); }
-		   | T_FOREACH '(' T_IDENT T_GET_MEMBER T_IDENT T_OF expression ')' statement {
+		   | T_FOREACH '(' T_IDENT T_MAPS T_IDENT T_OF expression ')' statement {
 		   		$$ = MK_FOREACHM_NODE( $3, $5, $7, $9 );
 		   		free($3);
 		   		free($5);
@@ -417,8 +413,6 @@ statements : /* empty */          { $$ = MK_NODE(0);  }
            | statements statement { $$ = MK_EOSTMT_NODE( $1, $2 ); };
 
 arithmeticExpression : T_MINUS expression %prec T_UMINUS { $$ = MK_UMINUS_NODE( $2 ); }
-					 | expression T_DOT expression       { $$ = MK_DOT_NODE( $1, $3 ); }
-					 | expression T_DOTE expression      { $$ = MK_DOTE_NODE( $1, $3 ); }
 					 | expression T_PLUS expression      { $$ = MK_PLUS_NODE( $1, $3 ); }
 					 | expression T_PLUSE expression     { $$ = MK_PLUSE_NODE( $1, $3 ); }
 					 | expression T_MINUS expression     { $$ = MK_MINUS_NODE( $1, $3 ); }
@@ -471,7 +465,7 @@ expression : T_BOOLEAN										  { $$ = MK_CONST_NODE($1); }
            | T_STRING                                         { $$ = MK_CONST_NODE($1); }
            | '[' itemList ']'                                 { $$ = MK_ARRAY_NODE($2); }
            | '[' mapList ']'								  { $$ = MK_MAP_NODE($2); }
-           /* expression -> <identifier> */
+           /* expression . <identifier> */
            | expression T_GET_MEMBER T_IDENT 				  { $$ = MK_MREQ_NODE( $1, MK_IDENT_NODE($3) ); free($3); }
            /* identifier */
            | T_IDENT                                          { $$ = MK_IDENT_NODE($1); }

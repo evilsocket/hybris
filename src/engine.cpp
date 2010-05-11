@@ -410,12 +410,6 @@ Object *engine_exec( engine_t *engine, vframe_t *frame, Node *node ){
                 /* object[ expression ] = expression */
                 case T_SUBSCRIPTSET :
                     return engine_on_subscript_set( engine, frame, node );
-                /* expression.expression */
-                case T_DOT    :
-                    return engine_on_dot( engine, frame, node );
-                /* expression .= expression */
-                case T_DOTE   :
-                    return engine_on_inplace_dot( engine, frame, node );
                 /* -expression */
                 case T_UMINUS :
                     return engine_on_uminus( engine, frame, node );
@@ -1724,36 +1718,6 @@ Object *engine_on_map( engine_t *engine, vframe_t *frame, Node *node ){
 	}
 
 	return (Object *)m;
-}
-
-Object *engine_on_dot( engine_t *engine, vframe_t *frame, Node *node ){
-    Object *a      = H_UNDEFINED,
-           *b      = H_UNDEFINED,
-           *result = H_UNDEFINED;
-
-    a      = engine_exec( engine, frame, node->child(0) );
-    b      = engine_exec( engine, frame, node->child(1) );
-
-    engine_check_frame_exit(frame)
-
-    result = ob_cl_concat( a, b );
-
-    return result;
-}
-
-Object *engine_on_inplace_dot( engine_t *engine, vframe_t *frame, Node *node ){
-    Object *a      = H_UNDEFINED,
-           *b      = H_UNDEFINED,
-           *result = H_UNDEFINED;
-
-    a      = engine_exec( engine, frame, node->child(0) );
-    b      = engine_exec( engine, frame, node->child(1) );
-
-    engine_check_frame_exit(frame)
-
-    result = ob_cl_inplace_concat( a, b );
-
-    return result;
 }
 
 Object *engine_on_assign( engine_t *engine, vframe_t *frame, Node *node ){

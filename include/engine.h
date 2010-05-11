@@ -173,8 +173,6 @@ Object   *engine_on_subscript_push( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_subscript_get( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_subscript_set( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_eostmt( engine_t *engine, vframe_t *, Node * );
-Object   *engine_on_dot( engine_t *engine, vframe_t *, Node * );
-Object   *engine_on_inplace_dot( engine_t *engine, vframe_t *, Node * );
 /* arithmetic */
 Object   *engine_on_assign( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_uminus( engine_t *engine, vframe_t *, Node * );

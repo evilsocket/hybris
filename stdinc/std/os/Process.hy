@@ -16,36 +16,35 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-import std.os.process;
+import  std.os.process;
 include std.io.File;
-
-import std.os.process;
+import  std.os.process;
 
 class Process {
 	protected pname, pargs;
 	
 	public method Process( name, args ){
-		me->pname    = name;
-		me->pargs    = args;
+		me.pname = name;
+		me.pargs = args;
 	}
 
 	public method Process(){
-		me->Pipe("","");
+		me.Pipe("","");
 	}
 
 	public method setProcessName( name ){
-		me->pname = name;
+		me.pname = name;
 	}
 
 	public method setProcessArgs( args ){
-		me->pargs = args;
+		me.pargs = args;
 	}
 
 	public method exec(){
-		if( me->pname == "" ){
+		if( me.pname == "" ){
 			return false;		
 		}
 
-		return exec( me->pname." ".me->pargs );
+		return exec( me.pname + " " + me.pargs );
 	}
 }		

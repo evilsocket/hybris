@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-import  std.type.array;
+import  std.lang.array;
 include std.Exception;
 include std.MethodReference;
 

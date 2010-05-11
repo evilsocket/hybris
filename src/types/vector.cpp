@@ -292,8 +292,6 @@ IMPLEMENT_TYPE(Vector) {
     0, // l_and
 
 	/** collection operators **/
-	0, // cl_concat
-	0, // cl_inplace_concat
 	vector_cl_push, // cl_push
 	vector_cl_push_reference, // cl_push_reference
 	vector_cl_pop, // cl_pop

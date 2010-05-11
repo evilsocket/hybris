@@ -23,14 +23,14 @@ class Thread  {
 	protected function_name, id;
 
 	public method Thread( function_name ){
-		me->function_name = function_name;
-		me->id 			  = 0;
+		me.function_name = function_name;
+		me.id 			 = 0;
 	}
 	
 	public method start( args ){
-		me->id = pthread_create_argv( me->function_name, args );
+		me.id = pthread_create_argv( me.function_name, args );
 	
-		return (me->id > 0);
+		return (me.id > 0);
 	}
 
 	public method exit(){
@@ -38,14 +38,14 @@ class Thread  {
 	}
 
 	public method terminate(){
-		return pthread_kill( me->id, SIGTERM );
+		return pthread_kill( me.id, SIGTERM );
 	}
 
 	public method kill(){
-		return pthread_kill( me->id, SIGKILL );
+		return pthread_kill( me.id, SIGKILL );
 	}
 
 	public method join(){
-		return pthread_join( me->id );
+		return pthread_join( me.id );
 	}
 }	

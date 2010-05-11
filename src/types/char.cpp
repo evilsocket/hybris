@@ -190,9 +190,17 @@ Object *char_minus( Object *me ){
 }
 
 Object *char_add( Object *me, Object *op ){
-    long ivalue = ob_ivalue(op);
+	if( ob_is_string(op) ){
+		string mvalue = ob_svalue(me),
+			   svalue = ob_svalue(op);
 
-    return (Object *)gc_new_char( ob_char_ucast(me)->value + ivalue );
+		return (Object *)gc_new_string( (mvalue + svalue).c_str() );
+	}
+	else{
+		long ivalue = ob_ivalue(op);
+
+		return (Object *)gc_new_char( ob_char_ucast(me)->value + ivalue );
+	}
 }
 
 Object *char_sub( Object *me, Object *op ){
@@ -234,7 +242,16 @@ Object *char_mod( Object *me, Object *op ){
 }
 
 Object *char_inplace_add( Object *me, Object *op ){
-    ob_char_ucast(me)->value += ob_ivalue(op);
+	if( ob_is_string(op) ){
+
+		string mvalue = ob_svalue(me),
+			   svalue = ob_svalue(op);
+
+		me = (Object *)gc_new_string( (mvalue + svalue).c_str() );
+	}
+	else{
+		ob_char_ucast(me)->value += ob_ivalue(op);
+	}
 
     return me;
 }
@@ -394,14 +411,6 @@ Object *char_l_and( Object *me, Object *op ){
     return (Object *)gc_new_char( ob_char_ucast(me)->value && ivalue );
 }
 
-/** collection operators **/
-Object *char_cl_concat( Object *me, Object *op ){
-    string mvalue = ob_svalue(me),
-           svalue = ob_svalue(op);
-
-    return (Object *)gc_new_string( (mvalue + svalue).c_str() );
-}
-
 IMPLEMENT_TYPE(Char) {
     /** type code **/
     otChar,
@@ -474,8 +483,6 @@ IMPLEMENT_TYPE(Char) {
     char_l_and, // l_and
 
 	/** collection operators **/
-	char_cl_concat, // cl_concat
-	0, // cl_inplace_concat
 	0, // cl_push
 	0, // cl_push_reference
 	0, // cl_pop

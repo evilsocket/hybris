@@ -23,53 +23,53 @@ class Pipe extends File {
 	protected pname, pargs;
 	
 	public method Pipe( name, args, mode ){
-		me->File(0)
-		me->fileName = name;
-		me->pname    = name;
-		me->pargs    = args;
-		me->mode     = mode;
+		me.File(0)
+		me.fileName = name;
+		me.pname    = name;
+		me.pargs    = args;
+		me.mode     = mode;
 	}
 
 	public method Pipe( name, mode ){
-		me->Pipe( name, "", mode );
+		me.Pipe( name, "", mode );
 	}
 
 	public method Pipe(){
-		me->Pipe("","");
+		me.Pipe("","");
 	}
 
 	public method close (){
-		if( me->file ){
-			pclose( me->file );	
-			me->file = null;		
+		if( me.file ){
+			pclose( me.file );	
+			me.file = null;		
 		}
 	}
 
 	private method __expire() {
-		me->close();
+		me.close();
 	}
 
 	public method setProcessName( name ){
-		me->close();
-		me->pname = name;
+		me.close();
+		me.pname = name;
 	}
 
 	public method setProcessArgs( args ){
-		me->close();
-		me->pargs = args;
+		me.close();
+		me.pargs = args;
 	}
 
 	public method setProcessMode( mdoe ){
-		me->close();
-		me->mode = mode;
+		me.close();
+		me.mode = mode;
 	}
 
 	public method open(){
-		if( me->pname == "" || me->mode == "" ){
+		if( me.pname == "" || me.mode == "" ){
 			return false;		
 		}
-		me->file = popen( me->pname." ".me->pargs, me->mode );
+		me.file = popen( me.pname + " " + me.pargs, me.mode );
 
-		return (me->file != 0);
+		return (me.file != 0);
 	}
 }	

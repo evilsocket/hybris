@@ -16,23 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-import std.type.type;
-import std.type.reflection;
+import std.lang.type;
+import std.lang.reflection;
 
 class MethodReference {
 	private classref;
 	private methodname;
 
 	method MethodReference( c, m ){
-		me->classref   = c;
-		me->methodname = m;
+		me.classref   = c;
+		me.methodname = m;
 	}
 
 	method __to_string(){
-		return "Reference<".typeof(me->classref)."::".me->methodname.">";
+		return "Reference<" + typeof(me.classref) + "::" + me.methodname + ">";
 	}
 
 	method call( argv ){
-		return call_method( me->classref, me->methodname, argv );
+		return call_method( me.classref, me.methodname, argv );
 	}
 }

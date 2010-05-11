@@ -19,38 +19,38 @@
 
 import std.io.network.tcp;
 import std.os.process;
-import std.type.map;
-import std.type.string;
-
-__CGI_stdout = STDOUT_FILENO;
-__CGI_stdin  = STDIN_FILENO;
+import std.lang.map;
+import std.lang.string;
 
 class CGI {
 	protected env;
 
+	static stdout = STDOUT_FILENO;
+	static stdin  = STDIN_FILENO;
+
 	method CGI(){
-		me->env = env();
+		me.env = env();
 	
-		if( haskey( me->env, "REQUEST_METHOD" ) != -1 ){
-			if( me->env["REQUEST_METHOD"] == "POST" ){
-				me->env["POST"] = map();	
+		if( haskey( me.env, "REQUEST_METHOD" ) != -1 ){
+			if( me.env["REQUEST_METHOD"] == "POST" ){
+				me.env["POST"] = map();	
 
 				data = " ";
-				recv( __CGI_stdin, data );
+				recv( CGI.stdin, data );
 				
 				duples = strsplit( data, "&" );
 				foreach( duple of duples ){
 					duple = strsplit( duple, "=" );
 					name  = (sizeof(duple) >= 1 ? duple[0] : "");
 					value = (sizeof(duple) >= 2 ? duple[1] : "");
-					me->env["POST"][name] = value;
+					me.env["POST"][name] = value;
 				}	
 			}
 		}
 
-		if( haskey( me->env, "QUERY_STRING" ) != -1 ){
-			me->env["GET"] = map();	
-			data = me->env["QUERY_STRING"];
+		if( haskey( me.env, "QUERY_STRING" ) != -1 ){
+			me.env["GET"] = map();	
+			data = me.env["QUERY_STRING"];
 						
 			if( trim(data) != "" ){
 				duples = strsplit( data, "&" );
@@ -58,25 +58,25 @@ class CGI {
 					duple = strsplit( duple, "=" );
 					name  = (sizeof(duple) >= 1 ? duple[0] : "");
 					value = (sizeof(duple) >= 2 ? duple[1] : "");
-					me->env["GET"][name] = value;
+					me.env["GET"][name] = value;
 				}		
 			}
 		}
 	}
 
 	method CGI( type ){
-		me->CGI();
-		send( __CGI_stdout,  "Content-type: ".type."\n\n" );
+		me.CGI();
+		send( CGI.stdout,  "Content-type: " + type + "\n\n" );
 	}
 
 	method env(){
-		return me->env;
+		return me.env;
 	}
 
 	method __attribute( name ){
 		value = null;		
-		if( haskey( me->env, name ) != -1 ){
-			value = me->env[name];
+		if( haskey( me.env, name ) != -1 ){
+			value = me.env[name];
 		}	
 		return value;
 	}

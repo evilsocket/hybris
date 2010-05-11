@@ -334,18 +334,6 @@ Object *ref_l_and( Object *me, Object *op ){
 }
 
 /* collection operators */
-Object *ref_cl_concat( Object *me, Object *op ){
-	REF_IS_NULL_PTR(me);
-
-	return ob_cl_concat( ob_ref_ucast(me)->value, op );
-}
-
-Object *ref_cl_inplace_concat( Object *me, Object *op ){
-	REF_IS_NULL_PTR(me);
-
-	return ob_cl_inplace_concat( ob_ref_ucast(me)->value, op );
-}
-
 Object *ref_cl_push( Object *me, Object *op ){
 	REF_IS_NULL_PTR(me);
 
@@ -521,8 +509,6 @@ IMPLEMENT_TYPE(Reference) {
     ref_l_and, // l_and
 
 	/** collection operators **/
-	ref_cl_concat, // cl_concat
-	ref_cl_inplace_concat, // cl_inplace_concat
 	ref_cl_push, // cl_push
 	ref_cl_push_reference, // cl_push_reference
 	ref_cl_pop, // cl_pop

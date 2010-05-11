@@ -37,12 +37,12 @@ class Console  {
 	}
 
 	operator << ( data ){
-		me->print(data);
+		me.print(data);
 		return me;
 	}
 
 	operator >> ( var ){
-		return me->input(var);
+		return me.input(var);
 	}
 }	
 /*

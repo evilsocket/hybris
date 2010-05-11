@@ -22,33 +22,33 @@ class ClientSocket extends Socket {
 	protected host, port;
 	
 	public method ClientSocket( host, port ){
-		me->Socket();		
-		me->host = host;
-		me->port = port;
+		me.Socket();		
+		me.host = host;
+		me.port = port;
 	}
 
 	public method ClientSocket(){
-		me->ClientSocket( null, null );		
+		me.ClientSocket( null, null );		
 	}
 
 	public method setHost( host ){
-		me->host = host;
+		me.host = host;
 	}
 
 	public method setPort( port ){
-		me->port = port;
+		me.port = port;
 	}
 
 	public method connect( host, port ){
-		me->host = host;
-		me->port = port;
-		return me->connect();
+		me.host = host;
+		me.port = port;
+		return me.connect();
 	}
 
 	public method connect(){
-		me->sd = connect( me->host, me->port );
+		me.sd = connect( me.host, me.port );
 		
-		return (me->sd != -1);
+		return (me.sd != -1);
 	}
 }
 

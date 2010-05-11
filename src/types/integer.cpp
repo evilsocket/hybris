@@ -206,9 +206,17 @@ Object *int_minus( Object *me ){
 }
 
 Object *int_add( Object *me, Object *op ){
-    long ivalue = ob_ivalue(op);
+	if( ob_is_string(op) ){
+	    string mvalue = ob_svalue(me),
+	           svalue = ob_svalue(op);
 
-    return (Object *)gc_new_integer( (ob_int_ucast(me))->value + ivalue );
+	    return (Object *)gc_new_string( (mvalue + svalue).c_str() );
+	}
+	else{
+		long ivalue = ob_ivalue(op);
+
+		return (Object *)gc_new_integer( (ob_int_ucast(me))->value + ivalue );
+	}
 }
 
 Object *int_sub( Object *me, Object *op ){
@@ -250,7 +258,15 @@ Object *int_mod( Object *me, Object *op ){
 }
 
 Object *int_inplace_add( Object *me, Object *op ){
-    (ob_int_ucast(me))->value += ob_ivalue(op);
+	if( ob_is_string(op) ){
+	    string mvalue = ob_svalue(me),
+	           svalue = ob_svalue(op);
+
+	    me = (Object *)gc_new_string( (mvalue + svalue).c_str() );
+	}
+	else{
+		(ob_int_ucast(me))->value += ob_ivalue(op);
+	}
 
     return me;
 }
@@ -410,14 +426,6 @@ Object *int_l_and( Object *me, Object *op ){
     return (Object *)gc_new_integer( (ob_int_ucast(me))->value && ivalue );
 }
 
-/** collection operators **/
-Object *int_cl_concat( Object *me, Object *op ){
-    string mvalue = ob_svalue(me),
-           svalue = ob_svalue(op);
-
-    return (Object *)gc_new_string( (mvalue + svalue).c_str() );
-}
-
 Object *int_cl_at( Object *me, Object *op ){
     long ivalue = ob_ivalue(op),
          x      = (ob_int_ucast(me))->value;
@@ -501,8 +509,6 @@ IMPLEMENT_TYPE(Integer) {
     int_l_and, // l_and
 
 	/** collection operators **/
-	int_cl_concat, // cl_concat
-	0, // cl_inplace_concat
 	0, // cl_push
 	0, // cl_push_reference
 	0, // cl_pop
@@ -594,8 +600,6 @@ IMPLEMENT_TYPE(Alias) {
     int_l_and, // l_and
 
 	/** collection operators **/
-	int_cl_concat, // cl_concat
-	0, // cl_inplace_concat
 	0, // cl_push
 	0, // cl_push_reference
 	0, // cl_pop
@@ -687,8 +691,6 @@ IMPLEMENT_TYPE(Extern) {
     int_l_and, // l_and
 
 	/** collection operators **/
-	int_cl_concat, // cl_concat
-	0, // cl_inplace_concat
 	0, // cl_push
 	0, // cl_push_reference
 	0, // cl_pop

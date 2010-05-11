@@ -22,25 +22,25 @@ class Exception {
 	protected file, line, message;
 	
 	public method Exception( file, line, message ){
-		me->file    = file;
-		me->line    = line;
-		me->message = message;
+		me.file    = file;
+		me.line    = line;
+		me.message = message;
 	}	
 
 	public method Exception( message ){
-		me->Exception( 0, 0, message );
+		me.Exception( 0, 0, message );
 	}
 	
 	public method message(){
-		return me->message;
+		return me.message;
 	}
 
 	public method __to_string(){
-		if( me->file ){	
-			svalue = "[".me->file.":".me->line."] ".me->message;
+		if( me.file ){	
+			svalue = "[" + me.file + ":" + me.line + "] " + me.message;
 		}
 		else{
-			svalue = me->message;	
+			svalue = me.message;	
 		}
 		return svalue;
 	}

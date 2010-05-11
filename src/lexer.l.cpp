@@ -184,8 +184,6 @@ include          BEGIN(T_INCLUSION);
 
 "@"				return T_VARGS;
 ".."            return T_RANGE;
-"."             return T_DOT;
-".="            return T_DOTE;
 
 "="		        return T_ASSIGN;
 "+"             return T_PLUS;
@@ -228,7 +226,8 @@ include          BEGIN(T_INCLUSION);
 [\(|\)|\{|\}|\[|\]|\,\?\:] return yytext[0];
 
 "$"             return T_DOLLAR;
-"->"            return T_GET_MEMBER;
+"."             return T_GET_MEMBER;
+"->"			return T_MAPS;
 "while"         return T_WHILE;
 "do"            return T_DO;
 "for"		    return T_FOR;

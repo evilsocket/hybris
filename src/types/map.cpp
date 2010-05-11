@@ -328,8 +328,6 @@ IMPLEMENT_TYPE(Map) {
     0, // l_and
 
 	/** collection operators **/
-	0, // cl_concat
-	0, // cl_inplace_concat
 	0, // cl_push
 	0, // cl_push_reference
 	map_cl_pop, // cl_pop

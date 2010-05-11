@@ -260,8 +260,6 @@ IMPLEMENT_TYPE(Boolean) {
     bool_l_and, // l_and
 
 	/** collection operators **/
-	0, // cl_concat
-	0, // cl_inplace_concat
 	0, // cl_push
 	0, // cl_push_reference
 	0, // cl_pop

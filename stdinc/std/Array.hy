@@ -16,40 +16,40 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-import std.type.array;
+import std.lang.array;
 
 class Array {
 	private __a;
 
 	public method Array(){
-		me->__a = array();	
+		me.__a = array();	
 	}
 
 	public method Array( a ){
-		me->Array();
+		me.Array();
 		foreach( item of a ){
 			me[] = a;
 		}
 	} 
 
 	public method __size(){
-		return elements(me->__a);
+		return elements(me.__a);
 	}
 
 	public method __to_string(){
-		return "( ".join( ", ", me->__a)." )";
+		return "( " + join( ", ", me.__a) + " )";
 	}
 
 	operator [] ( index ){	
-		return me->__a[index];
+		return me.__a[index];
 	}
 
 	operator []< ( index, object ){
-		me->__a[index] = object;
+		me.__a[index] = object;
 	}
 
 	operator []= ( object ){
-		me->__a[] = object;
+		me.__a[] = object;
 	}
 }
 

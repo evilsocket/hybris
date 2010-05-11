@@ -292,8 +292,6 @@ IMPLEMENT_TYPE(Binary) {
     0, // l_and
 
 	/** collection operators **/
-	0, // cl_concat
-	0, // cl_inplace_concat
 	binary_cl_push, // cl_push
 	binary_cl_push_reference, // cl_push_reference
 	0, // cl_pop

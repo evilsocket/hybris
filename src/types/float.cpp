@@ -171,9 +171,17 @@ Object *float_minus( Object *me ){
 }
 
 Object *float_add( Object *me, Object *op ){
-    double fvalue = ob_fvalue(op);
+	if( ob_is_string(op) ){
+	    string mvalue = ob_svalue(me),
+	           svalue = ob_svalue(op);
 
-    return (Object *)gc_new_float( ob_float_ucast(me)->value + fvalue );
+	    return (Object *)gc_new_string( (mvalue + svalue).c_str() );
+	}
+	else{
+		double fvalue = ob_fvalue(op);
+
+		return (Object *)gc_new_float( ob_float_ucast(me)->value + fvalue );
+	}
 }
 
 Object *float_sub( Object *me, Object *op ){
@@ -202,7 +210,15 @@ Object *float_mod( Object *me, Object *op ){
 }
 
 Object *float_inplace_add( Object *me, Object *op ){
-    ob_float_ucast(me)->value += ob_fvalue(op);
+	if( ob_is_string(op) ){
+		string mvalue = ob_svalue(me),
+			   svalue = ob_svalue(op);
+
+		me = (Object *)gc_new_string( (mvalue + svalue).c_str() );
+	}
+	else{
+		ob_float_ucast(me)->value += ob_fvalue(op);
+	}
 
     return me;
 }
@@ -362,14 +378,6 @@ Object *float_l_and( Object *me, Object *op ){
     return (Object *)gc_new_float( ob_float_ucast(me)->value && fvalue );
 }
 
-/** collection operators **/
-Object *float_cl_concat( Object *me, Object *op ){
-    string mvalue = ob_svalue(me),
-           svalue = ob_svalue(op);
-
-    return (Object *)gc_new_string( (mvalue + svalue).c_str() );
-}
-
 IMPLEMENT_TYPE(Float) {
     /** type code **/
     otFloat,
@@ -442,8 +450,6 @@ IMPLEMENT_TYPE(Float) {
     float_l_and, // l_and
 
 	/** collection operators **/
-	float_cl_concat, // cl_concat
-	0, // cl_inplace_concat
 	0, // cl_push
 	0, // cl_push_reference
 	0, // cl_pop

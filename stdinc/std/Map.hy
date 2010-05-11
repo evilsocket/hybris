@@ -16,48 +16,48 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-import std.type.array;
-import std.type.map;
+import std.lang.array;
+import std.lang.map;
 
 class Map {
 	private __m;
 
 	public method Map(){
-		me->__m = map();
+		me.__m = map();
 	}
 
 	public method __size(){
-		return mapelements(me->__m);
+		return mapelements(me.__m);
 	}
 
 	public method __to_string(){
 		ks = array();
 		vs = array();
 
-		foreach( k -> v of me->__m ){
+		foreach( k -> v of me.__m ){
 			ks[] = k;
 			vs[] = v;
 		}		
-		return "{ ".join( ", ", ks )." } -> { ".join( ", ", vs )." }";
+		return "{ " + join( ", ", ks ) + " } . { " + join( ", ", vs ) + " }";
 	}
 
 	public method __attribute( name ){
-		if( haskey( me->__m, name ) == -1 ){
-			me->__m[name] = null;
+		if( haskey( me.__m, name ) == -1 ){
+			me.__m[name] = null;
 		}
-		return me->__m[name];
+		return me.__m[name];
 	}
 
 	public method __attribute( name, value ){
-		me->__m[name] = value;
+		me.__m[name] = value;
 	}	
 
 	operator [] ( key ){	
-		return me->__m[key];
+		return me.__m[key];
 	}
 
 	operator []< ( key, object ){
-		me->__m[key] = object;
+		me.__m[key] = object;
 	}
 }
 

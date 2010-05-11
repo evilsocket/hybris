@@ -23,19 +23,19 @@ class ServerSocket extends Socket {
 	protected port, acceptor;
 	
 	public method ServerSocket( port, acceptor_thread_name ){
-		me->Socket(0);
-		me->port = port;
-		me->acceptor = acceptor_thread_name;
+		me.Socket(0);
+		me.port = port;
+		me.acceptor = acceptor_thread_name;
 	}
 
 	public method start(){
-		me->sd = server( me->port );
-		if( me->sd <= 0 ){
+		me.sd = server( me.port );
+		if( me.sd <= 0 ){
 			return false;
 		}
 
-		while( (csd = accept(me->sd)) > 0 ){
-			pthread_create( me->acceptor, new Socket(csd) );
+		while( (csd = accept(me.sd)) > 0 ){
+			pthread_create( me.acceptor, new Socket(csd) );
 		}
 
 		return true;

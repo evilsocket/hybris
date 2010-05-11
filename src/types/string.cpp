@@ -321,6 +321,22 @@ Object *string_assign( Object *me, Object *op ){
     return me;
 }
 
+Object *string_add( Object *me, Object *op ){
+    string mvalue = ob_svalue(me),
+           svalue = ob_svalue(op);
+
+    return (Object *)gc_new_string( (mvalue + svalue).c_str() );
+}
+
+Object *string_inplace_add( Object *me, Object *op ){
+    string svalue = ob_svalue(op);
+
+    ob_string_ucast(me)->value += svalue;
+    ob_string_ucast(me)->items += svalue.size();
+
+    return me;
+}
+
 Object *string_l_same( Object *me, Object *op ){
     return (Object *)gc_new_integer( (ob_string_ucast(me))->value == ob_svalue(op) );
 }
@@ -330,22 +346,6 @@ Object *string_l_diff( Object *me, Object *op ){
 }
 
 /** collection operators **/
-Object *string_cl_concat( Object *me, Object *op ){
-    string mvalue = ob_svalue(me),
-           svalue = ob_svalue(op);
-
-    return (Object *)gc_new_string( (mvalue + svalue).c_str() );
-}
-
-Object *string_cl_inplace_concat( Object *me, Object *op ){
-    string svalue = ob_svalue(op);
-
-    ob_string_ucast(me)->value += svalue;
-    ob_string_ucast(me)->items += svalue.size();
-
-    return me;
-}
-
 Object *string_cl_at( Object *me, Object *i ){
     size_t idx = ob_ivalue(i);
 
@@ -406,12 +406,12 @@ IMPLEMENT_TYPE(String) {
     0, // increment
     0, // decrement
     0, // minus
-    0, // add
+    string_add, // add
     0, // sub
     0, // mul
     0, // div
     0, // mod
-    0, // inplace_add
+    string_inplace_add, // inplace_add
     0, // inplace_sub
     0, // inplace_mul
     0, // inplace_div
@@ -442,8 +442,6 @@ IMPLEMENT_TYPE(String) {
     0, // l_and
 
 	/** collection operators **/
-	string_cl_concat, // cl_concat
-	string_cl_inplace_concat, // cl_inplace_concat
 	0, // cl_push
 	0, // cl_push_reference
 	0, // cl_pop

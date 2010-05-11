@@ -305,8 +305,6 @@ typedef struct _object_type_t {
     ob_binary_function_t        l_and;
 
     /** collection operators **/
-    ob_binary_function_t        cl_concat;
-    ob_binary_function_t        cl_inplace_concat;
     ob_binary_function_t        cl_push;
 	ob_binary_function_t        cl_push_reference;
 	ob_unary_function_t         cl_pop;
@@ -571,14 +569,6 @@ Object *ob_l_or( Object *a, Object *b );
  * Compute a && b.
  */
 Object *ob_l_and( Object *a, Object *b );
-/*
- * Compute a.b
- */
-Object *ob_cl_concat( Object *a, Object *b );
-/*
- * Compute a .= b
- */
-Object *ob_cl_inplace_concat( Object *a, Object *b );
 /*
  * Create a clone of 'b' and call ob_cl_push_reference( a, clone ) to
  * push the clone inside the collection 'a'.

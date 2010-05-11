@@ -567,24 +567,6 @@ Object *ob_l_and( Object *a, Object *b ){
 	}
 }
 
-Object *ob_cl_concat( Object *a, Object *b ){
-	if( a->type->cl_concat != HYB_UNIMPLEMENTED_FUNCTION ){
-		return a->type->cl_concat(a,b);
-	}
-	else{
-		hyb_error( H_ET_SYNTAX, "invalid '.' operator for object type '%s'", ob_typename(a) );
-	}
-}
-
-Object *ob_cl_inplace_concat( Object *a, Object *b ){
-	if( a->type->cl_inplace_concat != HYB_UNIMPLEMENTED_FUNCTION ){
-		return a->type->cl_inplace_concat(a,b);
-	}
-	else{
-		hyb_error( H_ET_SYNTAX, "invalid '.=' operator for object type '%s'", ob_typename(a) );
-	}
-}
-
 Object *ob_cl_push( Object *a, Object *b ){
 	if( a->type->cl_push != HYB_UNIMPLEMENTED_FUNCTION ){
 		return a->type->cl_push(a,b);

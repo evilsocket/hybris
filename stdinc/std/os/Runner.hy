@@ -20,26 +20,26 @@ include std.os.Runnable;
 include std.os.Thread;
 
 function __std_os_RunnerDispatcher( mref, argv ){
-	return mref->call(argv);	
+	return mref.call(argv);	
 }
 
 class Runner extends Thread {
 	private cref;
 
 	method Runner( cref ){
-		me->Thread( "__std_os_RunnerDispatcher" );
+		me.Thread( "__std_os_RunnerDispatcher" );
 		if( contains( methods(cref), "run" ) == -1 ){
-			throw new Exception( __FILE__, __LINE__, typeof(cref)." does not implement Runnable interface or does not override the run method." );
+			throw new Exception( __FILE__, __LINE__, typeof(cref) + " does not implement Runnable interface or does not override the run method." );
 		}
-		me->cref = cref;
+		me.cref = cref;
 	}	
 
 	method go( argv ){
-		me->start( array( me->cref->run, argv ) );
+		me.start( array( me.cref.run, argv ) );
 	}
 
 	method __to_string(){	
-		return "Runner<".typeof(me->cref).">";
+		return "Runner<" + typeof(me.cref) + ">";
 	}
 }
 
