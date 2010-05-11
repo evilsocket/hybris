@@ -41,39 +41,44 @@ Esempio :
 <pre class="code hybris"><span class="kw2">import</span> std.<span class="sy0">*;</span>
 &nbsp;
 <span class="co1">// creo una mappa con elementi e chiavi di tipologia mista e la stampo</span>
- m <span class="sy0">=</span> <span class="br0">&#91;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> 
-       <span class="st0">&quot;uno&quot;</span>  <span class="sy0">:</span> <span class="nu0">2</span> <span class="sy0">-</span> <span class="nu0">1</span><span class="sy0">,</span> 
-       <span class="st0">&quot;due&quot;</span>  <span class="sy0">:</span> <span class="nu0">2.0</span><span class="sy0">,</span> 
-       <span class="st0">&quot;tre&quot;</span>  <span class="sy0">:</span> <span class="br0">&#91;</span> 0<span class="sy0">,</span> 1<span class="sy0">,</span> 2<span class="sy0">,</span> 3 <span class="br0">&#93;</span> <span class="br0">&#93;</span><span class="sy0">;</span>
+m <span class="sy0">=</span> <span class="kw3">map</span><span class="br0">&#40;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> 
+		 <span class="st0">&quot;uno&quot;</span> <span class="sy0">:</span> <span class="nu0">2</span> <span class="sy0">-</span> <span class="nu0">1</span><span class="sy0">,</span> 
+		 <span class="st0">&quot;due&quot;</span> <span class="sy0">:</span> <span class="nu0">2.0</span><span class="sy0">,</span> 
+		 <span class="st0">&quot;tre&quot;</span> <span class="sy0">:</span> <span class="kw3">array</span><span class="br0">&#40;</span> 0<span class="sy0">,</span> 1<span class="sy0">,</span> 2<span class="sy0">,</span> 3 <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+<span class="kw3">print</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
- <span class="kw3">print</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span>
- <span class="co1">// stampo l’elemento con chiave ’due’</span>
- <span class="kw3">println</span><span class="br0">&#40;</span> m<span class="br0">&#91;</span><span class="st0">&quot;due&quot;</span><span class="br0">&#93;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
- <span class="co1">// in questo contesto, 144 non è considerato un indice come nel caso degli array, ma una chiave a sua volta</span>
- <span class="co1">// di conseguenza in questo modo sto mappando la stringa &quot;lulz&quot; sulla chiave 144 </span>
- m<span class="br0">&#91;</span><span class="nu0">144</span><span class="br0">&#93;</span> <span class="sy0">=</span> <span class="st0">&quot;lulz&quot;</span><span class="sy0">;</span>
- <span class="kw3">print</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span>
+<span class="co1">// stampo l'elemento con chiave 'due'</span>
+<span class="kw3">println</span><span class="br0">&#40;</span> m<span class="br0">&#91;</span><span class="st0">&quot;due&quot;</span><span class="br0">&#93;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
- <span class="co1">// rimuovo l’elemento mappato con la chiave &quot;uno&quot;</span>
- <span class="kw3">unmap</span><span class="br0">&#40;</span>m<span class="sy0">,</span><span class="st0">&quot;uno&quot;</span><span class="br0">&#41;</span><span class="sy0">;</span>
- <span class="kw3">print</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span>
+<span class="co1">// in questo contesto, 144 non è considerato un indice come nel caso degli array, ma una chiave a sua volta</span>
+<span class="co1">// di conseguenza in questo modo sto mappando la stringa &quot;lulz&quot; sulla chiave 144 </span>
+m<span class="br0">&#91;</span><span class="nu0">144</span><span class="br0">&#93;</span> <span class="sy0">=</span> <span class="st0">&quot;lulz&quot;</span><span class="sy0">;</span>
+<span class="kw3">print</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
- <span class="co1">// anche un decimale può essere usato come chiave</span>
- m<span class="br0">&#91;</span><span class="nu0">12.4</span><span class="br0">&#93;</span> <span class="sy0">=</span> <span class="st0">&quot;dodici virgola quattro&quot;</span><span class="sy0">;</span>
- <span class="kw3">print</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span>
+<span class="co1">// rimuovo l'elemento mappato con la chiave &quot;uno&quot;</span>
+<span class="kw3">unmap</span><span class="br0">&#40;</span>m<span class="sy0">,</span><span class="st0">&quot;uno&quot;</span><span class="br0">&#41;</span><span class="sy0">;</span>
+<span class="kw3">print</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
- <span class="coMULTI">/* nel caso delle mappe, il costrutto foreach ha la seguende sintassi :
- foreach( &lt;chiave&gt; -&gt; &lt;valore&gt; of &lt;mappa&gt; ) 
- */</span> 
- <span class="kw1">foreach</span><span class="br0">&#40;</span> key <span class="sy0">-&gt;</span> value <span class="kw1">of</span> m <span class="br0">&#41;</span><span class="br0">&#123;</span>
-	 <span class="co1">// se il valore è una mappa o un array, stampo la sua struttura</span>
-	 <span class="kw1">if</span><span class="br0">&#40;</span> <span class="kw3">isarray</span><span class="br0">&#40;</span>value<span class="br0">&#41;</span> <span class="sy0">||</span> <span class="kw3">ismap</span><span class="br0">&#40;</span>value<span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
-		 <span class="kw3">print</span><span class="br0">&#40;</span> key.<span class="st0">&quot; : &quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
-		 <span class="kw3">print</span><span class="br0">&#40;</span>value<span class="br0">&#41;</span><span class="sy0">;</span>
-	 <span class="br0">&#125;</span>
-	 <span class="co1">// se altrimenti è un tipo semplice, stampo direttamente il suo valore</span>
-	 <span class="kw1">else</span><span class="br0">&#123;</span>
-	 	<span class="kw3">print</span><span class="br0">&#40;</span> key.<span class="st0">&quot; : &quot;</span>.<span class="me1">value</span>.<span class="st0">&quot;<span class="es0">\n</span>&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span> 
-	 <span class="br0">&#125;</span>
- <span class="br0">&#125;</span></pre>
+<span class="co1">// anche un decimale può essere usato come chiave</span>
+m<span class="br0">&#91;</span><span class="nu0">12.4</span><span class="br0">&#93;</span> <span class="sy0">=</span> <span class="st0">&quot;dodici virgola quattro&quot;</span><span class="sy0">;</span>
+&nbsp;
+<span class="co1">// così come un elemento della mappa può essere una mappa a sua volta</span>
+m<span class="br0">&#91;</span><span class="st0">&quot;lol&quot;</span><span class="br0">&#93;</span> <span class="sy0">=</span> <span class="kw3">map</span><span class="br0">&#40;</span> <span class="st0">&quot;Ciao&quot;</span> <span class="sy0">:</span> <span class="st0">&quot;mao&quot;</span><span class="sy0">,</span>
+				<span class="st0">&quot;Bau&quot;</span>  <span class="sy0">:</span> <span class="kw3">array</span><span class="br0">&#40;</span> m <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+<span class="kw3">print</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span>
+&nbsp;
+<span class="coMULTI">/* nel caso delle mappe, il costrutto foreach ha la seguende sintassi :
+		foreach( &lt;chiave&gt; : &lt;valore&gt; of &lt;mappa&gt; )	
+*/</span>					
+<span class="kw1">foreach</span><span class="br0">&#40;</span> key <span class="sy0">-&gt;</span> value <span class="kw1">of</span> m <span class="br0">&#41;</span><span class="br0">&#123;</span>
+	<span class="co1">// se il valore è una mappa o un array, stampo la sua struttura</span>
+	<span class="kw1">if</span><span class="br0">&#40;</span> <span class="kw3">isarray</span><span class="br0">&#40;</span>value<span class="br0">&#41;</span> <span class="sy0">||</span> <span class="kw3">ismap</span><span class="br0">&#40;</span>value<span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
+		<span class="kw3">print</span><span class="br0">&#40;</span> key <span class="sy0">+</span> <span class="st0">&quot; : &quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+		<span class="kw3">print</span><span class="br0">&#40;</span>value<span class="br0">&#41;</span><span class="sy0">;</span>
+	<span class="br0">&#125;</span>
+	<span class="co1">// se altrimenti è un tipo semplice, stampo direttamente il suo valore</span>
+	<span class="kw1">else</span><span class="br0">&#123;</span>
+		<span class="kw3">print</span><span class="br0">&#40;</span> key <span class="sy0">+</span> <span class="st0">&quot; : &quot;</span> <span class="sy0">+</span> value <span class="sy0">+</span> <span class="st0">&quot;<span class="es0">\n</span>&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>	
+	<span class="br0">&#125;</span>
+<span class="br0">&#125;</span></pre>
 </div><!-- closes <div class="dokuwiki export">-->

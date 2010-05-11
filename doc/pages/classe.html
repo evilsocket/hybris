@@ -47,13 +47,13 @@ Ad esempio, una classe potrebbe essere dichiarata come :
     età<span class="sy0">;</span>
 &nbsp;
     <span class="kw2">method</span> Persona<span class="br0">&#40;</span> nome<span class="sy0">,</span> cognome<span class="sy0">,</span> età <span class="br0">&#41;</span><span class="br0">&#123;</span>
-        me<span class="sy0">-&gt;</span>nome    <span class="sy0">=</span> nome<span class="sy0">;</span>
-        me<span class="sy0">-&gt;</span>cognome <span class="sy0">=</span> cognome<span class="sy0">;</span>
-        me<span class="sy0">-&gt;</span>età     <span class="sy0">=</span> età<span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">nome</span>    <span class="sy0">=</span> nome<span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">cognome</span> <span class="sy0">=</span> cognome<span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">et</span>à     <span class="sy0">=</span> età<span class="sy0">;</span>
     <span class="br0">&#125;</span>
 &nbsp;
     <span class="kw2">method</span> presentati<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Ciao, mi chiamo &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>nome.<span class="st0">&quot; &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>cognome.<span class="st0">&quot; e ho &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>età.<span class="st0">&quot; anni.&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Ciao, mi chiamo &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">nome</span> <span class="sy0">+</span> <span class="st0">&quot; &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">cognome</span> <span class="sy0">+</span> <span class="st0">&quot; e ho &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">et</span>à <span class="sy0">+</span> <span class="st0">&quot; anni.&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
     <span class="br0">&#125;</span>
 <span class="br0">&#125;</span></pre>
 
@@ -67,7 +67,7 @@ In questo caso, sono stati dichiarati tre attributi e due metodi, anche se il pr
 <pre class="code hybris"><span class="co1">// istanzia la classe e lancia il costruttore</span>
 io <span class="sy0">=</span> <span class="kw2">new</span> Persona<span class="br0">&#40;</span> <span class="st0">&quot;Mario&quot;</span><span class="sy0">,</span> <span class="st0">&quot;Rossi&quot;</span><span class="sy0">,</span> 41 <span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
-io<span class="sy0">-&gt;</span>presentati<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span></pre>
+io.<span class="me1">presentati</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span></pre>
 
 <p>
 Questo script stamperà sullo schermo l&#039;output :
@@ -76,7 +76,7 @@ Questo script stamperà sullo schermo l&#039;output :
 <pre class="code">Ciao, mi chiamo Mario Rossi e ho 41 anni.</pre>
 
 </div>
-<!-- SECTION "Introduzione" [1-1699] -->
+<!-- SECTION "Introduzione" [1-1704] -->
 <h1><a name="specificatori_di_accesso" id="specificatori_di_accesso">Specificatori di accesso</a></h1>
 <div class="level1">
 
@@ -111,14 +111,14 @@ Un esempio per capirne la sintassi è :
 &nbsp;
     <span class="co1">// un costruttore è sempre public</span>
     <span class="kw2">method</span> Persona<span class="br0">&#40;</span> nome<span class="sy0">,</span> cognome<span class="sy0">,</span> età <span class="br0">&#41;</span><span class="br0">&#123;</span>
-        me<span class="sy0">-&gt;</span>nome    <span class="sy0">=</span> nome<span class="sy0">;</span>
-        me<span class="sy0">-&gt;</span>cognome <span class="sy0">=</span> cognome<span class="sy0">;</span>
-        me<span class="sy0">-&gt;</span>età     <span class="sy0">=</span> età<span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">nome</span>    <span class="sy0">=</span> nome<span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">cognome</span> <span class="sy0">=</span> cognome<span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">et</span>à     <span class="sy0">=</span> età<span class="sy0">;</span>
     <span class="br0">&#125;</span>
 &nbsp;
     <span class="co1">// metodo pubblico</span>
     <span class="kw2">public</span> <span class="kw2">method</span> presentati<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Ciao, mi chiamo &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>nome.<span class="st0">&quot; &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>cognome.<span class="st0">&quot; e ho &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>età.<span class="st0">&quot; anni.&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Ciao, mi chiamo &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">nome</span> <span class="sy0">+</span> <span class="st0">&quot; &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">cognome</span> <span class="sy0">+</span> <span class="st0">&quot; e ho &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">et</span>à <span class="sy0">+</span> <span class="st0">&quot; anni.&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
     <span class="br0">&#125;</span>
 <span class="br0">&#125;</span></pre>
 
@@ -127,7 +127,7 @@ In questo caso, gli attributi non sono richiamabili dall&#039;esterno ma solo da
 </p>
 <pre class="code hybris">io <span class="sy0">=</span> <span class="kw2">new</span> Persona<span class="br0">&#40;</span> <span class="st0">&quot;Mario&quot;</span><span class="sy0">,</span> <span class="st0">&quot;Rossi&quot;</span><span class="sy0">,</span> 41 <span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
-<span class="kw3">println</span><span class="br0">&#40;</span> io<span class="sy0">-&gt;</span>nome <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<span class="kw3">println</span><span class="br0">&#40;</span> io.<span class="me1">nome</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 
 <p>
 Genererà l&#039;errore :
@@ -136,7 +136,7 @@ Genererà l&#039;errore :
 <pre class="code">[LINE 22] Syntax error : Private attribute &#039;nome&#039; can be accessed only within &#039;Persona&#039; class .</pre>
 
 </div>
-<!-- SECTION "Specificatori di accesso" [1700-3333] -->
+<!-- SECTION "Specificatori di accesso" [1705-3343] -->
 <h1><a name="metodi_con_lo_stesso_nome" id="metodi_con_lo_stesso_nome">Metodi con lo stesso nome</a></h1>
 <div class="level1">
 
@@ -148,17 +148,17 @@ E&#039; possibile dichiarare più metodi in una classe che hanno lo stesso nome 
     <span class="kw2">private</span> nome<span class="sy0">,</span> cognome<span class="sy0">,</span> età<span class="sy0">;</span>
 &nbsp;
     <span class="kw2">method</span> Persona<span class="br0">&#40;</span> nome<span class="sy0">,</span> cognome<span class="sy0">,</span> età <span class="br0">&#41;</span><span class="br0">&#123;</span>
-        me<span class="sy0">-&gt;</span>nome    <span class="sy0">=</span> nome<span class="sy0">;</span>
-        me<span class="sy0">-&gt;</span>cognome <span class="sy0">=</span> cognome<span class="sy0">;</span>
-        me<span class="sy0">-&gt;</span>età     <span class="sy0">=</span> età<span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">nome</span>    <span class="sy0">=</span> nome<span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">cognome</span> <span class="sy0">=</span> cognome<span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">et</span>à     <span class="sy0">=</span> età<span class="sy0">;</span>
     <span class="br0">&#125;</span>
 &nbsp;
     <span class="kw2">public</span> <span class="kw2">method</span> presentati<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Ciao, mi chiamo &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>nome.<span class="st0">&quot; &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>cognome.<span class="st0">&quot; e ho &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>età.<span class="st0">&quot; anni.&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Ciao, mi chiamo &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">nome</span> <span class="sy0">+</span> <span class="st0">&quot; &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">cognome</span> <span class="sy0">+</span> <span class="st0">&quot; e ho &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">et</span>à <span class="sy0">+</span> <span class="st0">&quot; anni.&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
     <span class="br0">&#125;</span>
 &nbsp;
     <span class="kw2">public</span> <span class="kw2">method</span> presentati<span class="br0">&#40;</span> residenza <span class="br0">&#41;</span><span class="br0">&#123;</span>
-        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Ciao, mi chiamo &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>nome.<span class="st0">&quot; &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>cognome.<span class="st0">&quot; e ho &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>età.<span class="st0">&quot; anni, vivo a &quot;</span>.<span class="me1">residenza</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Ciao, mi chiamo &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">nome</span> <span class="sy0">+</span> <span class="st0">&quot; &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">cognome</span> <span class="sy0">+</span> <span class="st0">&quot; e ho &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">et</span>à <span class="sy0">+</span> <span class="st0">&quot; anni, vivo a &quot;</span> <span class="sy0">+</span> residenza <span class="br0">&#41;</span><span class="sy0">;</span>
     <span class="br0">&#125;</span>
 <span class="br0">&#125;</span></pre>
 
@@ -168,7 +168,7 @@ La stessa cosa è valida per i costruttori, quindi è possibile dichiararne più
 </p>
 
 </div>
-<!-- SECTION "Metodi con lo stesso nome" [3334-4448] -->
+<!-- SECTION "Metodi con lo stesso nome" [3344-4475] -->
 <h1><a name="costruttori_e_distruttori" id="costruttori_e_distruttori">Costruttori e Distruttori</a></h1>
 <div class="level1">
 
@@ -191,9 +191,9 @@ Ad esempio :
     <span class="kw2">private</span> nome<span class="sy0">,</span> cognome<span class="sy0">,</span> età<span class="sy0">;</span>
 &nbsp;
     <span class="kw2">method</span> Persona<span class="br0">&#40;</span> nome<span class="sy0">,</span> cognome<span class="sy0">,</span> età <span class="br0">&#41;</span><span class="br0">&#123;</span>
-        me<span class="sy0">-&gt;</span>nome    <span class="sy0">=</span> nome<span class="sy0">;</span>
-        me<span class="sy0">-&gt;</span>cognome <span class="sy0">=</span> cognome<span class="sy0">;</span>
-        me<span class="sy0">-&gt;</span>età     <span class="sy0">=</span> età<span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">nome</span>    <span class="sy0">=</span> nome<span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">cognome</span> <span class="sy0">=</span> cognome<span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">et</span>à     <span class="sy0">=</span> età<span class="sy0">;</span>
     <span class="br0">&#125;</span>
 &nbsp;
     <span class="kw2">method</span> <span class="kw3">__expire</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
@@ -207,7 +207,7 @@ Questo può tornare utile quando una classe, ad esempio, apre una connessione re
 </p>
 
 </div>
-<!-- SECTION "Costruttori e Distruttori" [4449-5600] -->
+<!-- SECTION "Costruttori e Distruttori" [4476-5624] -->
 <h1><a name="membri_statici" id="membri_statici">Membri Statici</a></h1>
 <div class="level1">
 
@@ -220,7 +220,7 @@ Sono valori o metodi che in pratica possono essere utilizzati tramite il nome de
     <span class="kw2">static</span> bar <span class="sy0">=</span> <span class="st0">&quot;Hello World&quot;</span><span class="sy0">;</span>
 <span class="br0">&#125;</span>
 &nbsp;
-<span class="kw3">println</span><span class="br0">&#40;</span> Foo<span class="sy0">-&gt;</span>bar <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<span class="kw3">println</span><span class="br0">&#40;</span> Foo.<span class="me1">bar</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 
 <p>
 Come è possibile vedere, non è stata creata un istanza della classe per accedere all&#039;attributo &#039;bar&#039;, ma direttamente il nome della classe (che in memoria mappa il prototipo stesso della classe.
@@ -233,11 +233,11 @@ Analogamente per un metodo statico :
     <span class="kw2">static</span> bar <span class="sy0">=</span> <span class="st0">&quot;Hello World&quot;</span><span class="sy0">;</span>
 &nbsp;
     <span class="kw2">static</span> <span class="kw2">method</span> say_bar<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-        <span class="kw3">println</span><span class="br0">&#40;</span> Foo<span class="sy0">-&gt;</span>bar <span class="br0">&#41;</span><span class="sy0">;</span>
+        <span class="kw3">println</span><span class="br0">&#40;</span> Foo.<span class="me1">bar</span> <span class="br0">&#41;</span><span class="sy0">;</span>
     <span class="br0">&#125;</span>
 <span class="br0">&#125;</span>
 &nbsp;
-Foo<span class="sy0">-&gt;</span>say_bar<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span></pre>
+Foo.<span class="me1">say_bar</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span></pre>
 
 <p>
 Inoltre si può notare da quest&#039;ultimo esempio, che dall&#039;interno di un metodo statico non è possibile utilizzare l&#039;istanza <strong>me</strong>, proprio perchè un metodo statico prescinde da qualsivoglia istanza della classe.
@@ -248,12 +248,12 @@ Viceversa, un istanza della classe può accedere liberamente ad un qualunque suo
     <span class="kw2">static</span> bar <span class="sy0">=</span> <span class="st0">&quot;Hello World&quot;</span><span class="sy0">;</span>
 &nbsp;
     <span class="kw2">public</span> <span class="kw2">method</span> say_bar<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-        <span class="kw3">println</span><span class="br0">&#40;</span> me<span class="sy0">-&gt;</span>bar <span class="br0">&#41;</span><span class="sy0">;</span>
+        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="kw1">me</span>.<span class="me1">bar</span> <span class="br0">&#41;</span><span class="sy0">;</span>
     <span class="br0">&#125;</span>
 <span class="br0">&#125;</span>
 &nbsp;
 foo <span class="sy0">=</span> <span class="kw2">new</span> Foo<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
-foo<span class="sy0">-&gt;</span>say_bar<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span></pre>
+foo.<span class="me1">say_bar</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span></pre>
 
 <p>
 <strong>Nota 1</strong>
@@ -276,7 +276,7 @@ foo<span class="sy0">-&gt;</span>say_bar<span class="br0">&#40;</span><span clas
   residente nella memoria dell&#039;interprete fino alla fine.</pre>
 
 </div>
-<!-- SECTION "Membri Statici" [5601-7781] -->
+<!-- SECTION "Membri Statici" [5625-7800] -->
 <h1><a name="ereditarieta" id="ereditarieta">Ereditarietà</a></h1>
 <div class="level1">
 
@@ -292,14 +292,14 @@ Ad esempio :
     <span class="kw2">private</span> ufficio<span class="sy0">,</span> salario<span class="sy0">;</span>
 &nbsp;
     <span class="kw2">method</span> Impiegato<span class="br0">&#40;</span> nome<span class="sy0">,</span> cognome<span class="sy0">,</span> eta<span class="sy0">,</span> ufficio<span class="sy0">,</span> salario <span class="br0">&#41;</span><span class="br0">&#123;</span>
-        me<span class="sy0">-&gt;</span>Persona<span class="br0">&#40;</span> nome<span class="sy0">,</span> cognome<span class="sy0">,</span> eta <span class="br0">&#41;</span><span class="sy0">;</span>
-        me<span class="sy0">-&gt;</span>ufficio <span class="sy0">=</span> ufficio<span class="sy0">;</span>
-        me<span class="sy0">-&gt;</span>salario <span class="sy0">=</span> salario<span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">Persona</span><span class="br0">&#40;</span> nome<span class="sy0">,</span> cognome<span class="sy0">,</span> eta <span class="br0">&#41;</span><span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">ufficio</span> <span class="sy0">=</span> ufficio<span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">salario</span> <span class="sy0">=</span> salario<span class="sy0">;</span>
     <span class="br0">&#125;</span>
 &nbsp;
     <span class="kw2">public</span> <span class="kw2">method</span> presentati<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Salve, mi chiamo &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>nome.<span class="st0">&quot; &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>cognome.<span class="st0">&quot;, ho &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>età.<span class="st0">&quot; anni.&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
-        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Lavoro nell'ufficio numero &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>ufficio.<span class="st0">&quot; per &quot;</span>.<span class="me1">me</span><span class="sy0">-&gt;</span>salario.<span class="st0">&quot; euro al mese.&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Salve, mi chiamo &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">nome</span> <span class="sy0">+</span> <span class="st0">&quot; &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">cognome</span> <span class="sy0">+</span> <span class="st0">&quot;, ho &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">et</span>à <span class="sy0">+</span> <span class="st0">&quot; anni.&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Lavoro nell'ufficio numero &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">ufficio</span> <span class="sy0">+</span> <span class="st0">&quot; per &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.<span class="me1">salario</span> <span class="sy0">+</span> <span class="st0">&quot; euro al mese.&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
     <span class="br0">&#125;</span>
 <span class="br0">&#125;</span></pre>
 
@@ -314,7 +314,7 @@ Inoltre vediamo che la classe rimpiazza il metodo <strong>presentati</strong> de
 </p>
 <pre class="code hybris">io <span class="sy0">=</span> <span class="kw2">new</span> Impiegato<span class="br0">&#40;</span> <span class="st0">&quot;Mario&quot;</span><span class="sy0">,</span> <span class="st0">&quot;Rossi&quot;</span><span class="sy0">,</span> 41<span class="sy0">,</span> 112<span class="sy0">,</span> 1200 <span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
-io<span class="sy0">-&gt;</span>presentati<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span></pre>
+io.<span class="me1">presentati</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span></pre>
 
 <p>
 Stamperà l&#039;output :
@@ -331,7 +331,7 @@ Per estendere più di una classe, basta elencarne i nomi dopo la direttiva <stro
 <span class="br0">&#125;</span></pre>
 
 </div>
-<!-- SECTION "Ereditarietà" [7782-9630] -->
+<!-- SECTION "Ereditarietà" [7801-9660] -->
 <h1><a name="overloading_degli_operatori" id="overloading_degli_operatori">Overloading degli Operatori</a></h1>
 <div class="level1">
 
@@ -354,20 +354,20 @@ Ad esempio, possiamo vedere una classe Array che wrappa il medesimo tipo :
 	<span class="kw2">private</span> __a<span class="sy0">;</span>
 &nbsp;
 	<span class="kw2">public</span> <span class="kw2">method</span> <span class="kw3">Array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-		me<span class="sy0">-&gt;</span>__a <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>	
+		<span class="kw1">me</span>.__a <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>	
 	<span class="br0">&#125;</span>
 &nbsp;
         <span class="co1">// accesso ad un elemento in sola lettura</span>
 	<span class="kw2">operator</span> <span class="br0">&#91;</span><span class="br0">&#93;</span> <span class="br0">&#40;</span> index <span class="br0">&#41;</span><span class="br0">&#123;</span>	
-		<span class="kw1">return</span> me<span class="sy0">-&gt;</span>__a<span class="br0">&#91;</span>index<span class="br0">&#93;</span><span class="sy0">;</span>
+		<span class="kw1">return</span> <span class="kw1">me</span>.__a<span class="br0">&#91;</span>index<span class="br0">&#93;</span><span class="sy0">;</span>
 	<span class="br0">&#125;</span>
         <span class="co1">// accesso ad un elemento in scrittura</span>
 	<span class="kw2">operator</span> <span class="br0">&#91;</span><span class="br0">&#93;</span><span class="sy0">&lt;</span> <span class="br0">&#40;</span> index<span class="sy0">,</span> object <span class="br0">&#41;</span><span class="br0">&#123;</span>
-		me<span class="sy0">-&gt;</span>__a<span class="br0">&#91;</span>index<span class="br0">&#93;</span> <span class="sy0">=</span> object<span class="sy0">;</span>
+		<span class="kw1">me</span>.__a<span class="br0">&#91;</span>index<span class="br0">&#93;</span> <span class="sy0">=</span> object<span class="sy0">;</span>
 	<span class="br0">&#125;</span>
         <span class="co1">// push di un elemento</span>
 	<span class="kw2">operator</span> <span class="br0">&#91;</span><span class="br0">&#93;</span><span class="sy0">=</span> <span class="br0">&#40;</span> object <span class="br0">&#41;</span><span class="br0">&#123;</span>
-		me<span class="sy0">-&gt;</span>__a<span class="br0">&#91;</span><span class="br0">&#93;</span> <span class="sy0">=</span> object<span class="sy0">;</span>
+		<span class="kw1">me</span>.__a<span class="br0">&#91;</span><span class="br0">&#93;</span> <span class="sy0">=</span> object<span class="sy0">;</span>
 	<span class="br0">&#125;</span>
 <span class="br0">&#125;</span></pre>
 
@@ -388,7 +388,7 @@ a<span class="br0">&#91;</span><span class="nu0">2</span><span class="br0">&#93;
 <span class="kw3">println</span><span class="br0">&#40;</span> a<span class="br0">&#91;</span>1<span class="br0">&#93;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 
 </div>
-<!-- SECTION "Overloading degli Operatori" [9631-10862] -->
+<!-- SECTION "Overloading degli Operatori" [9661-10888] -->
 <h1><a name="overloading_dei_descrittori" id="overloading_dei_descrittori">Overloading dei Descrittori</a></h1>
 <div class="level1">
 
@@ -398,7 +398,7 @@ Così come gli operatori, esistono dei <strong>descrittori</strong> standard dei
 </p>
 
 </div>
-<!-- SECTION "Overloading dei Descrittori" [10863-11125] -->
+<!-- SECTION "Overloading dei Descrittori" [10889-11151] -->
 <h2><a name="descrittore_size" id="descrittore_size">Descrittore size</a></h2>
 <div class="level2">
 
@@ -415,24 +415,24 @@ Potremmo modificare l&#039;esempio di prima così :
 	<span class="kw2">private</span> __a<span class="sy0">;</span>
 &nbsp;
 	<span class="kw2">public</span> <span class="kw2">method</span> <span class="kw3">Array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-		me<span class="sy0">-&gt;</span>__a <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>	
+		<span class="kw1">me</span>.__a <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>	
 	<span class="br0">&#125;</span>
 &nbsp;
         <span class="co1">// restituisce il numero di elementi che contiene l'array</span>
         <span class="kw2">public</span> <span class="kw2">method</span> <span class="kw3">__size</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-	    <span class="kw1">return</span> <span class="kw3">elements</span><span class="br0">&#40;</span>me<span class="sy0">-&gt;</span>__a<span class="br0">&#41;</span><span class="sy0">;</span>
+	    <span class="kw1">return</span> <span class="kw3">elements</span><span class="br0">&#40;</span><span class="kw1">me</span>.__a<span class="br0">&#41;</span><span class="sy0">;</span>
 	<span class="br0">&#125;</span>
 &nbsp;
 	<span class="kw2">operator</span> <span class="br0">&#91;</span><span class="br0">&#93;</span> <span class="br0">&#40;</span> index <span class="br0">&#41;</span><span class="br0">&#123;</span>	
-		<span class="kw1">return</span> me<span class="sy0">-&gt;</span>__a<span class="br0">&#91;</span>index<span class="br0">&#93;</span><span class="sy0">;</span>
+		<span class="kw1">return</span> <span class="kw1">me</span>.__a<span class="br0">&#91;</span>index<span class="br0">&#93;</span><span class="sy0">;</span>
 	<span class="br0">&#125;</span>
 &nbsp;
 	<span class="kw2">operator</span> <span class="br0">&#91;</span><span class="br0">&#93;</span><span class="sy0">&lt;</span> <span class="br0">&#40;</span> index<span class="sy0">,</span> object <span class="br0">&#41;</span><span class="br0">&#123;</span>
-		me<span class="sy0">-&gt;</span>__a<span class="br0">&#91;</span>index<span class="br0">&#93;</span> <span class="sy0">=</span> object<span class="sy0">;</span>
+		<span class="kw1">me</span>.__a<span class="br0">&#91;</span>index<span class="br0">&#93;</span> <span class="sy0">=</span> object<span class="sy0">;</span>
 	<span class="br0">&#125;</span>
 &nbsp;
 	<span class="kw2">operator</span> <span class="br0">&#91;</span><span class="br0">&#93;</span><span class="sy0">=</span> <span class="br0">&#40;</span> object <span class="br0">&#41;</span><span class="br0">&#123;</span>
-		me<span class="sy0">-&gt;</span>__a<span class="br0">&#91;</span><span class="br0">&#93;</span> <span class="sy0">=</span> object<span class="sy0">;</span>
+		<span class="kw1">me</span>.__a<span class="br0">&#91;</span><span class="br0">&#93;</span> <span class="sy0">=</span> object<span class="sy0">;</span>
 	<span class="br0">&#125;</span>
 <span class="br0">&#125;</span></pre>
 
@@ -473,7 +473,7 @@ Questo stamperà l&#039;output :
 <pre class="code">Hello World!</pre>
 
 </div>
-<!-- SECTION "Descrittore size" [11126-12694] -->
+<!-- SECTION "Descrittore size" [11152-12715] -->
 <h2><a name="descrittore_to_string" id="descrittore_to_string">Descrittore to_string</a></h2>
 <div class="level2">
 
@@ -489,28 +489,28 @@ Sempre seguendo l&#039;esempio di prima :
 	<span class="kw2">private</span> __a<span class="sy0">;</span>
 &nbsp;
 	<span class="kw2">public</span> <span class="kw2">method</span> <span class="kw3">Array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-		me<span class="sy0">-&gt;</span>__a <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>	
+		<span class="kw1">me</span>.__a <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>	
 	<span class="br0">&#125;</span>
 &nbsp;
         <span class="kw2">public</span> <span class="kw2">method</span> <span class="kw3">__size</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-	    <span class="kw1">return</span> <span class="kw3">elements</span><span class="br0">&#40;</span>me<span class="sy0">-&gt;</span>__a<span class="br0">&#41;</span><span class="sy0">;</span>
+	    <span class="kw1">return</span> <span class="kw3">elements</span><span class="br0">&#40;</span><span class="kw1">me</span>.__a<span class="br0">&#41;</span><span class="sy0">;</span>
 	<span class="br0">&#125;</span>
 &nbsp;
         <span class="co1">// restituisce una stringa che contiene gli elementi dell'array</span>
         <span class="kw2">public</span> <span class="kw2">method</span> <span class="kw3">__to_string</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-		<span class="kw1">return</span> <span class="st0">&quot;( &quot;</span>.<span class="me1">join</span><span class="br0">&#40;</span> <span class="st0">&quot;, &quot;</span><span class="sy0">,</span> me<span class="sy0">-&gt;</span>__a<span class="br0">&#41;</span>.<span class="st0">&quot; )&quot;</span><span class="sy0">;</span>
+		<span class="kw1">return</span> <span class="st0">&quot;( &quot;</span> <span class="sy0">+</span> join<span class="br0">&#40;</span> <span class="st0">&quot;, &quot;</span><span class="sy0">,</span> <span class="kw1">me</span>.__a<span class="br0">&#41;</span> <span class="sy0">+</span> <span class="st0">&quot; )&quot;</span><span class="sy0">;</span>
 	<span class="br0">&#125;</span>
 &nbsp;
 	<span class="kw2">operator</span> <span class="br0">&#91;</span><span class="br0">&#93;</span> <span class="br0">&#40;</span> index <span class="br0">&#41;</span><span class="br0">&#123;</span>	
-		<span class="kw1">return</span> me<span class="sy0">-&gt;</span>__a<span class="br0">&#91;</span>index<span class="br0">&#93;</span><span class="sy0">;</span>
+		<span class="kw1">return</span> <span class="kw1">me</span>.__a<span class="br0">&#91;</span>index<span class="br0">&#93;</span><span class="sy0">;</span>
 	<span class="br0">&#125;</span>
 &nbsp;
 	<span class="kw2">operator</span> <span class="br0">&#91;</span><span class="br0">&#93;</span><span class="sy0">&lt;</span> <span class="br0">&#40;</span> index<span class="sy0">,</span> object <span class="br0">&#41;</span><span class="br0">&#123;</span>
-		me<span class="sy0">-&gt;</span>__a<span class="br0">&#91;</span>index<span class="br0">&#93;</span> <span class="sy0">=</span> object<span class="sy0">;</span>
+		<span class="kw1">me</span>.__a<span class="br0">&#91;</span>index<span class="br0">&#93;</span> <span class="sy0">=</span> object<span class="sy0">;</span>
 	<span class="br0">&#125;</span>
 &nbsp;
 	<span class="kw2">operator</span> <span class="br0">&#91;</span><span class="br0">&#93;</span><span class="sy0">=</span> <span class="br0">&#40;</span> object <span class="br0">&#41;</span><span class="br0">&#123;</span>
-		me<span class="sy0">-&gt;</span>__a<span class="br0">&#91;</span><span class="br0">&#93;</span> <span class="sy0">=</span> object<span class="sy0">;</span>
+		<span class="kw1">me</span>.__a<span class="br0">&#91;</span><span class="br0">&#93;</span> <span class="sy0">=</span> object<span class="sy0">;</span>
 	<span class="br0">&#125;</span>
 <span class="br0">&#125;</span></pre>
 
@@ -532,7 +532,7 @@ La println, cercherà una rappresentazione sotto forma di stringa della classe <
 <pre class="code">( 1, 2, 3 )</pre>
 
 </div>
-<!-- SECTION "Descrittore to_string" [12695-13767] -->
+<!-- SECTION "Descrittore to_string" [12716-13786] -->
 <h2><a name="descrittore_attribute" id="descrittore_attribute">Descrittore attribute</a></h2>
 <div class="level2">
 
@@ -549,17 +549,17 @@ Ad esempio :
     <span class="kw2">private</span> un_attributo<span class="sy0">;</span>
 &nbsp;
     <span class="kw2">method</span> Prova<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-        me<span class="sy0">-&gt;</span>un_attributo <span class="sy0">=</span> <span class="st0">&quot;Qualcosa&quot;</span><span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">un_attributo</span> <span class="sy0">=</span> <span class="st0">&quot;Qualcosa&quot;</span><span class="sy0">;</span>
     <span class="br0">&#125;</span>
 &nbsp;
     <span class="co1">// descrittore in sola lettura</span>
     <span class="kw2">method</span> <span class="kw3">__attribute</span><span class="br0">&#40;</span> name <span class="br0">&#41;</span><span class="br0">&#123;</span>
-        <span class="kw1">return</span> <span class="st0">&quot;Non esiste '&quot;</span>.<span class="me1">name</span>.<span class="st0">&quot;' !!!&quot;</span><span class="sy0">;</span>
+        <span class="kw1">return</span> <span class="st0">&quot;Non esiste '&quot;</span> <span class="sy0">+</span> name <span class="sy0">+</span> <span class="st0">&quot;' !!!&quot;</span><span class="sy0">;</span>
     <span class="br0">&#125;</span>
 &nbsp;
     <span class="co1">// descrittore in scrittura</span>
     <span class="kw2">method</span> <span class="kw3">__attribute</span><span class="br0">&#40;</span> name<span class="sy0">,</span> value <span class="br0">&#41;</span><span class="br0">&#123;</span>
-        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Non esistendo '&quot;</span>.<span class="me1">name</span>.<span class="st0">&quot;', non puoi istanziarlo con il valore &quot;</span>.<span class="me1">value</span>.<span class="st0">&quot; !!!&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Non esistendo '&quot;</span> <span class="sy0">+</span> name <span class="sy0">+</span> <span class="st0">&quot;', non puoi istanziarlo con il valore &quot;</span> <span class="sy0">+</span> value <span class="sy0">+</span> <span class="st0">&quot; !!!&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
     <span class="br0">&#125;</span>
 <span class="br0">&#125;</span></pre>
 
@@ -568,9 +568,9 @@ Potremmo poi scrivere :
 </p>
 <pre class="code hybris">p <span class="sy0">=</span> <span class="kw2">new</span> Prova<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
-<span class="kw3">println</span><span class="br0">&#40;</span> p<span class="sy0">-&gt;</span>foo <span class="br0">&#41;</span><span class="sy0">;</span>
+<span class="kw3">println</span><span class="br0">&#40;</span> p.<span class="me1">foo</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
-p<span class="sy0">-&gt;</span>foo <span class="sy0">=</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">;</span></pre>
+p.<span class="me1">foo</span> <span class="sy0">=</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">;</span></pre>
 
 <p>
 Che stamperebbe l&#039;output :
@@ -580,7 +580,7 @@ Che stamperebbe l&#039;output :
 Non esistendo &#039;foo&#039;, non puoi istanziarlo con il valore bar !!!</pre>
 
 </div>
-<!-- SECTION "Descrittore attribute" [13768-14729] -->
+<!-- SECTION "Descrittore attribute" [13787-14757] -->
 <h2><a name="descrittore_method" id="descrittore_method">Descrittore method</a></h2>
 <div class="level2">
 
@@ -592,11 +592,11 @@ Similmente al descrittore attribute, il descrittore <strong>method</strong>, se 
     <span class="kw2">private</span> un_attributo<span class="sy0">;</span>
 &nbsp;
     <span class="kw2">method</span> Prova<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-        me<span class="sy0">-&gt;</span>un_attributo <span class="sy0">=</span> <span class="st0">&quot;Qualcosa&quot;</span><span class="sy0">;</span>
+        <span class="kw1">me</span>.<span class="me1">un_attributo</span> <span class="sy0">=</span> <span class="st0">&quot;Qualcosa&quot;</span><span class="sy0">;</span>
     <span class="br0">&#125;</span>
 &nbsp;
     <span class="kw2">method</span> <span class="kw3">__method</span><span class="br0">&#40;</span> name<span class="sy0">,</span> argv <span class="br0">&#41;</span><span class="br0">&#123;</span>
-        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Hai tentato di usare il metodo &quot;</span>.<span class="me1">name</span>.<span class="st0">&quot; passandogli i seguenti argomenti : &quot;</span>.<span class="me1">join</span><span class="br0">&#40;</span> <span class="st0">&quot;, &quot;</span><span class="sy0">,</span> argv <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Hai tentato di usare il metodo &quot;</span> <span class="sy0">+</span> name <span class="sy0">+</span> <span class="st0">&quot; passandogli i seguenti argomenti : &quot;</span> <span class="sy0">+</span> join<span class="br0">&#40;</span> <span class="st0">&quot;, &quot;</span><span class="sy0">,</span> argv <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
     <span class="br0">&#125;</span>
 <span class="br0">&#125;</span></pre>
 
@@ -605,7 +605,7 @@ Che potremmo sfruttare tramite lo script :
 </p>
 <pre class="code hybris">p <span class="sy0">=</span> <span class="kw2">new</span> Prova<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
-p<span class="sy0">-&gt;</span>metodo_inesistente<span class="br0">&#40;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> 12345 <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+p.<span class="me1">metodo_inesistente</span><span class="br0">&#40;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> 12345 <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 
 <p>
 Che genererebbe l&#039;output :
@@ -614,7 +614,7 @@ Che genererebbe l&#039;output :
 <pre class="code">Hai tentato di usare il metodo metodo_inesistente passandogli i seguenti argomenti : foo, bar, 12345</pre>
 
 </div>
-<!-- SECTION "Descrittore method" [14730-] --><div class="footnotes">
+<!-- SECTION "Descrittore method" [14758-] --><div class="footnotes">
 <div class="fn"><sup><a href="#fnt__1" id="fn__1" name="fn__1" class="fn_bot">1)</a></sup> 
 vedere paragrafo su costruttori e distruttori</div>
 <div class="fn"><sup><a href="#fnt__2" id="fn__2" name="fn__2" class="fn_bot">2)</a></sup> 

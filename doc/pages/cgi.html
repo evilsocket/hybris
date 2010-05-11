@@ -55,11 +55,11 @@ Ad esempio, il classico script “Hello World” in modalità <acronym title="Co
 &nbsp;
 <span class="kw2">import</span> std.<span class="sy0">*;</span>
 &nbsp;
-<span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Content-Type: text/html<span class="es0">\n</span><span class="es0">\n</span>&quot;</span>.
+<span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Content-Type: text/html<span class="es0">\n</span><span class="es0">\n</span>&quot;</span> <span class="sy0">+</span>
          <span class="st0">&quot;&lt;b&gt;Hello World !&lt;/b&gt;&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 
 </div>
-<!-- SECTION "Introduzione" [1-1075] -->
+<!-- SECTION "Introduzione" [1-1076] -->
 <h1><a name="la_classe_cgi" id="la_classe_cgi">La classe CGI</a></h1>
 <div class="level1">
 
@@ -95,12 +95,12 @@ Oppure, per stampare le variabili in GET e POST :
 cgi <span class="sy0">=</span> <span class="kw2">new</span> CGI<span class="br0">&#40;</span> <span class="st0">&quot;text/html&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
 <span class="co1">// stampo le variabili GET</span>
-<span class="kw1">foreach</span><span class="br0">&#40;</span> name <span class="sy0">-&gt;</span> value <span class="kw1">of</span> cgi<span class="sy0">-&gt;</span>GET <span class="br0">&#41;</span><span class="br0">&#123;</span>
+<span class="kw1">foreach</span><span class="br0">&#40;</span> name <span class="sy0">-&gt;</span> value <span class="kw1">of</span> cgi.<span class="me1">GET</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
     cgi <span class="sy0">&lt;&lt;</span> name <span class="sy0">&lt;&lt;</span> <span class="st0">&quot; = &quot;</span> <span class="sy0">&lt;&lt;</span> value <span class="sy0">&lt;&lt;</span> <span class="st0">&quot;&lt;br&gt;&quot;</span><span class="sy0">;</span>
 <span class="br0">&#125;</span>
 &nbsp;
 <span class="co1">// stampo le variabili POST</span>
-<span class="kw1">foreach</span><span class="br0">&#40;</span> name <span class="sy0">-&gt;</span> value <span class="kw1">of</span> cgi<span class="sy0">-&gt;</span>POST <span class="br0">&#41;</span><span class="br0">&#123;</span>
+<span class="kw1">foreach</span><span class="br0">&#40;</span> name <span class="sy0">-&gt;</span> value <span class="kw1">of</span> cgi.<span class="me1">POST</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
     cgi <span class="sy0">&lt;&lt;</span> name <span class="sy0">&lt;&lt;</span> <span class="st0">&quot; = &quot;</span> <span class="sy0">&lt;&lt;</span> value <span class="sy0">&lt;&lt;</span> <span class="st0">&quot;&lt;br&gt;&quot;</span><span class="sy0">;</span>
 <span class="br0">&#125;</span></pre>
 
@@ -109,7 +109,7 @@ Gli attributi di questa classe, in realtà provengono da una mappa interna prele
 </p>
 
 </div>
-<!-- SECTION "La classe CGI" [1076-2343] -->
+<!-- SECTION "La classe CGI" [1077-2342] -->
 <h1><a name="note_sull_utilizzo_della_memoria" id="note_sull_utilizzo_della_memoria">Note sull&#039;utilizzo della memoria</a></h1>
 <div class="level1">
 
@@ -124,17 +124,17 @@ Se si deve eseguire un operazione potenzialmente lunga o che comunque richiede m
 cgi <span class="sy0">=</span> <span class="kw2">new</span> CGI<span class="br0">&#40;</span> <span class="st0">&quot;text/html&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
 <span class="co1">// stampo le variabili GET</span>
-<span class="kw1">foreach</span><span class="br0">&#40;</span> name <span class="sy0">-&gt;</span> value <span class="kw1">of</span> cgi<span class="sy0">-&gt;</span>GET <span class="br0">&#41;</span><span class="br0">&#123;</span>
+<span class="kw1">foreach</span><span class="br0">&#40;</span> name <span class="sy0">-&gt;</span> value <span class="kw1">of</span> cgi.<span class="me1">GET</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
     cgi <span class="sy0">&lt;&lt;</span> name <span class="sy0">&lt;&lt;</span> <span class="st0">&quot; = &quot;</span> <span class="sy0">&lt;&lt;</span> value <span class="sy0">&lt;&lt;</span> <span class="st0">&quot;&lt;br&gt;&quot;</span><span class="sy0">;</span>
 <span class="br0">&#125;</span>
 &nbsp;
 <span class="co1">// stampo le variabili POST</span>
-<span class="kw1">foreach</span><span class="br0">&#40;</span> name <span class="sy0">-&gt;</span> value <span class="kw1">of</span> cgi<span class="sy0">-&gt;</span>POST <span class="br0">&#41;</span><span class="br0">&#123;</span>
+<span class="kw1">foreach</span><span class="br0">&#40;</span> name <span class="sy0">-&gt;</span> value <span class="kw1">of</span> cgi.<span class="me1">POST</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
     cgi <span class="sy0">&lt;&lt;</span> name <span class="sy0">&lt;&lt;</span> <span class="st0">&quot; = &quot;</span> <span class="sy0">&lt;&lt;</span> value <span class="sy0">&lt;&lt;</span> <span class="st0">&quot;&lt;br&gt;&quot;</span><span class="sy0">;</span>
 <span class="br0">&#125;</span></pre>
 
 </div>
-<!-- SECTION "Note sull'utilizzo della memoria" [2344-2975] -->
+<!-- SECTION "Note sull'utilizzo della memoria" [2343-2972] -->
 <h1><a name="esempio_completo" id="esempio_completo">Esempio completo</a></h1>
 <div class="level1">
 
@@ -150,9 +150,9 @@ L&#039;esempio mostrerà un form nel quale l&#039;utente dovrà inserire la quan
 &nbsp;
 cgi <span class="sy0">=</span> <span class="kw2">new</span> CGI<span class="br0">&#40;</span><span class="st0">&quot;text/html&quot;</span><span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
-<span class="kw1">if</span><span class="br0">&#40;</span> cgi<span class="sy0">-&gt;</span>POST <span class="br0">&#41;</span><span class="br0">&#123;</span>
+<span class="kw1">if</span><span class="br0">&#40;</span> cgi.<span class="me1">POST</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
 	start  <span class="sy0">=</span> <span class="kw3">ticks</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
-	tofind <span class="sy0">=</span> <span class="kw3">toint</span><span class="br0">&#40;</span> cgi<span class="sy0">-&gt;</span>POST<span class="br0">&#91;</span><span class="st0">&quot;n&quot;</span><span class="br0">&#93;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+	tofind <span class="sy0">=</span> <span class="kw3">toint</span><span class="br0">&#40;</span> cgi.<span class="me1">POST</span><span class="br0">&#91;</span><span class="st0">&quot;n&quot;</span><span class="br0">&#93;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 	found  <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">;</span>
 	n      <span class="sy0">=</span> <span class="nu0">3</span><span class="sy0">;</span>
 	primes <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
@@ -206,4 +206,4 @@ cgi <span class="sy0">=</span> <span class="kw2">new</span> CGI<span class="br0"
 <span class="br0">&#125;</span></pre>
 
 </div>
-<!-- SECTION "Esempio completo" [2976-] --></div><!-- closes <div class="dokuwiki export">-->
+<!-- SECTION "Esempio completo" [2973-] --></div><!-- closes <div class="dokuwiki export">-->

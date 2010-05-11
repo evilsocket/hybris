@@ -27,20 +27,26 @@ Un insieme di valori bidimensionale di tipologia non necessariamente omogenea.
 <p>
 Esempio :
 </p>
-<pre class="code hybris"> m <span class="sy0">=</span> <span class="kw3">matrix</span><span class="br0">&#40;</span> <span class="nu0">3</span><span class="sy0">,</span> <span class="nu0">3</span><span class="sy0">,</span> <span class="co1">// rows, columns</span>
-             <span class="nu0">2</span><span class="sy0">,</span> <span class="nu0">8</span><span class="sy0">,</span> <span class="nu0">4</span><span class="sy0">,</span> <span class="co1">// values </span>
-             5<span class="sy0">,</span> 6<span class="sy0">,</span> 0.1<span class="sy0">,</span> 
-             23<span class="sy0">,</span> 2<span class="sy0">,</span> 1.23 <span class="br0">&#41;</span><span class="sy0">;</span>
- <span class="kw3">println</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span>
+<pre class="code hybris"><span class="kw2">import</span> std.<span class="sy0">*;</span>
 &nbsp;
- <span class="kw1">for</span><span class="br0">&#40;</span> x <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">;</span> x <span class="sy0">&lt;</span> <span class="kw3">columns</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span> x<span class="sy0">++</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
-     <span class="kw1">for</span><span class="br0">&#40;</span> y <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">;</span> y <span class="sy0">&lt;</span> <span class="kw3">rows</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span> y<span class="sy0">++</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
-         <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;m[&quot;</span>.<span class="me1">x</span>.<span class="st0">&quot;][&quot;</span>.<span class="me1">y</span>.<span class="st0">&quot;] = &quot;</span>.<span class="me1">m</span><span class="br0">&#91;</span>x<span class="br0">&#93;</span><span class="br0">&#91;</span>y<span class="br0">&#93;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
-     <span class="br0">&#125;</span>
- <span class="br0">&#125;</span>
+m <span class="sy0">=</span> <span class="kw3">matrix</span><span class="br0">&#40;</span> <span class="nu0">3</span><span class="sy0">,</span>	<span class="nu0">3</span><span class="sy0">,</span> 		 <span class="co1">// rows, columns</span>
+			<span class="nu0">2</span><span class="sy0">,</span>  <span class="nu0">8</span><span class="sy0">,</span>    <span class="nu0">4</span><span class="sy0">,</span> <span class="co1">// values  </span>
+			5<span class="sy0">,</span>  6<span class="sy0">,</span>  0.1<span class="sy0">,</span> 
+			23<span class="sy0">,</span> 2<span class="sy0">,</span> 1.23 <span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
- a <span class="sy0">=</span> m <span class="sy0">*</span> m<span class="sy0">;</span>
- <span class="kw3">println</span><span class="br0">&#40;</span>a<span class="br0">&#41;</span><span class="sy0">;</span>
- m <span class="sy0">*=</span> m<span class="sy0">;</span>
- <span class="kw3">println</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<span class="kw3">println</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span>
+&nbsp;
+<span class="kw1">for</span><span class="br0">&#40;</span> x <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">;</span> x <span class="sy0">&lt;</span> <span class="kw3">columns</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span> x<span class="sy0">++</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
+	<span class="kw1">for</span><span class="br0">&#40;</span> y <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">;</span> y <span class="sy0">&lt;</span> <span class="kw3">rows</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span> y<span class="sy0">++</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
+		<span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;m[&quot;</span> <span class="sy0">+</span> x <span class="sy0">+</span> <span class="st0">&quot;][&quot;</span> <span class="sy0">+</span> y <span class="sy0">+</span> <span class="st0">&quot;] = &quot;</span> <span class="sy0">+</span> m<span class="br0">&#91;</span>x<span class="br0">&#93;</span><span class="br0">&#91;</span>y<span class="br0">&#93;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+	<span class="br0">&#125;</span>
+<span class="br0">&#125;</span>
+&nbsp;
+a <span class="sy0">=</span> m <span class="sy0">*</span> m<span class="sy0">;</span>
+&nbsp;
+<span class="kw3">println</span><span class="br0">&#40;</span>a<span class="br0">&#41;</span><span class="sy0">;</span>
+&nbsp;
+m <span class="sy0">*=</span> m<span class="sy0">;</span>
+&nbsp;
+<span class="kw3">println</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span></pre>
 </div><!-- closes <div class="dokuwiki export">-->
