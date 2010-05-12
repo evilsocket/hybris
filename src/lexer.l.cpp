@@ -42,6 +42,8 @@ typedef vector<string> matches_t;
 #define LEX_UNFETCH(c) unput(c)
 
 void             yyerror(char *);
+// check if a give name is a directory or a file
+bool  			 hyb_is_dir( const char *filename );
 // handle one line comments
 void             hyb_lex_skip_comment();
 // handle multi line comments
@@ -98,18 +100,17 @@ include          BEGIN(T_INCLUSION);
     *ptr = 0x00;
 
     string file = yytext;
-
     /*
 	 * First of all, try to include a file in the same directory
 	 * of the script.
 	 */
-    if( (yyin = fopen( file.c_str(), "r" )) != NULL ){
+    if( !hyb_is_dir(file.c_str()) && (yyin = fopen( file.c_str(), "r" )) != NULL ){
     	__hyb_file_stack.push_back(file);
     }
     /*
 	 * Secondly, try adding the .hy extension.
 	 */
-    else if( (yyin = fopen( (file + ".hy").c_str(), "r" )) != NULL ){
+    else if( !hyb_is_dir((file + ".hy").c_str()) && (yyin = fopen( (file + ".hy").c_str(), "r" )) != NULL ){
     	__hyb_file_stack.push_back((file + ".hy"));
     }
     /*
@@ -122,7 +123,7 @@ include          BEGIN(T_INCLUSION);
 	 *
 	 * /usr/lib/hybris/include/std/io/network/Socket.hy
 	 */
-    else if( string_replace( file, ".", "/" ) && (yyin = fopen( (INC_PATH + file + ".hy").c_str(), "r" )) != NULL ){
+    else if( string_replace( file, ".", "/" ) && !hyb_is_dir((INC_PATH + file + ".hy").c_str()) && (yyin = fopen( (INC_PATH + file + ".hy").c_str(), "r" )) != NULL ){
     	__hyb_file_stack.push_back((INC_PATH + file + ".hy"));
     }
     /*
@@ -317,6 +318,21 @@ include          BEGIN(T_INCLUSION);
 . { hyb_error( H_ET_SYNTAX, "Unexpected token '%s'", yytext ); }
 
 %%
+
+bool hyb_is_dir( const char *filename ){
+	int status;
+	struct stat sbuff;
+
+	status = stat( filename, &sbuff );
+
+	if( status < 0 || !S_ISDIR(sbuff.st_mode) ){
+	    return false;
+	}
+	else{
+		return true;
+	}
+}
+
 
 void hyb_lex_skip_comment(){
     char c, c1;

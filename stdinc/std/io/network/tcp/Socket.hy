@@ -30,7 +30,7 @@ class Socket {
 	}
 	
 	public method Socket(){
-		me.sd = null;
+		me.sd = false;
 	}
 
 	private method __expire(){
@@ -66,7 +66,9 @@ class Socket {
 	}
 
 	public method close(){
-		close( me.sd );
+		if( me.sd ){	
+			close( me.sd );
+		}
 	}
 
 	public method setTimeout( tm ){

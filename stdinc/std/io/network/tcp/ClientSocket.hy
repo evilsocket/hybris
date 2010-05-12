@@ -28,7 +28,7 @@ class ClientSocket extends Socket {
 	}
 
 	public method ClientSocket(){
-		me.ClientSocket( null, null );		
+		me.ClientSocket( false, false );		
 	}
 
 	public method setHost( host ){
