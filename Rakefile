@@ -5,7 +5,7 @@ require 'mkmf'
 verbose(false)
 
 TARGET  	  = 'hybris'
-RELEASE 	  = '1.0b2'
+RELEASE 	  = '1.0b3'
 
 FLEX		  = 'flex'
 BISON		  = 'bison'
