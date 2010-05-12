@@ -99,23 +99,30 @@ include          BEGIN(T_INCLUSION);
     }
     *ptr = 0x00;
 
-    string file = yytext;
+    string file 	= yytext,
+		   lcl_file = file,
+		   ext_file = file + ".hy",
+		   std_file;
+
+    string_replace( file, ".", "/" );
+    std_file = INC_PATH + file + ".hy";
+
     /*
 	 * First of all, try to include a file in the same directory
 	 * of the script.
 	 */
-    if( !hyb_is_dir(file.c_str()) && (yyin = fopen( file.c_str(), "r" )) != NULL ){
-    	__hyb_file_stack.push_back(file);
+    if( !hyb_is_dir(lcl_file.c_str()) && (yyin = fopen( lcl_file.c_str(), "r" )) != NULL ){
+    	__hyb_file_stack.push_back(lcl_file);
     }
     /*
 	 * Secondly, try adding the .hy extension.
 	 */
-    else if( !hyb_is_dir((file + ".hy").c_str()) && (yyin = fopen( (file + ".hy").c_str(), "r" )) != NULL ){
-    	__hyb_file_stack.push_back((file + ".hy"));
+    else if( !hyb_is_dir(ext_file.c_str()) && (yyin = fopen( ext_file.c_str(), "r" )) != NULL ){
+    	__hyb_file_stack.push_back(ext_file);
     }
     /*
 	 * Try to load from default include path.
-	 * In this case replace '.' with '/' so that :
+	 * In this case all '.' are replaced with '/' so that :
 	 *
 	 * include std.io.network.Socket;
 	 *
@@ -123,8 +130,8 @@ include          BEGIN(T_INCLUSION);
 	 *
 	 * /usr/lib/hybris/include/std/io/network/Socket.hy
 	 */
-    else if( string_replace( file, ".", "/" ) && !hyb_is_dir((INC_PATH + file + ".hy").c_str()) && (yyin = fopen( (INC_PATH + file + ".hy").c_str(), "r" )) != NULL ){
-    	__hyb_file_stack.push_back((INC_PATH + file + ".hy"));
+    else if( !hyb_is_dir(std_file.c_str()) && (yyin = fopen( std_file.c_str(), "r" )) != NULL ){
+    	__hyb_file_stack.push_back(std_file);
     }
     /*
      * Nothing found :(

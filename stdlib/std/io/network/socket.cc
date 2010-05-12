@@ -218,7 +218,7 @@ HYBRIS_DEFINE_FUNCTION(haccept){
 	csd = accept( sobj->sd, NULL, NULL );
 
 	if( csd <= 0 ){
-		return H_DEFAULT_ERROR;
+		return (Object *)gc_new_boolean(false);
 	}
 	else{
 		return  ob_dcast( MK_SOCK( csd, sobj->family, sobj->type, sobj->protocol ) );
@@ -240,7 +240,7 @@ HYBRIS_DEFINE_FUNCTION(hgetsockname){
 	struct sockaddr_storage addr;
 
 	if( getsockname( sobj->sd, (struct sockaddr*)&addr, &len ) != 0 ){
-		return H_DEFAULT_ERROR;
+		return (Object *)gc_new_boolean(false);
 	}
 
 	/*
@@ -284,7 +284,7 @@ HYBRIS_DEFINE_FUNCTION(hgetpeername){
 	struct sockaddr_storage addr;
 
 	if( getpeername( sobj->sd, (struct sockaddr*)&addr, &len ) != 0 ){
-		return H_DEFAULT_ERROR;
+		return (Object *)gc_new_boolean(false);
 	}
 
 	/*
@@ -336,7 +336,7 @@ HYBRIS_DEFINE_FUNCTION(hconnect){
 	if( ob_argc() >= 2 ){
 		int sd = socket( AF_INET, SOCK_STREAM, 0 );
 		if( sd <= 0 ){
-			return H_DEFAULT_ERROR;
+			return (Object *)gc_new_boolean(false);
 		}
 		if( ob_argc() == 3 ){
 			ob_type_assert( ob_argv(2), otInteger );
@@ -358,7 +358,7 @@ HYBRIS_DEFINE_FUNCTION(hconnect){
 		bcopy( host->h_addr, &(server.sin_addr.s_addr), host->h_length );
 
 		if( connect( sd, (struct sockaddr*)&server, sizeof(server) ) != 0 ){
-			return H_DEFAULT_ERROR;
+			return (Object *)gc_new_boolean(false);
 		}
 
 		_return = ob_dcast( MK_SOCK( sd, AF_INET, SOCK_STREAM, 0 ) );
@@ -376,7 +376,7 @@ HYBRIS_DEFINE_FUNCTION(hserver){
 	if( ob_argc() >= 1 ){
 		int sd = socket( AF_INET, SOCK_STREAM, 0 );
 		if( sd <= 0 ){
-			return H_DEFAULT_ERROR;
+			return (Object *)gc_new_boolean(false);
 		}
 		if( ob_argc() == 2 ){
 			ob_type_assert( ob_argv(1), otInteger );
@@ -395,11 +395,11 @@ HYBRIS_DEFINE_FUNCTION(hserver){
 		servaddr.sin_port        = htons(port);
 
 		if ( bind( sd, (struct sockaddr *)&servaddr, sizeof(servaddr) ) < 0 ) {
-			return H_DEFAULT_ERROR;
+			return (Object *)gc_new_boolean(false);
 		}
 
 		if ( listen( sd, 1024 ) < 0 ) {
-			return H_DEFAULT_ERROR;
+			return (Object *)gc_new_boolean(false);
 		}
 
 		_return =  ob_dcast( MK_SOCK( sd, AF_INET, SOCK_STREAM, 0 ) );

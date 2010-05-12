@@ -47,8 +47,7 @@ class ClientSocket extends Socket {
 
 	public method connect(){
 		me.sd = connect( me.host, me.port );
-		
-		return (me.sd != -1);
+		return me.sd;
 	}
 }
 
