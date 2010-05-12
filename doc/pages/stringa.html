@@ -25,13 +25,118 @@ Una stringa è una collezione di <a href="carattere.html" class="wikilink1" titl
 E&#039; caratterizzata, come ogni collezione, da una grandezza rappresentante il numero di elementi <sup><a href="#fn__1" name="fnt__1" id="fnt__1" class="fn_top">1)</a></sup> e dall&#039;operatore subscript per l&#039;accesso tramite indice agli elementi che la compongono <sup><a href="#fn__2" name="fnt__2" id="fnt__2" class="fn_top">2)</a></sup>.
 </p>
 
+
+
+<h1><a name="metodi" id="metodi">Metodi</a></h1>
+<div class="level1">
+
 <p>
-Esempio :
+
+Questa tipologia ha dei <a href="classe.html" class="wikilink1" title="classe">metodi</a> intrinsechi che permettono varie operazioni su di essa.
 </p>
+
+</div>
+<!-- SECTION "Metodi" [620-740] -->
+<h2><a name="length" id="length">length()</a></h2>
+<div class="level2">
+
+<p>
+
+Restituisce il numero di caratteri che contiene la stringa .
+</p>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;hello world&quot;</span>.<span class="me1">length</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code">11</pre>
+
+</div>
+<!-- SECTION "length()" [741-889] -->
+<h2><a name="find_str" id="find_str">find( str )</a></h2>
+<div class="level2">
+
+<p>
+
+Cerca una stringa o un carattere all&#039;interno della stringa principale, restituisce l&#039;indice dell&#039;elemento trovato o <strong>false</strong> in caso non ci sia alcun match.
+</p>
+<pre class="code hybris">s <span class="sy0">=</span> <span class="st0">&quot;hello world&quot;</span><span class="sy0">;</span>
+&nbsp;
+<span class="kw3">println</span><span class="br0">&#40;</span> s.<span class="me1">find</span><span class="br0">&#40;</span><span class="st0">&quot;wor&quot;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+&nbsp;
+<span class="kw3">println</span><span class="br0">&#40;</span> s.<span class="me1">find</span><span class="br0">&#40;</span><span class="st0">&quot;foo&quot;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code">6
+false</pre>
+
+</div>
+<!-- SECTION "find( str )" [890-1181] -->
+<h2><a name="substr_index_length_opzionale" id="substr_index_length_opzionale">substr( index, length (opzionale) )</a></h2>
+<div class="level2">
+
+<p>
+
+Restituisce una sottostringa lunga &#039;length&#039; caratteri, partendo dall&#039;indice &#039;index&#039; .
+Se il parametro length non è specificato, restituisce una sottostringa dall&#039;indice fino alla fine della stringa principale .
+</p>
+<pre class="code hybris">s <span class="sy0">=</span> <span class="st0">&quot;hello world&quot;</span><span class="sy0">;</span>
+&nbsp;
+<span class="kw3">println</span><span class="br0">&#40;</span> s.<span class="kw3">substr</span><span class="br0">&#40;</span>6<span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+&nbsp;
+<span class="kw3">println</span><span class="br0">&#40;</span> s.<span class="kw3">substr</span><span class="br0">&#40;</span>6<span class="sy0">,</span>4<span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code">world
+worl</pre>
+
+</div>
+<!-- SECTION "substr( index, length (opzionale) )" [1182-1552] -->
+<h2><a name="substr_find_replace" id="substr_find_replace">substr( find, replace )</a></h2>
+<div class="level2">
+
+<p>
+
+Restituisce una stringa tutte le occorrenze di &#039;find&#039; nella quale sono state sostituite con &#039;find&#039;.
+</p>
+<pre class="code hybris">s <span class="sy0">=</span> <span class="st0">&quot;hello world&quot;</span><span class="sy0">;</span>
+&nbsp;
+<span class="kw3">println</span><span class="br0">&#40;</span> s.<span class="me1">replace</span><span class="br0">&#40;</span> <span class="st0">&quot;world&quot;</span><span class="sy0">,</span> <span class="st0">&quot;hybris&quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code">hello hybris</pre>
+
+</div>
+<!-- SECTION "substr( find, replace )" [1553-1793] -->
+<h2><a name="split_separator" id="split_separator">split( separator )</a></h2>
+<div class="level2">
+
+<p>
+
+Divide la stringa in un array di stringhe, utilizzando il separatore specificato.
+</p>
+<pre class="code hybris">s <span class="sy0">=</span> <span class="st0">&quot;hello world from hybris&quot;</span><span class="sy0">;</span>
+&nbsp;
+<span class="kw3">println</span><span class="br0">&#40;</span> s.<span class="me1">split</span><span class="br0">&#40;</span> <span class="st0">&quot; &quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code">array {
+      hello
+      world
+      from
+      hybris
+}</pre>
+
+</div>
+<!-- SECTION "split( separator )" [1794-2060] -->
+<h2><a name="trim" id="trim">trim()</a></h2>
+<div class="level2">
+
+<p>
+
+Elimina ogni carattere “white space” (tab, new line, line feed, ecc) dall&#039;inizio e dalla fine della stringa, restituendo una nuova stringa .
+</p>
+<pre class="code hybris">s <span class="sy0">=</span> <span class="st0">&quot;hello world from hybris&quot;</span><span class="sy0">;</span>
+&nbsp;
+<span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;<span class="es0">\t</span><span class="es0">\n</span><span class="es0">\r</span> hello world<span class="es0">\n</span>&quot;</span>.<span class="kw3">trim</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code">hello world</pre>
+
+</div>
+<!-- SECTION "trim()" [2061-2336] -->
+<h1><a name="esempio" id="esempio">Esempio</a></h1>
+<div class="level1">
 <pre class="code hybris"> <span class="co1">// dichiaro una stringa</span>
  stringa <span class="sy0">=</span> <span class="st0">&quot;Ciao mondo !&quot;</span><span class="sy0">;</span>
  <span class="co1">// ne calcolo la lunghezza inserendola nell intero</span>
- lunghezza <span class="sy0">=</span> <span class="kw3">strlen</span><span class="br0">&#40;</span>stringa<span class="br0">&#41;</span><span class="sy0">;</span>
+ lunghezza <span class="sy0">=</span> stringa.<span class="me1">length</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
  <span class="co1">// stampo la stringa</span>
  <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Stringa originale : ’&quot;</span> <span class="sy0">+</span> stringa <span class="sy0">+</span> <span class="st0">&quot;‘&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
  <span class="co1">// nel ciclo, la variabile ’i' viene contemporaneamente dichiarata ed inizializzata</span>
@@ -41,7 +146,11 @@ Esempio :
  <span class="br0">&#125;</span>
  <span class="co1">// stampo la stringa nuovamente</span>
  <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Stringa modificata : ’&quot;</span> <span class="sy0">+</span> stringa <span class="sy0">+</span> <span class="st0">&quot;‘&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
-<div class="footnotes">
+<pre class="code">Stringa originale : ’Ciao mondo !‘
+Stringa modificata : ’abcdefghijkl‘</pre>
+
+</div>
+<!-- SECTION "Esempio" [2337-] --><div class="footnotes">
 <div class="fn"><sup><a href="#fnt__1" id="fn__1" name="fn__1" class="fn_bot">1)</a></sup> 
 La grandezza di una stringa è ottenibile sia con la funzione <strong>strlen</strong> che più genericamente con <strong>sizeof</strong> .</div>
 <div class="fn"><sup><a href="#fnt__2" id="fn__2" name="fn__2" class="fn_bot">2)</a></sup> 

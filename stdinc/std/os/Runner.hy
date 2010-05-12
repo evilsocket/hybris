@@ -28,14 +28,14 @@ class Runner extends Thread {
 
 	method Runner( cref ){
 		me.Thread( "__std_os_RunnerDispatcher" );
-		if( contains( methods(cref), "run" ) == -1 ){
+		if( methods(cref).contains( "run" ) == false ){
 			throw new Exception( __FILE__, __LINE__, typeof(cref) + " does not implement Runnable interface or does not override the run method." );
 		}
 		me.cref = cref;
 	}	
 
-	method go( argv ){
-		me.start( array( me.cref.run, argv ) );
+	method go( ... ){
+		me.start_argv( array( me.cref.run, @ ) );
 	}
 
 	method __to_string(){	

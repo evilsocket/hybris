@@ -26,7 +26,7 @@ __force_inline ascii_item_t *at_find_next_link( ascii_tree_t *at, char ascii ){
 	ascii_item_t *link;
 
 	for( i = 0; i < n_links; ++i ){
-		link =  at->links[i];
+		link = at->links[i];
 		if( link->ascii == ascii ){
 			return link;
 		}

@@ -61,7 +61,7 @@ class Dll {
 	}
 	
 	public method sym( name ){
-		if( haskey( me.cache, name ) != -1 ){
+		if( me.cache.has(name) ){
 			symbol = me.cache[name];
 		}
 		else{

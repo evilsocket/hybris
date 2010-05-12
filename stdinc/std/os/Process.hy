@@ -17,8 +17,8 @@
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
 import  std.os.process;
-include std.io.File;
 import  std.os.process;
+include std.io.File;
 
 class Process {
 	protected pname, pargs;

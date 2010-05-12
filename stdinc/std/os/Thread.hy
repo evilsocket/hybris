@@ -27,8 +27,14 @@ class Thread  {
 		me.id 			 = 0;
 	}
 	
-	public method start( args ){
+	public method start_argv( args ){
 		me.id = pthread_create_argv( me.function_name, args );
+	
+		return (me.id > 0);
+	}
+
+	public method start( ... ){
+		me.id = pthread_create_argv( me.function_name, @ );
 	
 		return (me.id > 0);
 	}

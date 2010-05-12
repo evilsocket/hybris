@@ -60,9 +60,11 @@ Troviamo una panoramica abbastanza completa delle varie modalità di esecuzione,
 Released under GPL v3.0 by The Hybris Dev Team http://www.hybris-lang.org/
 Compiled with :
   Library path : /usr/lib/hybris/library/
-  Include path : /usr/lib/hybris/include/</pre>
-<pre class="code">Usage: hybris &lt;options&gt; file</pre>
-<pre class="code">Where &lt;options&gt; is one or more among followring values :
+  Include path : /usr/lib/hybris/include/
+
+Usage: hybris &lt;options&gt; file
+
+Where &lt;options&gt; is one or more among followring values :
   -h (--help)    : Print this menu and exit.
   -m (--mem)     : Set the allocation memory limit expressed in bytes (see --gc, default is 128MB). 
   -g (--gc)      : Set the garbage collection memory threshold, expressed in bytes, 
@@ -73,12 +75,12 @@ Compiled with :
   -s (--trace)   : Enable stack trace report on errors .</pre>
 
 </div>
-<!-- SECTION "Introduzione" [1-1474] -->
+<!-- SECTION "Introduzione" [1-1478] -->
 <h1><a name="opzioni" id="opzioni">Opzioni</a></h1>
 <div class="level1">
 
 </div>
-<!-- SECTION "Opzioni" [1475-1497] -->
+<!-- SECTION "Opzioni" [1479-1501] -->
 <h2><a name="m_o_--mem" id="m_o_--mem">-m o --mem</a></h2>
 <div class="level2">
 
@@ -116,7 +118,7 @@ Se non viene passato come argomento, il valore di default di questa soglia è di
 </p>
 
 </div>
-<!-- SECTION "-m o --mem" [1498-2008] -->
+<!-- SECTION "-m o --mem" [1502-2012] -->
 <h2><a name="g_o_--gc" id="g_o_--gc">-g o --gc</a></h2>
 <div class="level2">
 
@@ -158,7 +160,7 @@ Se non viene passato come argomento, il valore di default di questa soglia è di
 </p>
 
 </div>
-<!-- SECTION "-g o --gc" [2009-2766] -->
+<!-- SECTION "-g o --gc" [2013-2770] -->
 <h2><a name="c_o_--cgi" id="c_o_--cgi">-c o --cgi</a></h2>
 <div class="level2">
 
@@ -169,7 +171,7 @@ Per un riferimento dettagliato su questa modalità, consultare la <a href="cgi.h
 </p>
 
 </div>
-<!-- SECTION "-c o --cgi" [2767-3120] -->
+<!-- SECTION "-c o --cgi" [2771-3124] -->
 <h2><a name="t_o_--time" id="t_o_--time">-t o --time</a></h2>
 <div class="level2">
 
@@ -179,7 +181,7 @@ Se si vogliono tenere d&#039;occhio le prestazioni del proprio script, si può u
 </p>
 
 </div>
-<!-- SECTION "-t o --time" [3121-3490] -->
+<!-- SECTION "-t o --time" [3125-3494] -->
 <h2><a name="s_o_--trace" id="s_o_--trace">-s o --trace</a></h2>
 <div class="level2">
 
@@ -211,8 +213,9 @@ mentre il comando :
 Risulterà in :
 
 </p>
-<pre class="code">Syntax error on line 17 : ‘undeclared_variable’ undeclared identifier .</pre>
-<pre class="code">Call Stack [memory usage 224 bytes] :
+<pre class="code">Syntax error on line 17 : ‘undeclared_variable’ undeclared identifier .
+
+Call Stack [memory usage 224 bytes] :
   do_error( n=123 )
      lulz( )</pre>
 
@@ -227,4 +230,4 @@ Nel caso in cui lo script avesse un errore talmente grave da generare un Segment
 </p>
 
 </div>
-<!-- SECTION "-s o --trace" [3491-] --></div><!-- closes <div class="dokuwiki export">-->
+<!-- SECTION "-s o --trace" [3495-] --></div><!-- closes <div class="dokuwiki export">-->

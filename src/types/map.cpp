@@ -18,6 +18,7 @@
 */
 #include "common.h"
 #include "types.h"
+#include "vm.h"
 
 /** helpers **/
 int map_find( Object *m, Object *key ){
@@ -30,6 +31,31 @@ int map_find( Object *m, Object *key ){
 		}
 	}
 	return -1;
+}
+
+/** builtin methods **/
+Object *__map_size( engine_t *engine, Object *me, vframe_t *data ){
+	return (Object *)gc_new_integer( ob_map_ucast(me)->items );
+}
+
+Object *__map_pop( engine_t *engine, Object *me, vframe_t *data ){
+	return ob_cl_pop( me );
+}
+
+Object *__map_unmap( engine_t *engine, Object *me, vframe_t *data ){
+	if( ob_argc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'unmap' requires 1 parameter (called with %d)", ob_argc() );
+	}
+
+	return ob_cl_remove( me, ob_argv(0) );
+}
+
+Object *__map_has( engine_t *engine, Object *me, vframe_t *data ){
+	if( ob_argc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'has' requires 1 parameter (called with %d)", ob_argc() );
+	}
+
+	return (Object *)gc_new_boolean( map_find( me, ob_argv(0) ) == -1 ? false : true );
 }
 
 /** generic function pointers **/
@@ -71,22 +97,7 @@ Object *map_clone( Object *me ){
 }
 
 void map_free( Object *me ){
-    MapObjectIterator ki, vi;
-    MapObject *mme = (MapObject *)me;
-    Object    *kitem,
-              *vitem;
-
-    for( ki = mme->keys.begin(), vi = mme->values.begin(); ki != mme->keys.end() && vi != mme->values.end(); ki++, vi++ ){
-        kitem = *ki;
-        vitem = *vi;
-
-        if( kitem ){
-            ob_free(kitem);
-        }
-        if( vitem ){
-            ob_free(vitem);
-        }
-    }
+	MapObject *mme = (MapObject *)me;
 
     mme->keys.clear();
     mme->values.clear();
@@ -256,6 +267,52 @@ Object *map_cl_set( Object *me, Object *k, Object *v ){
     return map_cl_set_reference( me, ob_clone(k), ob_clone(v) );
 }
 
+Object *map_call_method( engine_t *engine, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
+	size_t i(0);
+	ob_type_builtin_method_t *method  = NULL,
+							 *builtin = NULL;
+	do{
+		if( me->type->builtin_methods[i].name == method_id ){
+			method = me->type->builtin_methods[i].method;
+			break;
+		}
+	}
+	while( me->type->builtin_methods[++i].method != NULL );
+
+	if( method == NULL ){
+		hyb_error( H_ET_SYNTAX, "String type does not have a '%s' method", method_id );
+	}
+
+	Object  *value,
+			*result;
+	vframe_t stack;
+	size_t   argc = argv->children();
+
+	stack.owner = ob_typename(me) + string("::") + method_id;
+	/*
+	 * Evaluate each object and insert it into the stack
+	 */
+	for( i = 0; i < argc; ++i ){
+		value = engine_exec( engine, frame, argv->child(i) );
+		stack.push( value );
+	}
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( engine->vm, &stack );
+
+	/* execute the method */
+	result = ((ob_type_builtin_method_t)method)( engine, me, &stack );
+
+	/*
+	 * Dismiss the stack.
+	 */
+	vm_pop_frame( engine->vm );
+
+	/* return method evaluation value */
+	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
+}
+
 IMPLEMENT_TYPE(Map) {
     /** type code **/
     otMap,
@@ -263,6 +320,14 @@ IMPLEMENT_TYPE(Map) {
     "map",
 	/** type basic size **/
     0,
+    /** type builtin methods **/
+    {
+		{ "size",  (ob_type_builtin_method_t *)__map_size },
+		{ "pop",   (ob_type_builtin_method_t *)__map_pop },
+		{ "unmap", (ob_type_builtin_method_t *)__map_unmap },
+		{ "has",   (ob_type_builtin_method_t *)__map_has },
+		OB_BUILIN_METHODS_END_MARKER
+    },
 
 	/** generic function pointers **/
     map_typename, // type_name
@@ -346,6 +411,7 @@ IMPLEMENT_TYPE(Map) {
     0, // set_attribute;
     0, // set_attribute_reference
     0, // define_method
-    0  // get_method
+    0, // get_method
+    map_call_method  // call_method
 };
 

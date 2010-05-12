@@ -35,7 +35,6 @@ void vm_str_split( string& str, string delimiters, vector<string>& tokens ){
     }
 }
 
-
 vm_t *vm_create(){
 	vm_t *vm = new vm_t;
 
@@ -128,7 +127,9 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
     HYBRIS_DEFINE_CONSTANT( vm, "__VERSION__",  gc_new_string(VERSION) );
     HYBRIS_DEFINE_CONSTANT( vm, "__LIB_PATH__", gc_new_string(LIB_PATH) );
     HYBRIS_DEFINE_CONSTANT( vm, "__INC_PATH__", gc_new_string(INC_PATH) );
-
+    /*
+     * Initiailze environment variables.
+     */
     vm->env = envp;
 }
 

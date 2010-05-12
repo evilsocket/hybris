@@ -34,18 +34,92 @@ Oppure, qual&#039;ora fosse necessario crearlo inizialmente vuoto, tramite la fu
 </p>
 <pre class="code hybris"> a <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span></pre>
 
+
+
+<h1><a name="metodi" id="metodi">Metodi</a></h1>
+<div class="level1">
+
 <p>
-Esempio :
+
+Questa tipologia ha dei <a href="classe.html" class="wikilink1" title="classe">metodi</a> intrinsechi che permettono varie operazioni su di essa. 
 </p>
+
+</div>
+<!-- SECTION "Metodi" [546-667] -->
+<h2><a name="size" id="size">size()</a></h2>
+<div class="level2">
+
+<p>
+
+Restituisce il numero di elementi che contiene l&#039;array.
+</p>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span>.<span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code">3</pre>
+
+</div>
+<!-- SECTION "size()" [668-814] -->
+<h2><a name="pop" id="pop">pop()</a></h2>
+<div class="level2">
+
+<p>
+
+Rimuove l&#039;ultimo elemento dell&#039;array e ne restituisce un istanza .
+</p>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span>.<span class="kw3">pop</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code">meh</pre>
+
+</div>
+<!-- SECTION "pop()" [815-972] -->
+<h2><a name="remove_index" id="remove_index">remove( index )</a></h2>
+<div class="level2">
+
+<p>
+
+Rimuove un elemento dall&#039;array ad un indice specifico e ne restituisce un istanza.
+</p>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span>.<span class="kw3">remove</span><span class="br0">&#40;</span>1<span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code">bar</pre>
+
+</div>
+<!-- SECTION "remove( index )" [973-1162] -->
+<h2><a name="contains_object" id="contains_object">contains( object )</a></h2>
+<div class="level2">
+
+<p>
+
+Restituisce <strong>true</strong> se l&#039;array contiene l&#039;elemento specificato, altrimenti <strong>false</strong> .
+</p>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span>.<span class="kw3">contains</span><span class="br0">&#40;</span> <span class="st0">&quot;foo&quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+&nbsp;
+<span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span>.<span class="kw3">contains</span><span class="br0">&#40;</span> <span class="st0">&quot;moo&quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code">true
+false </pre>
+
+</div>
+<!-- SECTION "contains( object )" [1163-1433] -->
+<h2><a name="join_glue" id="join_glue">join( glue )</a></h2>
+<div class="level2">
+
+<p>
+
+Restituisce una stringa con tutti gli elementi dell&#039;array concatenati tramite il carattere o la stringa &#039;glue&#039;.
+</p>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span>.<span class="me1">join</span><span class="br0">&#40;</span> <span class="st0">&quot;, &quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code">foo, bar, meh</pre>
+
+</div>
+<!-- SECTION "join( glue )" [1434-1662] -->
+<h1><a name="esempio" id="esempio">Esempio</a></h1>
+<div class="level1">
 <pre class="code hybris"><span class="kw2">import</span> std.<span class="sy0">*;</span>
 &nbsp;
 <span class="co1">// inizializzo un array con valori di tipi misti, uno dei quali è un array a sua volta</span>
 a     <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span> 0<span class="sy0">,</span> 
-			   1 <span class="sy0">+</span> 0 <span class="sy0">*</span> 1<span class="sy0">,</span> 
-			   <span class="kw3">array</span><span class="br0">&#40;</span> <span class="nu0">2</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span><span class="sy0">,</span> 2 <span class="sy0">+</span> 0 <span class="br0">&#41;</span><span class="sy0">,</span> 
-			   3 <span class="br0">&#41;</span><span class="sy0">;</span>
+	       1 <span class="sy0">+</span> 0 <span class="sy0">*</span> 1<span class="sy0">,</span> 
+	       <span class="kw3">array</span><span class="br0">&#40;</span> <span class="nu0">2</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span><span class="sy0">,</span> 2 <span class="sy0">+</span> 0 <span class="br0">&#41;</span><span class="sy0">,</span> 
+	       3 <span class="br0">&#41;</span><span class="sy0">;</span>
 <span class="co1">// la variabile intera 'elems' ora contiene il numero di elementi dell'array 'a'</span>
-elems <span class="sy0">=</span> <span class="kw3">elements</span><span class="br0">&#40;</span>a<span class="br0">&#41;</span><span class="sy0">;</span>
+elems <span class="sy0">=</span> a.<span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
 <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;L'array 'a' ha &quot;</span> <span class="sy0">+</span> elems <span class="sy0">+</span> <span class="st0">&quot; elementi :<span class="es0">\n</span>&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 <span class="co1">// stampo ogni elemento di 'a', nel caso dell'array all'indice 2 verrà stampata la sua struttura </span>
@@ -56,8 +130,8 @@ elems <span class="sy0">=</span> <span class="kw3">elements</span><span class="b
 &nbsp;
 <span class="co1">// rimuovo il secondo elemento da 'a' e stampo nuovamente il contenuto</span>
 <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;<span class="es0">\n</span>a - 2° elemento : <span class="es0">\n</span>&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
-<span class="kw3">remove</span><span class="br0">&#40;</span> a<span class="sy0">,</span> 1 <span class="br0">&#41;</span><span class="sy0">;</span>
-elems <span class="sy0">=</span> <span class="kw3">elements</span><span class="br0">&#40;</span>a<span class="br0">&#41;</span><span class="sy0">;</span>
+a.<span class="kw3">remove</span><span class="br0">&#40;</span> 1 <span class="br0">&#41;</span><span class="sy0">;</span>
+elems <span class="sy0">=</span> a.<span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
 <span class="kw1">for</span><span class="br0">&#40;</span> i <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">;</span> i <span class="sy0">&lt;</span> elems<span class="sy0">;</span> i<span class="sy0">++</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
 	<span class="kw3">print</span><span class="br0">&#40;</span> <span class="st0">&quot;elemento &quot;</span> <span class="sy0">+</span> i <span class="sy0">+</span> <span class="st0">&quot; : &quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 	<span class="kw3">println</span><span class="br0">&#40;</span> a<span class="br0">&#91;</span>i<span class="br0">&#93;</span> <span class="br0">&#41;</span><span class="sy0">;</span>	
@@ -76,9 +150,63 @@ elems <span class="sy0">=</span> <span class="kw3">elements</span><span class="b
 &nbsp;
 <span class="co1">// rimuovo gli elementi residui di a</span>
 <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;<span class="es0">\n</span>Svuoto 'a' :<span class="es0">\n</span>&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
-elems <span class="sy0">=</span> <span class="kw3">elements</span><span class="br0">&#40;</span>a<span class="br0">&#41;</span><span class="sy0">;</span>
+elems <span class="sy0">=</span> a.<span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
 <span class="kw1">for</span><span class="br0">&#40;</span> i <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">;</span> i <span class="sy0">&lt;</span> elems<span class="sy0">;</span> i<span class="sy0">++</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
-	<span class="kw3">pop</span><span class="br0">&#40;</span>a<span class="br0">&#41;</span><span class="sy0">;</span>
+	a.<span class="kw3">pop</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
 	<span class="kw3">println</span><span class="br0">&#40;</span>a<span class="br0">&#41;</span><span class="sy0">;</span>	
 <span class="br0">&#125;</span></pre>
-</div><!-- closes <div class="dokuwiki export">-->
+<pre class="code">L&#039;array &#039;a&#039; ha 4 elementi :
+
+elemento 0 : 0
+elemento 1 : 1
+elemento 2 : array {
+  2
+  due
+  2
+}
+
+elemento 3 : 3
+
+a - 2° elemento : 
+
+elemento 0 : 0
+elemento 1 : array {
+  2
+  due
+  2
+}
+
+elemento 2 : 3
+
+Test foreach : 
+
+item = 0  integer
+item = array {
+  2
+  due
+  2
+}
+vector
+item = 3  integer
+
+Svuoto &#039;a&#039; :
+
+array {
+  0
+  array {
+    2
+    due
+    2
+  }
+
+}
+
+array {
+  0
+}
+
+array {
+}</pre>
+
+</div>
+<!-- SECTION "Esempio" [1663-] --></div><!-- closes <div class="dokuwiki export">-->

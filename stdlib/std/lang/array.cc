@@ -19,20 +19,9 @@
 #include <hybris.h>
 
 HYBRIS_DEFINE_FUNCTION(harray);
-HYBRIS_DEFINE_FUNCTION(helements);
-HYBRIS_DEFINE_FUNCTION(hpop);
-HYBRIS_DEFINE_FUNCTION(hremove);
-HYBRIS_DEFINE_FUNCTION(hcontains);
-HYBRIS_DEFINE_FUNCTION(hjoin);
-
 
 HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "array", harray },
-	{ "elements", helements },
-	{ "pop", hpop },
-	{ "remove", hremove },
-	{ "contains", hcontains },
-	{ "join", hjoin },
 	{ "", NULL }
 };
 
@@ -45,67 +34,3 @@ HYBRIS_DEFINE_FUNCTION(harray){
 	return array;
 }
 
-HYBRIS_DEFINE_FUNCTION(helements){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'elements' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_type_assert( ob_argv(0), otVector );
-
-    return ob_dcast( gc_new_integer( vector_argv(0)->items ) );
-}
-
-HYBRIS_DEFINE_FUNCTION(hpop){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'pop' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_type_assert( ob_argv(0), otVector );
-
-	return ob_cl_pop( ob_argv(0) );
-}
-
-HYBRIS_DEFINE_FUNCTION(hremove){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'remove' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_type_assert( ob_argv(0), otVector );
-
-	return ob_cl_remove( ob_argv(0), ob_argv(1) );
-}
-
-HYBRIS_DEFINE_FUNCTION(hcontains){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'contains' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_type_assert( ob_argv(0), otVector );
-
-	Object *array = ob_argv(0),
-           *find  = ob_argv(1);
-	IntegerObject index(0);
-	unsigned int size( ob_get_size(array) );
-
-	for( ; index.value < size; ++index.value ){
-		if( ob_cmp( ob_cl_at( array, (Object *)&index ), find ) == 0 ){
-			return ob_dcast( gc_new_integer(index.value) );
-		}
-	}
-
-	return H_DEFAULT_ERROR;
-}
-
-HYBRIS_DEFINE_FUNCTION(hjoin){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'join' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_type_assert( ob_argv(1), otVector );
-
-	Object *array = ob_argv(1);
-	string  glue  = ob_svalue( ob_argv(0) ),
-		    join;
-	unsigned int i, items(ob_vector_ucast(array)->items);
-
-	for( i = 0; i < items; ++i ){
-		join += ob_svalue(ob_vector_ucast(array)->value[i]) + ( i < items - 1 ? glue : "");
-	}
-
-	return (Object *)gc_new_string(join.c_str());
-}

@@ -444,6 +444,8 @@ IMPLEMENT_TYPE(Integer) {
     "integer",
 	/** type basic size **/
     sizeof(long),
+    /** type builtin methods **/
+    { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
     int_typename, // type_name
@@ -525,7 +527,8 @@ IMPLEMENT_TYPE(Integer) {
     0, // set_attribute;
     0, // set_attribute_reference
     0, // define_method
-    0  // get_method
+    0, // get_method
+    0  // call_method
 };
 
 IMPLEMENT_TYPE(Alias) {
@@ -535,6 +538,8 @@ IMPLEMENT_TYPE(Alias) {
     "alias",
 	/** type basic size **/
     sizeof(long),
+    /** type builtin methods **/
+    { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
     alias_typename, // type_name
@@ -616,7 +621,8 @@ IMPLEMENT_TYPE(Alias) {
     0, // set_attribute;
     0, // set_attribute_reference;
     0, // define_method
-    0  // get_method
+    0, // get_method
+    0  // call_method
 };
 
 IMPLEMENT_TYPE(Extern) {
@@ -626,6 +632,8 @@ IMPLEMENT_TYPE(Extern) {
     "extern",
 	/** type basic size **/
     sizeof(long),
+    /** type builtin methods **/
+    { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
     extern_typename, // type_name
@@ -709,5 +717,6 @@ IMPLEMENT_TYPE(Extern) {
     0, // set_attribute;
     0, // set_attribute_reference
     0, // define_method
-    0  // get_method
+    0, // get_method
+    0  // call_method
 };

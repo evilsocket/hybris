@@ -23,7 +23,7 @@ include std.MethodReference;
 class Runnable {
 	method __attribute( name ){
 		m = null;
-		if( contains( methods(me), name ) != -1 ){
+		if( methods(me).contains( name ) ){
 			m = new MethodReference( me, name );
 		}
 		return m;

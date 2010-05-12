@@ -22,6 +22,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <pcre.h>
+#include <algorithm>
 
 extern void hyb_error( H_ERROR_TYPE type, const char *format, ... );
 
@@ -71,6 +72,95 @@ void string_parse( string& s ){
             repl += (char)l_hex;
             string_replace( s, "\\x" + s_hex, repl );
     }
+}
+
+/** builtin methods **/
+Object *__string_length( engine_t *engine, Object *me, vframe_t *data ){
+	return (Object *)gc_new_integer( ob_string_ucast(me)->value.size() );
+}
+
+Object *__string_find( engine_t *engine, Object *me, vframe_t *data ){
+	if(  ob_argc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'find' requires 1 parameter (called with %d)",  ob_argc() );
+	}
+	ob_type_assert( ob_argv(0), otString );
+
+	int found = ob_string_ucast(me)->value.find( string_argv(0) );
+
+	return found == string::npos ? (Object *)gc_new_boolean(false) : (Object *)gc_new_integer( found );
+}
+
+Object *__string_substr( engine_t *engine, Object *me, vframe_t *data ){
+	if( ob_argc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'substr' requires at least 1 parameter (called with %d)", ob_argc() );
+	}
+	ob_type_assert( ob_argv(0), otInteger );
+
+	string sub;
+	if( ob_argc() == 2 ){
+		ob_type_assert( ob_argv(1), otInteger );
+		sub = ob_string_ucast(me)->value.substr( ob_ivalue( ob_argv(0) ), ob_ivalue( ob_argv(1) ) );
+	}
+	else{
+		sub = ob_string_ucast(me)->value.substr( ob_ivalue( ob_argv(0) ) );
+	}
+
+	return (Object *)gc_new_string( sub.c_str() );
+}
+
+Object *__string_replace( engine_t *engine, Object *me, vframe_t *data ){
+	if( ob_argc() < 2 ){
+		hyb_error( H_ET_SYNTAX, "method 'replace' requires 2 parameters (called with %d)", ob_argc() );
+	}
+	ob_type_assert( ob_argv(0), otString );
+	ob_type_assert( ob_argv(1), otString );
+
+	string str  = ob_string_ucast(me)->value,
+		   find = string_argv(0),
+		   repl = string_argv(1);
+
+	size_t i, f_len( find.length() );
+	for( ; (i = str.find( find )) != string::npos ; ){
+		str.replace( i, f_len, repl );
+	}
+
+	return (Object *)gc_new_string( str.c_str() );
+}
+
+Object *__string_split( engine_t *engine, Object *me, vframe_t *data ){
+	if( ob_argc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'split' requires 1 parameter (called with %d)", ob_argc() );
+	}
+	ob_types_assert( ob_argv(0), otString, otChar );
+
+	string str = ob_string_ucast(me)->value,
+		   tok = ob_svalue( ob_argv(0) );
+	vector<string> parts;
+    int start = 0, end = 0, i;
+
+  	while( (end = str.find(tok,start)) != string::npos ){
+		parts.push_back( str.substr( start, end - start ) );
+		start = end + tok.size();
+	}
+	parts.push_back( str.substr(start) );
+
+   	Object *array = ob_dcast( gc_new_vector() );
+	for( i = 0; i < parts.size(); ++i ){
+		ob_cl_push_reference( array, ob_dcast( gc_new_string( parts[i].c_str() ) ) );
+	}
+
+	return array;
+}
+
+Object *__string_trim( engine_t *engine, Object *me, vframe_t *data ){
+	string s = ob_string_ucast(me)->value;
+
+	// trim from start
+	s.erase( s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))) );
+	// trim from end
+	s.erase( std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end() );
+
+	return (Object *)gc_new_string(s.c_str());
 }
 
 /** generic function pointers **/
@@ -370,6 +460,52 @@ Object *string_cl_set( Object *me, Object *i, Object *v ){
     return me;
 }
 
+Object *string_call_method( engine_t *engine, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
+	size_t i(0);
+	ob_type_builtin_method_t *method  = NULL,
+							 *builtin = NULL;
+	do{
+		if( me->type->builtin_methods[i].name == method_id ){
+			method = me->type->builtin_methods[i].method;
+			break;
+		}
+	}
+	while( me->type->builtin_methods[++i].method != NULL );
+
+	if( method == NULL ){
+		hyb_error( H_ET_SYNTAX, "String type does not have a '%s' method", method_id );
+	}
+
+	Object  *value,
+			*result;
+	vframe_t stack;
+	size_t   argc = argv->children();
+
+	stack.owner = ob_typename(me) + string("::") + method_id;
+	/*
+	 * Evaluate each object and insert it into the stack
+	 */
+	for( i = 0; i < argc; ++i ){
+		value = engine_exec( engine, frame, argv->child(i) );
+		stack.push( value );
+	}
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( engine->vm, &stack );
+
+	/* execute the method */
+	result = ((ob_type_builtin_method_t)method)( engine, me, &stack );
+
+	/*
+	 * Dismiss the stack.
+	 */
+	vm_pop_frame( engine->vm );
+
+	/* return method evaluation value */
+	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
+}
+
 IMPLEMENT_TYPE(String) {
     /** type code **/
     otString,
@@ -377,6 +513,16 @@ IMPLEMENT_TYPE(String) {
     "string",
 	/** type basic size **/
     0,
+    /** type builtin methods **/
+    {
+    	{ "length",  (ob_type_builtin_method_t *)__string_length },
+        { "find",    (ob_type_builtin_method_t *)__string_find },
+        { "substr",  (ob_type_builtin_method_t *)__string_substr },
+        { "replace", (ob_type_builtin_method_t *)__string_replace },
+        { "split",   (ob_type_builtin_method_t *)__string_split },
+        { "trim",    (ob_type_builtin_method_t *)__string_trim },
+	    OB_BUILIN_METHODS_END_MARKER
+    },
 
 	/** generic function pointers **/
     string_typename, // type_name
@@ -460,6 +606,7 @@ IMPLEMENT_TYPE(String) {
     0, // set_attribute;
     0, // set_attribute_reference
     0, // define_method
-    0  // get_method
+    0, // get_method
+    string_call_method // call_method
 };
 

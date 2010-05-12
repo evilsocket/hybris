@@ -20,7 +20,6 @@
 import std.io.network.tcp;
 import std.os.process;
 import std.lang.map;
-import std.lang.string;
 
 class CGI {
 	protected env;
@@ -31,33 +30,29 @@ class CGI {
 	method CGI(){
 		me.env = env();
 	
-		if( haskey( me.env, "REQUEST_METHOD" ) != -1 ){
+		if( me.env.has( "REQUEST_METHOD" ) ){
 			if( me.env["REQUEST_METHOD"] == "POST" ){
 				me.env["POST"] = map();	
 
 				data = " ";
 				recv( CGI.stdin, data );
 				
-				duples = strsplit( data, "&" );
+				duples = data.split("&");
 				foreach( duple of duples ){
-					duple = strsplit( duple, "=" );
-					name  = (sizeof(duple) >= 1 ? duple[0] : "");
-					value = (sizeof(duple) >= 2 ? duple[1] : "");
+					( name, value ) = duple.split("=");
 					me.env["POST"][name] = value;
 				}	
 			}
 		}
 
-		if( haskey( me.env, "QUERY_STRING" ) != -1 ){
+		if( me.env.has( "QUERY_STRING" ) != -1 ){
 			me.env["GET"] = map();	
 			data = me.env["QUERY_STRING"];
 						
-			if( trim(data) != "" ){
-				duples = strsplit( data, "&" );
+			if( data.trim() != "" ){
+				duples = data.trim().split("&");
 				foreach( duple of duples ){
-					duple = strsplit( duple, "=" );
-					name  = (sizeof(duple) >= 1 ? duple[0] : "");
-					value = (sizeof(duple) >= 2 ? duple[1] : "");
+					( name, value ) = duple.split("=");
 					me.env["GET"][name] = value;
 				}		
 			}

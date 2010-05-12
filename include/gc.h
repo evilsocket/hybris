@@ -103,7 +103,7 @@ gc_list_t;
 /*
  * Threshold upon which an object is moved from the heap
  * space to the lag space, where 0.7 is 70% object collections
- * on the total collections counter
+ * on the total collections counter.
  */
 #define GC_LAGGING_THRESHOLD 		  0.7f
 /*
@@ -210,7 +210,6 @@ void            gc_release();
 #define gc_new_binary(d)     ob_binary_ucast( gc_track( ob_dcast( new BinaryObject(d) ),                       	    sizeof(BinaryObject) ) )
 #define gc_new_vector()      ob_vector_ucast( gc_track( ob_dcast( new VectorObject() ),                        	    sizeof(VectorObject) ) )
 #define gc_new_map()         ob_map_ucast(    gc_track( ob_dcast( new MapObject() ),                           	    sizeof(MapObject) ) )
-#define gc_new_matrix(r,c,v) ob_matrix_ucast( gc_track( ob_dcast( new MatrixObject(r,c,v) ),                   	    sizeof(MatrixObject) ) )
 #define gc_new_struct()      ob_struct_ucast( gc_track( ob_dcast( new StructureObject() ),                     	    sizeof(StructureObject) ) )
 #define gc_new_class()       ob_class_ucast(  gc_track( ob_dcast( new ClassObject() ),                              sizeof(ClassObject) ) )
 #define gc_new_reference(o)  ob_ref_ucast(    gc_track( ob_dcast( new ReferenceObject(o) ),                         sizeof(ReferenceObject) ) )

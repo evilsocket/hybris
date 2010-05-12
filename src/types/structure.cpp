@@ -47,16 +47,7 @@ size_t struct_get_size( Object *me ){
 }
 
 void struct_free( Object *me ){
-	StructureObjectAttributeIterator ai;
     StructureObject *sme = ob_struct_ucast(me);
-    Object          *vitem;
-
-    for( ai = sme->s_attributes.begin(); ai != sme->s_attributes.end(); ai++ ){
-    	vitem = (*ai)->value;
-		if( vitem ){
-			ob_free(vitem);
-		}
-    }
 
     sme->s_attributes.clear();
     sme->items = 0;
@@ -145,6 +136,8 @@ IMPLEMENT_TYPE(Structure) {
     "struct",
 	/** type basic size **/
     0,
+    /** type builtin methods **/
+    { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
     struct_typename, // type_name
@@ -228,6 +221,7 @@ IMPLEMENT_TYPE(Structure) {
     struct_set_attribute, // set_attribute
     struct_set_attribute_reference, // set_attribute_reference
     0, // define_method
-    0  // get_method
+    0, // get_method
+    0  // call_method
 };
 

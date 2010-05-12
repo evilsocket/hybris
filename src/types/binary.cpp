@@ -43,16 +43,9 @@ Object *binary_clone( Object *me ){
 }
 
 void binary_free( Object *me ){
-    BinaryObjectIterator i;
     BinaryObject *bme = (BinaryObject *)me;
-    Object       *item;
 
-    for( i = bme->value.begin(); i != bme->value.end(); i++ ){
-        item = *i;
-        if( item && ob_free(item) == true ){
-            bme->items--;
-        }
-    }
+    bme->items = 0;
     bme->value.clear();
 }
 
@@ -227,6 +220,8 @@ IMPLEMENT_TYPE(Binary) {
     "binary",
 	/** type basic size **/
     0,
+    /** type builtin methods **/
+    { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
     binary_typename, // type_name
@@ -310,6 +305,7 @@ IMPLEMENT_TYPE(Binary) {
     0, // set_attribute;
     0, // set_attribute_reference
     0, // define_method
-    0  // get_method
+    0, // get_method
+    0  // call_method
 };
 

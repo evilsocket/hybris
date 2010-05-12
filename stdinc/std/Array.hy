@@ -33,11 +33,11 @@ class Array {
 	} 
 
 	public method __size(){
-		return elements(me.__a);
+		return me.__a.size();
 	}
 
 	public method __to_string(){
-		return "( " + join( ", ", me.__a) + " )";
+		return "( " +  me.__a.join( ", " ) + " )";
 	}
 
 	operator [] ( index ){	

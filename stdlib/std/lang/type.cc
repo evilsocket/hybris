@@ -206,45 +206,6 @@ Object *xmlNode2Object( xmlNode *node ){
 		}
 		return ob_dcast( map );
 	}
-	else if( strcmp( (char *)node->name, "matrix" ) == 0 ){
-		vector<Object *> dummy;
-		MatrixObject *matrix = gc_new_matrix(0,0,dummy);
-		xmlNode *child = NULL,
-				*row   = NULL,
-				*item  = NULL;
-		int i, j;
-
-		matrix->rows    = 0;
-		matrix->columns = 0;
-		matrix->items   = 0;
-		matrix->matrix  = NULL;
-
-		i = 0;
-
-		for( child = node->children; child; child = child->next ){
-			if( strcmp( (char *)child->name, "rows" ) == 0 ){
-				matrix->rows   = atoi((char *)child->children->content);
-				matrix->matrix = new Object ** [matrix->rows];
-			}
-			else if( strcmp( (char *)child->name, "cols" ) == 0 ){
-				matrix->columns = atoi((char *)child->children->content);
-				for( int x = 0; x < matrix->rows; ++x ){
-					matrix->matrix[x] = new Object * [matrix->columns];
-				}
-			}
-			else if( strcmp( (char *)child->name, "row" ) == 0 ){
-				for( item = child->children, j = 0; item; item = item->next ){
-					if( item->type == XML_ELEMENT_NODE ){
-						matrix->matrix[i][j++] = xmlNode2Object(item);
-						matrix->items++;
-					}
-				}
-				++i;
-			}
-		}
-
-		return ob_dcast( matrix );
-	}
 	else if( strcmp( (char *)node->name, "struct" ) == 0 ){
 		Object  *structure = ob_dcast( gc_new_struct() );
 		xmlNode *child     = NULL;
@@ -309,20 +270,6 @@ string Object2Xml( Object *o, unsigned int tabs = 0 ){
 				xml << Object2Xml( ob_map_ucast(o)->values[i], tabs + 1 );
 			}
 			xml << xtabs << "</map>\n";
-		break;
-		case otMatrix :
-            xml << xtabs << "<matrix>\n";
-            xml << xtabs << "\t" << "<rows>" << ob_matrix_ucast(o)->rows    << "</rows>\n";
-            xml << xtabs << "\t" << "<cols>" <<ob_matrix_ucast(o)->columns << "</cols>\n";
-
-            for( i = 0; i < ob_matrix_ucast(o)->rows; ++i ){
-                xml << xtabs << "\t" << "<row>\n";
-                for( j = 0; j < ob_matrix_ucast(o)->columns; ++j ){
-                    xml << Object2Xml( ob_matrix_ucast(o)->matrix[i][j], tabs + 2 );
-                }
-                xml << xtabs << "\t" << "</row>\n";
-            }
-            xml << xtabs << "</matrix>\n";
 		break;
 
 		case otStructure :

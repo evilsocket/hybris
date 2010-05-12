@@ -437,6 +437,12 @@ Node *ref_get_method( Object *me, char *name, int argc ){
 	return ob_get_method( ob_ref_ucast(me)->value, name, argc );
 }
 
+Object *ref_call_method( engine_t *engine, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
+	REF_IS_NULL_PTR_RET(me,NULL);
+
+	return ob_call_method( engine, frame, me, me_id, method_id, argv );
+}
+
 IMPLEMENT_TYPE(Reference) {
     /** type code **/
     otReference,
@@ -444,6 +450,8 @@ IMPLEMENT_TYPE(Reference) {
     "reference",
 	/** type basic size **/
     sizeof( Object * ),
+    /** type builtin methods **/
+    { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
     ref_typename, // type_name
@@ -527,6 +535,7 @@ IMPLEMENT_TYPE(Reference) {
     ref_set_attribute, // set_attribute
     ref_set_attribute_reference,  // set_attribute_reference
     ref_define_method, // define_method
-    ref_get_method  // get_method
+    ref_get_method,  // get_method
+    ref_call_method // call_method
 };
 

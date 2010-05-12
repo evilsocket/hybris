@@ -27,7 +27,7 @@ class Map {
 	}
 
 	public method __size(){
-		return mapelements(me.__m);
+		return me.__m.size();
 	}
 
 	public method __to_string(){
@@ -38,11 +38,11 @@ class Map {
 			ks[] = k;
 			vs[] = v;
 		}		
-		return "{ " + join( ", ", ks ) + " } . { " + join( ", ", vs ) + " }";
+		return "{ " + ks.join( ", " ) + " } . { " + vs.join( ", " ) + " }";
 	}
 
 	public method __attribute( name ){
-		if( haskey( me.__m, name ) == -1 ){
+		if( me.__m.has(name) == false){
 			me.__m[name] = null;
 		}
 		return me.__m[name];

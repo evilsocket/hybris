@@ -385,6 +385,8 @@ IMPLEMENT_TYPE(Float) {
     "float",
 	/** type basic size **/
     sizeof(double),
+    /** type builtin methods **/
+    { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
     float_typename, // type_name
@@ -468,6 +470,7 @@ IMPLEMENT_TYPE(Float) {
     0, // set_attribute;
     0, // set_attribute_reference
     0, // define_method
-    0  // get_method
+    0, // get_method
+    0  // call_method
 };
 

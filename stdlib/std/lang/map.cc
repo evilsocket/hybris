@@ -19,19 +19,9 @@
 #include <hybris.h>
 
 HYBRIS_DEFINE_FUNCTION(hmap);
-HYBRIS_DEFINE_FUNCTION(hmapelements);
-HYBRIS_DEFINE_FUNCTION(hmappop);
-HYBRIS_DEFINE_FUNCTION(hunmap);
-HYBRIS_DEFINE_FUNCTION(hismapped);
-HYBRIS_DEFINE_FUNCTION(hhaskey);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "map", hmap },
-	{ "mapelements", hmapelements },
-	{ "mappop", hmappop },
-	{ "unmap", hunmap },
-	{ "ismapped", hismapped },
-	{ "haskey", hhaskey },
 	{ "", NULL }
 };
 
@@ -45,69 +35,4 @@ HYBRIS_DEFINE_FUNCTION(hmap){
 		ob_cl_set( map, ob_argv(i), ob_argv(i + 1) );
 	}
 	return map;
-}
-
-HYBRIS_DEFINE_FUNCTION(hmapelements){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'mapelements' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_type_assert( ob_argv(0), otMap );
-
-    return ob_dcast( gc_new_integer( ob_map_ucast(ob_argv(0))->items ) );
-}
-
-HYBRIS_DEFINE_FUNCTION(hmappop){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'mappop' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_type_assert( ob_argv(0), otMap );
-
-	return ob_cl_pop( ob_argv(0) );
-}
-
-HYBRIS_DEFINE_FUNCTION(hunmap){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'unmap' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_type_assert( ob_argv(0), otMap );
-
-	return ob_cl_remove( ob_argv(0), ob_argv(1) );
-}
-
-HYBRIS_DEFINE_FUNCTION(hismapped){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'ismapped' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_type_assert( ob_argv(0), otMap );
-
-	Object *map  = ob_argv(0),
-           *find = ob_argv(1);
-	unsigned int i;
-
-	for( i = 0; i < ob_map_ucast(map)->items; ++i ){
-		if( ob_cmp( ob_map_ucast(map)->values[i], find ) == 0 ){
-			return ob_dcast( gc_new_integer(i) );
-		}
-	}
-
-	return H_DEFAULT_ERROR;
-}
-
-HYBRIS_DEFINE_FUNCTION(hhaskey){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'haskey' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_type_assert( ob_argv(0), otMap );
-
-	Object *map = ob_argv(0),
-	       *key = ob_argv(1);
-	unsigned int i;
-
-	for( i = 0; i < ob_map_ucast(map)->items; ++i ){
-		if( ob_cmp( ob_map_ucast(map)->keys[i], key ) == 0 ){
-			return ob_dcast( gc_new_integer(i) );
-		}
-	}
-
-	return H_DEFAULT_ERROR;
 }

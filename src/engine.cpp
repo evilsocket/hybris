@@ -62,7 +62,7 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 		stack.insert( "me", cobj );
 	}
 	/*
-	 * Evaluate each object and increment references
+	 * Evaluate each object and insert it into the stack
 	 */
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->child(i) );
@@ -94,7 +94,7 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t &stack, str
 
 	stack.insert( "me", cobj );
 	/*
-	 * Evaluate each object and increment references
+	 * Evaluate each object and insert it into the stack
 	 */
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
@@ -640,84 +640,8 @@ Object *engine_on_member_request( engine_t *engine, vframe_t *frame, Node *node 
 	}
 	else if( member->type() == H_NT_CALL ){
 		name   = (char *)member->value.m_call.c_str();
-		argc   = member->children();
-		method = ob_get_method( cobj, name, argc );
-		/*
-		 * Method not found.
-		 */
-		if( method == H_UNDEFINED ){
-			/*
-			 * Try to call the __method descriptor if it's overloaded.
-			 */
-			result = ob_call_undefined_method( engine->vm, cobj, owner_id, name, member );
-			if( result == H_UNDEFINED ){
-				hyb_error( H_ET_SYNTAX, "'%s' is not a method of object '%s'", name, ob_typename(cobj) );
-			}
-			else{
-				return result;
-			}
-		}
 
-		/*
-		 * If the method access specifier is not asPublic, only the identifier
-		 * "me" can use the method.
-		 */
-		if( method->value.m_access != asPublic && strcmp( owner_id, "me" ) != 0 ){
-			/*
-			 * The method is protected.
-			 */
-			if( method->value.m_access == asProtected ){
-				hyb_error( H_ET_SYNTAX, "Protected method '%s' can be accessed only by derived classes of '%s'", name, ob_typename(cobj) );
-			}
-			/*
-			 * The method is private..
-			 */
-			else{
-				hyb_error( H_ET_SYNTAX, "Private method '%s' can be accessed only within '%s' class", name, ob_typename(cobj) );
-			}
-		}
-
-		/*
-		 * The last child of a method is its body itself, so we compare
-		 * call children with method->children() - 1 to ignore the body.
-		 */
-		method_argc = method->children() - 1;
-		method_argc = (method_argc < 0 ? 0 : method_argc);
-
-		if( method->value.m_vargs ){
-			if( argc < method_argc ){
-				hyb_error( H_ET_SYNTAX, "method '%s' requires at least %d parameters (called with %d)",
-										name,
-										method_argc,
-										argc );
-		   }
-		}
-		else{
-			if( argc != method_argc ){
-				hyb_error( H_ET_SYNTAX, "method '%s' requires %d parameters (called with %d)",
-										 name,
-										 method_argc,
-										 argc );
-			}
-		}
-
-		engine_prepare_stack( engine, frame, stack, ob_typename(cobj) + string("::") + name, cobj, argc, method, member );
-
-		/* call the method */
-		result = engine_exec( engine, &stack, method->callBody() );
-
-		engine_dismiss_stack( engine, stack );
-
-		/*
-		 * Check for unhandled exceptions and put them on the root
-		 * memory frame.
-		 */
-		if( stack.state.is(Exception) ){
-			frame->state.set( Exception, stack.state.value );
-		}
-
-		/* return method evaluation value */
-		return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
+		return ob_call_method( engine, frame, cobj, owner_id, name, member );
 	}
 	else{
 		/*

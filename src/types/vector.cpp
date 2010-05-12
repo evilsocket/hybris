@@ -18,7 +18,62 @@
 */
 #include "common.h"
 #include "types.h"
+#include "vm.h"
 
+/** builtin methods **/
+Object *__vector_size( engine_t *engine, Object *me, vframe_t *data ){
+	return (Object *)gc_new_integer( ob_vector_ucast(me)->items );
+}
+
+Object *__vector_pop( engine_t *engine, Object *me, vframe_t *data ){
+	return (Object *)ob_cl_pop( me );
+}
+
+Object *__vector_remove( engine_t *engine, Object *me, vframe_t *data ){
+	if( ob_argc() != 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'remove' requires 1 parameter (called with %d)", ob_argc() );
+	}
+
+	return (Object *)ob_cl_remove( me, ob_argv(0) );
+}
+
+Object *__vector_contains( engine_t *engine, Object *me, vframe_t *data ){
+	if( ob_argc() != 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'contains' requires 1 parameter (called with %d)", ob_argc() );
+	}
+
+	Object *array = me,
+		   *find  = ob_argv(0);
+	IntegerObject index(0);
+	unsigned int size( ob_get_size(array) );
+
+	for( ; index.value < size; ++index.value ){
+		if( ob_cmp( ob_cl_at( array, (Object *)&index ), find ) == 0 ){
+			return (Object *)gc_new_boolean(true);
+		}
+	}
+
+	return (Object *)gc_new_boolean(false);
+}
+
+Object *__vector_join( engine_t *engine, Object *me, vframe_t *data ){
+	if( ob_argc() != 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'join' requires 1 parameter (called with %d)", ob_argc() );
+	}
+
+	Object *array = me;
+	string  glue  = ob_svalue( ob_argv(0) ),
+			join;
+	unsigned int i, items(ob_vector_ucast(array)->items);
+
+	for( i = 0; i < items; ++i ){
+		join += ob_svalue(ob_vector_ucast(array)->value[i]) + ( i < items - 1 ? glue : "");
+	}
+
+	return (Object *)gc_new_string(join.c_str());
+}
+
+/** generic function pointers **/
 const char *vector_typename( Object *o ){
 	return o->type->name;
 }
@@ -27,7 +82,6 @@ Object *vector_traverse( Object *me, int index ){
 	return (index >= ((VectorObject *)me)->value.size() ? NULL : ((VectorObject *)me)->value.at(index));
 }
 
-/** generic function pointers **/
 Object *vector_clone( Object *me ){
     VectorObjectIterator i;
     VectorObject *vclone = gc_new_vector(),
@@ -41,16 +95,9 @@ Object *vector_clone( Object *me ){
 }
 
 void vector_free( Object *me ){
-    VectorObjectIterator i;
     VectorObject *vme = ob_vector_ucast(me);
-    Object       *item;
 
-    for( i = vme->value.begin(); i != vme->value.end(); i++ ){
-        item = *i;
-        if( item && ob_free(item) == true ){
-            vme->items--;
-        }
-    }
+    vme->items = 0;
     vme->value.clear();
 }
 
@@ -220,6 +267,54 @@ Object *vector_cl_set_reference( Object *me, Object *i, Object *v ){
     return me;
 }
 
+Object *vector_call_method( engine_t *engine, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
+	size_t i(0);
+	ob_type_builtin_method_t *method  = NULL,
+							 *builtin = NULL;
+	do{
+		if( me->type->builtin_methods[i].name == method_id ){
+			method = me->type->builtin_methods[i].method;
+			break;
+		}
+	}
+	while( me->type->builtin_methods[++i].method != NULL );
+
+	if( method == NULL ){
+		hyb_error( H_ET_SYNTAX, "String type does not have a '%s' method", method_id );
+	}
+
+	Object  *value,
+			*result;
+	vframe_t stack;
+	size_t   argc = argv->children();
+
+	stack.owner = ob_typename(me) + string("::") + method_id;
+	/*
+	 * Evaluate each object and insert it into the stack
+	 */
+	for( i = 0; i < argc; ++i ){
+		value = engine_exec( engine, frame, argv->child(i) );
+		stack.push( value );
+	}
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( engine->vm, &stack );
+
+	/* execute the method */
+	result = ((ob_type_builtin_method_t)method)( engine, me, &stack );
+
+	/*
+	 * Dismiss the stack.
+	 */
+	vm_pop_frame( engine->vm );
+
+	/* return method evaluation value */
+	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
+}
+
+static ob_builtin_methods_t __vector_builtin_methods;
+
 IMPLEMENT_TYPE(Vector) {
     /** type code **/
     otVector,
@@ -227,6 +322,15 @@ IMPLEMENT_TYPE(Vector) {
     "vector",
 	/** type basic size **/
     0,
+    /** type builtin methods **/
+    {
+		{ "size",  (ob_type_builtin_method_t *)__vector_size },
+		{ "pop",  (ob_type_builtin_method_t *)__vector_pop },
+		{ "remove",  (ob_type_builtin_method_t *)__vector_remove },
+		{ "contains",  (ob_type_builtin_method_t *)__vector_contains },
+		{ "join",  (ob_type_builtin_method_t *)__vector_join },
+		{ OB_BUILIN_METHODS_END_MARKER }
+    },
 
 	/** generic function pointers **/
     vector_typename, // type_name
@@ -310,6 +414,7 @@ IMPLEMENT_TYPE(Vector) {
     0, // set_attribute;
     0, // set_attribute_reference
     0, // define_method
-    0  // get_method
+    0, // get_method
+    vector_call_method  // call_method
 };
 

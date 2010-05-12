@@ -259,9 +259,6 @@ void class_free( Object *me ){
 		 * of the program.
 		 */
 		if( attribute->is_static == false ){
-			if( attribute->value ){
-				ob_free( attribute->value );
-			}
 			delete attribute;
 		}
 	}
@@ -614,6 +611,127 @@ Node *class_get_method( Object *me, char *name, int argc ){
 	}
 }
 
+Object *class_call_method( engine_t *engine, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
+	size_t 	 method_argc,
+			 i,
+		 	 argc   = argv->children();
+	Object  *value  = H_UNDEFINED,
+			*result = H_UNDEFINED;
+	Node    *method = class_get_method( me, method_id, argc );
+	vframe_t stack;
+
+	/*
+	 * Method not found.
+	 */
+	if( method == H_UNDEFINED ){
+		/*
+		 * Try to call the __method descriptor if it's overloaded.
+		 */
+		result = ob_call_undefined_method( engine->vm, me, me_id, method_id, argv );
+		if( result == H_UNDEFINED ){
+			hyb_error( H_ET_SYNTAX, "'%s' is not a method of object '%s'", method_id, ob_typename(me) );
+		}
+		else{
+			return result;
+		}
+	}
+
+	/*
+	 * If the method access specifier is not asPublic, only the identifier
+	 * "me" can use the method.
+	 */
+	if( method->value.m_access != asPublic && strcmp( me_id, "me" ) != 0 ){
+		/*
+		 * The method is protected.
+		 */
+		if( method->value.m_access == asProtected ){
+			hyb_error( H_ET_SYNTAX, "Protected method '%s' can be accessed only by derived classes of '%s'", method_id, ob_typename(me) );
+		}
+		/*
+		 * The method is private..
+		 */
+		else{
+			hyb_error( H_ET_SYNTAX, "Private method '%s' can be accessed only within '%s' class", method_id, ob_typename(me) );
+		}
+	}
+
+	/*
+	 * The last child of a method is its body itself, so we compare
+	 * call children with method->children() - 1 to ignore the body.
+	 */
+	method_argc = method->children() - 1;
+	method_argc = (method_argc < 0 ? 0 : method_argc);
+
+	if( method->value.m_vargs ){
+		if( argc < method_argc ){
+			hyb_error( H_ET_SYNTAX, "method '%s' requires at least %d parameters (called with %d)",
+									method_id,
+									method_argc,
+									argc );
+	   }
+	}
+	else{
+		if( argc != method_argc ){
+			hyb_error( H_ET_SYNTAX, "method '%s' requires %d parameters (called with %d)",
+									 method_id,
+									 method_argc,
+									 argc );
+		}
+	}
+
+	/*
+	 * Check for heavy recursions and/or nested calls.
+	 */
+	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+	}
+	/*
+	 * Set the stack owner
+	 */
+	stack.owner = ob_typename(me) + string("::") + method_id;
+	/*
+	 * Static methods can not use 'me' instance.
+	 */
+	if( method->value.m_static == false ){
+		stack.insert( "me", me );
+	}
+	/*
+	 * Evaluate each object and insert it into the stack
+	 */
+	for( i = 0; i < argc; ++i ){
+		value = engine_exec( engine, frame, argv->child(i) );
+		if( i >= argc ){
+			stack.push( value );
+		}
+		else{
+			stack.insert( (char *)method->child(i)->value.m_identifier.c_str(), value );
+		}
+	}
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( engine->vm, &stack );
+
+	/* execute the method */
+	result = engine_exec( engine, &stack, method->callBody() );
+
+	/*
+	 * Dismiss the stack.
+	 */
+	vm_pop_frame( engine->vm );
+
+	/*
+	 * Check for unhandled exceptions and put them on the root
+	 * memory frame.
+	 */
+	if( stack.state.is(Exception) ){
+		frame->state.set( Exception, stack.state.value );
+	}
+
+	/* return method evaluation value */
+	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
+}
+
 IMPLEMENT_TYPE(Class) {
     /** type code **/
     otClass,
@@ -621,6 +739,8 @@ IMPLEMENT_TYPE(Class) {
     "class",
 	/** type basic size **/
     0,
+    /** type builtin methods **/
+    { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
     class_typename, // type_name
@@ -704,6 +824,7 @@ IMPLEMENT_TYPE(Class) {
     class_set_attribute, // set_attribute
     class_set_attribute_reference,  // set_attribute_reference
     class_define_method, // define_method
-    class_get_method  // get_method
+    class_get_method,  // get_method
+    class_call_method  // call_method
 };
 

@@ -145,6 +145,8 @@ IMPLEMENT_TYPE(Handle) {
     "handle",
 	/** type basic size **/
     sizeof(void *),
+    /** type builtin methods **/
+    { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
     handle_typename, // type_name
@@ -228,6 +230,7 @@ IMPLEMENT_TYPE(Handle) {
     0, // set_attribute;
     0, // set_attribute_reference
     0, // define_method
-    0  // get_method
+    0, // get_method
+    0  // call_method
 };
 

@@ -311,7 +311,6 @@ void gc_collect( vm_t *vm ){
     	vframe_t *frame;
     	size_t j, size;
 
-
     	/*
     	 * Lock the virtual machine to prevent new frames to be added.
     	 */

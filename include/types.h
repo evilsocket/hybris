@@ -34,6 +34,15 @@ using std::vector;
 using std::string;
 
 typedef unsigned char byte;
+/*
+ * Pre declarations of useful types.
+ */
+class Node;
+class MemorySegment;
+typedef struct _vm_t 	 vm_t;
+typedef struct _engine_t engine_t;
+typedef MemorySegment vmem_t;
+typedef MemorySegment vframe_t;
 
 /*
  *  Helper macro to obtain the address of a pointer
@@ -106,6 +115,26 @@ typedef struct _Object {
     BASE_OBJECT_HEADER;
 }
 Object;
+/*
+ * Function pointer prototype for objects builtin methods (if any).
+ */
+typedef Object * (*ob_type_builtin_method_t)( engine_t *, Object *, vframe_t * );
+/*
+ * Type builtin methods map.
+ */
+typedef struct {
+	string 					  name;
+	ob_type_builtin_method_t *method;
+}
+ob_builtin_methods_t;
+/*
+ * Max number of builtin methods a type can have.
+ */
+#define OB_MAX_BUILTIN_METHODS 100
+/*
+ * End marker for builtin methods map.
+ */
+#define OB_BUILIN_METHODS_END_MARKER { "", NULL }
 
 #ifndef H_ACCESS_SPECIFIER
 	enum access_t {
@@ -115,9 +144,6 @@ Object;
 	};
 #	define H_ACCESS_SPECIFIER
 #endif
-
-class Node;
-typedef struct _vm_t vm_t;
 
 /*
  * Type function pointers descriptors .
@@ -169,6 +195,7 @@ typedef void     (*ob_set_attribute_function_t) ( Object *, char *, Object * );
 // functions to manage class methods
 typedef void     (*ob_define_method_function_t) ( Object *, char *, Node * );
 typedef Node   * (*ob_get_method_function_t)	( Object *, char *, int );
+typedef Object * (*ob_call_method_function_t)	( engine_t *, vframe_t *, Object *, char *, char *, Node * );
 /*
  * Object type codes enumeration.
  */
@@ -182,7 +209,6 @@ enum H_OBJECT_TYPE {
     otBinary,
     otVector,
     otMap,
-    otMatrix,
     otAlias,
     otExtern,
     otHandle,
@@ -202,7 +228,6 @@ __force_inline const char *ob_type_to_string( H_OBJECT_TYPE type ){
 		case otBinary    : return "binary";
 		case otVector    : return "vector";
 		case otMap       : return "map";
-		case otMatrix    : return "matrix";
 		case otAlias     : return "alias";
 		case otExtern    : return "extern";
 		case otHandle    : return "handle";
@@ -240,6 +265,10 @@ typedef struct _object_type_t {
      * and ob_get_size will return the number of its elements.
      */
     size_t        size;
+    /*
+     * Type builtin methods map.
+     */
+    ob_builtin_methods_t builtin_methods[OB_MAX_BUILTIN_METHODS];
 
     /** generic function pointers **/
     ob_typename_function_t      type_name;
@@ -326,6 +355,7 @@ typedef struct _object_type_t {
     /** class operators **/
     ob_define_method_function_t define_method;
     ob_get_method_function_t    get_method;
+    ob_call_method_function_t   call_method;
 }
 object_type_t;
 
@@ -648,13 +678,17 @@ void    ob_define_method( Object *c, char *name, Node *code );
  */
 Node   *ob_get_method( Object *c, char *name, int argc = -1 );
 /*
+ * Execute a class method.
+ */
+Object *ob_call_method( engine_t *engine, vframe_t *frame, Object *owner, char *owner_id, char *method_id, Node *argv );
+/*
+* Special function to execute a class method.
+*/
+Object *ob_call_method( vm_t *vm, Object *c, char *c_name, char *method_name, Object *argv );
+/*
  * Special function to execute a __method class descriptor.
  */
 Object *ob_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *method_name, Node *argv );
-/*
- * Special function to execute a class method.
- */
-Object *ob_call_method( vm_t *vm, Object *c, char *c_name, char *method_name, Object *argv );
 
 /**
  * Types definition.
@@ -862,74 +896,6 @@ typedef vector<Object *>::iterator MapObjectIterator;
 #define ob_is_map(o)    ob_is_typeof(o,Map)
 #define ob_map_ucast(o) ((MapObject *)(o))
 #define ob_map_val(o)	(MapObject *)(o)
-
-DECLARE_TYPE(Matrix);
-
-typedef struct _MatrixObject {
-    BASE_OBJECT_HEADER;
-    size_t    items;
-    size_t    rows;
-    size_t    columns;
-    Object ***matrix;
-
-    _MatrixObject() : BASE_OBJECT_HEADER_INIT(Matrix), items(0), rows(0), columns(0) {
-
-    }
-
-    _MatrixObject( size_t _rows, size_t _columns ) : BASE_OBJECT_HEADER_INIT(Matrix) {
-        size_t x, y;
-
-        rows    = _rows;
-        columns = _columns;
-        items   = rows * columns;
-        matrix  = new Object ** [rows];
-
-        for( x = 0; x < rows; ++x ){
-            matrix[x] = new Object * [columns];
-        }
-
-        for( x = 0; x < rows; ++x ){
-            for( y = 0; y < columns; ++y ){
-                matrix[x][y] = (Object *)&matrix;
-            }
-        }
-    }
-
-    _MatrixObject( size_t _rows, size_t _columns, vector<Object *>& data ) : BASE_OBJECT_HEADER_INIT(Matrix) {
-        size_t x, y;
-
-        rows    = _rows;
-        columns = _columns;
-        items   = rows * columns;
-        matrix  = new Object ** [rows];
-
-        for( x = 0; x < rows; ++x ){
-            matrix[x] = new Object * [columns];
-        }
-
-        if( data.size() ){
-            for( x = 0; x < rows; ++x ){
-                for( y = 0; y < columns; ++y ){
-                    Object * o   = data[ x * columns + y ];
-                    matrix[x][y] = o;
-                }
-            }
-        }
-        else{
-            for( x = 0; x < rows; ++x ){
-                for( y = 0; y < columns; ++y ){
-                    Object * o   = (Object *)gc_new_integer(0);
-                    matrix[x][y] = o;
-                }
-            }
-        }
-    }
-}
-MatrixObject;
-
-#define ob_is_matrix(o)      ob_is_typeof(o,Matrix)
-#define ob_matrix_ucast(o)   ((MatrixObject *)(o))
-#define ob_matrix_val(o)     ((MatrixObject *)o)
 
 DECLARE_TYPE(Structure);
 

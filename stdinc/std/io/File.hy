@@ -16,9 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 import std.io.file;
-import std.lang.string;
 
 class File {
 	
@@ -31,7 +29,7 @@ class File {
 	}
 
 	private method isBinary(){
-		return strfind( me.mode, "b");
+		return me.mode.find("b") != false;
 	}
 	
 	public method File ( file ){
@@ -110,7 +108,7 @@ class File {
 	}
 
 	public method readType ( type ){
-		if ( me.isBinary() == -1 ) {
+		if ( me.isBinary() == false ) {
 			return -1;
 		}
 		if ( fread (me.file, type ) > 0 ) {
@@ -126,7 +124,7 @@ class File {
 	}
 
 	public method readType ( type, bytes ){
-		if ( me.isBinary() == -1 ) {
+		if ( me.isBinary() == false ) {
 			return -1;
 		}
 		if ( fread (me.file, type, bytes ) > 0){
@@ -138,7 +136,7 @@ class File {
 	}
 
 	public method readType ( type, seek, seekType ){
-		if ( ( me.isBinary() == -1 ) | ( me.seek( seek, seekType) == 0 ) ) {
+		if ( ( me.isBinary() == false ) | ( me.seek( seek, seekType) == 0 ) ) {
 			return -1;
 		}
 
@@ -146,7 +144,7 @@ class File {
 	}
 	
 	public method  readType(  type, bytes, seek, seekType){
-		if ( ( me.isBinary() == -1 ) | ( me.seek( seek, seekType) == 0 ) ) {
+		if ( ( me.isBinary() == false ) | ( me.seek( seek, seekType) == 0 ) ) {
 			return -1;
 		}
 

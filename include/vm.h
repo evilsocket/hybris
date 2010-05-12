@@ -67,7 +67,6 @@ typedef Object * (*function_t)( vm_t *, vmem_t * );
 #define binary_argv(i) ob_binary_val( data->at(i) )
 #define vector_argv(i) ob_vector_val( data->at(i) )
 #define map_argv(i)    ob_map_val( data->at(i) )
-#define matrix_argv(i) ob_matrix_val( data->at(i) )
 #define struct_argv(i) ob_struct_val( data->at(i) )
 #define class_argv(i)  ob_class_val( data->at(i) )
 #define handle_argv(i) ob_handle_val( data->at(i) )
