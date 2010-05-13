@@ -54,7 +54,7 @@ Restituisce il numero di caratteri che contiene la stringa .
 
 <p>
 
-Cerca una stringa o un carattere all&#039;interno della stringa principale, restituisce l&#039;indice dell&#039;elemento trovato o <strong>false</strong> in caso non ci sia alcun match.
+Cerca una stringa o un carattere all&#039;interno della stringa principale, restituisce l&#039;indice dell&#039;elemento trovato o <strong>-1</strong> in caso non ci sia alcun match.
 </p>
 <pre class="code hybris">s <span class="sy0">=</span> <span class="st0">&quot;hello world&quot;</span><span class="sy0">;</span>
 &nbsp;
@@ -62,10 +62,10 @@ Cerca una stringa o un carattere all&#039;interno della stringa principale, rest
 &nbsp;
 <span class="kw3">println</span><span class="br0">&#40;</span> s.<span class="me1">find</span><span class="br0">&#40;</span><span class="st0">&quot;foo&quot;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">6
-false</pre>
+-1</pre>
 
 </div>
-<!-- SECTION "find( str )" [890-1181] -->
+<!-- SECTION "find( str )" [890-1175] -->
 <h2><a name="substr_index_length_opzionale" id="substr_index_length_opzionale">substr( index, length (opzionale) )</a></h2>
 <div class="level2">
 
@@ -83,7 +83,7 @@ Se il parametro length non è specificato, restituisce una sottostringa dall&#03
 worl</pre>
 
 </div>
-<!-- SECTION "substr( index, length (opzionale) )" [1182-1552] -->
+<!-- SECTION "substr( index, length (opzionale) )" [1176-1546] -->
 <h2><a name="substr_find_replace" id="substr_find_replace">substr( find, replace )</a></h2>
 <div class="level2">
 
@@ -97,7 +97,7 @@ Restituisce una stringa tutte le occorrenze di &#039;find&#039; nella quale sono
 <pre class="code">hello hybris</pre>
 
 </div>
-<!-- SECTION "substr( find, replace )" [1553-1793] -->
+<!-- SECTION "substr( find, replace )" [1547-1787] -->
 <h2><a name="split_separator" id="split_separator">split( separator )</a></h2>
 <div class="level2">
 
@@ -116,7 +116,7 @@ Divide la stringa in un array di stringhe, utilizzando il separatore specificato
 }</pre>
 
 </div>
-<!-- SECTION "split( separator )" [1794-2060] -->
+<!-- SECTION "split( separator )" [1788-2054] -->
 <h2><a name="trim" id="trim">trim()</a></h2>
 <div class="level2">
 
@@ -130,7 +130,7 @@ Elimina ogni carattere “white space” (tab, new line, line feed, ecc) dall&#0
 <pre class="code">hello world</pre>
 
 </div>
-<!-- SECTION "trim()" [2061-2336] -->
+<!-- SECTION "trim()" [2055-2330] -->
 <h1><a name="esempio" id="esempio">Esempio</a></h1>
 <div class="level1">
 <pre class="code hybris"> <span class="co1">// dichiaro una stringa</span>
@@ -150,7 +150,7 @@ Elimina ogni carattere “white space” (tab, new line, line feed, ecc) dall&#0
 Stringa modificata : ’abcdefghijkl‘</pre>
 
 </div>
-<!-- SECTION "Esempio" [2337-] --><div class="footnotes">
+<!-- SECTION "Esempio" [2331-] --><div class="footnotes">
 <div class="fn"><sup><a href="#fnt__1" id="fn__1" name="fn__1" class="fn_bot">1)</a></sup> 
 La grandezza di una stringa è ottenibile sia con la funzione <strong>strlen</strong> che più genericamente con <strong>sizeof</strong> .</div>
 <div class="fn"><sup><a href="#fnt__2" id="fn__2" name="fn__2" class="fn_bot">2)</a></sup> 
