@@ -172,7 +172,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 	ob_type_assert( ob_argv(0), otString );
 	ob_type_assert( ob_argv(1), otString );
 	ob_type_assert( ob_argv(2), otMap );
-	if( ob_argc() >= 3 ){
+	if( ob_argc() >= 4 ){
 		ob_type_assert( ob_argv(3), otInteger );
 	}
 
@@ -188,7 +188,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 		   page = string_argv(1),
 		   url;
 	unsigned int i,
-				 dohead = (ob_argc() >= 3 ? ob_lvalue( ob_argv(3) ) : 0),
+				 dohead = (ob_argc() >= 4 ? ob_lvalue( ob_argv(3) ) : 0),
 				 https  = !strncmp( "https://", host.c_str(), 8 );
 
 	cd = curl_easy_init();
@@ -219,7 +219,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 		curl_easy_setopt( cd, CURLOPT_SSL_VERIFYHOST, 0L );
 	}
 
-	if( ob_argc() >= 4 ){
+	if( ob_argc() >= 5 ){
 		ob_type_assert( ob_argv(4), otMap );
 		string header;
 		MapObject *headers = map_argv(4);
