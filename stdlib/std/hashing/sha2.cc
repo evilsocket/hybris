@@ -309,11 +309,11 @@ HYBRIS_DEFINE_FUNCTION(hsha2){
     if( ob_argc() < 1 ){
         hyb_error( H_ET_SYNTAX, "function 'sha2' requires at least 1 parameter (called with %d)", ob_argc() );
     }
-    ob_type_assert( ob_argv(0), otString );
+    ob_argv_type_assert( 0, otString, "sha2" );
 
     int is224 = SHA256;
     if( ob_argc() == 2 ){
-		ob_type_assert( ob_argv(1), otInteger );
+    	ob_argv_type_assert( 1, otInteger, "sha2" );
 		is224 = int_argv(1);
 		if( is224 != SHA256 && is224 != SHA224 ){
 			 hyb_error( H_ET_SYNTAX, "function 'sha2' admits as second parameter only SHA256 or SHA224 constants" );

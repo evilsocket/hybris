@@ -83,7 +83,7 @@ Object *__string_find( engine_t *engine, Object *me, vframe_t *data ){
 	if(  ob_argc() < 1 ){
 		hyb_error( H_ET_SYNTAX, "method 'find' requires 1 parameter (called with %d)",  ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otString );
+	ob_type_assert( ob_argv(0), otString, "find" );
 
 	int found = ob_string_ucast(me)->value.find( string_argv(0) );
 
@@ -94,11 +94,11 @@ Object *__string_substr( engine_t *engine, Object *me, vframe_t *data ){
 	if( ob_argc() < 1 ){
 		hyb_error( H_ET_SYNTAX, "method 'substr' requires at least 1 parameter (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otInteger );
+	ob_type_assert( ob_argv(0), otInteger, "substr" );
 
 	string sub;
 	if( ob_argc() == 2 ){
-		ob_type_assert( ob_argv(1), otInteger );
+		ob_type_assert( ob_argv(1), otInteger, "substr" );
 		sub = ob_string_ucast(me)->value.substr( ob_ivalue( ob_argv(0) ), ob_ivalue( ob_argv(1) ) );
 	}
 	else{
@@ -112,8 +112,8 @@ Object *__string_replace( engine_t *engine, Object *me, vframe_t *data ){
 	if( ob_argc() < 2 ){
 		hyb_error( H_ET_SYNTAX, "method 'replace' requires 2 parameters (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otString );
-	ob_type_assert( ob_argv(1), otString );
+	ob_type_assert( ob_argv(0), otString, "replace" );
+	ob_type_assert( ob_argv(1), otString, "replace" );
 
 	string str  = ob_string_ucast(me)->value,
 		   find = string_argv(0),
@@ -131,7 +131,7 @@ Object *__string_split( engine_t *engine, Object *me, vframe_t *data ){
 	if( ob_argc() < 1 ){
 		hyb_error( H_ET_SYNTAX, "method 'split' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	ob_types_assert( ob_argv(0), otString, otChar );
+	ob_types_assert( ob_argv(0), otString, otChar, "split" );
 
 	string str = ob_string_ucast(me)->value,
 		   tok = ob_svalue( ob_argv(0) );

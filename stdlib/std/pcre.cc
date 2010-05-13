@@ -30,9 +30,9 @@ HYBRIS_DEFINE_FUNCTION(hpcre_replace){
 	if( ob_argc() != 3 ){
 		hyb_error( H_ET_SYNTAX, "function 'pcre_replace' requires 2 parameters (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otString );
-	ob_type_assert( ob_argv(1), otString );
-	ob_types_assert( ob_argv(2), otString, otChar );
+	ob_argv_type_assert( 0, otString, "pcre_replace" );
+	ob_argv_type_assert( 1, otString, "pcre_replace" );
+	ob_argv_types_assert( 2, otString, otChar, "pcre_replace" );
 
 	string rawreg  = string_argv(0).c_str(),
 		   subject = string_argv(1).c_str(),

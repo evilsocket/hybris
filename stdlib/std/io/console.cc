@@ -123,8 +123,8 @@ HYBRIS_DEFINE_FUNCTION(hprintf){
 	else if( ob_argc() > PRINTF_MAX_ARGS ){
 		hyb_error( H_ET_SYNTAX, "function 'printf' supports at max %d parameters (called with %d)", PRINTF_MAX_ARGS, ob_argc() );
 	}
+	ob_argv_type_assert( 0, otString, "printf" );
 
-	ob_type_assert( ob_argv(0), otString );
 
 	typedef int (* function_t)(void);
 	function_t function = (function_t)printf;

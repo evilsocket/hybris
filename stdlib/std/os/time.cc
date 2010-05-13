@@ -58,7 +58,7 @@ HYBRIS_DEFINE_FUNCTION(husleep){
 	if( ob_argc() != 1 ){
 		hyb_error( H_ET_SYNTAX, "function 'usleep' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otInteger );
+	ob_argv_type_assert( 0, otInteger, "usleep" );
 
 	struct timespec ts;
 
@@ -73,7 +73,7 @@ HYBRIS_DEFINE_FUNCTION(hsleep){
 	if( ob_argc() != 1 ){
 		hyb_error( H_ET_SYNTAX, "function 'sleep' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otInteger );
+	ob_argv_type_assert( 0, otInteger, "sleep" );
 
 	struct timespec ts;
 

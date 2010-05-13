@@ -266,7 +266,7 @@ HYBRIS_DEFINE_FUNCTION(hmd5){
     if( ob_argc() != 1 ){
         hyb_error( H_ET_SYNTAX, "function 'md5' requires 1 parameter (called with %d)", ob_argc() );
     }
-    ob_type_assert( ob_argv(0), otString );
+    ob_argv_type_assert( 0, otString, "md5" );
 
 	string        str 	   = string_argv(0),
 				  str_hash("");
@@ -291,7 +291,7 @@ HYBRIS_DEFINE_FUNCTION(hmd5_file){
 	if( ob_argc() != 1 ){
 		hyb_error( H_ET_SYNTAX, "function 'md5_file' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otString );
+	ob_argv_type_assert( 0, otString, "md5_file" );
 
 	string        fname	   = string_argv(0),
 				  str_hash("");

@@ -84,10 +84,10 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 	if( ob_argc() < 2 ){
 		hyb_error( H_ET_SYNTAX, "function 'http_get' requires at least 2 parameters (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otString );
-	ob_type_assert( ob_argv(1), otString );
+	ob_argv_type_assert( 0, otString, "http_get" );
+	ob_argv_type_assert( 1, otString, "http_get" );
 	if( ob_argc() >= 3 ){
-		ob_type_assert( ob_argv(2), otInteger );
+		ob_argv_type_assert( 2, otBoolean, "http_get" );
 	}
 
 	CURL  *cd;
@@ -130,7 +130,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 	}
 
 	if( ob_argc() >= 4 ){
-		ob_type_assert( ob_argv(3), otMap );
+		ob_argv_type_assert( 3, otMap, "http_get" );
 		unsigned int i;
 		string header;
 		MapObject *headers = map_argv(3);
@@ -169,11 +169,11 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 	if( ob_argc() < 3 ){
 		hyb_error( H_ET_SYNTAX, "function 'http_post' requires at least 3 parameters (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otString );
-	ob_type_assert( ob_argv(1), otString );
-	ob_type_assert( ob_argv(2), otMap );
+	ob_argv_type_assert( 0, otString, "http_post" );
+	ob_argv_type_assert( 1, otString, "http_post" );
+	ob_argv_type_assert( 2, otMap, "http_post" );
 	if( ob_argc() >= 4 ){
-		ob_type_assert( ob_argv(3), otInteger );
+		ob_argv_type_assert( 3, otBoolean, "http_post" );
 	}
 
 	CURL  *cd;
@@ -220,7 +220,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 	}
 
 	if( ob_argc() >= 5 ){
-		ob_type_assert( ob_argv(4), otMap );
+		ob_argv_type_assert( 4, otMap, "http_post" );
 		string header;
 		MapObject *headers = map_argv(4);
 
@@ -272,7 +272,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp){
     if( ob_argc() < 1 ){
 		hyb_error( H_ET_SYNTAX, "function 'http' requires at least 1 parameter (called with %d)", ob_argc() );
 	}
-    ob_type_assert( ob_argv(0), otInteger );
+    ob_argv_type_assert( 0, otInteger, "http" );
 
     vmem_t hdata;
     int    method = int_argv(0),
@@ -304,12 +304,12 @@ HYBRIS_DEFINE_FUNCTION(hhttp_download){
 	if( ob_argc() < 2 ){
 		hyb_error( H_ET_SYNTAX, "function 'http_download' requires at least 2 parameters (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otString );
-	ob_type_assert( ob_argv(1), otHandle );
+	ob_argv_type_assert( 0, otString, "http_download" );
+	ob_argv_type_assert( 1, otHandle, "http_download" );
 
 	http_progress_callback_data_t *http_data = NULL;
 	string  file = string_argv(0);
-	FILE    *fp   = (FILE *)handle_argv(1);
+	FILE    *fp  = (FILE *)handle_argv(1);
 	CURL    *curl;
 	CURLcode res;
 
@@ -324,7 +324,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_download){
 	curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, http_download_callback );
 
 	if( ob_argc() > 2 ){
-		ob_type_assert( ob_argv(2), otAlias );
+		ob_argv_type_assert( 2, otAlias, "http_download" );
 
 		http_data = new http_progress_callback_data_t;
 

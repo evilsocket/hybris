@@ -28,14 +28,14 @@
 
 #define safe_send( sd, b ) if( sd_write(sd, b) <= 0 ){ close(sd); return H_DEFAULT_ERROR; }
 #define safe_read( sd, b ) if( (buffer = sd_read(sd)) == "" ){ \
-                            close(sd); return H_DEFAULT_ERROR; \
+							   close(sd); return H_DEFAULT_ERROR; \
                            } \
                            else if( buffer.find("220") == string::npos && \
                                     buffer.find("235") == string::npos && \
                                     buffer.find("250") == string::npos && \
                                     buffer.find("334") == string::npos && \
                                     buffer.find("354") == string::npos ){ \
-                            hyb_error( H_ET_WARNING, buffer.c_str() ); \
+                        	   hyb_error( H_ET_WARNING, buffer.c_str() ); \
                            }
 
 HYBRIS_DEFINE_FUNCTION(hsmtp_send);
@@ -141,12 +141,12 @@ HYBRIS_DEFINE_FUNCTION(hsmtp_send){
 	if( ob_argc() < 2 ) {
 		hyb_error( H_ET_SYNTAX, "function 'smtp_send' requires at least 2 parameters (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otString );
-	ob_type_assert( ob_argv(1), otMap );
+	ob_argv_type_assert( 0, otString, "smtp_send" );
+	ob_argv_type_assert( 1, otMap, 	  "smtp_send" );
 
 	MapObject *login_map = NULL;
 	if( ob_argc() == 3 ) {
-		ob_type_assert( ob_argv(2), otMap );
+		ob_argv_type_assert( 2, otMap, "smtp_send" );
 		login_map = map_argv(2);
 	}
 
@@ -166,13 +166,13 @@ HYBRIS_DEFINE_FUNCTION(hsmtp_send){
 		Object *value = headers->values[i];
 
 		if( name == "to" ){
-			ob_types_assert( value, otString, otVector );
+			ob_types_assert( value, otString, otVector, "smtp_send" );
 			if( value->type->code == otString ){
 				receivers.push_back( ob_string_val(value) );
 			}
 			else if( value->type->code == otVector ){
 				for( j = 0; j < ob_vector_ucast(value)->items; ++j ){
-				    ob_type_assert(  ob_vector_ucast(value)->value[j], otString );
+				    ob_type_assert(  ob_vector_ucast(value)->value[j], otString, "smtp_send" );
 					receivers.push_back( ob_string_val( ob_vector_ucast(value)->value[j] ) );
 				}
 			}

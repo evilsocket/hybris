@@ -72,12 +72,15 @@ typedef Object * (*function_t)( vm_t *, vmem_t * );
 #define handle_argv(i) ob_handle_val( data->at(i) )
 
 /* macros to assert an object type */
-#define ob_type_assert(o,t)      if( !(o->type->code == t) ){ \
-                                     hyb_error( H_ET_SYNTAX, "Unexpected '%s' variable, expected '%s'", o->type->name, ob_type_to_string(t) ); \
-                                  }
-#define ob_types_assert(o,t1,t2) if( o->type->code != t1 && o->type->code != t2 ){ \
-                                     hyb_error( H_ET_SYNTAX, "Unexpected '%s' variable, expected '%s' or '%s'", o->type->name, ob_type_to_string(t1), ob_type_to_string(t2) ); \
-                                  }
+#define ob_type_assert(o,t,f)      if( o->type->code != t ){ \
+                                    hyb_error( H_ET_SYNTAX, "Unexpected '%s' variable for function " f ", expected '%s'", o->type->name, ob_type_to_string(t) ); \
+                                 }
+#define ob_types_assert(o,t1,t2,f) if( o->type->code != t1 && o->type->code != t2 ){ \
+									   hyb_error( H_ET_SYNTAX, "Unexpected '%s' variable for function " f ", expected '%s' or '%s'", o->type->name, ob_type_to_string(t1), ob_type_to_string(t2) ); \
+                                   }
+
+#define ob_argv_type_assert( i, t, f ) 		 ob_type_assert( ob_argv(i), t, f )
+#define ob_argv_types_assert( i, t1, t2, f ) ob_types_assert( ob_argv(i), t1, t2, f )
 
 #define HYB_TIMER_START 1
 #define HYB_TIMER_STOP  0

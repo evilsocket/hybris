@@ -299,7 +299,7 @@ HYBRIS_DEFINE_FUNCTION(hsha1){
     if( ob_argc() != 1 ){
         hyb_error( H_ET_SYNTAX, "function 'sha1' requires 1 parameter (called with %d)", ob_argc() );
     }
-    ob_type_assert( ob_argv(0), otString );
+    ob_argv_type_assert( 0, otString, "sha1" );
 
 	string        str 	   = string_argv(0),
 				  str_hash("");

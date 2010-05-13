@@ -33,16 +33,16 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 
 
 __force_inline char a2i(char ch) {
-  return isdigit(ch) ? ch - '0' : tolower(ch) - 'a' + 10;
+	return isdigit(ch) ? ch - '0' : tolower(ch) - 'a' + 10;
 }
 
 __force_inline char i2a(char code) {
-  static char hex[] = "0123456789abcdef";
-  return hex[code & 15];
+	static char hex[] = "0123456789abcdef";
+	return hex[code & 15];
 }
 
 __force_inline bool is_base64(unsigned char c) {
-  return (isalnum(c) || (c == '+') || (c == '/'));
+	return (isalnum(c) || (c == '+') || (c == '/'));
 }
 
 HYBRIS_DEFINE_FUNCTION(hurlencode){
@@ -50,7 +50,7 @@ HYBRIS_DEFINE_FUNCTION(hurlencode){
     if( ob_argc() != 1 ){
         hyb_error( H_ET_SYNTAX, "function 'urlencode' requires 1 parameter (called with %d)", ob_argc() );
     }
-    ob_type_assert( ob_argv(0), otString );
+    ob_argv_type_assert( 0, otString, "urlencode" );
 
     char *pstr = (char *)string_argv(0).c_str(),
          *buf  = (char *)malloc( strlen(pstr) * 3 + 1 ),
@@ -84,7 +84,7 @@ HYBRIS_DEFINE_FUNCTION(hurldecode){
     if( ob_argc() != 1 ){
         hyb_error( H_ET_SYNTAX, "function 'urldecode' requires 1 parameter (called with %d)", ob_argc() );
     }
-    ob_type_assert( ob_argv(0), otString );
+    ob_argv_type_assert( 0, otString, "urldecode" );
 
     char *pstr = (char *)string_argv(0).c_str(),
          *buf  = (char *)malloc(strlen(pstr) + 1),
@@ -119,7 +119,7 @@ HYBRIS_DEFINE_FUNCTION(hbase64encode) {
     if( ob_argc() != 1 ){
         hyb_error( H_ET_SYNTAX, "function 'base64encode' requires 1 parameter (called with %d)", ob_argc() );
     }
-    ob_type_assert( ob_argv(0), otString );
+    ob_argv_type_assert( 0, otString, "base64encode" );
 
     static const char b64_charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -170,7 +170,7 @@ HYBRIS_DEFINE_FUNCTION(hbase64decode) {
     if( ob_argc() != 1 ){
         hyb_error( H_ET_SYNTAX, "function 'base64decode' requires 1 parameter (called with %d)", ob_argc() );
     }
-    ob_type_assert( ob_argv(0), otString );
+    ob_argv_type_assert( 0, otString, "hbase64decode" );
 
     static const std::string b64_charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     std::string ret;

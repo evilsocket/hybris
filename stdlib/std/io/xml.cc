@@ -115,7 +115,7 @@ HYBRIS_DEFINE_FUNCTION(hxml_load){
 	if( ob_argc() != 1 ){
 		hyb_error( H_ET_SYNTAX, "function 'xml_load' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otString );
+	ob_argv_type_assert( 0, otString, "xml_load" );
 
 	string   filename = string_argv(0);
 	xmlDoc  *doc  = NULL;
@@ -140,7 +140,7 @@ HYBRIS_DEFINE_FUNCTION(hxml_parse){
 	if( ob_argc() != 1 ){
 		hyb_error( H_ET_SYNTAX, "function 'xml_parse' requires 1 parameter (called with %d)", ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otString );
+	ob_argv_type_assert( 0, otString, "xml_parse" );
 
 	string   xml  = string_argv(0);
 	xmlDoc  *doc  = NULL;
