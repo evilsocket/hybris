@@ -1156,16 +1156,47 @@ Object *engine_on_reference( engine_t *engine, vframe_t *frame, Node *node ){
 
 Object *engine_on_dollar( engine_t *engine, vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
+    Node *function = H_UNDEFINED;
     string svalue;
+    char *identifier;
 
-    o 	   = engine_exec( engine, frame, node->child(0) );
-    svalue = ob_svalue(o);
+    o 	   	   = engine_exec( engine, frame, node->child(0) );
+    svalue 	   = ob_svalue(o);
+    identifier = (char *)svalue.c_str();
 
-    if( (o = frame->get( (char *)svalue.c_str() )) == H_UNDEFINED ){
-        hyb_error( H_ET_SYNTAX, "'%s' undeclared identifier", svalue.c_str() );
-    }
-
-    return o;
+    /*
+     * Same as engine_on_identifier.
+     */
+    if( (o = frame->get(identifier)) != H_UNDEFINED ){
+		return o;
+	}
+	/*
+	 * Let's check if the address of this frame si different from
+	 * global frame one, in that case try to search the definition
+	 * on the global frame too.
+	 */
+	else if( H_ADDRESS_OF(frame) != H_ADDRESS_OF(engine->mem) && (o = engine->mem->get(identifier)) != H_UNDEFINED ){
+		return o;
+	}
+	/*
+	 * Check for an user defined object (structure or class) name.
+	 */
+	else if( (o = engine->types->get(identifier)) != H_UNDEFINED ){
+		return o;
+	}
+	/*
+	 * So, it's neither defined on local frame nor in the global one,
+	 * let's search for it in the engine->code frame.
+	 */
+	else if( (function = engine->code->find(identifier)) != H_UNDEFINED ){
+		/*
+		 * Create an alias to that engine->code region (basically its index).
+		 */
+		return ob_dcast( gc_new_alias( H_ADDRESS_OF(function) ) );
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
+	}
 }
 
 Object *engine_on_return( engine_t *engine, vframe_t *frame, Node *node ){

@@ -38,7 +38,7 @@ class Pipe extends File {
 		me.Pipe("","");
 	}
 
-	public method close (){
+	public method close(){
 		if( me.file ){
 			pclose( me.file );	
 			me.file = null;		
@@ -70,6 +70,6 @@ class Pipe extends File {
 		}
 		me.file = popen( me.pname + " " + me.pargs, me.mode );
 
-		return (me.file != 0);
+		return &me;
 	}
 }	
