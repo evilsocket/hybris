@@ -66,115 +66,11 @@ void Node::addChild( Node *child ){
 }
 
 Node *Node::clone(){
-    int   i, sz( size() );
-    Node *clone = H_UNDEFINED;
-
-    switch( m_type ){
-        case H_NT_CONSTANT   :
-
-            if( ob_is_int(value.m_constant) ){
-                clone = new ConstantNode( (ob_int_ucast(value.m_constant))->value );
-            }
-            else if( ob_is_float(value.m_constant) ){
-                clone = new ConstantNode( ob_float_ucast(value.m_constant)->value );
-            }
-            else if( ob_is_char(value.m_constant) ){
-                clone = new ConstantNode( ob_char_ucast(value.m_constant)->value );
-            }
-            else if( ob_is_string(value.m_constant) ){
-                clone = new ConstantNode( (char *)ob_string_ucast(value.m_constant)->value.c_str() );
-            }
-            else if( ob_is_boolean(value.m_constant) ){
-            	clone = new ConstantNode( ob_bool_ucast(value.m_constant)->value );
-            }
-            else{
-            	/*
-				 * THIS SHOULD NEVER HAPPEN!
-				 */
-				assert(false);
-            }
-
-        break;
-
-        case H_NT_IDENTIFIER :
-            clone = new IdentifierNode( (char *)value.m_identifier.c_str() );
-            clone->value.m_access = value.m_access;
-        break;
-
-        case H_NT_EXPRESSION   :
-            clone = new ExpressionNode( value.m_expression, 0 );
-            for( i = 0; i < sz; ++i ){
-            	if( child(i) ){
-            		clone->push_back( child(i)->clone() );
-            	}
-            }
-        break;
-
-        case H_NT_STATEMENT  :
-            clone = new StatementNode( value.m_statement, 0 );
-            for( i = 0; i < sz; ++i ){
-            	if( child(i) ){
-            		clone->push_back( child(i)->clone() );
-            	}
-            }
-        break;
-
-        case H_NT_FUNCTION   :
-            clone = new FunctionNode( value.m_function.c_str() );
-            clone->value.m_vargs = value.m_vargs;
-            for( i = 0; i < sz; ++i ){
-            	if( child(i) ){
-            		clone->push_back( child(i)->clone() );
-            	}
-            }
-        break;
-
-        case H_NT_CALL       :
-            if( value.m_alias_call == NULL ){
-                clone = new CallNode( (char *)value.m_call.c_str(), NULL );
-            }
-            else{
-                clone = new CallNode( value.m_alias_call, NULL );
-            }
-            for( i = 0; i < sz; ++i ){
-            	if( child(i) ){
-            		clone->push_back( child(i)->clone() );
-            	}
-            }
-        break;
-
-        case H_NT_METHOD :
-			clone = new MethodNode( value.m_method.c_str(), value.m_access );
-			clone->value.m_static = value.m_static;
-			clone->value.m_vargs  = value.m_vargs;
-			for( i = 0; i < sz; ++i ){
-				if( child(i) ){
-					clone->push_back( child(i)->clone() );
-				}
-			}
-        break;
-
-        case H_NT_MEMBER :
-        	clone = new MemberRequestNode( value.m_owner, value.m_member );
-        break;
-
-        case H_NT_NEW :
-        	clone = new NewNode( (char *)value.m_identifier.c_str(), NULL );
-        	for( i = 0; i < sz; ++i ){
-				if( child(i) ){
-					clone->push_back( child(i)->clone() );
-				}
-			}
-        break;
-
-        default:
-        	/*
-        	 * THIS SHOULD NEVER HAPPEN!
-        	 */
-        	assert(false);
-    }
-
-	return clone;
+	/*
+	 * THIS SHOULD NEVER HAPPEN!
+	 */
+	printf( "%d\n", m_type );
+	assert( false );
 }
 
 /* constants */
@@ -201,6 +97,30 @@ ConstantNode::ConstantNode( char *v ) : Node(H_NT_CONSTANT) {
 ConstantNode::ConstantNode( bool v ) : Node(H_NT_CONSTANT) {
 	value.m_constant = (Object *)gc_new_boolean(v);
 	value.m_constant->attributes |= H_OA_CONSTANT;
+}
+
+Node *ConstantNode::clone() {
+	if( ob_is_int(value.m_constant) ){
+		return new ConstantNode( (ob_int_ucast(value.m_constant))->value );
+	}
+	else if( ob_is_float(value.m_constant) ){
+		return new ConstantNode( ob_float_ucast(value.m_constant)->value );
+	}
+	else if( ob_is_char(value.m_constant) ){
+		return new ConstantNode( ob_char_ucast(value.m_constant)->value );
+	}
+	else if( ob_is_string(value.m_constant) ){
+		return new ConstantNode( (char *)ob_string_ucast(value.m_constant)->value.c_str() );
+	}
+	else if( ob_is_boolean(value.m_constant) ){
+		return new ConstantNode( ob_bool_ucast(value.m_constant)->value );
+	}
+	else{
+		/*
+		 * THIS SHOULD NEVER HAPPEN!
+		 */
+		assert(false);
+	}
 }
 
 /* expressions */
@@ -232,6 +152,17 @@ ExpressionNode::ExpressionNode( int expression, int argc, ... ) : Node(H_NT_EXPR
 		push_back( va_arg( ap, Node * ) );
 	}
 	va_end(ap);
+}
+
+Node *ExpressionNode::clone(){
+	Node *clone = new ExpressionNode( value.m_expression, 0 );
+	int   i, sz(size());
+    for( int i = 0; i < sz; ++i ){
+    	if( child(i) ){
+    		clone->push_back( child(i)->clone() );
+    	}
+    }
+    return clone;
 }
 
 /* statements */
@@ -296,6 +227,21 @@ StatementNode::StatementNode( int statement, Node *sw, NodeList *caselist, Node 
 	}
 }
 
+Node *StatementNode::clone(){
+	Node *clone = new StatementNode( value.m_statement, 0 );
+	int   i, sz(size());
+
+	clone->value.m_switch  = ( value.m_switch  ? value.m_switch->clone() : NULL );
+	clone->value.m_default = ( value.m_default ? value.m_default->clone() : NULL );
+	for( i = 0; i < sz; ++i ){
+		if( child(i) ){
+			clone->push_back( child(i)->clone() );
+		}
+	}
+
+    return clone;
+}
+
 /* identifiers */
 IdentifierNode::IdentifierNode( char *identifier ) : Node(H_NT_IDENTIFIER) {
     value.m_identifier = identifier;
@@ -322,10 +268,24 @@ IdentifierNode::IdentifierNode( access_t access, bool is_static, char *identifie
 	push_back(v);
 }
 
+Node *IdentifierNode::clone(){
+	Node *clone = new IdentifierNode( (char *)value.m_identifier.c_str() );
+	int   i, sz(size());
+
+	clone->value.m_access = value.m_access;
+    clone->value.m_static = value.m_static;
+
+    return clone;
+}
+
 /* structure or class member request */
 MemberRequestNode::MemberRequestNode( Node *owner, Node *member ) : Node(H_NT_MEMBER) {
 	value.m_owner  = owner;
 	value.m_member = member;
+}
+
+Node *MemberRequestNode::clone(){
+	return new MemberRequestNode( value.m_owner, value.m_member );
 }
 
 /* functions */
@@ -366,6 +326,20 @@ FunctionNode::FunctionNode( const char *name ) : Node(H_NT_FUNCTION) {
     value.m_function = name;
 }
 
+Node *FunctionNode::clone(){
+	Node *clone = new FunctionNode( value.m_function.c_str() );
+	int   i, sz(size());
+
+	clone->value.m_vargs = value.m_vargs;
+	for( i = 0; i < sz; ++i ){
+		if( child(i) ){
+			clone->push_back( child(i)->clone() );
+		}
+	}
+
+	return clone;
+}
+
 /* function calls */
 CallNode::CallNode( char *name, NodeList *argv ) : Node(H_NT_CALL) {
     value.m_call = name;
@@ -389,6 +363,25 @@ CallNode::CallNode( Node *alias, NodeList *argv ) :  Node(H_NT_CALL) {
 	}
 }
 
+Node *CallNode::clone(){
+	Node *clone = H_UNDEFINED;
+	int   i, sz(size());
+
+    if( value.m_alias_call == NULL ){
+        clone = new CallNode( (char *)value.m_call.c_str(), NULL );
+    }
+    else{
+        clone = new CallNode( value.m_alias_call, NULL );
+    }
+    for( i = 0; i < sz; ++i ){
+    	if( child(i) ){
+    		clone->push_back( child(i)->clone() );
+    	}
+    }
+
+    return clone;
+}
+
 /* structure or class creation */
 NewNode::NewNode( char *type, NodeList *argv ) : Node(H_NT_NEW){
 	value.m_identifier = type;
@@ -399,6 +392,19 @@ NewNode::NewNode( char *type, NodeList *argv ) : Node(H_NT_NEW){
 		}
 		delete argv;
 	}
+}
+
+Node *NewNode::clone(){
+	Node *clone = new NewNode( (char *)value.m_identifier.c_str(), NULL );
+	int   i, sz(size());
+
+	for( i = 0; i < sz; ++i ){
+		if( child(i) ){
+			clone->push_back( child(i)->clone() );
+		}
+	}
+
+	return clone;
 }
 
 /* struct type definition */
@@ -460,6 +466,20 @@ MethodNode::MethodNode( access_t access, method_decl_t *declaration, bool is_sta
 MethodNode::MethodNode( const char *name, access_t access ) : Node(H_NT_METHOD) {
 	value.m_method = name;
 	value.m_access = access;
+}
+
+Node *MethodNode::clone(){
+	Node *clone = new MethodNode( value.m_method.c_str(), value.m_access );
+	int   i, sz(size());
+
+	clone->value.m_static = value.m_static;
+	clone->value.m_vargs  = value.m_vargs;
+	for( i = 0; i < sz; ++i ){
+		if( child(i) ){
+			clone->push_back( child(i)->clone() );
+		}
+	}
+	return clone;
 }
 
 /* class type definition */

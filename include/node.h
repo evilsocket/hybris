@@ -160,7 +160,7 @@ public  :
 
     void addChild( Node *child );
 
-    Node *clone();
+    virtual Node *clone();
 };
 
 /** specialized node classes **/
@@ -174,6 +174,8 @@ class ConstantNode : public Node {
         ConstantNode( char v );
         ConstantNode( char *v );
         ConstantNode( bool v );
+
+        Node *clone();
 };
 
 /* expressions */
@@ -183,6 +185,8 @@ class ExpressionNode : public Node {
         ExpressionNode( int expression );
         ExpressionNode( int expression, NodeList *list );
         ExpressionNode( int expression, int argc, ... );
+
+        Node *clone();
 };
 
 /* statements */
@@ -194,6 +198,8 @@ class StatementNode : public Node {
         StatementNode( int statement, NodeList *identList, Node *expr );
         StatementNode( int statement, Node *sw, NodeList *caselist );
         StatementNode( int statement, Node *sw, NodeList *caselist, Node *deflt );
+
+        Node *clone();
 };
 
 /* identifiers */
@@ -204,6 +210,8 @@ class IdentifierNode : public Node {
         IdentifierNode( access_t access, Node *i );
         IdentifierNode( access_t access, char *identifier );
         IdentifierNode( access_t access, bool is_static, char *identifier, Node *v );
+
+        Node *clone();
 };
 
 /* structure attribute expression */
@@ -211,6 +219,8 @@ class MemberRequestNode : public Node {
     public :
 
 		MemberRequestNode( Node *owner, Node *member );
+
+		Node *clone();
 };
 
 /* function declarations */
@@ -220,6 +230,8 @@ class FunctionNode : public Node {
         FunctionNode( function_decl_t *declaration );
         FunctionNode( function_decl_t *declaration, int argc, ... );
         FunctionNode( const char *name );
+
+        Node *clone();
 };
 
 /* function calls (a subset of StatementNode) */
@@ -228,6 +240,8 @@ class CallNode : public Node {
 
         CallNode( char *name, NodeList *argv );
         CallNode( Node *alias, NodeList *argv );
+
+        Node *clone();
 };
 
 /* structure or class creation */
@@ -235,6 +249,8 @@ class NewNode : public Node {
 	public :
 
 		NewNode( char *type, NodeList *argv );
+
+		Node *clone();
 };
 
 /* struct type definition */
@@ -250,6 +266,8 @@ class MethodNode : public Node {
 		MethodNode( access_t access, method_decl_t *declaration, int argc, ... );
 		MethodNode( access_t access, method_decl_t *declaration, bool is_static, int argc, ... );
 		MethodNode( const char *name, access_t access );
+
+		Node *clone();
 };
 
 /* class type definition */
