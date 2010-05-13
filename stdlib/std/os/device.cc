@@ -71,6 +71,10 @@ extern "C" void hybris_module_init( vm_t * vm ){
 	HYBRIS_DEFINE_CONSTANT( vm, "MS_NOATIME", gc_new_integer(MS_NOATIME) );
 	HYBRIS_DEFINE_CONSTANT( vm, "MS_NODIRATIME", gc_new_integer(MS_NODIRATIME) );
 	HYBRIS_DEFINE_CONSTANT( vm, "MS_BIND", gc_new_integer(MS_BIND) );
+
+	HYBRIS_DEFINE_CONSTANT( vm, "MNT_FORCE",  gc_new_integer(MNT_FORCE) );
+	HYBRIS_DEFINE_CONSTANT( vm, "MNT_DETACH", gc_new_integer(MNT_DETACH) );
+	HYBRIS_DEFINE_CONSTANT( vm, "MNT_EXPIRE", gc_new_integer(MNT_EXPIRE) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hmknod){
