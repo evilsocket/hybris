@@ -151,7 +151,16 @@ HYBRIS_DEFINE_FUNCTION(hpopen){
 HYBRIS_DEFINE_FUNCTION(hpclose){
 	ob_argv_type_assert( 0, otHandle, "pclose" );
     if( ob_argc() ){
-		pclose( (FILE *)handle_argv(0) );
+    	if( handle_argv(0) == NULL ){
+			return H_DEFAULT_ERROR;
+		}
+
+    	pclose( (FILE *)handle_argv(0) );
+		/*
+		 * Make sure the handle is set to NULL to prevent SIGSEGV
+		 * when p* functions try to use this file handle.
+		 */
+		ob_ref_ucast( ob_argv(0) )->value = NULL;
     }
     return H_DEFAULT_RETURN;
 }

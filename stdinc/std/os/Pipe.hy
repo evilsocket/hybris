@@ -41,7 +41,6 @@ class Pipe extends File {
 	public method close(){
 		if( me.file ){
 			pclose( me.file );	
-			me.file = null;		
 		}
 	}
 
@@ -70,6 +69,6 @@ class Pipe extends File {
 		}
 		me.file = popen( me.pname + " " + me.pargs, me.mode );
 
-		return &me;
+		return (me.file != null);
 	}
 }	
