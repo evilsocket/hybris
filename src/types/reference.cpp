@@ -43,7 +43,7 @@ Object *ref_clone( Object *me ){
 }
 
 size_t ref_get_size( Object *me ){
-	return sizeof( Object * );
+	return ob_ref_ucast(me)->value ? ob_get_size( ob_ref_ucast(me)->value ) : 0;
 }
 
 byte *ref_serialize( Object *me, size_t size ){
@@ -280,56 +280,65 @@ Object *ref_bw_inplace_rshift( Object *me, Object *op ){
 
 /** logic operators **/
 Object *ref_l_not( Object *me ){
-	REF_IS_NULL_PTR(me);
-
+	if( ob_ref_ucast(me)->value == NULL ){
+		return (Object *)gc_new_boolean(true);
+	}
 	return ob_l_not( ob_ref_ucast(me)->value );
 }
 
 Object *ref_l_same( Object *me, Object *op ){
-	REF_IS_NULL_PTR(me);
-
+	if( ob_is_reference(op) ){
+		return (Object *)gc_new_boolean( ob_ref_ucast(me)->value == ob_ref_ucast(op)->value );
+	}
 	return ob_l_same( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_l_diff( Object *me, Object *op ){
-	REF_IS_NULL_PTR(me);
-
+	if( ob_is_reference(op) ){
+		return (Object *)gc_new_boolean( ob_ref_ucast(me)->value != ob_ref_ucast(op)->value );
+	}
 	return ob_l_diff( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_l_less( Object *me, Object *op ){
-	REF_IS_NULL_PTR(me);
-
+	if( ob_is_reference(op) && !ob_ref_ucast(op)->value ){
+		return (Object *)gc_new_boolean( ob_ref_ucast(me)->value < ob_ref_ucast(op)->value );
+	}
 	return ob_l_less( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_l_greater( Object *me, Object *op ){
-	REF_IS_NULL_PTR(me);
-
+	if( ob_is_reference(op) && !ob_ref_ucast(op)->value ){
+		return (Object *)gc_new_boolean( ob_ref_ucast(me)->value > ob_ref_ucast(op)->value );
+	}
 	return ob_l_greater( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_l_less_or_same( Object *me, Object *op ){
-	REF_IS_NULL_PTR(me);
-
+	if( ob_is_reference(op) && !ob_ref_ucast(op)->value ){
+		return (Object *)gc_new_boolean( ob_ref_ucast(me)->value <= ob_ref_ucast(op)->value );
+	}
 	return ob_l_less_or_same( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_l_greater_or_same( Object *me, Object *op ){
-	REF_IS_NULL_PTR(me);
-
+	if( ob_is_reference(op) && !ob_ref_ucast(op)->value ){
+		return (Object *)gc_new_boolean( ob_ref_ucast(me)->value >= ob_ref_ucast(op)->value );
+	}
 	return ob_l_greater_or_same( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_l_or( Object *me, Object *op ){
-	REF_IS_NULL_PTR(me);
-
+	if( ob_is_reference(op) && !ob_ref_ucast(op)->value ){
+		return (Object *)gc_new_boolean( ob_ref_ucast(me)->value || ob_ref_ucast(op)->value );
+	}
 	return ob_l_or( ob_ref_ucast(me)->value, op );
 }
 
 Object *ref_l_and( Object *me, Object *op ){
-	REF_IS_NULL_PTR(me);
-
+	if( ob_is_reference(op) ){
+		return (Object *)gc_new_boolean( ob_ref_ucast(me)->value && ob_ref_ucast(op)->value );
+	}
 	return ob_l_and( ob_ref_ucast(me)->value, op );
 }
 
