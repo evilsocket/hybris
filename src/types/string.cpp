@@ -83,9 +83,11 @@ Object *__string_find( engine_t *engine, Object *me, vframe_t *data ){
 	if(  ob_argc() < 1 ){
 		hyb_error( H_ET_SYNTAX, "method 'find' requires 1 parameter (called with %d)",  ob_argc() );
 	}
-	ob_type_assert( ob_argv(0), otString, "find" );
+	ob_argv_types_assert( 0, otString, otChar, "find" );
 
-	int found = ob_string_ucast(me)->value.find( string_argv(0) );
+	string needle = ob_is_char( ob_argv(0) ) ? string("") + ob_char_ucast(ob_argv(0))->value : ob_string_ucast(ob_argv(0))->value;
+
+	int found = ob_string_ucast(me)->value.find(needle);
 
 	return found == string::npos ? (Object *)gc_new_boolean(false) : (Object *)gc_new_integer( found );
 }
