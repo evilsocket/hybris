@@ -313,6 +313,10 @@ methodList : accessSpecifier T_METHOD_PROTOTYPE '{' statements '}' methodList {
 				 $$ = MK_NODE_LIST();
 				 $$->head( MK_METHOD_NODE( $1, $2, $4 ) );
 		   }
+		   | T_STATIC T_METHOD_PROTOTYPE '{' statements '}' methodList {
+				 $$ = MK_NODE($6);
+				 $$->head( MK_STATIC_METHOD_NODE( $2, $4 ) );
+		   }
 		   | T_STATIC T_METHOD_PROTOTYPE '{' statements '}' {
 				 $$ = MK_NODE_LIST();
 				 $$->head( MK_STATIC_METHOD_NODE( $2, $4 ) );
