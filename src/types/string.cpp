@@ -89,7 +89,7 @@ Object *__string_find( engine_t *engine, Object *me, vframe_t *data ){
 
 	int found = ob_string_ucast(me)->value.find(needle);
 
-	return found == string::npos ? (Object *)gc_new_boolean(false) : (Object *)gc_new_integer( found );
+	return found == string::npos ? (Object *)gc_new_integer(string::npos) : (Object *)gc_new_integer( found );
 }
 
 Object *__string_substr( engine_t *engine, Object *me, vframe_t *data ){
