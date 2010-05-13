@@ -26,6 +26,9 @@ HYBRIS_DEFINE_FUNCTION(hserial_fcntl);
 HYBRIS_DEFINE_FUNCTION(hserial_get_attr);
 HYBRIS_DEFINE_FUNCTION(hserial_get_ispeed);
 HYBRIS_DEFINE_FUNCTION(hserial_get_ospeed);
+HYBRIS_DEFINE_FUNCTION(hserial_set_attr);
+HYBRIS_DEFINE_FUNCTION(hserial_set_ispeed);
+HYBRIS_DEFINE_FUNCTION(hserial_set_ospeed);
 HYBRIS_DEFINE_FUNCTION(hserial_close);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
@@ -34,11 +37,46 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "serial_get_attr",   hserial_get_attr },
 	{ "serial_get_ispeed", hserial_get_ispeed },
 	{ "serial_get_ospeed", hserial_get_ospeed },
+	{ "serial_set_attr",   hserial_set_attr },
+	{ "serial_set_ispeed", hserial_set_ispeed },
+	{ "serial_set_ospeed", hserial_set_ospeed },
 	{ "serial_close",	   hserial_close },
 	{ "", NULL }
 };
 
 static Object *__termios_type = H_UNDEFINED;
+
+static void termios_h2c( Object *h_attr, struct termios *c_attr ){
+	struct termios attributes;
+
+	c_attr->c_iflag  = ob_int_val( ob_get_attribute( h_attr, "c_iflag") );
+	c_attr->c_oflag  = ob_int_val( ob_get_attribute( h_attr, "c_oflag") );
+	c_attr->c_cflag  = ob_int_val( ob_get_attribute( h_attr, "c_cflag") );
+	c_attr->c_lflag  = ob_int_val( ob_get_attribute( h_attr, "c_lflag") );
+	c_attr->c_line   = ob_char_val( ob_get_attribute( h_attr, "c_line") );
+	c_attr->c_ispeed = ob_int_val( ob_get_attribute( h_attr, "c_ispeed") );
+	c_attr->c_ospeed = ob_int_val( ob_get_attribute( h_attr, "c_ospeed") );
+
+	BinaryObject *termios_c_cc = (BinaryObject *)ob_get_attribute( h_attr, "c_cc" );
+	for( int i = 0; i < NCCS; ++i ){
+		c_attr->c_cc[i] = ob_int_val( termios_c_cc->value[i] );
+	}
+}
+
+static void termios_c2h(  struct termios *c_attr, Object *h_attr ){
+	ob_set_attribute_reference( h_attr, "c_iflag",  (Object *)gc_new_integer(c_attr->c_iflag) );
+	ob_set_attribute_reference( h_attr, "c_oflag",  (Object *)gc_new_integer(c_attr->c_oflag) );
+	ob_set_attribute_reference( h_attr, "c_cflag",  (Object *)gc_new_integer(c_attr->c_cflag) );
+	ob_set_attribute_reference( h_attr, "c_lflag",  (Object *)gc_new_integer(c_attr->c_lflag) );
+	ob_set_attribute_reference( h_attr, "c_line",   (Object *)gc_new_char(c_attr->c_line) );
+	ob_set_attribute_reference( h_attr, "c_ispeed", (Object *)gc_new_integer(c_attr->c_ispeed) );
+	ob_set_attribute_reference( h_attr, "c_ospeed", (Object *)gc_new_integer(c_attr->c_ospeed) );
+
+	Object *termios_c_cc = ob_get_attribute( h_attr, "c_cc" );
+	for( int i = 0; i < NCCS; ++i ){
+		ob_cl_push_reference( termios_c_cc, (Object *)new CharObject( c_attr->c_cc[i] ) );
+	}
+}
 
 extern "C" void hybris_module_init( vm_t * vm ){
 	/*
@@ -344,18 +382,7 @@ HYBRIS_DEFINE_FUNCTION(hserial_get_attr){
 	if( tcgetattr( fd, &attributes ) == 0 ){
 		Object *h_termios = ob_clone(__termios_type);
 
-		ob_set_attribute_reference( h_termios, "c_iflag",  (Object *)gc_new_integer(attributes.c_iflag) );
-		ob_set_attribute_reference( h_termios, "c_oflag",  (Object *)gc_new_integer(attributes.c_oflag) );
-		ob_set_attribute_reference( h_termios, "c_cflag",  (Object *)gc_new_integer(attributes.c_cflag) );
-		ob_set_attribute_reference( h_termios, "c_lflag",  (Object *)gc_new_integer(attributes.c_lflag) );
-		ob_set_attribute_reference( h_termios, "c_line",   (Object *)gc_new_char(attributes.c_line) );
-		ob_set_attribute_reference( h_termios, "c_ispeed", (Object *)gc_new_integer(attributes.c_ispeed) );
-		ob_set_attribute_reference( h_termios, "c_ospeed", (Object *)gc_new_integer(attributes.c_ospeed) );
-
-		Object *termios_c_cc = ob_get_attribute( h_termios, "c_cc" );
-		for( int i = 0; i < NCCS; ++i ){
-			ob_cl_push_reference( termios_c_cc, (Object *)new CharObject( attributes.c_cc[i] ) );
-		}
+		termios_c2h( &attributes, h_termios );
 
 		return h_termios;
 	}
@@ -392,6 +419,74 @@ HYBRIS_DEFINE_FUNCTION(hserial_get_ospeed){
 
 	if( tcgetattr( fd, &attributes ) == 0 ){
 		return (Object *)gc_new_integer( cfgetospeed(&attributes) );
+	}
+	else{
+		return (Object *)gc_new_boolean(false);
+	}
+}
+
+HYBRIS_DEFINE_FUNCTION(hserial_set_attr){
+	if( ob_argc() != 3 ){
+		hyb_error( H_ET_SYNTAX, "function 'serial_get_attr' requires 2 parameters (called with %d)", ob_argc() );
+	}
+	ob_argv_type_assert( 0, otInteger,   "serial_set_attr" );
+	ob_argv_type_assert( 1, otInteger,   "serial_set_attr" );
+	ob_argv_type_assert( 2, otStructure, "serial_set_attr" );
+
+	int fd 			  = int_argv(0),
+		how			  = int_argv(1);
+	Object *h_termios = ob_argv(2);
+	struct termios attributes;
+
+	termios_h2c( h_termios, &attributes );
+
+	return (Object *)gc_new_integer( tcsetattr( fd, how, &attributes ) );
+}
+
+HYBRIS_DEFINE_FUNCTION(hserial_set_ispeed){
+	if( ob_argc() != 2 ){
+		hyb_error( H_ET_SYNTAX, "function 'serial_set_ospeed' requires 2 parameters (called with %d)", ob_argc() );
+	}
+	ob_argv_type_assert( 0, otReference, "serial_set_ospeed" );
+	ob_argv_type_assert( 1, otInteger,   "serial_set_ospeed" );
+
+	int 	speed 	  = int_argv(1),
+			i;
+	Object *h_termios = ob_ref_ucast( ob_argv(0) )->value;
+
+	struct termios attributes;
+
+	termios_h2c( h_termios, &attributes );
+
+	if( cfsetispeed( &attributes, speed ) == 0 ){
+		termios_c2h( &attributes, h_termios );
+
+		return (Object *)gc_new_boolean(true);
+	}
+	else{
+		return (Object *)gc_new_boolean(false);
+	}
+}
+
+HYBRIS_DEFINE_FUNCTION(hserial_set_ospeed){
+	if( ob_argc() != 2 ){
+		hyb_error( H_ET_SYNTAX, "function 'serial_set_ospeed' requires 2 parameters (called with %d)", ob_argc() );
+	}
+	ob_argv_type_assert( 0, otReference, "serial_set_ospeed" );
+	ob_argv_type_assert( 1, otInteger,   "serial_set_ospeed" );
+
+	int 	speed 	  = int_argv(1),
+			i;
+	Object *h_termios = ob_ref_ucast( ob_argv(0) )->value;
+
+	struct termios attributes;
+
+	termios_h2c( h_termios, &attributes );
+
+	if( cfsetospeed( &attributes, speed ) == 0 ){
+		termios_c2h( &attributes, h_termios );
+
+		return (Object *)gc_new_boolean(true);
 	}
 	else{
 		return (Object *)gc_new_boolean(false);
