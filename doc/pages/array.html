@@ -29,11 +29,6 @@ Può essere inizializzato con dei valori tramite operatore [ ] :
 </p>
 <pre class="code hybris"> a <span class="sy0">=</span> <span class="br0">&#91;</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="nu0">2</span><span class="sy0">,</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span> <span class="br0">&#93;</span><span class="sy0">;</span></pre>
 
-<p>
-Oppure, qual&#039;ora fosse necessario crearlo inizialmente vuoto, tramite la funzione <strong>array</strong> :
-</p>
-<pre class="code hybris"> a <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span></pre>
-
 
 
 <h1><a name="metodi" id="metodi">Metodi</a></h1>
@@ -45,7 +40,7 @@ Questa tipologia ha dei <a href="classe.html" class="wikilink1" title="classe">m
 </p>
 
 </div>
-<!-- SECTION "Metodi" [546-667] -->
+<!-- SECTION "Metodi" [414-535] -->
 <h2><a name="size" id="size">size()</a></h2>
 <div class="level2">
 
@@ -57,7 +52,7 @@ Restituisce il numero di elementi che contiene l&#039;array.
 <pre class="code">3</pre>
 
 </div>
-<!-- SECTION "size()" [668-814] -->
+<!-- SECTION "size()" [536-682] -->
 <h2><a name="pop" id="pop">pop()</a></h2>
 <div class="level2">
 
@@ -69,7 +64,7 @@ Rimuove l&#039;ultimo elemento dell&#039;array e ne restituisce un istanza .
 <pre class="code">meh</pre>
 
 </div>
-<!-- SECTION "pop()" [815-972] -->
+<!-- SECTION "pop()" [683-840] -->
 <h2><a name="remove_index" id="remove_index">remove( index )</a></h2>
 <div class="level2">
 
@@ -81,7 +76,7 @@ Rimuove un elemento dall&#039;array ad un indice specifico e ne restituisce un i
 <pre class="code">bar</pre>
 
 </div>
-<!-- SECTION "remove( index )" [973-1162] -->
+<!-- SECTION "remove( index )" [841-1030] -->
 <h2><a name="contains_object" id="contains_object">contains( object )</a></h2>
 <div class="level2">
 
@@ -96,7 +91,7 @@ Restituisce <strong>true</strong> se l&#039;array contiene l&#039;elemento speci
 false </pre>
 
 </div>
-<!-- SECTION "contains( object )" [1163-1433] -->
+<!-- SECTION "contains( object )" [1031-1301] -->
 <h2><a name="join_glue" id="join_glue">join( glue )</a></h2>
 <div class="level2">
 
@@ -108,16 +103,16 @@ Restituisce una stringa con tutti gli elementi dell&#039;array concatenati trami
 <pre class="code">foo, bar, meh</pre>
 
 </div>
-<!-- SECTION "join( glue )" [1434-1662] -->
+<!-- SECTION "join( glue )" [1302-1530] -->
 <h1><a name="esempio" id="esempio">Esempio</a></h1>
 <div class="level1">
 <pre class="code hybris"><span class="kw2">import</span> std.<span class="sy0">*;</span>
 &nbsp;
 <span class="co1">// inizializzo un array con valori di tipi misti, uno dei quali è un array a sua volta</span>
-a     <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span> 0<span class="sy0">,</span> 
-	       1 <span class="sy0">+</span> 0 <span class="sy0">*</span> 1<span class="sy0">,</span> 
-	       <span class="kw3">array</span><span class="br0">&#40;</span> <span class="nu0">2</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span><span class="sy0">,</span> 2 <span class="sy0">+</span> 0 <span class="br0">&#41;</span><span class="sy0">,</span> 
-	       3 <span class="br0">&#41;</span><span class="sy0">;</span>
+a     <span class="sy0">=</span> <span class="br0">&#91;</span> <span class="nu0">0</span><span class="sy0">,</span> 
+	  <span class="nu0">1</span> <span class="sy0">+</span> <span class="nu0">0</span> <span class="sy0">*</span> <span class="nu0">1</span><span class="sy0">,</span> 
+	  <span class="br0">&#91;</span> <span class="nu0">2</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span><span class="sy0">,</span> 2 <span class="sy0">+</span> 0 <span class="br0">&#93;</span><span class="sy0">,</span> 
+	  3 <span class="br0">&#93;</span><span class="sy0">;</span>
 <span class="co1">// la variabile intera 'elems' ora contiene il numero di elementi dell'array 'a'</span>
 elems <span class="sy0">=</span> a.<span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
@@ -209,4 +204,4 @@ array {
 }</pre>
 
 </div>
-<!-- SECTION "Esempio" [1663-] --></div><!-- closes <div class="dokuwiki export">-->
+<!-- SECTION "Esempio" [1531-] --></div><!-- closes <div class="dokuwiki export">-->
