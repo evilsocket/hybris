@@ -29,6 +29,8 @@ HYBRIS_DEFINE_FUNCTION(hserial_get_ospeed);
 HYBRIS_DEFINE_FUNCTION(hserial_set_attr);
 HYBRIS_DEFINE_FUNCTION(hserial_set_ispeed);
 HYBRIS_DEFINE_FUNCTION(hserial_set_ospeed);
+HYBRIS_DEFINE_FUNCTION(hserial_write);
+HYBRIS_DEFINE_FUNCTION(hserial_read);
 HYBRIS_DEFINE_FUNCTION(hserial_close);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
@@ -40,6 +42,8 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "serial_set_attr",   hserial_set_attr },
 	{ "serial_set_ispeed", hserial_set_ispeed },
 	{ "serial_set_ospeed", hserial_set_ospeed },
+	{ "serial_write", 	   hserial_write },
+	{ "serial_read", 	   hserial_read },
 	{ "serial_close",	   hserial_close },
 	{ "", NULL }
 };
@@ -490,6 +494,40 @@ HYBRIS_DEFINE_FUNCTION(hserial_set_ospeed){
 	}
 	else{
 		return (Object *)gc_new_boolean(false);
+	}
+}
+
+HYBRIS_DEFINE_FUNCTION(hserial_write){
+	if( ob_argc() != 2 ){
+		hyb_error( H_ET_SYNTAX, "function 'serial_write' requires 2 parameters (called with %d)", ob_argc() );
+	}
+	ob_argv_type_assert( 0, otInteger, "serial_write" );
+	ob_argv_type_assert( 1, otString, "serial_write" );
+
+	int 		fd 	   = int_argv(0);
+	const char *buffer = string_argv(1).c_str();
+
+	return (Object *)gc_new_integer( write( fd, buffer, strlen(buffer) ) );
+}
+
+HYBRIS_DEFINE_FUNCTION(hserial_read){
+	if( ob_argc() != 2 ){
+		hyb_error( H_ET_SYNTAX, "function 'serial_read' requires 2 parameters (called with %d)", ob_argc() );
+	}
+	ob_argv_type_assert( 0, otInteger, "serial_read" );
+	ob_argv_type_assert( 1, otInteger, "serial_read" );
+
+	int fd 	 = int_argv(0),
+		size = int_argv(1),
+		status;
+
+	unsigned char *buffer = (unsigned char *)alloca(size);
+
+	if( (status = read( fd, buffer, size )) < 0 ){
+		return (Object *)gc_new_integer(status);
+	}
+	else{
+		return (Object *)gc_new_string(buffer);
 	}
 }
 
