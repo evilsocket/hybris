@@ -229,6 +229,99 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	vm_add_frame( engine->vm, &stack );
 }
 
+void engine_prepare_stack( engine_t *engine, vframe_t *root, named_function_t *function, vframe_t &stack, string owner, Node *argv ){
+	int 	i, argc, f_argc, t;
+	Object *value;
+	H_OBJECT_TYPE type;
+
+	/*
+	 * Check for heavy recursions and/or nested calls.
+	 */
+	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+	}
+
+	/*
+	 * First of all, check that the arguments number is the right one.
+	 */
+	argc = argv->children();
+	for( i = 0 ;; ++i ){
+		f_argc = function->argc[i];
+		if( f_argc < 0 ){
+			break;
+		}
+		else if( f_argc <= argc ){
+			break;
+		}
+	}
+	/*
+	 * If f_argc is -1 and i is 0, the first argc descriptor is H_ANY_ARGC so
+	 * the function pointer accept any number of arguments, otherwise, if i != 0
+	 * and f_argc is -1, we reached the end marker without a match, so the argc
+	 * is wrong.
+	 */
+	if( f_argc == -1 && i != 0 ){
+		hyb_error( H_ET_SYNTAX, "Function '%s' requires %s%d argument%s, %d given",
+							    function->identifier.c_str(),
+							    function->argc[1] >= 0 ? "at least " : "",
+							    function->argc[0],
+							    function->argc[0] > 1  ? "s" : "",
+							    argc );
+	}
+	/*
+	 * Ok, argc is the right one (or one of the right ones), now evaluate each
+	 * object and check the type.
+	 */
+	stack.owner = owner;
+	for( i = 0; i < argc; ++i ){
+		value = engine_exec( engine, root, argv->child(i) );
+
+		if( f_argc != -1 && i < f_argc ){
+			for( t = 0 ;; ++t ){
+				type = function->types[i][t];
+				if( type <= otVoid ){
+					break;
+				}
+				else if( value->type->code == type ){
+					break;
+				}
+			}
+			/*
+			 * Same as before, check if H_ANY_TYPE given or report error.
+			 */
+			if( type <= otVoid && t != 0 ){
+				std::stringstream error;
+
+				error << "Invalid " << ob_typename(value)
+					  << " type for argument " << i + 1
+					  << " of '"
+					  << function->identifier.c_str()
+					  << "' function, required type"
+					  << (function->types[i][1] > 0 ? "s are " : " is ");
+
+				for( t = 0 ;; ++t ){
+					type = function->types[i][t];
+					if( type <= otVoid ){
+						break;
+					}
+					bool prev_last = ( function->types[i][t + 2] <= otVoid );
+					bool last      = ( function->types[i][t + 1] <= otVoid );
+					error << ob_type_to_string(type) << ( last ? "" : (prev_last ? " or " : ", ") );
+				}
+
+				hyb_error( H_ET_SYNTAX, error.str().c_str() );
+			}
+		}
+
+		stack.push( value );
+	}
+
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( engine->vm, &stack );
+}
+
 __force_inline void engine_dismiss_stack( engine_t *engine, vframe_t &stack ){
 	vm_pop_frame( engine->vm );
 }
@@ -807,7 +900,7 @@ Object *engine_on_class_declaration( engine_t *engine, vframe_t *frame, Node *no
 
 Object *engine_on_builtin_function_call( engine_t *engine, vframe_t *frame, Node * call ){
     char        *callname = (char *)call->value.m_call.c_str();
-    function_t   function;
+    named_function_t* function;
     vframe_t     stack;
     unsigned int i(0),
                  children( call->children() );
@@ -818,10 +911,10 @@ Object *engine_on_builtin_function_call( engine_t *engine, vframe_t *frame, Node
         return H_UNDEFINED;
     }
 
-    engine_prepare_stack( engine, frame, stack, string(callname), call );
+    engine_prepare_stack( engine, frame, function, stack, string(callname), call );
 
     /* call the function */
-    result = function( engine->vm, &stack );
+    result = function->function( engine->vm, &stack );
 
     engine_dismiss_stack( engine, stack );
 
@@ -1104,7 +1197,7 @@ Object *engine_on_dll_function_call( engine_t *engine, vframe_t *frame, Node *ca
      * We assume that dll module is already loaded, otherwise there shouldn't be
      * any onDllFunctionCall call .
      */
-    function_t dllcall = vm_get_function( engine->vm, "dllcall" );
+    named_function_t *dllcall = vm_get_function( engine->vm, "dllcall" );
 
     if( (fn_pointer = frame->get( callname )) == H_UNDEFINED ){
         return H_UNDEFINED;
@@ -1116,7 +1209,7 @@ Object *engine_on_dll_function_call( engine_t *engine, vframe_t *frame, Node *ca
     engine_prepare_stack( engine, frame, stack, string(callname), (ExternObject *)fn_pointer, call );
 
     /* call the function */
-    result = dllcall( engine->vm, &stack );
+    result = dllcall->function( engine->vm, &stack );
 
     engine_dismiss_stack( engine, stack );
 

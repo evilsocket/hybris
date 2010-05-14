@@ -41,7 +41,7 @@
 HYBRIS_DEFINE_FUNCTION(hsmtp_send);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "smtp_send", hsmtp_send },
+	{ "smtp_send", hsmtp_send, H_REQ_ARGC(2,3), { H_REQ_TYPES(otString), H_REQ_TYPES(otMap), H_REQ_TYPES(otMap) } },
 	{ "", NULL }
 };
 
@@ -138,15 +138,8 @@ string base64( unsigned char *data, unsigned int size ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hsmtp_send){
-	if( ob_argc() < 2 ) {
-		hyb_error( H_ET_SYNTAX, "function 'smtp_send' requires at least 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otString, "smtp_send" );
-	ob_argv_type_assert( 1, otMap, 	  "smtp_send" );
-
 	MapObject *login_map = NULL;
 	if( ob_argc() == 3 ) {
-		ob_argv_type_assert( 2, otMap, "smtp_send" );
 		login_map = map_argv(2);
 	}
 

@@ -50,9 +50,18 @@ typedef Object * (*function_t)( vm_t *, vmem_t * );
 #define HYBRIS_DEFINE_CONSTANT( vm, name, value ) vm->vmem.addConstant( (char *)name, (Object *)value )
 /* macro to define a new structure type given its name and its attribute names */
 #define HYBRIS_DEFINE_STRUCTURE( vm, name, n, attrs ) vm_define_structure( vm, name, n, attrs )
+/* macro to easily define allowed argument number */
+#define H_REQ_ARGC(...) { __VA_ARGS__, -1 }
+/* only -1, any argument number is allowed */
+#define H_ANY_ARGC       H_REQ_ARGC(-1)
+/* no argument needed */
+#define H_NO_ARGS		 H_REQ_ARGC(0)
+/* macro to easily define single argument allowed types */
+#define H_REQ_TYPES(...) { __VA_ARGS__, otEndMarker }
+/* only otEndMarker, any type is allowed */
+#define H_ANY_TYPE  	 H_REQ_TYPES(otEndMarker)
 /* macro to define module exported functions structure */
 #define HYBRIS_EXPORTED_FUNCTIONS() extern "C" named_function_t hybris_module_functions[] =
-
 /* macro to easily access hybris functions parameters */
 #define ob_argv(i)    (data->at(i))
 /* macro to easily access hybris functions parameters number */
@@ -86,14 +95,22 @@ typedef Object * (*function_t)( vm_t *, vmem_t * );
 #define HYB_TIMER_STOP  0
 
 typedef struct _named_function_t {
-    string     identifier;
-    function_t function;
-
-    _named_function_t( string i, function_t f ) :
-        identifier(i),
-        function(f){
-
-    }
+	/*
+	 * Function identifier.
+	 */
+    string     	  identifier;
+    /*
+     * Function pointer.
+     */
+    function_t    function;
+    /*
+     * Number of arguments required.
+     */
+    int		      argc[HMAXARGS];
+    /*
+     * Allowed types of each argument.
+     */
+    H_OBJECT_TYPE types[HMAXARGS][20];
 }
 named_function_t;
 
@@ -331,7 +348,7 @@ __force_inline void vm_timer( vm_t *vm, int start = 0 ){
  * loaded module and return its pointer.
  * Handle function pointer caching.
  */
-__force_inline function_t vm_get_function( vm_t *vm, char *identifier ){
+__force_inline named_function_t *vm_get_function( vm_t *vm, char *identifier ){
 	unsigned int i, j,
 				 ndyns( vm->modules.size() ),
 				 nfuncs;
@@ -339,7 +356,7 @@ __force_inline function_t vm_get_function( vm_t *vm, char *identifier ){
 	/* first check if it's already in cache */
 	named_function_t * cache = vm->mcache.find(identifier);
 	if( cache != H_UNDEFINED ){
-		return cache->function;
+		return cache;
 	}
 
 	/* search it in dynamic loaded modules */
@@ -355,7 +372,7 @@ __force_inline function_t vm_get_function( vm_t *vm, char *identifier ){
 					vm->mcache.insert( identifier, cache );
 				vm_mcache_unlock( vm );
 
-				return cache->function;
+				return cache;
 			}
 		}
 	}

@@ -26,10 +26,10 @@ HYBRIS_DEFINE_FUNCTION(hprintf);
 HYBRIS_DEFINE_FUNCTION(hinput);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "print", hprint },
-	{ "println", hprintln },
-	{ "printf",  hprintf },
-	{ "input", hinput },
+	{ "print",   hprint,   H_ANY_ARGC },
+	{ "println", hprintln, H_ANY_ARGC },
+	{ "printf",  hprintf,  H_REQ_ARGC(1),   { H_REQ_TYPES(otString) } },
+	{ "input",   hinput,   H_REQ_ARGC(1,2), { H_REQ_TYPES(otString), H_ANY_TYPE } },
 	{ "", NULL }
 };
 
@@ -117,14 +117,9 @@ HYBRIS_DEFINE_FUNCTION(hprintln){
 }
 
 HYBRIS_DEFINE_FUNCTION(hprintf){
-	if( ob_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'printf' requires at least 1 parameter (called with %d)", ob_argc() );
-	}
-	else if( ob_argc() > PRINTF_MAX_ARGS ){
+	if( ob_argc() > PRINTF_MAX_ARGS ){
 		hyb_error( H_ET_SYNTAX, "function 'printf' supports at max %d parameters (called with %d)", PRINTF_MAX_ARGS, ob_argc() );
 	}
-	ob_argv_type_assert( 0, otString, "printf" );
-
 
 	typedef int (* function_t)(void);
 	function_t function = (function_t)printf;
@@ -187,9 +182,6 @@ HYBRIS_DEFINE_FUNCTION(hinput){
         ob_input( ob_argv(0) );
         _return = ob_argv(0);
     }
-	else{
-		hyb_error( H_ET_SYNTAX, "function 'input' requires 1 or 2 parameters (called with %d)", ob_argc() );
-	}
 
     return _return;
 }

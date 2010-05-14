@@ -24,10 +24,10 @@ HYBRIS_DEFINE_FUNCTION(hbase64encode);
 HYBRIS_DEFINE_FUNCTION(hbase64decode);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-    {"urlencode", hurlencode },
-    {"urldecode", hurldecode },
-    {"base64encode", hbase64encode },
-    {"base64decode", hbase64decode },
+    {"urlencode", 	 hurlencode,    H_REQ_ARGC(1), { H_REQ_TYPES(otString) } },
+    {"urldecode", 	 hurldecode,    H_REQ_ARGC(1), { H_REQ_TYPES(otString) } },
+    {"base64encode", hbase64encode, H_REQ_ARGC(1), { H_REQ_TYPES(otString) } },
+    {"base64decode", hbase64decode, H_REQ_ARGC(1), { H_REQ_TYPES(otString) } },
     { "", NULL }
 };
 
@@ -47,10 +47,6 @@ __force_inline bool is_base64(unsigned char c) {
 
 HYBRIS_DEFINE_FUNCTION(hurlencode){
     Object *_return;
-    if( ob_argc() != 1 ){
-        hyb_error( H_ET_SYNTAX, "function 'urlencode' requires 1 parameter (called with %d)", ob_argc() );
-    }
-    ob_argv_type_assert( 0, otString, "urlencode" );
 
     char *pstr = (char *)string_argv(0).c_str(),
          *buf  = (char *)malloc( strlen(pstr) * 3 + 1 ),
@@ -81,10 +77,6 @@ HYBRIS_DEFINE_FUNCTION(hurlencode){
 
 HYBRIS_DEFINE_FUNCTION(hurldecode){
     Object *_return;
-    if( ob_argc() != 1 ){
-        hyb_error( H_ET_SYNTAX, "function 'urldecode' requires 1 parameter (called with %d)", ob_argc() );
-    }
-    ob_argv_type_assert( 0, otString, "urldecode" );
 
     char *pstr = (char *)string_argv(0).c_str(),
          *buf  = (char *)malloc(strlen(pstr) + 1),
@@ -116,11 +108,6 @@ HYBRIS_DEFINE_FUNCTION(hurldecode){
 }
 
 HYBRIS_DEFINE_FUNCTION(hbase64encode) {
-    if( ob_argc() != 1 ){
-        hyb_error( H_ET_SYNTAX, "function 'base64encode' requires 1 parameter (called with %d)", ob_argc() );
-    }
-    ob_argv_type_assert( 0, otString, "base64encode" );
-
     static const char b64_charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     std::string ret;
@@ -167,11 +154,6 @@ HYBRIS_DEFINE_FUNCTION(hbase64encode) {
 }
 
 HYBRIS_DEFINE_FUNCTION(hbase64decode) {
-    if( ob_argc() != 1 ){
-        hyb_error( H_ET_SYNTAX, "function 'base64decode' requires 1 parameter (called with %d)", ob_argc() );
-    }
-    ob_argv_type_assert( 0, otString, "hbase64decode" );
-
     static const std::string b64_charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     std::string ret;
     char * str = (char *)string_argv(0).c_str();

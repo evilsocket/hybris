@@ -31,15 +31,15 @@ HYBRIS_DEFINE_FUNCTION(hexit);
 HYBRIS_DEFINE_FUNCTION(hkill);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "env",  henv },
-	{ "exec", hexec },
-	{ "fork", hfork },
-	{ "getpid", hgetpid },
-	{ "wait", hwait },
-	{ "popen", hpopen },
-	{ "pclose", hpclose },
-	{ "exit", hexit },
-	{ "kill", hkill },
+	{ "env",    henv,    H_NO_ARGS },
+	{ "exec",   hexec,   H_REQ_ARGC(1),   { H_REQ_TYPES(otString) } },
+	{ "fork",   hfork,   H_NO_ARGS },
+	{ "getpid", hgetpid, H_NO_ARGS },
+	{ "wait",   hwait,   H_REQ_ARGC(1),   { H_REQ_TYPES(otInteger) } },
+	{ "popen",  hpopen,  H_REQ_ARGC(2),   { H_REQ_TYPES(otString), H_REQ_TYPES(otString) } },
+	{ "pclose", hpclose, H_REQ_ARGC(1),   { H_REQ_TYPES(otHandle) } },
+	{ "exit",   hexit,   H_REQ_ARGC(0,1), { H_REQ_TYPES(otInteger) } },
+	{ "kill",   hkill,   H_REQ_ARGC(2),   { H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
 	{ "", NULL }
 };
 
@@ -107,16 +107,7 @@ HYBRIS_DEFINE_FUNCTION(henv){
 }
 
 HYBRIS_DEFINE_FUNCTION(hexec){
-	ob_argv_type_assert( 0, otString, "exec" );
-
-    Object *_return = NULL;
-    if( ob_argc() ){
-        _return = ob_dcast( gc_new_integer( system( string_argv(0).c_str() ) ) );
-    }
-	else{
-		hyb_error( H_ET_SYNTAX, "function 'exec' requires 1 parameter (called with %d)", ob_argc() );
-	}
-    return _return;
+    return ob_dcast( gc_new_integer( system( string_argv(0).c_str() ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfork){
@@ -128,47 +119,29 @@ HYBRIS_DEFINE_FUNCTION(hgetpid){
 }
 
 HYBRIS_DEFINE_FUNCTION(hwait){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'wait' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otInteger, "wait" );
-
 	return ob_dcast( gc_new_integer( wait( &(int_argv(0)) ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hpopen){
-	ob_argv_type_assert( 0, otString, "popen" );
-	ob_argv_type_assert( 1, otString, "popen" );
-
-    if( ob_argc() == 2 ){
-        return ob_dcast( gc_new_handle( popen( string_argv(0).c_str(), string_argv(1).c_str() ) ) );
-    }
-	else{
-		hyb_error( H_ET_SYNTAX, "function 'popen' requires 2 parameters (called with %d)", ob_argc() );
-	}
+	return ob_dcast( gc_new_handle( popen( string_argv(0).c_str(), string_argv(1).c_str() ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hpclose){
-	ob_argv_type_assert( 0, otHandle, "pclose" );
-    if( ob_argc() ){
-    	if( handle_argv(0) == NULL ){
-			return H_DEFAULT_ERROR;
-		}
+   	if( handle_argv(0) == NULL ){
+		return H_DEFAULT_ERROR;
+	}
 
-    	pclose( (FILE *)handle_argv(0) );
-		/*
-		 * Make sure the handle is set to NULL to prevent SIGSEGV
-		 * when p* functions try to use this file handle.
-		 */
-		ob_ref_ucast( ob_argv(0) )->value = NULL;
-    }
-    return H_DEFAULT_RETURN;
+	pclose( (FILE *)handle_argv(0) );
+	/*
+	 * Make sure the handle is set to NULL to prevent SIGSEGV
+	 * when p* functions try to use this file handle.
+	 */
+	ob_ref_ucast( ob_argv(0) )->value = NULL;
 }
 
 HYBRIS_DEFINE_FUNCTION(hexit){
     int code = 0;
     if( ob_argc() > 0 ){
-    	ob_argv_type_assert( 0, otInteger, "exit" );
 		code = (long)int_argv(0);
 	}
 	exit(code);
@@ -177,11 +150,5 @@ HYBRIS_DEFINE_FUNCTION(hexit){
 }
 
 HYBRIS_DEFINE_FUNCTION(hkill){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'kill' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otInteger, "kill" );
-	ob_argv_type_assert( 1, otInteger, "kill" );
-
 	return (Object *)gc_new_integer( kill( int_argv(0), int_argv(1) ) );
 }

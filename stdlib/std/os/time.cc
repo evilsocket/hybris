@@ -30,12 +30,12 @@ HYBRIS_DEFINE_FUNCTION(hstrtime);
 HYBRIS_DEFINE_FUNCTION(hstrdate);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "ticks", hticks },
-	{ "usleep", husleep },
-	{ "sleep", hsleep },
-	{ "time", htime },
-	{ "strtime", hstrtime },
-	{ "strdate", hstrdate },
+	{ "ticks",   hticks,   H_NO_ARGS },
+	{ "usleep",  husleep,  H_REQ_ARGC(1), { H_REQ_TYPES(otInteger) } },
+	{ "sleep",   hsleep,   H_REQ_ARGC(1), { H_REQ_TYPES(otInteger) } },
+	{ "time",    htime,    H_NO_ARGS },
+	{ "strtime", hstrtime, H_NO_ARGS },
+	{ "strdate", hstrdate, H_NO_ARGS },
 	{ "", NULL }
 };
 
@@ -55,11 +55,6 @@ HYBRIS_DEFINE_FUNCTION(hticks){
 }
 
 HYBRIS_DEFINE_FUNCTION(husleep){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'usleep' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otInteger, "usleep" );
-
 	struct timespec ts;
 
     ts.tv_sec  = int_argv(0) / 1000000;
@@ -70,11 +65,6 @@ HYBRIS_DEFINE_FUNCTION(husleep){
 }
 
 HYBRIS_DEFINE_FUNCTION(hsleep){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'sleep' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otInteger, "sleep" );
-
 	struct timespec ts;
 
     ts.tv_sec  = int_argv(0) / 1000;

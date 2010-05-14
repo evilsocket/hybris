@@ -56,7 +56,7 @@ task :exec    => [ :checkdeps, :config_h, :interpreter, :library ]
 task :all     => [ :exec, :modules ]
 task :debug do
 	CXXFLAGS = "-Iinclude/ #{WFLAGS} -g -pg" 
-	Rake::Task["all"].invoke
+	Rake::Task["exec"].invoke
 end
 task :default => [ :all ]
 

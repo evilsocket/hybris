@@ -24,8 +24,8 @@ HYBRIS_DEFINE_FUNCTION(hxml_load);
 HYBRIS_DEFINE_FUNCTION(hxml_parse);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "xml_load", hxml_load },
-	{ "xml_parse", hxml_parse },
+	{ "xml_load",  hxml_load,  H_REQ_ARGC(1), { H_REQ_TYPES(otString) } },
+	{ "xml_parse", hxml_parse, H_REQ_ARGC(1), { H_REQ_TYPES(otString) } },
 	{ "", NULL }
 };
 
@@ -112,11 +112,6 @@ Object *xml_traverse( xmlNode *node ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hxml_load){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'xml_load' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otString, "xml_load" );
-
 	string   filename = string_argv(0);
 	xmlDoc  *doc  = NULL;
 	xmlNode *root = NULL;
@@ -137,11 +132,6 @@ HYBRIS_DEFINE_FUNCTION(hxml_load){
 }
 
 HYBRIS_DEFINE_FUNCTION(hxml_parse){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'xml_parse' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otString, "xml_parse" );
-
 	string   xml  = string_argv(0);
 	xmlDoc  *doc  = NULL;
 	xmlNode *root = NULL;

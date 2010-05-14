@@ -26,11 +26,11 @@ HYBRIS_DEFINE_FUNCTION(hpthread_join);
 HYBRIS_DEFINE_FUNCTION(hpthread_kill);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "pthread_create", hpthread_create },
-	{ "pthread_create_argv", hpthread_create_argv },
-	{ "pthread_exit", hpthread_exit },
-	{ "pthread_join", hpthread_join },
-	{ "pthread_kill", hpthread_kill },
+	{ "pthread_create",      hpthread_create,      H_REQ_ARGC(1), { H_REQ_TYPES(otString) } },
+	{ "pthread_create_argv", hpthread_create_argv, H_REQ_ARGC(2), { H_REQ_TYPES(otString), H_REQ_TYPES(otVector) } },
+	{ "pthread_exit", 		 hpthread_exit,        H_NO_ARGS },
+	{ "pthread_join", 		 hpthread_join,        H_REQ_ARGC(1), { H_REQ_TYPES(otInteger) } },
+	{ "pthread_kill", 		 hpthread_kill,        H_REQ_ARGC(2), { H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
 	{ "", NULL }
 };
 
@@ -65,12 +65,7 @@ void * hyb_pthread_worker( void *arg ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_create){
-	if( ob_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'pthread_create' requires at least 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otString, "pthread_create" );
-
-    pthread_t tid;
+	pthread_t tid;
     int       code;
     thread_args_t *args = new thread_args_t;
 
@@ -104,13 +99,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_create_argv){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'pthread_create_argv' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otString, "pthread_create_argv" );
-	ob_argv_type_assert( 1, otVector, "pthread_create_argv" );
-
-    pthread_t tid;
+	pthread_t tid;
     int       i, code, argc( ob_get_size( ob_argv(1) ) );
     thread_args_t *args = new thread_args_t;
 
@@ -156,11 +145,6 @@ HYBRIS_DEFINE_FUNCTION(hpthread_exit){
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_join){
-    if( ob_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'pthread_join' requires at least 1 parameter (called with %d)", ob_argc() );
-	}
-    ob_argv_type_assert( 0, otInteger, "pthread_join" );
-
     pthread_t tid = static_cast<pthread_t>( int_argv(0) );
     void *status;
 
@@ -175,12 +159,6 @@ HYBRIS_DEFINE_FUNCTION(hpthread_join){
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_kill){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'pthread_kill' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otInteger, "pthread_kill" );
-	ob_argv_type_assert( 1, otInteger, "pthread_kill" );
-
 	if( int_argv(0) > 0 ){
 		return (Object *)gc_new_integer( pthread_kill( int_argv(0), int_argv(1) ) );
 	}

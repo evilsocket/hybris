@@ -198,8 +198,11 @@ typedef Node   * (*ob_get_method_function_t)	( Object *, char *, int );
 typedef Object * (*ob_call_method_function_t)	( engine_t *, vframe_t *, Object *, char *, char *, Node * );
 /*
  * Object type codes enumeration.
+ * otEndMarker is used to mark the last allowed type in
+ * named_function_t::types.
  */
 enum H_OBJECT_TYPE {
+	otEndMarker = -1,
     otVoid = 0,
     otBoolean,
     otInteger,

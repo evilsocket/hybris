@@ -216,8 +216,8 @@ void vm_load_namespace( vm_t *vm, string path ){
 }
 
 void vm_load_module( vm_t *vm, string path, string name ){
+    unsigned int i, a, j, k, max_argc = 0, sz(vm->modules.size());
     /* check that the module isn't already loaded */
-    unsigned int i, sz(vm->modules.size());
     for( i = 0; i < sz; ++i ){
         if( vm->modules[i]->name == name ){
             return;
@@ -259,7 +259,45 @@ void vm_load_module( vm_t *vm, string path, string name ){
     i = 0;
 
     while( functions[i].function != NULL ){
-        named_function_t *function = new named_function_t( functions[i].identifier, functions[i].function );
+        named_function_t *function = new named_function_t();
+
+        function->identifier = functions[i].identifier;
+        function->function   = functions[i].function;
+
+        max_argc = 0;
+        for( a = 0;; ++a ){
+        	int argc = functions[i].argc[a];
+        	function->argc[a] = argc;
+        	if( argc >= 0 ){
+        		if( argc > max_argc ){
+        			max_argc = argc;
+        		}
+        	}
+        	else{
+        		break;
+        	}
+        }
+
+        if( max_argc > 0 ){
+			/*
+			 * For each argument.
+			 */
+			for( j = 0; j < max_argc; ++j ){
+				/*
+				 * For each type.
+				 */
+				for( k = 0;; ++k ){
+					H_OBJECT_TYPE type = functions[i].types[j][k];
+					if( type != otEndMarker ){
+						function->types[j][k] = type;
+					}
+					else{
+						break;
+					}
+				}
+			}
+		}
+
         hmod->functions.push_back(function);
         ++i;
     }

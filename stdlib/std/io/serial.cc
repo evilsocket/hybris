@@ -34,17 +34,17 @@ HYBRIS_DEFINE_FUNCTION(hserial_read);
 HYBRIS_DEFINE_FUNCTION(hserial_close);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "serial_open",       hserial_open },
-	{ "serial_fcntl",      hserial_fcntl },
-	{ "serial_get_attr",   hserial_get_attr },
-	{ "serial_get_ispeed", hserial_get_ispeed },
-	{ "serial_get_ospeed", hserial_get_ospeed },
-	{ "serial_set_attr",   hserial_set_attr },
-	{ "serial_set_ispeed", hserial_set_ispeed },
-	{ "serial_set_ospeed", hserial_set_ospeed },
-	{ "serial_write", 	   hserial_write },
-	{ "serial_read", 	   hserial_read },
-	{ "serial_close",	   hserial_close },
+	{ "serial_open",       hserial_open,       H_REQ_ARGC(2),   { H_REQ_TYPES(otString), H_REQ_TYPES(otInteger) } },
+	{ "serial_fcntl",      hserial_fcntl,      H_REQ_ARGC(2,3), { H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
+	{ "serial_get_attr",   hserial_get_attr,   H_REQ_ARGC(1),   { H_REQ_TYPES(otInteger) } },
+	{ "serial_get_ispeed", hserial_get_ispeed, H_REQ_ARGC(1),   { H_REQ_TYPES(otInteger) } },
+	{ "serial_get_ospeed", hserial_get_ospeed, H_REQ_ARGC(1),   { H_REQ_TYPES(otInteger) } },
+	{ "serial_set_attr",   hserial_set_attr,   H_REQ_ARGC(3),   { H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger), H_REQ_TYPES(otStructure) } },
+	{ "serial_set_ispeed", hserial_set_ispeed, H_REQ_ARGC(2),   { H_REQ_TYPES(otReference), H_REQ_TYPES(otInteger) } },
+	{ "serial_set_ospeed", hserial_set_ospeed, H_REQ_ARGC(2),   { H_REQ_TYPES(otReference), H_REQ_TYPES(otInteger) } },
+	{ "serial_write", 	   hserial_write,      H_REQ_ARGC(2),   { H_REQ_TYPES(otInteger), H_REQ_TYPES(otString) } },
+	{ "serial_read", 	   hserial_read,       H_REQ_ARGC(2),   { H_REQ_TYPES(otInteger), H_REQ_TYPES(otString) } },
+	{ "serial_close",	   hserial_close,      H_REQ_ARGC(1),   { H_REQ_TYPES(otInteger) } },
 	{ "", NULL }
 };
 

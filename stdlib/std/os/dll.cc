@@ -27,11 +27,11 @@ HYBRIS_DEFINE_FUNCTION(hdllcall_argv);
 HYBRIS_DEFINE_FUNCTION(hdllclose);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "dllopen", hdllopen },
-	{ "dlllink", hdlllink },
-	{ "dllcall", hdllcall },
-	{ "dllcall_argv", hdllcall_argv },
-	{ "dllclose", hdllclose },
+	{ "dllopen", 	  hdllopen,      H_REQ_ARGC(1), { H_REQ_TYPES(otString) } },
+	{ "dlllink",	  hdlllink,      H_REQ_ARGC(2), { H_REQ_TYPES(otInteger), H_REQ_TYPES(otString) } },
+	{ "dllcall", 	  hdllcall,      H_REQ_ARGC(1), { H_REQ_TYPES(otExtern) } },
+	{ "dllcall_argv", hdllcall_argv, H_REQ_ARGC(2), { H_REQ_TYPES(otExtern), H_REQ_TYPES(otVector) } },
+	{ "dllclose", 	  hdllclose,     H_REQ_ARGC(1), { H_REQ_TYPES(otInteger) } },
 	{ "", NULL }
 };
 
@@ -95,34 +95,19 @@ static void ctype_convert( Object *o, dll_arg_t *pa ) {
 }
 
 HYBRIS_DEFINE_FUNCTION(hdllopen){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'dllopen' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otString, "dllopen" );
-
     return ob_dcast( PTR_TO_INT_OBJ( dlopen( string_argv(0).c_str(), RTLD_LAZY ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hdlllink){
-    if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'dlllink' requires 2 parameters (called with %d)", ob_argc() );
-	}
-    ob_argv_type_assert( 0, otInteger, "dlllink" );
-    ob_argv_type_assert( 1, otString, "dlllink" );
-
     void *hdll = reinterpret_cast<void *>( int_argv(0) );
 
     return ob_dcast( gc_new_extern( H_ADDRESS_OF( dlsym( hdll, string_argv(1).c_str() ) ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hdllcall){
-    if( ob_argc() < 1 ){
-        hyb_error( H_ET_SYNTAX, "function 'dllcall' requires at least 1 parameter (called with %d)", ob_argc() );
-    }
-    else if( ob_argc() > CALL_MAX_ARGS + 1 ){
+	if( ob_argc() > CALL_MAX_ARGS + 1 ){
         hyb_error( H_ET_SYNTAX, "function 'dllcall' supports at max %d parameters (called with %d)", CALL_MAX_ARGS, ob_argc() );
     }
-    ob_argv_type_assert( 0, otExtern, "dllcall" );
 
     typedef int (* function_t)(void);
     function_t function = (function_t)extern_argv(0);
@@ -174,12 +159,6 @@ HYBRIS_DEFINE_FUNCTION(hdllcall){
 }
 
 HYBRIS_DEFINE_FUNCTION(hdllcall_argv){
-    if( ob_argc() != 2 ){
-        hyb_error( H_ET_SYNTAX, "function 'dllcall_argv' requires 2 parameters (called with %d)", ob_argc() );
-    }
-    ob_argv_type_assert( 0, otExtern, "dllcall_argv" );
-    ob_argv_type_assert( 1, otVector, "dllcall_argv" );
-
     vframe_t stack;
     int size( ob_get_size( ob_argv(1) ) );
     IntegerObject index(0);
@@ -193,11 +172,6 @@ HYBRIS_DEFINE_FUNCTION(hdllcall_argv){
 }
 
 HYBRIS_DEFINE_FUNCTION(hdllclose){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'dllclose' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otInteger, "dllclose" );
-
 	if( int_argv(0) ){
 		dlclose( (void *)int_argv(0) );
 	}

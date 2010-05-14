@@ -22,21 +22,14 @@
 HYBRIS_DEFINE_FUNCTION(hpcre_replace);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-    { "pcre_replace", hpcre_replace },
+    { "pcre_replace", hpcre_replace, H_REQ_ARGC(3), { H_REQ_TYPES(otString), H_REQ_TYPES(otString), H_REQ_TYPES(otChar,otString) } },
     { "", NULL }
 };
 
 HYBRIS_DEFINE_FUNCTION(hpcre_replace){
-	if( ob_argc() != 3 ){
-		hyb_error( H_ET_SYNTAX, "function 'pcre_replace' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otString, "pcre_replace" );
-	ob_argv_type_assert( 1, otString, "pcre_replace" );
-	ob_argv_types_assert( 2, otString, otChar, "pcre_replace" );
-
 	string rawreg  = string_argv(0).c_str(),
 		   subject = string_argv(1).c_str(),
-		   replace = ob_is_string( ob_argv(2) ) ? string_argv(2).c_str() : string("") + (char)ob_ivalue(ob_argv(2)),
+		   replace = ob_svalue( ob_argv(2) ),
 		   pattern;
 	int    		 opts, i, ccount, rc,
 				*offsets,

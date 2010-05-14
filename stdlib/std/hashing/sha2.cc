@@ -21,7 +21,7 @@
 HYBRIS_DEFINE_FUNCTION(hsha2);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-    {"sha2", hsha2 },
+    {"sha2", hsha2, H_REQ_ARGC(1), { H_REQ_TYPES(otString) } },
     { "", NULL }
 };
 
@@ -306,11 +306,6 @@ void sha2_finish( sha2_context *vm, unsigned char output[32] )
 }
 
 HYBRIS_DEFINE_FUNCTION(hsha2){
-    if( ob_argc() < 1 ){
-        hyb_error( H_ET_SYNTAX, "function 'sha2' requires at least 1 parameter (called with %d)", ob_argc() );
-    }
-    ob_argv_type_assert( 0, otString, "sha2" );
-
     int is224 = SHA256;
     if( ob_argc() == 2 ){
     	ob_argv_type_assert( 1, otInteger, "sha2" );

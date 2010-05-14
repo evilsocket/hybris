@@ -32,16 +32,16 @@ HYBRIS_DEFINE_FUNCTION(hfile);
 HYBRIS_DEFINE_FUNCTION(hreaddir);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "fopen", hfopen },
-	{ "fseek", hfseek },
-	{ "ftell", hftell },
-	{ "fsize", hfsize },
-	{ "fread", hfread },
-	{ "fwrite", hfwrite },
-	{ "fgets", hfgets },
-	{ "fclose", hfclose },
-	{ "file", hfile },
-	{ "readdir", hreaddir },
+	{ "fopen",   hfopen,   H_REQ_ARGC(2),   { H_REQ_TYPES(otString), H_REQ_TYPES(otString) } },
+	{ "fseek",   hfseek,   H_REQ_ARGC(3),   { H_REQ_TYPES(otHandle), H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
+	{ "ftell",   hftell,   H_REQ_ARGC(1),   { H_REQ_TYPES(otHandle) } },
+	{ "fsize",   hfsize,   H_REQ_ARGC(1),   { H_REQ_TYPES(otHandle,otString) } },
+	{ "fread",   hfread,   H_REQ_ARGC(2,3), { H_REQ_TYPES(otHandle), H_ANY_TYPE, H_REQ_TYPES(otInteger) } },
+	{ "fwrite",  hfwrite,  H_REQ_ARGC(2,3), { H_REQ_TYPES(otHandle), H_ANY_TYPE, H_REQ_TYPES(otInteger) } },
+	{ "fgets",   hfgets,   H_REQ_ARGC(1),   { H_REQ_TYPES(otHandle) } },
+	{ "fclose",  hfclose,  H_REQ_ARGC(1),   { H_REQ_TYPES(otHandle) } },
+	{ "file",    hfile,    H_REQ_ARGC(1),   { H_REQ_TYPES(otString) } },
+	{ "readdir", hreaddir, H_REQ_ARGC(1,2), { H_REQ_TYPES(otString), H_REQ_TYPES(otBoolean) } },
 	{ "", NULL }
 };
 
@@ -63,27 +63,12 @@ extern "C" void hybris_module_init( vm_t * vm ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hfopen){
-	ob_argv_type_assert( 0, otString, "fopen" );
-	ob_argv_type_assert( 1, otString, "fopen" );
-
     Object *_return = NULL;
-    if( ob_argc() == 2 ){
-        _return = ob_dcast( gc_new_handle( fopen( string_argv(0).c_str(), string_argv(1).c_str() ) ) );
-    }
-	else{
-		hyb_error( H_ET_SYNTAX, "function 'fopen' requires 2 parameters (called with %d)", ob_argc() );
-	}
-    return _return;
+
+    return ob_dcast( gc_new_handle( fopen( string_argv(0).c_str(), string_argv(1).c_str() ) ) );;
 }
 
 HYBRIS_DEFINE_FUNCTION(hfseek){
-	if( ob_argc() != 3 ){
-		hyb_error( H_ET_SYNTAX, "function 'fseek' requires 3 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otHandle, "fseek" );
-	ob_argv_type_assert( 1, otInteger, "fseek" );
-	ob_argv_type_assert( 2, otInteger, "fseek" );
-
 	if( handle_argv(0) == NULL ){
 		return H_DEFAULT_ERROR;
 	}
@@ -92,11 +77,6 @@ HYBRIS_DEFINE_FUNCTION(hfseek){
 }
 
 HYBRIS_DEFINE_FUNCTION(hftell){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'ftell' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otHandle, "ftell" );
-
 	if( handle_argv(0) == NULL ){
 		return H_DEFAULT_ERROR;
 	}
@@ -105,11 +85,6 @@ HYBRIS_DEFINE_FUNCTION(hftell){
 }
 
 HYBRIS_DEFINE_FUNCTION(hfsize){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'fsize' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_types_assert( 0, otHandle, otString, "fsize" );
-
 	int size = 0, pos;
 	FILE *fp;
 
@@ -139,11 +114,6 @@ HYBRIS_DEFINE_FUNCTION(hfsize){
 }
 
 HYBRIS_DEFINE_FUNCTION(hfread){
-	if( ob_argc() < 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'fread' requires 2 or 3 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otHandle, "fread" );
-
 	if( handle_argv(0) == NULL ){
 		return H_DEFAULT_ERROR;
 	}
@@ -155,7 +125,6 @@ HYBRIS_DEFINE_FUNCTION(hfread){
 
 	/* explicit size declaration */
 	if( ob_argc() == 3 ){
-		ob_argv_type_assert( 2, otInteger, "fread" );
 		size = int_argv(2);
 	}
 
@@ -163,11 +132,6 @@ HYBRIS_DEFINE_FUNCTION(hfread){
 }
 
 HYBRIS_DEFINE_FUNCTION(hfwrite){
-	if( ob_argc() < 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'fwrite' requires 2 or 3 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otHandle, "fwrite" );
-
 	if( handle_argv(0) == NULL ){
 		return H_DEFAULT_ERROR;
 	}
@@ -179,7 +143,6 @@ HYBRIS_DEFINE_FUNCTION(hfwrite){
 
 	/* explicit size declaration */
 	if( ob_argc() == 3 ){
-		ob_argv_type_assert( 2, otInteger, "fseek" );
 		size = int_argv(2);
 	}
 
@@ -187,11 +150,6 @@ HYBRIS_DEFINE_FUNCTION(hfwrite){
 }
 
 HYBRIS_DEFINE_FUNCTION(hfgets){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'fgets' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otHandle, "fgets" );
-
 	if( handle_argv(0) == NULL ){
 		return H_DEFAULT_ERROR;
 	}
@@ -207,28 +165,21 @@ HYBRIS_DEFINE_FUNCTION(hfgets){
 }
 
 HYBRIS_DEFINE_FUNCTION(hfclose){
-	ob_argv_type_assert( 0, otHandle, "fclose" );
-    if( ob_argc() ){
-    	if( handle_argv(0) == NULL ){
-			return H_DEFAULT_ERROR;
-		}
+	if( handle_argv(0) == NULL ){
+		return H_DEFAULT_ERROR;
+	}
 
-		fclose( (FILE *)handle_argv(0) );
-		/*
-		 * Make sure the handle is set to NULL to prevent SIGSEGV
-		 * when file functions try to use this file handle.
-		 */
-		ob_ref_ucast( ob_argv(0) )->value = NULL;
-    }
-    return H_DEFAULT_RETURN;
+	fclose( (FILE *)handle_argv(0) );
+	/*
+	 * Make sure the handle is set to NULL to prevent SIGSEGV
+	 * when file functions try to use this file handle.
+	 */
+	ob_ref_ucast( ob_argv(0) )->value = NULL;
+
+	return H_DEFAULT_RETURN;
 }
 
 HYBRIS_DEFINE_FUNCTION(hfile){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'file' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otString, "file" );
-
 	FILE *fp = fopen( string_argv(0).c_str(), "rt" );
 	if( !fp ){
 		hyb_error( H_ET_GENERIC, "could not open '%s' for reading", string_argv(0).c_str() );
@@ -284,11 +235,6 @@ void readdir_recurse( char *root, char *dir, VectorObject *vector ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hreaddir){
-    if( ob_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'readdir' requires at least 1 parameter (called with %d)", ob_argc() );
-	}
-    ob_argv_type_assert( 0, otString, "readdir" );
-
     DIR           *dir;
     struct dirent *ent;
 
@@ -297,7 +243,7 @@ HYBRIS_DEFINE_FUNCTION(hreaddir){
     }
 
     VectorObject *files 	= gc_new_vector();
-	int           recursive = ( ob_argc() > 1 && ob_lvalue(ob_argv(1)) );
+	bool          recursive = ( ob_argc() > 1 && ob_lvalue(ob_argv(1)) );
     while( (ent = readdir(dir)) != NULL ){
     	MapObject *file = gc_new_map();
 

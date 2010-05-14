@@ -22,15 +22,12 @@ HYBRIS_DEFINE_FUNCTION(hbinary);
 HYBRIS_DEFINE_FUNCTION(hpack);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "binary", hbinary },
-	{ "pack", hpack },
+	{ "binary", hbinary, H_REQ_ARGC(1), { H_REQ_TYPES(otInteger,otChar) } },
+	{ "pack",   hpack,   H_REQ_ARGC(2), { H_ANY_TYPE, H_REQ_TYPES(otInteger) } },
 	{ "", NULL }
 };
 
 HYBRIS_DEFINE_FUNCTION(hbinary){
-    if( ob_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'binary' requires at least 1 parameter (called with %d)", ob_argc() );
-	}
 	vector<unsigned char> stream;
 	unsigned int          i;
 
@@ -63,11 +60,6 @@ void do_simple_packing( vector<byte>& stream, Object *o, size_t size ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hpack){
-	if( ob_argc() < 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'pack' requires at least 2 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 1, otInteger, "pack" );
-
 	vector<byte> stream;
 	size_t 		 i, j, size( int_argv(1) );
 	Object      *o = ob_argv(0);

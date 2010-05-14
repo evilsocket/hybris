@@ -22,8 +22,8 @@ HYBRIS_DEFINE_FUNCTION(hmd5);
 HYBRIS_DEFINE_FUNCTION(hmd5_file);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-    {"md5", hmd5 },
-    {"md5_file", hmd5_file },
+    {"md5", 	 hmd5,      H_REQ_ARGC(1), { H_REQ_TYPES(otString) } },
+    {"md5_file", hmd5_file, H_REQ_ARGC(1), { H_REQ_TYPES(otString) } },
     { "", NULL }
 };
 
@@ -288,11 +288,6 @@ HYBRIS_DEFINE_FUNCTION(hmd5){
 }
 
 HYBRIS_DEFINE_FUNCTION(hmd5_file){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'md5_file' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otString, "md5_file" );
-
 	string        fname	   = string_argv(0),
 				  str_hash("");
 	FILE		 *fp = NULL;

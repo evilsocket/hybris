@@ -58,18 +58,18 @@ HYBRIS_DEFINE_FUNCTION(hsend);
 HYBRIS_DEFINE_FUNCTION(hclose);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "socket", hsocket },
-	{ "bind", hbind },
-	{ "listen", hlisten },
-	{ "accept", haccept },
-	{ "getsockname", hgetsockname },
-	{ "getpeername", hgetpeername },
-	{ "settimeout", hsettimeout },
-	{ "connect", hconnect },
-	{ "server", hserver },
-	{ "recv", hrecv },
-	{ "send", hsend },
-	{ "close", hclose },
+	{ "socket", 	 hsocket,      H_REQ_ARGC(2),   { H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
+	{ "bind", 		 hbind,        H_REQ_ARGC(2,3), { H_REQ_TYPES(otHandle), H_REQ_TYPES(otString), H_REQ_TYPES(otInteger) } },
+	{ "listen", 	 hlisten,      H_REQ_ARGC(1,2), { H_REQ_TYPES(otHandle), H_REQ_TYPES(otInteger) } },
+	{ "accept", 	 haccept,      H_REQ_ARGC(1),   { H_REQ_TYPES(otHandle) } },
+	{ "getsockname", hgetsockname, H_REQ_ARGC(3),   { H_REQ_TYPES(otHandle), H_REQ_TYPES(otReference), H_REQ_TYPES(otReference) } },
+	{ "getpeername", hgetpeername, H_REQ_ARGC(3),   { H_REQ_TYPES(otHandle), H_REQ_TYPES(otReference), H_REQ_TYPES(otReference) } },
+	{ "settimeout",  hsettimeout,  H_REQ_ARGC(2),   { H_REQ_TYPES(otHandle), H_REQ_TYPES(otInteger) } },
+	{ "connect",     hconnect, 	   H_REQ_ARGC(2,3), { H_REQ_TYPES(otString), H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
+	{ "server",      hserver,      H_REQ_ARGC(1,2), { H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
+	{ "recv", 	     hrecv,        H_REQ_ARGC(2,3), { H_REQ_TYPES(otHandle), H_ANY_TYPE, H_REQ_TYPES(otInteger) } },
+	{ "send", 		 hsend,        H_REQ_ARGC(2,3), { H_REQ_TYPES(otHandle), H_ANY_TYPE, H_REQ_TYPES(otInteger) } },
+	{ "close", 		 hclose,       H_REQ_ARGC(1),   { H_REQ_TYPES(otHandle) } },
 	{ "", NULL }
 };
 
@@ -131,12 +131,6 @@ extern "C" void hybris_module_init( vm_t * vm ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hsocket){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'socket' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otInteger, "socket" );
-	ob_argv_type_assert( 1, otInteger, "socket" );
-
 	int domain = int_argv(0),
 		type   = int_argv(1),
 		/*
@@ -149,12 +143,6 @@ HYBRIS_DEFINE_FUNCTION(hsocket){
 }
 
 HYBRIS_DEFINE_FUNCTION(hbind){
-	if( ob_argc() < 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'bind' requires at least 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otHandle, "bind" );
-	ob_argv_type_assert( 1, otString, "bind" );
-
 	SocketObject *sobj = (SocketObject *)handle_argv(0);
 
 	int    port    = 0,
@@ -164,7 +152,6 @@ HYBRIS_DEFINE_FUNCTION(hbind){
 	struct sockaddr_in saddr;
 
 	if( ob_argc() > 2 ){
-		ob_argv_type_assert( 2, otInteger, "bind" );
 		port = int_argv(2);
 		if( port < 0 || port > 0xffff ){
 			hyb_error( H_ET_GENERIC, "allowed port interval is 0-65535, given %d", port );
@@ -187,17 +174,11 @@ HYBRIS_DEFINE_FUNCTION(hbind){
 }
 
 HYBRIS_DEFINE_FUNCTION(hlisten){
-	if( ob_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'listen' requires at least 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otHandle, "listen" );
-
 	int sd 		= ((SocketObject *)handle_argv(0))->sd,
 		backlog = 10,
 		res     = -1;
 
 	if( ob_argc() >= 2 ){
-		ob_argv_type_assert( 1, otInteger, "listen" );
 		backlog = int_argv(1);
 	}
 
@@ -207,11 +188,6 @@ HYBRIS_DEFINE_FUNCTION(hlisten){
 }
 
 HYBRIS_DEFINE_FUNCTION(haccept){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'accept' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otHandle, "accept" );
-
 	SocketObject *sobj = (SocketObject *)handle_argv(0);
 	int			  csd  = -1;
 
@@ -226,13 +202,6 @@ HYBRIS_DEFINE_FUNCTION(haccept){
 }
 
 HYBRIS_DEFINE_FUNCTION(hgetsockname){
-	if( ob_argc() != 3 ){
-		hyb_error( H_ET_SYNTAX, "function 'getsockname' requires 3 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otHandle, "getsockname" );
-	ob_argv_type_assert( 1, otReference, "getsockname" );
-	ob_argv_type_assert( 2, otReference, "getsockname" );
-
 	SocketObject *sobj = (SocketObject *)handle_argv(0);
 	char		  ipstr[INET6_ADDRSTRLEN];
 	int 		  port;
@@ -270,13 +239,6 @@ HYBRIS_DEFINE_FUNCTION(hgetsockname){
 }
 
 HYBRIS_DEFINE_FUNCTION(hgetpeername){
-	if( ob_argc() != 3 ){
-		hyb_error( H_ET_SYNTAX, "function 'getpeername' requires 3 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otHandle, 	 "getpeername" );
-	ob_argv_type_assert( 1, otReference, "getpeername" );
-	ob_argv_type_assert( 2, otReference, "getpeername" );
-
 	SocketObject *sobj = (SocketObject *)handle_argv(0);
 	char		  ipstr[INET6_ADDRSTRLEN];
 	int 		  port;
@@ -314,12 +276,6 @@ HYBRIS_DEFINE_FUNCTION(hgetpeername){
 }
 
 HYBRIS_DEFINE_FUNCTION(hsettimeout){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'settimeout' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otHandle, "settimeout" );
-	ob_argv_type_assert( 1, otInteger, "settimeout" );
-
 	SocketObject  *sobj = (SocketObject *)handle_argv(0);
 	struct timeval tout = { 0 , int_argv(1) };
 
@@ -330,17 +286,11 @@ HYBRIS_DEFINE_FUNCTION(hsettimeout){
 }
 
 HYBRIS_DEFINE_FUNCTION(hconnect){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'connect' requires at least 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otString, "connect" );
-
 	int sd = socket( AF_INET, SOCK_STREAM, 0 );
 	if( sd <= 0 ){
 		return (Object *)gc_new_boolean(false);
 	}
 	if( ob_argc() >= 3 ){
-		ob_argv_type_assert( 2, otInteger, "connect" );
 		struct timeval tout = { 0 , int_argv(2) };
 
 		setsockopt( sd, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
@@ -366,17 +316,11 @@ HYBRIS_DEFINE_FUNCTION(hconnect){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserver){
-	if( ob_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'server' requires at least 1 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otInteger, "server" );
-
 	int sd = socket( AF_INET, SOCK_STREAM, 0 );
 	if( sd <= 0 ){
 		return (Object *)gc_new_boolean(false);
 	}
 	if( ob_argc() >= 2 ){
-		ob_argv_type_assert( 1, otInteger, "server" );
 		struct timeval tout = { 0 , int_argv(1) };
 
 		setsockopt( sd, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
@@ -402,18 +346,12 @@ HYBRIS_DEFINE_FUNCTION(hserver){
 }
 
 HYBRIS_DEFINE_FUNCTION(hrecv){
-	if( ob_argc() < 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'recv' requires 2 or 3 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otHandle, "recv" );
-
 	int sd			 = ((SocketObject *)handle_argv(0))->sd;
 	size_t size 	 = 0;
 	Object *object   = ob_argv(1);
 
 	/* explicit size declaration */
 	if( ob_argc() >= 3 ){
-		ob_argv_type_assert( 2, otInteger, "recv" );
 		size = int_argv(2);
 	}
 
@@ -421,18 +359,12 @@ HYBRIS_DEFINE_FUNCTION(hrecv){
 }
 
 HYBRIS_DEFINE_FUNCTION(hsend){
-	if( ob_argc() < 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'send' requires 2 or 3 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otHandle, "send" );
-
 	int sd 			 = ((SocketObject *)handle_argv(0))->sd;
 	size_t size 	 = 0;
 	Object *object   = ob_argv(1);
 
 	/* explicit size declaration */
 	if( ob_argc() >= 3 ){
-		ob_argv_type_assert( 2, otInteger, "send" );
 		size = int_argv(2);
 	}
 
@@ -440,11 +372,6 @@ HYBRIS_DEFINE_FUNCTION(hsend){
 }
 
 HYBRIS_DEFINE_FUNCTION(hclose){
-	if( ob_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'close' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otHandle, "close" );
-
 	close( ((SocketObject *)handle_argv(0))->sd );
 
     return H_DEFAULT_RETURN;

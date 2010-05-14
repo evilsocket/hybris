@@ -21,7 +21,7 @@
 HYBRIS_DEFINE_FUNCTION(hcrc32);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-    {"crc32", hcrc32 },
+    {"crc32", hcrc32, H_REQ_ARGC(1), { H_REQ_TYPES(otString) } },
     { "", NULL }
 };
 
@@ -93,11 +93,6 @@ static unsigned long crc_table[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hcrc32){
-    if( ob_argc() != 1 ){
-        hyb_error( H_ET_SYNTAX, "function 'crc32' requires 1 parameter (called with %d)", ob_argc() );
-    }
-    ob_argv_type_assert( 0, otString, "crc32" );
-
 	string str = string_argv(0);
 
     unsigned long crc( 0xFFFFFFFF ), i, size(str.size());

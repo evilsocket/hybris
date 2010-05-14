@@ -27,11 +27,11 @@ HYBRIS_DEFINE_FUNCTION(humount2);
 HYBRIS_DEFINE_FUNCTION(humount);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "mknod", hmknod },
-	{ "mkfifo", hmkfifo },
-	{ "mount", hmount },
-	{ "umount2", humount2 },
-	{ "umount", humount },
+	{ "mknod",   hmknod,   H_REQ_ARGC(3), { H_REQ_TYPES(otString), H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
+	{ "mkfifo",  hmkfifo,  H_REQ_ARGC(2), { H_REQ_TYPES(otString), H_REQ_TYPES(otInteger) } },
+	{ "mount",   hmount,   H_REQ_ARGC(4), { H_REQ_TYPES(otString), H_REQ_TYPES(otString), H_REQ_TYPES(otString), H_REQ_TYPES(otInteger) } },
+	{ "umount2", humount2, H_REQ_ARGC(2), { H_REQ_TYPES(otString), H_REQ_TYPES(otInteger) } },
+	{ "umount",  humount,  H_REQ_ARGC(1), { H_REQ_TYPES(otString)} },
 	{ "", NULL }
 };
 
@@ -78,13 +78,6 @@ extern "C" void hybris_module_init( vm_t * vm ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hmknod){
-    if( ob_argc() < 3 ){
-        hyb_error( H_ET_SYNTAX, "function 'mknod' requires 3 parameters (called with %d)", ob_argc() );
-    }
-    ob_argv_type_assert( 0, otString,  "mknod" );
-    ob_argv_type_assert( 1, otInteger, "mknod" );
-    ob_argv_type_assert( 2, otInteger, "mknod" );
-
     const char *path = string_argv(0).c_str();
     mode_t		mode = int_argv(1);
     dev_t		dev  = int_argv(2);
@@ -93,12 +86,6 @@ HYBRIS_DEFINE_FUNCTION(hmknod){
 }
 
 HYBRIS_DEFINE_FUNCTION(hmkfifo){
-	 if( ob_argc() < 3 ){
-		hyb_error( H_ET_SYNTAX, "function 'mkfifo' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otString,  "mkfifo" );
-	ob_argv_type_assert( 1, otInteger, "mkfifo" );
-
 	const char *path = string_argv(0).c_str();
 	mode_t		mode = int_argv(1);
 
@@ -106,14 +93,6 @@ HYBRIS_DEFINE_FUNCTION(hmkfifo){
 }
 
 HYBRIS_DEFINE_FUNCTION(hmount){
-	if( ob_argc() < 4 ){
-		hyb_error( H_ET_SYNTAX, "function 'mount' requires 4 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otString,  "mount" );
-	ob_argv_type_assert( 1, otString,  "mount" );
-	ob_argv_type_assert( 2, otString,  "mount" );
-	ob_argv_type_assert( 3, otInteger, "mount" );
-
 	const char *special_file  = string_argv(0).c_str(),
 			   *dir           = string_argv(1).c_str(),
 			   *fstype        = string_argv(2).c_str();
@@ -123,12 +102,6 @@ HYBRIS_DEFINE_FUNCTION(hmount){
 }
 
 HYBRIS_DEFINE_FUNCTION(humount2){
-	if( ob_argc() < 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'umount2' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otString,  "umount2" );
-	ob_argv_type_assert( 1, otInteger, "umount2" );
-
 	const char *file  = string_argv(0).c_str();
 	int			flags = int_argv(1);
 
@@ -136,11 +109,6 @@ HYBRIS_DEFINE_FUNCTION(humount2){
 }
 
 HYBRIS_DEFINE_FUNCTION(humount){
-	if( ob_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'umount' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otString,  "umount" );
-
 	const char *file = string_argv(0).c_str();
 
 	return (Object *)gc_new_integer( umount( file ) );

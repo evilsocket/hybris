@@ -21,7 +21,7 @@
 HYBRIS_DEFINE_FUNCTION(hmap);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "map", hmap },
+	{ "map", hmap, H_ANY_ARGC, { H_ANY_TYPE } },
 	{ "", NULL }
 };
 

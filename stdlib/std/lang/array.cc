@@ -21,7 +21,7 @@
 HYBRIS_DEFINE_FUNCTION(harray);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "array", harray },
+	{ "array", harray, H_ANY_ARGC, { H_ANY_TYPE } },
 	{ "", NULL }
 };
 

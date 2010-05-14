@@ -21,7 +21,7 @@
 HYBRIS_DEFINE_FUNCTION(hsha1);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-    {"sha1", hsha1 },
+    {"sha1", hsha1, H_REQ_ARGC(1), { H_REQ_TYPES(otString) } },
     { "", NULL }
 };
 
@@ -296,11 +296,6 @@ void sha1_finish( sha1_context *vm, unsigned char output[20] )
 }
 
 HYBRIS_DEFINE_FUNCTION(hsha1){
-    if( ob_argc() != 1 ){
-        hyb_error( H_ET_SYNTAX, "function 'sha1' requires 1 parameter (called with %d)", ob_argc() );
-    }
-    ob_argv_type_assert( 0, otString, "sha1" );
-
 	string        str 	   = string_argv(0),
 				  str_hash("");
 	unsigned char hash[20] = {0};
