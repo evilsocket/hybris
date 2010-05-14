@@ -251,9 +251,11 @@ body       : body statement { vm_timer( __hyb_vm, HYB_TIMER_START );
 
 mapList : expression ':' expression ',' mapList { $$ = MK_NODE($5);    $$->head($1,$3); }
 	    | expression ':' expression 			{ $$ = MK_NODE_LIST(); $$->tail($1,$3); }
+	    | ':'			   						{ $$ = NULL; }
 
 itemList : expression ',' itemList { $$ = MK_NODE($3);    $$->head($1); }
  		 | expression              { $$ = MK_NODE_LIST(); $$->tail($1); }
+ 		 | /* empty */			   { $$ = NULL; }
 
 argumentList : expression ':' argumentList { $$ = MK_NODE($3);    $$->head($1); }
 			 | expression ',' argumentList { $$ = MK_NODE($3);    $$->head($1); }
