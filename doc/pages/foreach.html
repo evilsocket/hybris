@@ -34,7 +34,7 @@ La sintassi (nel caso di una variabile di tipo <a href="array.html" class="wikil
 <p>
 Ad esempio, per stampare ogni elemento di un <a href="array.html" class="wikilink1" title="array">array</a> :
 </p>
-<pre class="code hybris">foo <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span> 1<span class="sy0">,</span> 2<span class="sy0">,</span> 3<span class="sy0">,</span> 4<span class="sy0">,</span> 5<span class="sy0">,</span> 6 <span class="br0">&#41;</span><span class="sy0">;</span>
+<pre class="code hybris">foo <span class="sy0">=</span> <span class="br0">&#91;</span> 1<span class="sy0">,</span> 2<span class="sy0">,</span> 3<span class="sy0">,</span> 4<span class="sy0">,</span> 5<span class="sy0">,</span> 6 <span class="br0">&#93;</span><span class="sy0">;</span>
 <span class="kw1">foreach</span><span class="br0">&#40;</span> item <span class="kw1">of</span> foo <span class="br0">&#41;</span><span class="br0">&#123;</span>
     <span class="kw3">println</span><span class="br0">&#40;</span>item<span class="br0">&#41;</span><span class="sy0">;</span>
 <span class="br0">&#125;</span></pre>
@@ -42,8 +42,8 @@ Ad esempio, per stampare ogni elemento di un <a href="array.html" class="wikilin
 <p>
 Se invece volessimo stampare ogni chiave e relativo elemento di una <a href="mappa.html" class="wikilink1" title="mappa">mappa</a> :
 </p>
-<pre class="code hybris">foo <span class="sy0">=</span> <span class="kw3">map</span><span class="br0">&#40;</span> <span class="st0">&quot;nome&quot;</span>    <span class="sy0">:</span> <span class="st0">&quot;Mario&quot;</span><span class="sy0">,</span>
-           <span class="st0">&quot;cognome&quot;</span> <span class="sy0">:</span> <span class="st0">&quot;Rossi&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+<pre class="code hybris">foo <span class="sy0">=</span> <span class="br0">&#91;</span> <span class="st0">&quot;nome&quot;</span>    <span class="sy0">:</span> <span class="st0">&quot;Mario&quot;</span><span class="sy0">,</span>
+        <span class="st0">&quot;cognome&quot;</span> <span class="sy0">:</span> <span class="st0">&quot;Rossi&quot;</span> <span class="br0">&#93;</span><span class="sy0">;</span>
 &nbsp;
 <span class="kw1">foreach</span><span class="br0">&#40;</span> chiave <span class="sy0">-&gt;</span> elemento <span class="kw1">of</span> foo <span class="br0">&#41;</span><span class="br0">&#123;</span>
      <span class="kw3">println</span><span class="br0">&#40;</span> chiave <span class="sy0">+</span> <span class="st0">&quot; -&gt; &quot;</span> <span class="sy0">+</span> elemento <span class="br0">&#41;</span><span class="sy0">;</span>

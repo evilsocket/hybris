@@ -58,6 +58,30 @@ Object *__map_has( engine_t *engine, Object *me, vframe_t *data ){
 	return (Object *)gc_new_boolean( map_find( me, ob_argv(0) ) == -1 ? false : true );
 }
 
+Object *__map_keys( engine_t *engine, Object *me, vframe_t *data ){
+	MapObject *mme  = ob_map_ucast(me);
+	Object    *keys = (Object *)gc_new_vector();
+	int		   i, sz( mme->keys.size() );
+
+	for( i = 0; i < sz; ++i ){
+		ob_cl_push( keys, mme->keys[i] );
+	}
+
+	return keys;
+}
+
+Object *__map_values( engine_t *engine, Object *me, vframe_t *data ){
+	MapObject *mme    = ob_map_ucast(me);
+	Object    *values = (Object *)gc_new_vector();
+	int		   i, sz( mme->values.size() );
+
+	for( i = 0; i < sz; ++i ){
+		ob_cl_push( values, mme->values[i] );
+	}
+
+	return values;
+}
+
 /** generic function pointers **/
 const char *map_typename( Object *o ){
 	return o->type->name;
@@ -322,10 +346,12 @@ IMPLEMENT_TYPE(Map) {
     0,
     /** type builtin methods **/
     {
-		{ "size",  (ob_type_builtin_method_t *)__map_size },
-		{ "pop",   (ob_type_builtin_method_t *)__map_pop },
-		{ "unmap", (ob_type_builtin_method_t *)__map_unmap },
-		{ "has",   (ob_type_builtin_method_t *)__map_has },
+		{ "size",   (ob_type_builtin_method_t *)__map_size },
+		{ "pop",    (ob_type_builtin_method_t *)__map_pop },
+		{ "unmap",  (ob_type_builtin_method_t *)__map_unmap },
+		{ "has",    (ob_type_builtin_method_t *)__map_has },
+		{ "keys",   (ob_type_builtin_method_t *)__map_keys },
+		{ "values", (ob_type_builtin_method_t *)__map_values },
 		OB_BUILIN_METHODS_END_MARKER
     },
 

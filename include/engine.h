@@ -167,6 +167,7 @@ Object   *engine_on_switch( engine_t *engine, vframe_t *, Node * );
  * Expressions and operators.
  */
 /* misc */
+Object 	 *engine_on_backtick( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_vargs( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_dollar( engine_t *engine, vframe_t *, Node * );
 Object   *engine_on_reference( engine_t *engine, vframe_t *, Node * );

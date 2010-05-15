@@ -44,7 +44,7 @@ class Dll {
 
 	public method Dll( name ){
 		me.name  = name;
-		me.cache = map();
+		me.cache = [:];
  		me.link  = dllopen( me.name );
 		
 		if( !me.link ){

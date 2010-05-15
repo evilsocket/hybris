@@ -354,7 +354,7 @@ Ad esempio, possiamo vedere una classe Array che wrappa il medesimo tipo :
 	<span class="kw2">private</span> __a<span class="sy0">;</span>
 &nbsp;
 	<span class="kw2">public</span> <span class="kw2">method</span> <span class="kw3">Array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-		<span class="kw1">me</span>.__a <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>	
+		<span class="kw1">me</span>.__a <span class="sy0">=</span> <span class="br0">&#91;</span><span class="br0">&#93;</span><span class="sy0">;</span>	
 	<span class="br0">&#125;</span>
 &nbsp;
         <span class="co1">// accesso ad un elemento in sola lettura</span>
@@ -388,7 +388,7 @@ a<span class="br0">&#91;</span><span class="nu0">2</span><span class="br0">&#93;
 <span class="kw3">println</span><span class="br0">&#40;</span> a<span class="br0">&#91;</span>1<span class="br0">&#93;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 
 </div>
-<!-- SECTION "Overloading degli Operatori" [9661-10888] -->
+<!-- SECTION "Overloading degli Operatori" [9661-10883] -->
 <h1><a name="overloading_dei_descrittori" id="overloading_dei_descrittori">Overloading dei Descrittori</a></h1>
 <div class="level1">
 
@@ -398,7 +398,7 @@ Così come gli operatori, esistono dei <strong>descrittori</strong> standard dei
 </p>
 
 </div>
-<!-- SECTION "Overloading dei Descrittori" [10889-11151] -->
+<!-- SECTION "Overloading dei Descrittori" [10884-11146] -->
 <h2><a name="descrittore_size" id="descrittore_size">Descrittore size</a></h2>
 <div class="level2">
 
@@ -415,12 +415,12 @@ Potremmo modificare l&#039;esempio di prima così :
 	<span class="kw2">private</span> __a<span class="sy0">;</span>
 &nbsp;
 	<span class="kw2">public</span> <span class="kw2">method</span> <span class="kw3">Array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-		<span class="kw1">me</span>.__a <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>	
+		<span class="kw1">me</span>.__a <span class="sy0">=</span> <span class="br0">&#91;</span><span class="br0">&#93;</span><span class="sy0">;</span>	
 	<span class="br0">&#125;</span>
 &nbsp;
         <span class="co1">// restituisce il numero di elementi che contiene l'array</span>
         <span class="kw2">public</span> <span class="kw2">method</span> <span class="kw3">__size</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-	    <span class="kw1">return</span> <span class="kw3">elements</span><span class="br0">&#40;</span><span class="kw1">me</span>.__a<span class="br0">&#41;</span><span class="sy0">;</span>
+	    <span class="kw1">return</span> <span class="kw1">me</span>.__a.<span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
 	<span class="br0">&#125;</span>
 &nbsp;
 	<span class="kw2">operator</span> <span class="br0">&#91;</span><span class="br0">&#93;</span> <span class="br0">&#40;</span> index <span class="br0">&#41;</span><span class="br0">&#123;</span>	
@@ -473,7 +473,7 @@ Questo stamperà l&#039;output :
 <pre class="code">Hello World!</pre>
 
 </div>
-<!-- SECTION "Descrittore size" [11152-12715] -->
+<!-- SECTION "Descrittore size" [11147-12702] -->
 <h2><a name="descrittore_to_string" id="descrittore_to_string">Descrittore to_string</a></h2>
 <div class="level2">
 
@@ -489,16 +489,16 @@ Sempre seguendo l&#039;esempio di prima :
 	<span class="kw2">private</span> __a<span class="sy0">;</span>
 &nbsp;
 	<span class="kw2">public</span> <span class="kw2">method</span> <span class="kw3">Array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-		<span class="kw1">me</span>.__a <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>	
+		<span class="kw1">me</span>.__a <span class="sy0">=</span> <span class="br0">&#91;</span><span class="br0">&#93;</span><span class="sy0">;</span>	
 	<span class="br0">&#125;</span>
 &nbsp;
         <span class="kw2">public</span> <span class="kw2">method</span> <span class="kw3">__size</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-	    <span class="kw1">return</span> <span class="kw3">elements</span><span class="br0">&#40;</span><span class="kw1">me</span>.__a<span class="br0">&#41;</span><span class="sy0">;</span>
+	    <span class="kw1">return</span> <span class="kw1">me</span>.__a.<span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
 	<span class="br0">&#125;</span>
 &nbsp;
         <span class="co1">// restituisce una stringa che contiene gli elementi dell'array</span>
         <span class="kw2">public</span> <span class="kw2">method</span> <span class="kw3">__to_string</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>
-		<span class="kw1">return</span> <span class="st0">&quot;( &quot;</span> <span class="sy0">+</span> join<span class="br0">&#40;</span> <span class="st0">&quot;, &quot;</span><span class="sy0">,</span> <span class="kw1">me</span>.__a<span class="br0">&#41;</span> <span class="sy0">+</span> <span class="st0">&quot; )&quot;</span><span class="sy0">;</span>
+		<span class="kw1">return</span> <span class="st0">&quot;( &quot;</span> <span class="sy0">+</span> <span class="kw1">me</span>.__a.<span class="me1">join</span><span class="br0">&#40;</span> <span class="st0">&quot;, &quot;</span> <span class="br0">&#41;</span> <span class="sy0">+</span> <span class="st0">&quot; )&quot;</span><span class="sy0">;</span>
 	<span class="br0">&#125;</span>
 &nbsp;
 	<span class="kw2">operator</span> <span class="br0">&#91;</span><span class="br0">&#93;</span> <span class="br0">&#40;</span> index <span class="br0">&#41;</span><span class="br0">&#123;</span>	
@@ -532,7 +532,7 @@ La println, cercherà una rappresentazione sotto forma di stringa della classe <
 <pre class="code">( 1, 2, 3 )</pre>
 
 </div>
-<!-- SECTION "Descrittore to_string" [12716-13786] -->
+<!-- SECTION "Descrittore to_string" [12703-13765] -->
 <h2><a name="descrittore_attribute" id="descrittore_attribute">Descrittore attribute</a></h2>
 <div class="level2">
 
@@ -580,7 +580,7 @@ Che stamperebbe l&#039;output :
 Non esistendo &#039;foo&#039;, non puoi istanziarlo con il valore bar !!!</pre>
 
 </div>
-<!-- SECTION "Descrittore attribute" [13787-14757] -->
+<!-- SECTION "Descrittore attribute" [13766-14736] -->
 <h2><a name="descrittore_method" id="descrittore_method">Descrittore method</a></h2>
 <div class="level2">
 
@@ -596,7 +596,7 @@ Similmente al descrittore attribute, il descrittore <strong>method</strong>, se 
     <span class="br0">&#125;</span>
 &nbsp;
     <span class="kw2">method</span> <span class="kw3">__method</span><span class="br0">&#40;</span> name<span class="sy0">,</span> argv <span class="br0">&#41;</span><span class="br0">&#123;</span>
-        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Hai tentato di usare il metodo &quot;</span> <span class="sy0">+</span> name <span class="sy0">+</span> <span class="st0">&quot; passandogli i seguenti argomenti : &quot;</span> <span class="sy0">+</span> join<span class="br0">&#40;</span> <span class="st0">&quot;, &quot;</span><span class="sy0">,</span> argv <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+        <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Hai tentato di usare il metodo &quot;</span> <span class="sy0">+</span> name <span class="sy0">+</span> <span class="st0">&quot; passandogli i seguenti argomenti : &quot;</span> <span class="sy0">+</span> argv.<span class="me1">join</span><span class="br0">&#40;</span> <span class="st0">&quot;, &quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
     <span class="br0">&#125;</span>
 <span class="br0">&#125;</span></pre>
 
@@ -614,7 +614,7 @@ Che genererebbe l&#039;output :
 <pre class="code">Hai tentato di usare il metodo metodo_inesistente passandogli i seguenti argomenti : foo, bar, 12345</pre>
 
 </div>
-<!-- SECTION "Descrittore method" [14758-] --><div class="footnotes">
+<!-- SECTION "Descrittore method" [14737-] --><div class="footnotes">
 <div class="fn"><sup><a href="#fnt__1" id="fn__1" name="fn__1" class="fn_bot">1)</a></sup> 
 vedere paragrafo su costruttori e distruttori</div>
 <div class="fn"><sup><a href="#fnt__2" id="fn__2" name="fn__2" class="fn_bot">2)</a></sup> 

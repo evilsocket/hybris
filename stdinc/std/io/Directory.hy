@@ -23,15 +23,15 @@ class Directory {
 
 	public method Directory(){
 		me.root 		= "";
-		me.directories = array();
-		me.files       = array();
+		me.directories = [];
+		me.files       = [];
 	}
 
 	public method Directory( root ){
 		me.Directory();
 		me.root = root;
 
-		items = readdir( me.root, 1 );
+		items = readdir( me.root, true );
 		foreach( item of items ){
 			if( item["type"] == DT_DIR ){
 				me.directories[] = item["name"];

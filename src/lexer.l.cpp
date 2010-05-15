@@ -231,7 +231,7 @@ include          BEGIN(T_INCLUSION);
 
 "~="            return T_REGEX_OP;
 
-[\(|\)|\{|\}|\[|\]|\,\?\:] return yytext[0];
+[\(|\)|\{|\}|\[|\]|\,\?\:`] return yytext[0];
 
 "$"             return T_DOLLAR;
 "."             return T_GET_MEMBER;

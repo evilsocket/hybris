@@ -72,6 +72,7 @@
 #define MK_METHOD_NODE(a, b, c)   new MethodNode( a, b, 1, c )
 #define MK_STATIC_METHOD_NODE(a,b) new MethodNode( asPublic, a, true, 1, b )
 /* expressions */
+#define MK_BACKTICK_NODE(a)       new ExpressionNode( T_BACKTICK, 1, a )
 #define MK_EOSTMT_NODE(a, b)      new ExpressionNode( T_EOSTMT, 2, a, b )
 #define MK_REF_NODE(a)		  	  new ExpressionNode( T_REF, 1, a )
 #define MK_DOLLAR_NODE(a)		  new ExpressionNode( T_DOLLAR, 1, a )
@@ -165,6 +166,7 @@ vm_t *__hyb_vm;
 %token T_EOSTMT
 %token T_ARRAY
 %token T_MAP
+%token T_BACKTICK
 %token T_ASSIGN
 %token T_EXPLODE
 %token T_VARGS
@@ -346,9 +348,6 @@ classMembers : attrList methodList classMembers {
 				delete $1;
 				delete $2;
 			 }
-			 | methodList {
-				 $$ = MK_NODE($1);
-			 }
 			 | attrList {
 				 $$ = MK_NODE($1);
 			 }
@@ -455,7 +454,7 @@ logicExpression : T_L_NOT expression                 			   { $$ = MK_LNOT_NODE( 
 				| expression T_L_OR expression       			   { $$ = MK_LOR_NODE( $1, $3 ); }
 				| '(' expression '?' expression ':' expression ')' { $$ = MK_QUESTION_NODE( $2, $4, $6 ); };
 
-callExpression : /* expression -> <identifier>( ... ) */
+callExpression : /* expression . <identifier>( ... ) */
 				 expression T_GET_MEMBER T_IDENT '(' argumentList ')' { $$ = MK_MREQ_NODE( $1, MK_CALL_NODE( $3, $5 ) ); }
 				 /* new <identifier>( ... ) */
 			   | T_NEW T_IDENT '(' argumentList ')' 				  { $$ = MK_NEW_NODE( $2, $4 ); }
@@ -469,6 +468,7 @@ expression : T_BOOLEAN										  { $$ = MK_CONST_NODE($1); }
            | T_REAL                                           { $$ = MK_CONST_NODE($1); }
            | T_CHAR                                           { $$ = MK_CONST_NODE($1); }
            | T_STRING                                         { $$ = MK_CONST_NODE($1); }
+           | '`' expression '`'								  { $$ = MK_BACKTICK_NODE($2); }
            | '[' itemList ']'                                 { $$ = MK_ARRAY_NODE($2); }
            | '[' mapList ']'								  { $$ = MK_MAP_NODE($2); }
            /* expression . <identifier> */

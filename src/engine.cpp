@@ -485,6 +485,10 @@ Object *engine_exec( engine_t *engine, vframe_t *frame, Node *node ){
                 case T_REF :
                 	return engine_on_reference( engine, frame, node );
                 break;
+                /* `string` */
+                case T_BACKTICK :
+					return engine_on_backtick( engine, frame, node );
+                break;
                 /* $ */
                 case T_DOLLAR :
                     return engine_on_dollar( engine, frame, node );
@@ -1302,6 +1306,27 @@ Object *engine_on_return( engine_t *engine, vframe_t *frame, Node *node ){
     frame->state.set( Return );
 
     return frame->state.value;
+}
+
+Object *engine_on_backtick( engine_t *engine, vframe_t *frame, Node *node ){
+	Object *cmd  = engine_exec( engine, frame, node->child(0) );
+	FILE   *pipe = popen( ob_svalue(cmd).c_str(), "r" );
+
+	if( !pipe ){
+		return H_DEFAULT_ERROR;
+	}
+
+	char buffer[128];
+	std::string result = "";
+
+	while( !feof(pipe) ){
+		if( fgets( buffer, 128, pipe ) != NULL ){
+			result += buffer;
+		}
+	}
+	pclose(pipe);
+
+	return (Object *)gc_new_string( result.c_str() );
 }
 
 Object *engine_on_vargs( engine_t *engine, vframe_t *frame, Node *node ){

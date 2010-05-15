@@ -7,6 +7,7 @@ verbose(false)
 TARGET  	  = 'hybris'
 RELEASE 	  = '1.0b3'
 
+PREFIX        = "/usr"
 FLEX		  = 'flex'
 BISON		  = 'bison'
 CXX           = 'g++'
@@ -19,15 +20,14 @@ LIBXML_LFLAGS = "`xml2-config --libs`"
 LIBFFI_CFLAGS = "`pkg-config libffi --cflags`"
 LIBFFI_LFLAGS = "`pkg-config libffi --libs`"
 STDLIB_LFLAGS = "-ldl -lpcre -lcurl -lpthread #{LIBXML_LFLAGS} #{LIBFFI_LFLAGS}" 
-STDLIB_CFLAGS = "#{WFLAGS} -L. -I./include/ #{OPTIMIZATION} -fPIC #{LIBXML_CFLAGS} #{LIBFFI_CFLAGS} -lhybris -lc -shared"
-PREFIX        = "/usr"
+STDLIB_CFLAGS = "#{WFLAGS} -L. -L./build#{PREFIX}/lib/ -I./include/ #{OPTIMIZATION} -fPIC #{LIBXML_CFLAGS} #{LIBFFI_CFLAGS} -lhybris -lc -shared"
+
 
 CLEAN.include( 'src/**/*.o', 
                'src/**/*.lo', 
                TARGET, 
 			   'include/config.h',
                'src/lexer.cpp', 'src/parser.cpp', 'src/parser.hpp', 
-               'libhybris.so', 'libhybris.so.1', 'libhybris.so.1.0',
 			   'build' )
 
 #----------------------------- Files ----------------------------
@@ -91,21 +91,52 @@ task :config_h do
 
 end
 
+task :deb => :all do
+	raise "[ERROR] You need to run this taks on a debian environment" unless File.exist?("/etc/debian_version")
+	# include files
+	sh "mkdir -p build/#{PREFIX}/include/#{TARGET}"
+	sh "cp -rf include/*.h build/#{PREFIX}/include/#{TARGET}/"
+ 	# directories and library
+	sh "mkdir -p build/#{PREFIX}/lib/#{TARGET}/include"
+	sh "cp -rf stdinc/* build/#{PREFIX}/lib/#{TARGET}/include"
+	# debian control file
+	sh "mkdir -p build/DEBIAN"
+	arch = `dpkg --print-architecture`.chop()
+	time = `date +'%Y%m%d%H%M%S'`.chop()
+	File.open("build/DEBIAN/control", "w+") do |control|
+	      control.puts "Package: #{TARGET}
+Version: #{RELEASE}-#{time}
+Architecture: #{arch}
+Maintainer: Simone Margaritelli < evilsocket@gmail.com >
+Installed-Size: 2512
+Priority: optional
+Pre-Depends: dpkg
+Depends: libpcre3, libstdc++6, libcurl3, libffi5, libxml2
+Section: developement
+Description: Hybris programming language interpreter and standard libraries.
+ Hybris, which stands for hybrid scripiting language, is an open source scripting language with dynamic typing, which is a language that does not require explicit declaration of the type of a variable, but understands how to treat the variable in question in accordance with the value which is initialized and subsequently treated, and object-oriented, which listen to the needs of developers who want to automate certain procedures in a simple and fast way."
+	end
+	sh "dpkg-deb -b ./build ."
+end
+
 task :install do
 	raise '[ERROR] Must run as root' unless Process.uid == 0
-
-	sh "install -m 0755 #{TARGET} #{PREFIX}/bin/"
+	# binary
+	sh "install -m 0755  build#{PREFIX}/bin/#{TARGET} #{PREFIX}/bin/"
+	# include files
 	sh "mkdir -p #{PREFIX}/include/#{TARGET}"
 	sh "cp include/*.h #{PREFIX}/include/#{TARGET}/"
+ 	# directories and library
 	sh "mkdir -p #{PREFIX}/lib/#{TARGET}"
 	sh "mkdir -p #{PREFIX}/lib/#{TARGET}/include"
 	sh "mkdir -p #{PREFIX}/lib/#{TARGET}/library"
 	sh "chmod -R 777 #{PREFIX}/lib/#{TARGET}/"
-	sh "install -m 0644 lib#{TARGET}.so.1.0 #{PREFIX}/lib"
+	sh "install -m 0644  build#{PREFIX}/lib/lib#{TARGET}.so.1.0 #{PREFIX}/lib"
 	sh "ln -sf #{PREFIX}/lib/lib#{TARGET}.so.1.0 #{PREFIX}/lib/lib#{TARGET}.so"
 	sh "ln -sf #{PREFIX}/lib/lib#{TARGET}.so.1.0 #{PREFIX}/lib/lib#{TARGET}.so.1"
 	sh "ldconfig"
-	sh "cp -rf build/* #{PREFIX}/lib/hybris/library/"
+	# modules and std includes
+	sh "cp -rf build/#{PREFIX}/lib/#{TARGET}/library/* #{PREFIX}/lib/#{TARGET}/library/"
 	sh "cp -rf stdinc/* #{PREFIX}/lib/hybris/include/"
 end
 
@@ -145,7 +176,7 @@ end
 rule '.so' => '.cc' do |t|
 	puts "@ Compiling #{t.source}"
 	output = t.source.ext("so")
-	output['stdlib'] = 'build'
+	output['stdlib'] = "build#{PREFIX}/lib/hybris/library"
 	sh "mkdir -p #{File.dirname(output)}"
 	sh "#{CXX} #{t.source} -o#{output} #{STDLIB_CFLAGS} #{STDLIB_LFLAGS}"
 end
@@ -154,16 +185,18 @@ end
 
 file TARGET => OBJECTS[:BIN]  do
 	puts "@ Linking #{TARGET}"
+	sh "mkdir -p build#{PREFIX}/bin/"
 	BIN_OBJECTS = (OBJECTS[:BIN].uniq - ['src/lexer.cpp', 'src/parser.cpp']).join(' ')
-    sh "#{CXX} #{CXXFLAGS} -o #{TARGET} #{BIN_OBJECTS} #{LDFLAGS}"
+    sh "#{CXX} #{CXXFLAGS} -o build#{PREFIX}/bin/#{TARGET} #{BIN_OBJECTS} #{LDFLAGS}"
 end
 
 file "lib#{TARGET}.so.1.0" => OBJECTS[:LIB] do
 	puts "@ Linking lib#{TARGET}.so.1.0"
+	sh "mkdir -p build#{PREFIX}/lib/"
 	LIB_OBJECTS = (OBJECTS[:LIB].uniq - ['src/lexer.cpp', 'src/parser.cpp']).join(' ')
-	sh "#{CXX} -shared -Wl,-soname,lib#{TARGET}.so.1 -o lib#{TARGET}.so.1.0 #{LIB_OBJECTS} #{STDLIB_LFLAGS}"
-	sh "ln -sf lib#{TARGET}.so.1.0 lib#{TARGET}.so"
-	sh "ln -sf lib#{TARGET}.so.1.0 lib#{TARGET}.so.1"	
+	sh "#{CXX} -shared -Wl,-soname,lib#{TARGET}.so.1 -o build#{PREFIX}/lib/lib#{TARGET}.so.1.0 #{LIB_OBJECTS} #{STDLIB_LFLAGS}"
+	sh "ln -sf lib#{TARGET}.so.1.0 build#{PREFIX}/lib/lib#{TARGET}.so"
+	sh "ln -sf lib#{TARGET}.so.1.0 build#{PREFIX}/lib/lib#{TARGET}.so.1"	
 end
 
 

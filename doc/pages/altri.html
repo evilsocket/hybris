@@ -30,6 +30,7 @@ Hybris offre un set di operatori non standard, ovvero che sono al di fuori delle
 <div class="level1">
 
 <p>
+
 Questo operatore serve per concatenare in una stringa due o più valori segue la sintassi :
 </p>
 <pre class="code hybris">a <span class="sy0">+</span> b</pre>
@@ -49,7 +50,7 @@ equivale a :
 <pre class="code hybris">a <span class="sy0">=</span> a <span class="sy0">+</span> b</pre>
 
 </div>
-<!-- SECTION "Operatore +" [271-576] -->
+<!-- SECTION "Operatore +" [271-575] -->
 <h1><a name="operatore_subscript" id="operatore_subscript">Operatore [ ] (subscript)</a></h1>
 <div class="level1">
 
@@ -96,7 +97,7 @@ restituisce il primo valore della decima riga della matrice &#039;a&#039;, cioè
 </p>
 
 </div>
-<!-- SECTION "Operatore [ ] (subscript)" [577-1592] -->
+<!-- SECTION "Operatore [ ] (subscript)" [576-1591] -->
 <h1><a name="operatore__range" id="operatore__range">Operatore .. (range)</a></h1>
 <div class="level1">
 
@@ -134,7 +135,7 @@ Esempio 3 :
 <span class="br0">&#125;</span></pre>
 
 </div>
-<!-- SECTION "Operatore .. (range)" [1593-2266] -->
+<!-- SECTION "Operatore .. (range)" [1592-2265] -->
 <h1><a name="operatore_regexp" id="operatore_regexp">Operatore ~= (regexp)</a></h1>
 <div class="level1">
 
@@ -146,13 +147,13 @@ Questo operatore serve per applicare un espressione regolare su una data stringa
 <p>
 Esempio 1 (match booleano) :
 </p>
-<pre class="code hybris">mails <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span> <span class="st0">&quot;evilsocket@gmail.com&quot;</span><span class="sy0">,</span> <span class="st0">&quot;lamer@foo&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+<pre class="code hybris">mails <span class="sy0">=</span> <span class="br0">&#91;</span> <span class="st0">&quot;evilsocket@gmail.com&quot;</span><span class="sy0">,</span> <span class="st0">&quot;lamer@foo&quot;</span> <span class="br0">&#93;</span><span class="sy0">;</span>
 <span class="kw1">foreach</span><span class="br0">&#40;</span> mail <span class="kw1">of</span> mails <span class="br0">&#41;</span><span class="br0">&#123;</span>
 	<span class="kw1">if</span><span class="br0">&#40;</span> mail ~<span class="sy0">=</span> <span class="st0">&quot;/^[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+<span class="es0">\.</span>[a-zA-Z.]{2,5}$/i&quot;</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
-		<span class="kw3">print</span><span class="br0">&#40;</span> mail.<span class="st0">&quot; è un email valida .<span class="es0">\n</span>&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>	
+		<span class="kw3">print</span><span class="br0">&#40;</span> mail <span class="sy0">+</span> <span class="st0">&quot; è un email valida .<span class="es0">\n</span>&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>	
 	<span class="br0">&#125;</span>
 	<span class="kw1">else</span><span class="br0">&#123;</span>
-		<span class="kw3">print</span><span class="br0">&#40;</span> mail.<span class="st0">&quot; NON è un email valida .<span class="es0">\n</span>&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>	
+		<span class="kw3">print</span><span class="br0">&#40;</span> mail <span class="sy0">+</span> <span class="st0">&quot; NON è un email valida .<span class="es0">\n</span>&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>	
 	<span class="br0">&#125;</span>
 <span class="br0">&#125;</span></pre>
 
@@ -162,11 +163,11 @@ Esempio 2 (estrazione di token) :
 <pre class="code hybris">html  <span class="sy0">=</span> <span class="kw3">http_get</span><span class="br0">&#40;</span> <span class="st0">&quot;www.google.it&quot;</span> <span class="sy0">,</span> <span class="st0">&quot;/&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 links <span class="sy0">=</span> html ~<span class="sy0">=</span> <span class="st0">&quot;/a[^&gt;]+href=[<span class="es0">\&quot;</span>']([^<span class="es0">\&quot;</span>']+)[<span class="es0">\&quot;</span>']/i&quot;</span><span class="sy0">;</span>
 <span class="kw1">foreach</span><span class="br0">&#40;</span> link <span class="kw1">of</span> links <span class="br0">&#41;</span><span class="br0">&#123;</span>
-	<span class="kw3">print</span><span class="br0">&#40;</span> <span class="st0">&quot;<span class="es0">\t</span>&quot;</span>.<span class="me1">link</span>.<span class="st0">&quot;<span class="es0">\n</span>&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>	
+	<span class="kw3">print</span><span class="br0">&#40;</span> <span class="st0">&quot;<span class="es0">\t</span>&quot;</span> <span class="sy0">+</span> link <span class="sy0">+</span> <span class="st0">&quot;<span class="es0">\n</span>&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>	
 <span class="br0">&#125;</span></pre>
 
 </div>
-<!-- SECTION "Operatore ~= (regexp)" [2267-3023] -->
+<!-- SECTION "Operatore ~= (regexp)" [2266-3025] -->
 <h1><a name="operatore1" id="operatore1">Operatore $</a></h1>
 <div class="level1">
 
@@ -187,7 +188,7 @@ esistano.
 </p>
 
 </div>
-<!-- SECTION "Operatore $" [3024-3603] -->
+<!-- SECTION "Operatore $" [3026-3605] -->
 <h1><a name="operatore2" id="operatore2">Operatore @</a></h1>
 <div class="level1">
 
@@ -213,7 +214,7 @@ bar
 moo</pre>
 
 </div>
-<!-- SECTION "Operatore @" [3604-4195] -->
+<!-- SECTION "Operatore @" [3606-4197] -->
 <h1><a name="operatore_explode" id="operatore_explode">Operatore &#039;explode&#039;</a></h1>
 <div class="level1">
 
@@ -226,7 +227,7 @@ L&#039;operatore explode, considerato un costrutto ibrido, serve per copiare gli
 <p>
 Ad esempio :
 </p>
-<pre class="code hybris">foo <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="nu0">2</span><span class="sy0">,</span> <span class="st0">&quot;moo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+<pre class="code hybris">foo <span class="sy0">=</span> <span class="br0">&#91;</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="nu0">2</span><span class="sy0">,</span> <span class="st0">&quot;moo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span> <span class="br0">&#93;</span><span class="sy0">;</span>
 &nbsp;
 <span class="br0">&#40;</span> a<span class="sy0">,</span> b<span class="sy0">,</span> c<span class="sy0">,</span> d <span class="br0">&#41;</span> <span class="sy0">=</span> foo<span class="sy0">;</span></pre>
 
@@ -234,12 +235,34 @@ Ad esempio :
 In questo caso, le variabili a, b, c e d verranno definite ed impostate con i quattro elementi dell&#039;array &#039;foo&#039;.
 Alternativamente, se non si desidera prelevare tutti gli elementi dall&#039;array, si possono specificare meno variabili :
 </p>
-<pre class="code hybris">foo <span class="sy0">=</span> <span class="kw3">array</span><span class="br0">&#40;</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="nu0">2</span><span class="sy0">,</span> <span class="st0">&quot;moo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+<pre class="code hybris">foo <span class="sy0">=</span> <span class="br0">&#91;</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="nu0">2</span><span class="sy0">,</span> <span class="st0">&quot;moo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span> <span class="br0">&#93;</span><span class="sy0">;</span>
 &nbsp;
 <span class="br0">&#40;</span> a<span class="sy0">,</span> b <span class="br0">&#41;</span> <span class="sy0">=</span> foo<span class="sy0">;</span></pre>
 
 </div>
-<!-- SECTION "Operatore 'explode'" [4196-] --><div class="footnotes">
+<!-- SECTION "Operatore 'explode'" [4198-4979] -->
+<h1><a name="operatore_backtick" id="operatore_backtick">Operatore backtick</a></h1>
+<div class="level1">
+
+<p>
+
+L&#039;operatore backtick, costituito dal carattere `, serve per eseguire un comando shell costituito da un espressione all&#039;interno di due di questi apici ed a restituirne l&#039;output in una <a href="stringa.html" class="wikilink1" title="stringa">stringa</a>, ad esempio :
+</p>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> `<span class="st0">&quot;whoami&quot;</span>`.<span class="kw3">trim</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code">nome-utente</pre>
+
+<p>
+Oppure 
+</p>
+<pre class="code hybris"><span class="kw3">file</span> <span class="sy0">=</span> <span class="st0">&quot;file.txt&quot;</span><span class="sy0">;</span>
+&nbsp;
+<span class="kw3">println</span><span class="br0">&#40;</span> `<span class="st0">&quot;cat &quot;</span> <span class="sy0">+</span> <span class="kw3">file</span>`.<span class="kw3">trim</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code">...
+contenuto del file
+...</pre>
+
+</div>
+<!-- SECTION "Operatore backtick" [4980-] --><div class="footnotes">
 <div class="fn"><sup><a href="#fnt__1" id="fn__1" name="fn__1" class="fn_bot">1)</a></sup> 
 Essendo un array contiene solo i valori e non i loro nomi.</div>
 </div>
