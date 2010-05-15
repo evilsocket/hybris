@@ -148,9 +148,11 @@ H_TEMPLATE_T HashMap<value_t>::~HashMap(){
 H_TEMPLATE_T value_t * HashMap<value_t>::insert( char *label, value_t *value ){
 	pair_t *pair = new pair_t( label, value );
 	m_map.push_back( pair );
-    at_insert( &m_tree, label, strlen(label), pair );
     m_elements++;
-    return value;
+    /*
+     * at_insert never returns NULL, so this is safe.
+     */
+    return ((pair_t *)at_insert( &m_tree, label, strlen(label), pair ))->value;
 }
 
 H_TEMPLATE_T value_t * HashMap<value_t>::find( char *label ){

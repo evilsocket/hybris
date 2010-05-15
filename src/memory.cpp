@@ -45,7 +45,7 @@ Object *MemorySegment::add( char *identifier, Object *object ){
 		 * If the old value is just a reference to something else (otReference type),
 		 * assign a new value to the object it refers to.
 		 */
-		if( ob_is_reference(prev->value) ){
+		if( ob_is_reference(prev->value) && ob_ref_ucast(prev->value)->value != NULL ){
 			retn = ob_assign( prev->value, next );
 		}
 		/*
@@ -53,7 +53,7 @@ Object *MemorySegment::add( char *identifier, Object *object ){
 		 */
 		else{
 			ob_free(prev->value);
-			retn = prev->value = next;
+			retn = (prev->value = next);
 		}
 	}
 	/*
