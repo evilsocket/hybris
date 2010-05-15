@@ -24,51 +24,47 @@ MemorySegment::MemorySegment() : HashMap<Object>(), mutex(PTHREAD_MUTEX_INITIALI
 }
 
 Object *MemorySegment::add( char *identifier, Object *object ){
-    Object *_new = H_UNDEFINED,
-           *_old = H_UNDEFINED,
-           *_ret = H_UNDEFINED;
+    Object *next = H_UNDEFINED,
+           *prev = H_UNDEFINED;
 
     /*
      * First of all, create a clone of the object instance.
      */
-    _new = ob_clone(object);
+    next = ob_clone(object);
 
     pthread_mutex_lock( &mutex );
-    /* if object does not exist yet, insert as a new one */
-    if( (_old = get( identifier )) == H_UNDEFINED ){
-    	_ret = insert( identifier, _new );
-    }
-    /* else set the new value */
-    else{
-		/*
-		 * Overwriting a constant object, print a warning.
-		 */
-    	if( (_old->attributes & H_OA_CONSTANT) == H_OA_CONSTANT ){
-			hyb_error( H_ET_WARNING, "Overwriting constant value '%s'", identifier );
-		}
-    	
+
+    prev = insert( identifier, next );
+    /*
+     * An object with that key was already there ?
+     */
+    if( prev != next ){
     	/*
     	 * If the old value is just a reference to something else (otReference type),
-    	 * don't replace it in memory, but assign a new value to the object it
-    	 * references.
+    	 * assign a new value to the object it refers to.
     	 */
-    	if( ob_is_reference(_old) && ob_ref_ucast(_old)->value != NULL ){
-    		_ret = ob_assign( _old, _new );
+    	if( ob_is_reference(prev) ){
+			ob_assign( prev, next );
+			/*
+			 * TODO: THIS IS NASTY! We should find a better way to do this!
+			 *
+			 *  Replace it back.
+			 */
+			insert( identifier, prev );
+
+			return prev;
     	}
     	/*
-    	 * Plain object, do a normal memory replacement and ob_free the old value.
+    	 * Plain object, ob_free the old value.
     	 */
     	else{
-			replace( identifier, _old, _new );
-
-			ob_free(_old);
-
-			_ret = _new;
+    		ob_free(prev);
     	}
     }
+
     pthread_mutex_unlock( &mutex );
 
-    return _ret;
+    return next;
 }
 
 MemorySegment *MemorySegment::clone(){

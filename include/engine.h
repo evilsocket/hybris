@@ -38,6 +38,10 @@ typedef struct _engine_t {
 	 */
 	vm_t 	*vm;
 	/*
+	 * Constants segment.
+	 */
+	vmem_t  *cnst;
+	/*
 	 * Memory segment.
 	 */
 	vmem_t  *mem;

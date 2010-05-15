@@ -43,7 +43,7 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "serial_set_ispeed", hserial_set_ispeed, H_REQ_ARGC(2),   { H_REQ_TYPES(otReference), H_REQ_TYPES(otInteger) } },
 	{ "serial_set_ospeed", hserial_set_ospeed, H_REQ_ARGC(2),   { H_REQ_TYPES(otReference), H_REQ_TYPES(otInteger) } },
 	{ "serial_write", 	   hserial_write,      H_REQ_ARGC(2),   { H_REQ_TYPES(otInteger), H_REQ_TYPES(otString) } },
-	{ "serial_read", 	   hserial_read,       H_REQ_ARGC(2),   { H_REQ_TYPES(otInteger), H_REQ_TYPES(otString) } },
+	{ "serial_read", 	   hserial_read,       H_REQ_ARGC(2),   { H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
 	{ "serial_close",	   hserial_close,      H_REQ_ARGC(1),   { H_REQ_TYPES(otInteger) } },
 	{ "", NULL }
 };
@@ -343,12 +343,6 @@ extern "C" void hybris_module_init( vm_t * vm ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_open){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'serial_open' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otString,  "serial_open" );
-	ob_argv_type_assert( 1, otInteger, "serial_open" );
-
 	const char *dev  = string_argv(0).c_str();
 	size_t		mode = int_argv(1);
 
@@ -356,12 +350,6 @@ HYBRIS_DEFINE_FUNCTION(hserial_open){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_fcntl){
-	if( ob_argc() < 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'serial_fcntl' requires at least 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otInteger, "serial_fcntl" );
-	ob_argv_type_assert( 1, otInteger, "serial_fcntl" );
-
 	int fd   = int_argv(0),
 		cmd  = int_argv(1),
 		cmd2 = 0;
@@ -375,11 +363,6 @@ HYBRIS_DEFINE_FUNCTION(hserial_fcntl){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_get_attr){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'serial_get_attr' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otInteger, "serial_get_attr" );
-
 	int fd = int_argv(0);
 	struct termios attributes;
 
@@ -396,11 +379,6 @@ HYBRIS_DEFINE_FUNCTION(hserial_get_attr){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_get_ispeed){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'serial_get_ispeed' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otInteger, "serial_get_ispeed" );
-
 	int fd = int_argv(0);
 	struct termios attributes;
 
@@ -413,11 +391,6 @@ HYBRIS_DEFINE_FUNCTION(hserial_get_ispeed){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_get_ospeed){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'serial_get_ospeed' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otInteger, "serial_get_ospeed" );
-
 	int fd = int_argv(0);
 	struct termios attributes;
 
@@ -430,13 +403,6 @@ HYBRIS_DEFINE_FUNCTION(hserial_get_ospeed){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_set_attr){
-	if( ob_argc() != 3 ){
-		hyb_error( H_ET_SYNTAX, "function 'serial_get_attr' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otInteger,   "serial_set_attr" );
-	ob_argv_type_assert( 1, otInteger,   "serial_set_attr" );
-	ob_argv_type_assert( 2, otStructure, "serial_set_attr" );
-
 	int fd 			  = int_argv(0),
 		how			  = int_argv(1);
 	Object *h_termios = ob_argv(2);
@@ -448,12 +414,6 @@ HYBRIS_DEFINE_FUNCTION(hserial_set_attr){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_set_ispeed){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'serial_set_ospeed' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otReference, "serial_set_ospeed" );
-	ob_argv_type_assert( 1, otInteger,   "serial_set_ospeed" );
-
 	int 	speed 	  = int_argv(1),
 			i;
 	Object *h_termios = ob_ref_ucast( ob_argv(0) )->value;
@@ -473,12 +433,6 @@ HYBRIS_DEFINE_FUNCTION(hserial_set_ispeed){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_set_ospeed){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'serial_set_ospeed' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otReference, "serial_set_ospeed" );
-	ob_argv_type_assert( 1, otInteger,   "serial_set_ospeed" );
-
 	int 	speed 	  = int_argv(1),
 			i;
 	Object *h_termios = ob_ref_ucast( ob_argv(0) )->value;
@@ -498,12 +452,6 @@ HYBRIS_DEFINE_FUNCTION(hserial_set_ospeed){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_write){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'serial_write' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otInteger, "serial_write" );
-	ob_argv_type_assert( 1, otString, "serial_write" );
-
 	int 		fd 	   = int_argv(0);
 	const char *buffer = string_argv(1).c_str();
 
@@ -511,12 +459,6 @@ HYBRIS_DEFINE_FUNCTION(hserial_write){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_read){
-	if( ob_argc() != 2 ){
-		hyb_error( H_ET_SYNTAX, "function 'serial_read' requires 2 parameters (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otInteger, "serial_read" );
-	ob_argv_type_assert( 1, otInteger, "serial_read" );
-
 	int fd 	 = int_argv(0),
 		size = int_argv(1),
 		status;
@@ -532,11 +474,6 @@ HYBRIS_DEFINE_FUNCTION(hserial_read){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_close){
-	if( ob_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "function 'serial_close' requires 1 parameter (called with %d)", ob_argc() );
-	}
-	ob_argv_type_assert( 0, otInteger, "serial_close" );
-
 	int fd = int_argv(0);
 
 	return (Object *)gc_new_integer( close(fd) );

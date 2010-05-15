@@ -34,6 +34,7 @@ engine_t *engine_create( vm_t* vm ){
 
 	engine->vm    = vm;
 	engine->mem   = &vm->vmem;
+	engine->cnst  = &vm->vconst;
 	engine->code  = &vm->vcode;
 	engine->types = &vm->vtypes;
 
@@ -624,11 +625,17 @@ Object *engine_on_identifier( engine_t *engine, vframe_t *frame, Node *node ){
     Node   *function   = H_UNDEFINED;
     char   *identifier = (char *)node->value.m_identifier.c_str();
 
-	/*
-	 * First thing first, search for the identifier definition on
+    /*
+   	 * First thing first, check for a constant object name.
+   	 */
+   	if( (o = engine->cnst->get(identifier)) != H_UNDEFINED ){
+   		return o;
+   	}
+   	/*
+	 * Search for the identifier definition on
 	 * the function local stack frame.
 	 */
-	if( (o = frame->get(identifier)) != H_UNDEFINED ){
+   	else if( (o = frame->get(identifier)) != H_UNDEFINED ){
 		return o;
 	}
 	/*
@@ -1262,9 +1269,16 @@ Object *engine_on_dollar( engine_t *engine, vframe_t *frame, Node *node ){
     identifier = (char *)svalue.c_str();
 
     /*
-     * Same as engine_on_identifier.
-     */
-    if( (o = frame->get(identifier)) != H_UNDEFINED ){
+   	 * Same as engine_on_identifier.
+   	 */
+   	if( (o = engine->cnst->get(identifier)) != H_UNDEFINED ){
+   		return o;
+   	}
+   	/*
+	 * Search for the identifier definition on
+	 * the function local stack frame.
+	 */
+   	else if( (o = frame->get(identifier)) != H_UNDEFINED ){
 		return o;
 	}
 	/*

@@ -92,7 +92,8 @@ task :config_h do
 end
 
 task :deb => :all do
-	raise "[ERROR] You need to run this taks on a debian environment" unless File.exist?("/etc/debian_version")
+	raise "[ERROR] You need to run this task on a debian environment !\n" unless File.exist?("/etc/debian_version")
+	raise "[ERROR] You need dpkg-deb binary to run this task !\n" unless find_executable( "dpkg-deb" )
 	# include files
 	sh "mkdir -p build/#{PREFIX}/include/#{TARGET}"
 	sh "cp -rf include/*.h build/#{PREFIX}/include/#{TARGET}/"

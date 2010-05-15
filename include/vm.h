@@ -47,7 +47,7 @@ typedef Object * (*function_t)( vm_t *, vmem_t * );
 /* macro to declare a hybris function */
 #define HYBRIS_DEFINE_FUNCTION(name) Object *name( vm_t *vm, vmem_t *data )
 /* macro to define a constant value */
-#define HYBRIS_DEFINE_CONSTANT( vm, name, value ) vm->vmem.addConstant( (char *)name, (Object *)value )
+#define HYBRIS_DEFINE_CONSTANT( vm, name, value ) vm->vconst.addConstant( (char *)name, (Object *)value )
 /* macro to define a new structure type given its name and its attribute names */
 #define HYBRIS_DEFINE_STRUCTURE( vm, name, n, attrs ) vm_define_structure( vm, name, n, attrs )
 /* macro to easily define allowed argument number */
@@ -158,6 +158,10 @@ typedef struct _vm_t {
 	 * Pointer to environment variables listing.
 	 */
 	char         **env;
+	/*
+	 * Constats memory segment.
+	 */
+	vmem_t         vconst;
 	/*
 	 * Main memory segment.
 	 */

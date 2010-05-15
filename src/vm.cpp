@@ -162,7 +162,7 @@ void vm_release( vm_t *vm ){
     }
     /*
      * gc_release must be called before anything else because it will
-     * need vmem, vtypes and so on to call classes destructors.
+     * need vmem, vconst, vtypes and so on to call classes destructors.
      */
     gc_release();
 
@@ -183,6 +183,7 @@ void vm_release( vm_t *vm ){
 
     vm->modules.clear();
     vm->mcache.clear();
+    vm->vconst.release();
     vm->vmem.release();
     vm->vcode.release();
     vm->vtypes.release();

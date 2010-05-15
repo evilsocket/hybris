@@ -17,29 +17,32 @@
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "asciitree.h"
-
 /*
  * Find next link with 'ascii' byte.
  */
 __force_inline ascii_item_t *at_find_next_link( ascii_tree_t *at, char ascii ){
-	int i, n_links(at->n_links);
-	ascii_item_t *link;
+	int i, j, n_links(at->n_links), r_start(n_links - 1);
 
-	for( i = 0; i < n_links; ++i ){
-		link = at->links[i];
-		if( link->ascii == ascii ){
-			return link;
+	for( i = 0, j = r_start; i < n_links; ++i, --j ){
+		if( at->links[i]->ascii == ascii ){
+			return at->links[i];
+		}
+		else if( at->links[j]->ascii == ascii ){
+			return at->links[j];
 		}
 	}
 	return NULL;
 }
 
-void at_insert( ascii_tree_t *at, char *key, int len, void *value ){
+void *at_insert( ascii_tree_t *at, char *key, int len, void *value ){
 	/*
 	 * End of the chain, set the marker value and exit the recursion.
 	 */
-	if(!len){ at->e_marker = value; return; }
-
+	if(!len){
+		void *old = at->e_marker;
+		at->e_marker = value;
+		return old ? old : value;
+	}
 	/*
 	 * Has the item a link with given byte?
 	 */
@@ -48,7 +51,7 @@ void at_insert( ascii_tree_t *at, char *key, int len, void *value ){
 		/*
 		 * Next recursion, search next byte,
 		 */
-		at_insert( link, key + 1, len - 1, value );
+		return at_insert( link, ++key, --len, value );
 	}
 	/*
 	 * Nothing found.
@@ -62,29 +65,26 @@ void at_insert( ascii_tree_t *at, char *key, int len, void *value ){
 		/*
 		 * Continue with next byte.
 		 */
-		at_insert( link, key + 1, len - 1, value );
+		return at_insert( link, ++key, --len, value );
 	}
 }
 
 void *at_find( ascii_tree_t *at, char *key, int len ){
+	ascii_item_t *link = at;
+	int i = 0;
+
+	do{
+		/*
+		 * Find next link ad continue.
+		 */
+		link = at_find_next_link( link, key[i++] );
+	}
+	while( --len && link );
 	/*
 	 * End of the chain, if e_marker is NULL this chain is not complete,
 	 * therefore 'key' does not map any alive object.
 	 */
-	if(!len){ return at->e_marker; }
-	/*
-	 * Find next link ad continue recursion.
-	 */
-	ascii_item_t *link = at_find_next_link( at, key[0] );
-	if( link ){
-		return at_find( link, key + 1, len - 1 );
-	}
-	/*
-	 * Nothing found! Not an alive key.
-	 */
-	else{
-		return NULL;
-	}
+	return ( link ? link->e_marker : NULL );
 }
 
 void at_free( ascii_tree_t *at ){
