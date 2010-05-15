@@ -832,7 +832,6 @@ Object *engine_on_class_declaration( engine_t *engine, vframe_t *frame, Node *no
 		 */
 		if( node->child(i)->type() == H_NT_IDENTIFIER ){
 			attribute = node->child(i);
-			ob_define_attribute( c, attribute->id(), attribute->value.m_access, attribute->value.m_static );
 			/*
 			 * Initialize static attributes.
 			 */
@@ -843,8 +842,20 @@ Object *engine_on_class_declaration( engine_t *engine, vframe_t *frame, Node *no
 				 * the program is reached because they reside in a global scope.
 				 */
 				GC_SET_UNTOUCHABLE(static_attr_value);
-
-				ob_set_attribute_reference( c, attribute->id(), static_attr_value );
+				/*
+				 * Initialize the attribute definition in the prototype.
+				 */
+				ob_class_ucast(c)->c_attributes.insert( attribute->id(),
+														new class_attribute_t( attribute->id(),
+																			   attribute->value.m_access,
+																			   static_attr_value,
+																			   attribute->value.m_static ) );
+			}
+			else{
+				/*
+				 * Non static attribute, just define it with a void value.
+				 */
+				ob_define_attribute( c, attribute->id(), attribute->value.m_access, attribute->value.m_static );
 			}
 		}
 		/*

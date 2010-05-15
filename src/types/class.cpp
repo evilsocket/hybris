@@ -457,7 +457,7 @@ Object *class_cl_set( Object *me, Object *index, Object *op ){
 
 /** class operators **/
 void class_define_attribute( Object *me, char *name, access_t access, bool is_static /*= false*/ ){
-	ClassObject   *cme = ob_class_ucast(me);
+	ClassObject *cme = ob_class_ucast(me);
 
 	cme->c_attributes.insert( name, new class_attribute_t( name, access, H_VOID_VALUE, is_static ) );
 }

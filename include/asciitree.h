@@ -73,10 +73,9 @@ typedef ascii_tree_t ascii_item_t;
 
 /*
  * Insert 'value' inside 'at' ascii tree, mapped by
- * the given 'key' of 'len' bytes, if the value already is mapped
- * return its old value, otherwise return the new one.
+ * the given 'key' of 'len' bytes.
  */
-void *at_insert( ascii_tree_t *at, char *key, int len, void *value );
+void  at_insert( ascii_tree_t *at, char *key, int len, void *value );
 /*
  * Find the object mapped mapped by the given 'key'
  * of 'len' bytes inside 'at' ascii tree.

@@ -24,49 +24,47 @@ MemorySegment::MemorySegment() : HashMap<Object>(), mutex(PTHREAD_MUTEX_INITIALI
 }
 
 Object *MemorySegment::add( char *identifier, Object *object ){
-	Object *next = H_UNDEFINED,
-		   *retn = H_UNDEFINED;
-	pair_t *prev = H_UNDEFINED;
+    Object *next = H_UNDEFINED,
+           *prev = H_UNDEFINED,
+           *retn = H_UNDEFINED;
 
+    /*
+	* First of all, create a clone of the object instance.
+	*/
+    next = ob_clone(object);
 
-	/*
-	 * First of all, create a clone of the object instance.
-	 */
-	next = ob_clone(object);
+    pthread_mutex_lock( &mutex );
 
-	pthread_mutex_lock( &mutex );
-
-	prev = (pair_t *)at_find( &m_tree, identifier, strlen(identifier) );
-	/*
-	 * An object with that key is already there ?
-	 */
-	if( prev && prev->value ){
+    /* if object does not exist yet, insert as a new one */
+    if( (prev = get( identifier )) == H_UNDEFINED ){
+    	retn = insert( identifier, next );
+    }
+    /* else set the new value */
+    else{
 		/*
 		 * If the old value is just a reference to something else (otReference type),
-		 * assign a new value to the object it refers to.
+		 * don't replace it in memory, but assign a new value to the object it
+		 * references.
 		 */
-		if( ob_is_reference(prev->value) && ob_ref_ucast(prev->value)->value != NULL ){
-			retn = ob_assign( prev->value, next );
-		}
-		/*
-		 * Plain object, ob_free the old value.
-		 */
-		else{
-			ob_free(prev->value);
-			retn = (prev->value = next);
-		}
-	}
-	/*
-	 * New object for that key, do normal insert.
-	 */
-	else{
-		retn = insert( identifier, object );
-	}
+		 if( ob_is_reference(prev) && ob_ref_ucast(prev)->value != NULL ){
+			 retn = ob_assign( prev, next );
+		 }
+		 /*
+		  * Plain object, do a normal memory replacement and ob_free the old value.
+		  */
+		 else{
+			 replace( identifier, prev, next );
 
-	pthread_mutex_unlock( &mutex );
+			 ob_free(prev);
 
-	return retn;
+			 retn = next;
+		 }
+    }
+    pthread_mutex_unlock( &mutex );
+
+    return retn;
 }
+
 
 MemorySegment *MemorySegment::clone(){
     unsigned int i;

@@ -34,14 +34,13 @@ __force_inline ascii_item_t *at_find_next_link( ascii_tree_t *at, char ascii ){
 	return NULL;
 }
 
-void *at_insert( ascii_tree_t *at, char *key, int len, void *value ){
+void at_insert( ascii_tree_t *at, char *key, int len, void *value ){
 	/*
 	 * End of the chain, set the marker value and exit the recursion.
 	 */
 	if(!len){
-		void *old = at->e_marker;
 		at->e_marker = value;
-		return old ? old : value;
+		return;
 	}
 	/*
 	 * Has the item a link with given byte?
@@ -51,7 +50,7 @@ void *at_insert( ascii_tree_t *at, char *key, int len, void *value ){
 		/*
 		 * Next recursion, search next byte,
 		 */
-		return at_insert( link, ++key, --len, value );
+		at_insert( link, ++key, --len, value );
 	}
 	/*
 	 * Nothing found.
@@ -65,7 +64,7 @@ void *at_insert( ascii_tree_t *at, char *key, int len, void *value ){
 		/*
 		 * Continue with next byte.
 		 */
-		return at_insert( link, ++key, --len, value );
+		at_insert( link, ++key, --len, value );
 	}
 }
 
