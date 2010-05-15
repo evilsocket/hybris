@@ -107,6 +107,10 @@ class MemorySegment : public HashMap<Object> {
 
 		MemorySegment();
 
+		__force_inline Object *operator [] ( int index ){
+			return m_map[index]->value;
+		}
+
 		/*
 		 * Return an object instance if defined as 'identifier',
 		 * otherwise return H_UNDEFINED (NULL).

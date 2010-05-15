@@ -131,7 +131,7 @@ public  :
     }
 
     __force_inline Node *child( unsigned int i ){
-        return at(i);
+        return (*this)[i];
     }
 
     __force_inline char *id(){

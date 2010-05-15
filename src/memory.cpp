@@ -24,47 +24,48 @@ MemorySegment::MemorySegment() : HashMap<Object>(), mutex(PTHREAD_MUTEX_INITIALI
 }
 
 Object *MemorySegment::add( char *identifier, Object *object ){
-    Object *next = H_UNDEFINED,
-           *prev = H_UNDEFINED;
+	Object *next = H_UNDEFINED,
+		   *retn = H_UNDEFINED;
+	pair_t *prev = H_UNDEFINED;
 
-    /*
-     * First of all, create a clone of the object instance.
-     */
-    next = ob_clone(object);
 
-    pthread_mutex_lock( &mutex );
+	/*
+	 * First of all, create a clone of the object instance.
+	 */
+	next = ob_clone(object);
 
-    prev = insert( identifier, next );
-    /*
-     * An object with that key was already there ?
-     */
-    if( prev != next ){
-    	/*
-    	 * If the old value is just a reference to something else (otReference type),
-    	 * assign a new value to the object it refers to.
-    	 */
-    	if( ob_is_reference(prev) ){
-			ob_assign( prev, next );
-			/*
-			 * TODO: THIS IS NASTY! We should find a better way to do this!
-			 *
-			 *  Replace it back.
-			 */
-			insert( identifier, prev );
+	pthread_mutex_lock( &mutex );
 
-			return prev;
-    	}
-    	/*
-    	 * Plain object, ob_free the old value.
-    	 */
-    	else{
-    		ob_free(prev);
-    	}
-    }
+	prev = (pair_t *)at_find( &m_tree, identifier, strlen(identifier) );
+	/*
+	 * An object with that key is already there ?
+	 */
+	if( prev && prev->value ){
+		/*
+		 * If the old value is just a reference to something else (otReference type),
+		 * assign a new value to the object it refers to.
+		 */
+		if( ob_is_reference(prev->value) ){
+			retn = ob_assign( prev->value, next );
+		}
+		/*
+		 * Plain object, ob_free the old value.
+		 */
+		else{
+			ob_free(prev->value);
+			retn = prev->value = next;
+		}
+	}
+	/*
+	 * New object for that key, do normal insert.
+	 */
+	else{
+		retn = insert( identifier, object );
+	}
 
-    pthread_mutex_unlock( &mutex );
+	pthread_mutex_unlock( &mutex );
 
-    return next;
+	return retn;
 }
 
 MemorySegment *MemorySegment::clone(){

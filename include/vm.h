@@ -63,22 +63,22 @@ typedef Object * (*function_t)( vm_t *, vmem_t * );
 /* macro to define module exported functions structure */
 #define HYBRIS_EXPORTED_FUNCTIONS() extern "C" named_function_t hybris_module_functions[] =
 /* macro to easily access hybris functions parameters */
-#define ob_argv(i)    (data->at(i))
+#define ob_argv(i)    ((*data)[i])
 /* macro to easily access hybris functions parameters number */
 #define ob_argc()     (data->size())
 /* typed versions of ob_argv macro */
-#define int_argv(i)    ob_int_val( data->at(i) )
-#define alias_argv(i)  ob_alias_val( data->at(i) )
-#define extern_argv(i) ob_extern_val( data->at(i) )
-#define float_argv(i)  ob_float_val( data->at(i) )
-#define char_argv(i)   ob_char_val( data->at(i) )
-#define string_argv(i) ob_string_val( data->at(i) )
-#define binary_argv(i) ob_binary_val( data->at(i) )
-#define vector_argv(i) ob_vector_val( data->at(i) )
-#define map_argv(i)    ob_map_val( data->at(i) )
-#define struct_argv(i) ob_struct_val( data->at(i) )
-#define class_argv(i)  ob_class_val( data->at(i) )
-#define handle_argv(i) ob_handle_val( data->at(i) )
+#define int_argv(i)    ob_int_val( ob_argv(i) )
+#define alias_argv(i)  ob_alias_val( ob_argv(i) )
+#define extern_argv(i) ob_extern_val( ob_argv(i) )
+#define float_argv(i)  ob_float_val( ob_argv(i) )
+#define char_argv(i)   ob_char_val( ob_argv(i) )
+#define string_argv(i) ob_string_val( ob_argv(i) )
+#define binary_argv(i) ob_binary_val( ob_argv(i) )
+#define vector_argv(i) ob_vector_val( ob_argv(i) )
+#define map_argv(i)    ob_map_val( ob_argv(i) )
+#define struct_argv(i) ob_struct_val( ob_argv(i) )
+#define class_argv(i)  ob_class_val( ob_argv(i) )
+#define handle_argv(i) ob_handle_val( ob_argv(i) )
 
 /* macros to assert an object type */
 #define ob_type_assert(o,t,f)      if( o->type->code != t ){ \
