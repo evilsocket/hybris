@@ -182,8 +182,12 @@ extern "C" void hybris_module_init( vm_t * vm ){
     #ifdef __USE_GNU
     HYBRIS_DEFINE_CONSTANT( vm, "F_SETSIG", gc_new_integer(F_SETSIG) );
     HYBRIS_DEFINE_CONSTANT( vm, "F_GETSIG", gc_new_integer(F_GETSIG) );
-    HYBRIS_DEFINE_CONSTANT( vm, "F_SETOWN_EX", gc_new_integer(F_SETOWN_EX) );
-    HYBRIS_DEFINE_CONSTANT( vm, "F_GETOWN_EX", gc_new_integer(F_GETOWN_EX) );
+	#	ifdef F_SETOWN_EX
+	HYBRIS_DEFINE_CONSTANT( vm, "F_SETOWN_EX", gc_new_integer(F_SETOWN_EX) );
+	#	endif
+	#	ifdef F_GETOWN_EX
+	HYBRIS_DEFINE_CONSTANT( vm, "F_GETOWN_EX", gc_new_integer(F_GETOWN_EX) );
+	#	endif
     #endif
     #ifdef __USE_GNU
     HYBRIS_DEFINE_CONSTANT( vm, "F_SETLEASE", gc_new_integer(F_SETLEASE) );
