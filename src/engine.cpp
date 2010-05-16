@@ -879,7 +879,7 @@ Object *engine_on_class_declaration( engine_t *engine, vframe_t *frame, Node *no
 	ClassNode *cnode = (ClassNode *)node;
 	if( cnode->m_extends.size() > 0 ){
 		for( NodeList::iterator ni = cnode->m_extends.begin(); ni != cnode->m_extends.end(); ni++ ){
-			Object *type =vm_get_type( engine->vm, (char *)(*ni)->value.m_identifier.c_str() );
+			Object *type = vm_get_type( engine->vm, (char *)(*ni)->value.m_identifier.c_str() );
 			if( type == H_UNDEFINED ){
 				hyb_error( H_ET_SYNTAX, "'%s' undeclared class type", (*ni)->value.m_identifier.c_str() );
 			}
@@ -1168,13 +1168,14 @@ Object *engine_on_new_operator( engine_t *engine, vframe_t *frame, Node *type ){
 
 			vframe_t stack;
 
-			engine_prepare_stack( engine, frame,
-						   stack,
-						   string(type_name) + "::" + string(type_name),
-						   newtype,
-						   children,
-						   ctor,
-						   type );
+			engine_prepare_stack( engine,
+								  frame,
+								  stack,
+								  string(type_name) + "::" + string(type_name),
+								  newtype,
+								  children,
+								  ctor,
+								  type );
 
 			/* call the ctor */
 			engine_exec( engine, &stack, ctor->callBody() );
