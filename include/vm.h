@@ -281,7 +281,7 @@ void   		vm_load_namespace( vm_t *vm, string path );
  * Throw an exception inside the script, causing the active frame,
  * if any, to be set with an exception state.
  */
-void		vm_throw_exception( const char *fmt, ... );
+Object 	   *vm_raise_exception( const char *fmt, ... );
 /*
  * Print the calling stack trace.
  */

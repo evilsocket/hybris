@@ -67,6 +67,9 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	 */
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->child(i) );
+		if( root->state.is(Exception) ){
+		   return;
+		}
 		if( i >= n_ids ){
 			stack.push( value );
 		}
@@ -162,6 +165,12 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	argc = argv->children();
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->at(i) );
+		if( root->state.is(Exception) ){
+		   return;
+		}
+		if( root->state.is(Exception) ){
+		   return;
+		}
 		if( i >= n_ids ){
 			stack.push( value );
 		}
@@ -195,6 +204,9 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	argc = argv->children();
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->child(i) );
+		if( root->state.is(Exception) ){
+		   return;
+		}
 		stack.push( value );
 	}
 
@@ -221,6 +233,9 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	argc = argv->children();
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->child(i) );
+		if( root->state.is(Exception) ){
+		   return;
+		}
 		stack.push( value );
 	}
 
@@ -276,7 +291,9 @@ void engine_prepare_stack( engine_t *engine, vframe_t *root, named_function_t *f
 	stack.owner = owner;
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->child(i) );
-
+		if( root->state.is(Exception) ){
+		   return;
+	    }
 		if( f_argc != -1 && i < f_argc ){
 			for( t = 0 ;; ++t ){
 				type = function->types[i][t];
@@ -935,6 +952,8 @@ Object *engine_on_builtin_function_call( engine_t *engine, vframe_t *frame, Node
 
     engine_prepare_stack( engine, frame, function, stack, string(callname), call );
 
+    engine_check_frame_exit(frame);
+
     /* call the function */
     result = function->function( engine->vm, &stack );
 
@@ -990,6 +1009,8 @@ Object *engine_on_threaded_call( engine_t *engine, string function_name, vframe_
 
 	engine_prepare_stack( engine, frame, stack, function_name, identifiers, argv );
 
+	engine_check_frame_exit(frame);
+
 	/* call the function */
 	result = engine_exec( engine, &stack, body );
 
@@ -1028,6 +1049,8 @@ Object *engine_on_threaded_call( engine_t *engine, Node *function, vframe_t *fra
 	}
 
 	engine_prepare_stack( engine, frame, stack, function->value.m_function, identifiers, argv );
+
+	engine_check_frame_exit(frame);
 
 	/* call the function */
 	result = engine_exec( engine, &stack, body );
@@ -1083,6 +1106,8 @@ Object *engine_on_user_function_call( engine_t *engine, vframe_t *frame, Node *c
     }
 
     engine_prepare_stack( engine, frame, stack, function->value.m_function, identifiers, call );
+
+    engine_check_frame_exit(frame);
 
     /* call the function */
     result = engine_exec( engine, &stack, body );
@@ -1177,6 +1202,8 @@ Object *engine_on_new_operator( engine_t *engine, vframe_t *frame, Node *type ){
 								  ctor,
 								  type );
 
+			engine_check_frame_exit(frame);
+
 			/* call the ctor */
 			engine_exec( engine, &stack, ctor->callBody() );
 
@@ -1230,6 +1257,8 @@ Object *engine_on_dll_function_call( engine_t *engine, vframe_t *frame, Node *ca
     }
 
     engine_prepare_stack( engine, frame, stack, string(callname), (ExternObject *)fn_pointer, call );
+
+    engine_check_frame_exit(frame);
 
     /* call the function */
     result = dllcall->function( engine->vm, &stack );

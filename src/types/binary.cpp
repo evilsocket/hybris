@@ -18,6 +18,7 @@
 */
 #include "common.h"
 #include "types.h"
+#include "vm.h"
 #include <math.h>
 #include <stdio.h>
 
@@ -179,7 +180,7 @@ Object *binary_cl_at( Object *me, Object *i ){
     size_t idx = ob_ivalue(i);
 
     if( idx >= ob_binary_ucast(me)->items ){
-        hyb_error( H_ET_GENERIC, "index out of bounds" );
+    	return vm_raise_exception( "index out of bounds" );
     }
 
     return ((BinaryObject *)me)->value[idx];
@@ -193,7 +194,7 @@ Object *binary_cl_set_reference( Object *me, Object *i, Object *v ){
     size_t idx = ob_ivalue(i);
 
     if( idx >= ob_binary_ucast(me)->items ){
-        hyb_error( H_ET_GENERIC, "index out of bounds" );
+    	return vm_raise_exception( "index out of bounds" );
     }
 
     DECLARE_TYPE(Char);

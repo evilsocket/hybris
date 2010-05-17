@@ -683,7 +683,7 @@ Object *class_call_method( engine_t *engine, vframe_t *frame, Object *me, char *
 	 * Check for heavy recursions and/or nested calls.
 	 */
 	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
-		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+		return vm_raise_exception( "Reached max number of nested calls" );
 	}
 	/*
 	 * Set the stack owner

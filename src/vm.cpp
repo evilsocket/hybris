@@ -350,16 +350,13 @@ void vm_load_module( vm_t *vm, char *module ){
     vm_load_module( vm, path, name );
 }
 
-void vm_throw_exception( const char *fmt, ... ){
+Object *vm_raise_exception( const char *fmt, ... ){
 	extern vm_t *__hyb_vm;
-	vframe_t    *frame;
     char message[MAX_MESSAGE_SIZE] = {0},
 	     error[MAX_MESSAGE_SIZE] = {0};
 	va_list ap;
 
 	vm_mm_lock( __hyb_vm );
-
-	frame = vm_frame(__hyb_vm);
 
 	va_start( ap, fmt );
 		vsnprintf( message, MAX_MESSAGE_SIZE, fmt, ap );
@@ -373,9 +370,11 @@ void vm_throw_exception( const char *fmt, ... ){
 	 */
 	GC_SET_UNTOUCHABLE(exception);
 
-	frame->state.set( Exception, exception );
+	vm_frame(__hyb_vm)->state.set( Exception, exception );
 
 	vm_mm_unlock( __hyb_vm );
+
+	return H_DEFAULT_ERROR;
 }
 
 void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){

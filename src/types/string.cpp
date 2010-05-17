@@ -362,7 +362,7 @@ Object * string_regexp( Object *me, Object *r ){
 
 	compiled = vm_pcre_compile( __hyb_vm, pattern, opts, &error, &eoffset );
 	if( !compiled ){
-		hyb_error( H_ET_GENERIC, "error during regex evaluation at offset %d (%s)", eoffset, error );
+		return vm_raise_exception( "error during regex evaluation at offset %d (%s)", eoffset, error );
     }
 
 	rc = pcre_fullinfo( compiled, 0, PCRE_INFO_CAPTURECOUNT, &ccount );
@@ -442,7 +442,7 @@ Object *string_cl_at( Object *me, Object *i ){
     size_t idx = ob_ivalue(i);
 
     if( idx >= ob_string_ucast(me)->items ){
-        hyb_error( H_ET_GENERIC, "index out of bounds" );
+    	return vm_raise_exception( "index out of bounds" );
     }
 
     char chr = ob_string_ucast(me)->value[idx];
@@ -454,7 +454,7 @@ Object *string_cl_set( Object *me, Object *i, Object *v ){
     size_t idx = ob_ivalue(i);
 
     if( idx >= ob_string_ucast(me)->items ){
-        hyb_error( H_ET_GENERIC, "index out of bounds" );
+    	return vm_raise_exception( "index out of bounds" );
     }
 
     ob_string_ucast(me)->value[idx] = ob_ivalue(v);

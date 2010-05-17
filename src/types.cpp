@@ -818,7 +818,11 @@ ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_id ){
 	size_t 					  i;
 	ob_type_builtin_method_t *method  = NULL;
 	ob_builtin_methods_t     *methods = c->type->builtin_methods;
-
+	/*
+	 * Builtin methods are supposed to be only a few, so a loop with a string
+	 * comparision is faster than an hashmap/asciitree initialization and
+	 * further search.
+	 */
 	for( i = 0; methods[i].method != NULL; ++i ){
 		if( methods[i].name == method_id ){
 			return methods[i].method;
