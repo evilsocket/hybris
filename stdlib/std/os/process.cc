@@ -43,6 +43,8 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "", NULL }
 };
 
+static char **__envp;
+
 extern "C" void hybris_module_init( vm_t * vm ){
 	extern vm_t  *__hyb_vm;
 
@@ -53,6 +55,7 @@ extern "C" void hybris_module_init( vm_t * vm ){
 	 * the pointer with the right data.
 	 */
 	__hyb_vm = vm;
+	__envp   = vm->env;
 
 	HYBRIS_DEFINE_CONSTANT( vm, "SIGHUP", gc_new_integer(SIGHUP) ); /* Hangup (POSIX).  */
 	HYBRIS_DEFINE_CONSTANT( vm, "SIGINT", gc_new_integer(SIGINT) ); /* Interrupt (ANSI).  */
@@ -89,18 +92,18 @@ extern "C" void hybris_module_init( vm_t * vm ){
 }
 
 HYBRIS_DEFINE_FUNCTION(henv){
-	char   *duple,
-		   *marker,
-	      **env,
-		  **envp = vm->env;
-	Object *map  = (Object *)gc_new_map();
+	char   		 **penv;
+	string		   env;
+	Object  	  *map  = (Object *)gc_new_map();
+	vector<string> duple;
 
-	for( env = envp; *env != 0; env++ ){
-		duple   = *env;
-		marker  = strchr( duple, '=' );
-		*marker = 0x00;
-
-		ob_cl_set( map, (Object *)gc_new_string(duple), (Object *)gc_new_string( marker + 1 ) );
+	for( penv = __envp; *penv != 0; penv++ ){
+		duple.clear();
+		env = *penv;
+		vm_str_split( env, "=", duple );
+		if( duple.size() >= 2 ){
+			ob_cl_set( map, (Object *)gc_new_string( duple[0].c_str() ), (Object *)gc_new_string( duple[1].c_str() ) );
+		}
 	}
 
 	return map;
