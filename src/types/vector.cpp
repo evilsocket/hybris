@@ -241,7 +241,7 @@ Object *vector_cl_at( Object *me, Object *i ){
     size_t idx = ob_ivalue(i);
 
     if( idx >= ob_vector_ucast(me)->items ){
-        hyb_error( H_ET_GENERIC, "index out of bounds" );
+    	hyb_error( H_ET_GENERIC, "index out of bounds" );
     }
 
     return ob_vector_ucast(me)->value[idx];
@@ -255,7 +255,7 @@ Object *vector_cl_set_reference( Object *me, Object *i, Object *v ){
     size_t idx = ob_ivalue(i);
 
     if( idx >= ob_vector_ucast(me)->items ){
-        hyb_error( H_ET_GENERIC, "index out of bounds" );
+    	hyb_error( H_ET_GENERIC, "index out of bounds" );
     }
 
     Object *old = ob_vector_ucast(me)->value[idx];
@@ -268,25 +268,16 @@ Object *vector_cl_set_reference( Object *me, Object *i, Object *v ){
 }
 
 Object *vector_call_method( engine_t *engine, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
-	size_t i(0);
-	ob_type_builtin_method_t *method  = NULL,
-							 *builtin = NULL;
-	do{
-		if( me->type->builtin_methods[i].name == method_id ){
-			method = me->type->builtin_methods[i].method;
-			break;
-		}
-	}
-	while( me->type->builtin_methods[++i].method != NULL );
+	ob_type_builtin_method_t *method = NULL;
 
-	if( method == NULL ){
-		hyb_error( H_ET_SYNTAX, "String type does not have a '%s' method", method_id );
+	if( (method = ob_get_builtin_method( me, method_id )) == NULL ){
+		hyb_error( H_ET_SYNTAX, "Vector type does not have a '%s' method", method_id );
 	}
 
 	Object  *value,
 			*result;
 	vframe_t stack;
-	size_t   argc = argv->children();
+	size_t   i, argc = argv->children();
 
 	stack.owner = ob_typename(me) + string("::") + method_id;
 	/*
@@ -324,11 +315,11 @@ IMPLEMENT_TYPE(Vector) {
     0,
     /** type builtin methods **/
     {
-		{ "size",  (ob_type_builtin_method_t *)__vector_size },
-		{ "pop",  (ob_type_builtin_method_t *)__vector_pop },
-		{ "remove",  (ob_type_builtin_method_t *)__vector_remove },
-		{ "contains",  (ob_type_builtin_method_t *)__vector_contains },
-		{ "join",  (ob_type_builtin_method_t *)__vector_join },
+		{ "size",     (ob_type_builtin_method_t *)__vector_size },
+		{ "pop",      (ob_type_builtin_method_t *)__vector_pop },
+		{ "remove",   (ob_type_builtin_method_t *)__vector_remove },
+		{ "contains", (ob_type_builtin_method_t *)__vector_contains },
+		{ "join",     (ob_type_builtin_method_t *)__vector_join },
 		{ OB_BUILIN_METHODS_END_MARKER }
     },
 

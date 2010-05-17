@@ -292,25 +292,16 @@ Object *map_cl_set( Object *me, Object *k, Object *v ){
 }
 
 Object *map_call_method( engine_t *engine, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
-	size_t i(0);
-	ob_type_builtin_method_t *method  = NULL,
-							 *builtin = NULL;
-	do{
-		if( me->type->builtin_methods[i].name == method_id ){
-			method = me->type->builtin_methods[i].method;
-			break;
-		}
-	}
-	while( me->type->builtin_methods[++i].method != NULL );
+	ob_type_builtin_method_t *method = NULL;
 
-	if( method == NULL ){
-		hyb_error( H_ET_SYNTAX, "String type does not have a '%s' method", method_id );
+	if( (method = ob_get_builtin_method( me, method_id )) == NULL ){
+		hyb_error( H_ET_SYNTAX, "Map type does not have a '%s' method", method_id );
 	}
 
 	Object  *value,
 			*result;
 	vframe_t stack;
-	size_t   argc = argv->children();
+	size_t   i, argc = argv->children();
 
 	stack.owner = ob_typename(me) + string("::") + method_id;
 	/*

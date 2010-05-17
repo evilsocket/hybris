@@ -692,6 +692,11 @@ Object *ob_call_method( vm_t *vm, Object *c, char *c_name, char *method_name, Ob
  * Special function to execute a __method class descriptor.
  */
 Object *ob_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *method_name, Node *argv );
+/*
+ * Check if the object 'c' has the builtin method 'method_id' and return
+ * a pointer to it, otherwise return NULL.
+ */
+ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_id );
 
 /**
  * Types definition.

@@ -278,6 +278,11 @@ void		vm_load_module( vm_t *vm, char *module );
  */
 void   		vm_load_namespace( vm_t *vm, string path );
 /*
+ * Throw an exception inside the script, causing the active frame,
+ * if any, to be set with an exception state.
+ */
+void		vm_throw_exception( const char *fmt, ... );
+/*
  * Print the calling stack trace.
  */
 void 		vm_print_stack_trace( vm_t *vm, bool force = false );

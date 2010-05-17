@@ -18,6 +18,13 @@
 */
 #include "vm.h"
 
+#ifndef MAX_STRING_SIZE
+#	define MAX_STRING_SIZE 1024
+#endif
+#ifndef MAX_MESSAGE_SIZE
+#	define MAX_MESSAGE_SIZE MAX_STRING_SIZE + 0xFF
+#endif
+
 void vm_signal_handler( int signo ){
     if( signo == SIGSEGV ){
         hyb_error( H_ET_GENERIC, "SIGSEGV Signal Catched" );
@@ -341,6 +348,34 @@ void vm_load_module( vm_t *vm, char *module ){
     }
 
     vm_load_module( vm, path, name );
+}
+
+void vm_throw_exception( const char *fmt, ... ){
+	extern vm_t *__hyb_vm;
+	vframe_t    *frame;
+    char message[MAX_MESSAGE_SIZE] = {0},
+	     error[MAX_MESSAGE_SIZE] = {0};
+	va_list ap;
+
+	vm_mm_lock( __hyb_vm );
+
+	frame = vm_frame(__hyb_vm);
+
+	va_start( ap, fmt );
+		vsnprintf( message, MAX_MESSAGE_SIZE, fmt, ap );
+	va_end(ap);
+
+	Object *exception = (Object *)gc_new_string(message);
+
+	/*
+	 * Make sure the exception object will not be freed until someone
+	 * catches it or the program ends.
+	 */
+	GC_SET_UNTOUCHABLE(exception);
+
+	frame->state.set( Exception, exception );
+
+	vm_mm_unlock( __hyb_vm );
 }
 
 void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){

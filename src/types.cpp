@@ -814,3 +814,16 @@ Object *ob_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *metho
 	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
 }
 
+ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_id ){
+	size_t 					  i;
+	ob_type_builtin_method_t *method  = NULL;
+	ob_builtin_methods_t     *methods = c->type->builtin_methods;
+
+	for( i = 0; methods[i].method != NULL; ++i ){
+		if( methods[i].name == method_id ){
+			return methods[i].method;
+		}
+	}
+
+	return NULL;
+}
