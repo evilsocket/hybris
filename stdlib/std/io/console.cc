@@ -17,19 +17,24 @@
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <hybris.h>
+#include <iostream>
 #include <dlfcn.h>
 #include <ffi.h>
+
+using std::cin;
 
 HYBRIS_DEFINE_FUNCTION(hprint);
 HYBRIS_DEFINE_FUNCTION(hprintln);
 HYBRIS_DEFINE_FUNCTION(hprintf);
 HYBRIS_DEFINE_FUNCTION(hinput);
+HYBRIS_DEFINE_FUNCTION(hreadline);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "print",   hprint,   H_ANY_ARGC },
-	{ "println", hprintln, H_ANY_ARGC },
-	{ "printf",  hprintf,  H_REQ_ARGC(1),   { H_REQ_TYPES(otString) } },
-	{ "input",   hinput,   H_REQ_ARGC(1,2), { H_REQ_TYPES(otString), H_ANY_TYPE } },
+	{ "print",    hprint,    H_ANY_ARGC },
+	{ "println",  hprintln,  H_ANY_ARGC },
+	{ "printf",   hprintf,   H_REQ_ARGC(1),   { H_REQ_TYPES(otString) } },
+	{ "input",    hinput,    H_REQ_ARGC(1,2), { H_REQ_TYPES(otString), H_ANY_TYPE } },
+	{ "readline", hreadline, H_REQ_ARGC(0) },
 	{ "", NULL }
 };
 
@@ -184,4 +189,12 @@ HYBRIS_DEFINE_FUNCTION(hinput){
     }
 
     return _return;
+}
+
+HYBRIS_DEFINE_FUNCTION(hreadline){
+	string line;
+
+	getline( cin, line );
+
+	return (Object *)gc_new_string( line.c_str() );
 }
