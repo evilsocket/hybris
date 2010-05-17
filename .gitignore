@@ -16,4 +16,4 @@ src/parser.hpp
 .settings
 # Misc
 *.log
-
+examples
