@@ -31,6 +31,8 @@
 #	define __force_inline __inline__ __attribute__((always_inline))
 #endif
 
+typedef unsigned long ulong;
+
 /*
  * This is a mark-and-sweep garbage collector implementation.
  *
