@@ -1009,9 +1009,9 @@ typedef struct _ReferenceObject {
 }
 ReferenceObject;
 
-#define ob_is_reference(o)    ob_is_typeof(o,Reference)
-#define ob_ref_ucast(o) ((ReferenceObject *)(o))
-#define ob_reference_val(o)   ((ReferenceObject *)o)
+#define ob_is_reference(o)  ob_is_typeof(o,Reference)
+#define ob_ref_ucast(o)     ((ReferenceObject *)(o))
+#define ob_reference_val(o) ((ReferenceObject *)o)
 
 DECLARE_TYPE(Handle);
 

@@ -26,6 +26,16 @@
  */
 #define MAX_RECURSION_THRESHOLD 10000
 
+#define engine_on_break_state( frame ) frame->state.set(Break)
+#define engine_on_next_state( frame )  frame->state.set(Next)
+
+#define engine_check_frame_exit(frame) if( frame->state.is(Exception) ){ \
+										   return frame->state.value; \
+									   } \
+									   else if( frame->state.is(Return) ){ \
+										   return frame->state.value; \
+									   }
+
 typedef struct _named_function_t named_function_t;
 typedef struct _vm_t 			 vm_t;
 

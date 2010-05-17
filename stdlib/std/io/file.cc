@@ -103,7 +103,7 @@ HYBRIS_DEFINE_FUNCTION(hfsize){
 	else{
 		fp = fopen( string_argv(0).c_str(), "r" );
 		if( fp == NULL ){
-			hyb_error( H_ET_GENERIC, "'%s' no such file or directory", string_argv(0).c_str() );
+			return vm_raise_exception( "'%s' no such file or directory", string_argv(0).c_str() );
 		}
 		fseek( fp, 0, SEEK_END );
 		size = ftell( fp );
@@ -182,7 +182,7 @@ HYBRIS_DEFINE_FUNCTION(hfclose){
 HYBRIS_DEFINE_FUNCTION(hfile){
 	FILE *fp = fopen( string_argv(0).c_str(), "rt" );
 	if( !fp ){
-		hyb_error( H_ET_GENERIC, "could not open '%s' for reading", string_argv(0).c_str() );
+		return vm_raise_exception( "could not open '%s' for reading", string_argv(0).c_str() );
 	}
 
 	string buffer;
@@ -209,7 +209,8 @@ void readdir_recurse( char *root, char *dir, VectorObject *vector ){
 	}
 
     if( (dirh = opendir(path)) == NULL ) {
-        hyb_error( H_ET_GENERIC, "could not open directory '%s' for reading", path );
+    	vm_raise_exception( "could not open directory '%s' for reading", path );
+    	return;
     }
 
     while( (ent = readdir(dirh)) != NULL ){
@@ -239,7 +240,7 @@ HYBRIS_DEFINE_FUNCTION(hreaddir){
     struct dirent *ent;
 
     if( (dir = opendir( string_argv(0).c_str() )) == NULL ) {
-        hyb_error( H_ET_GENERIC, "could not open directory '%s' for reading", string_argv(0).c_str() );
+    	return vm_raise_exception( "could not open directory '%s' for reading", string_argv(0).c_str() );
     }
 
     VectorObject *files 	= gc_new_vector();

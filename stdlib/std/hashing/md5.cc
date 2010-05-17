@@ -299,7 +299,7 @@ HYBRIS_DEFINE_FUNCTION(hmd5_file){
 
 	fp = fopen( fname.c_str(), "rb" );
 	if( !fp ){
-		hyb_error( H_ET_SYNTAX, "Could not open '%s' for reading", fname.c_str() );
+		return vm_raise_exception( "Could not open '%s' for reading", fname.c_str() );
 	}
 
 	md5_starts( &md5_vm );

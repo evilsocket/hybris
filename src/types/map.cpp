@@ -309,6 +309,7 @@ Object *map_call_method( engine_t *engine, vframe_t *frame, Object *me, char *me
 	 */
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, frame, argv->child(i) );
+		engine_check_frame_exit(frame);
 		stack.push( value );
 	}
 	/*

@@ -157,7 +157,9 @@ const char *class_typename( Object *o ){
 }
 
 Object *class_traverse( Object *me, int index ){
-	return (index >= ((ClassObject *)me)->c_attributes.size() ? NULL : ((ClassObject *)me)->c_attributes.at(index)->value);
+	ClassObject       *cme  = (ClassObject *)me;
+	class_attribute_t *attr = (index >= cme->c_attributes.size() ? NULL : cme->c_attributes.at(index));
+	return (attr ? attr->value : NULL);
 }
 
 Object *class_clone( Object *me ){

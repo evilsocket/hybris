@@ -285,6 +285,7 @@ Object *vector_call_method( engine_t *engine, vframe_t *frame, Object *me, char 
 	 */
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, frame, argv->child(i) );
+		engine_check_frame_exit(frame);
 		stack.push( value );
 	}
 	/*

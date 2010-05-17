@@ -219,9 +219,9 @@ size_t gc_mm_threshold(){
  */
 void gc_mark( Object *o ){
 	/*
-	 * Already marked?
+	 * Valid and already marked?
 	 */
-	if( !o->gc_mark ){
+	if( o && !o->gc_mark ){
 		/*
 		 * This object is not collectable right now.
 		 */

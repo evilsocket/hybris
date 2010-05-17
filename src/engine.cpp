@@ -19,16 +19,6 @@
 #include "engine.h"
 #include "parser.hpp"
 
-#define engine_on_break_state( frame ) frame->state.set(Break)
-#define engine_on_next_state( frame )  frame->state.set(Next)
-
-#define engine_check_frame_exit(frame) if( frame->state.is(Exception) ){ \
-										   return frame->state.value; \
-									   } \
-									   else if( frame->state.is(Return) ){ \
-										   return frame->state.value; \
-									   }
-
 engine_t *engine_create( vm_t* vm ){
 	engine_t *engine = new engine_t;
 
@@ -957,6 +947,14 @@ Object *engine_on_builtin_function_call( engine_t *engine, vframe_t *frame, Node
     /* call the function */
     result = function->function( engine->vm, &stack );
 
+	/*
+	 * Check for unhandled exceptions and put them on the root
+	 * memory frame.
+	 */
+	if( stack.state.is(Exception) ){
+		frame->state.set( Exception, stack.state.value );
+	}
+
     engine_dismiss_stack( engine, stack );
 
     /* return function evaluation value */
@@ -1014,6 +1012,14 @@ Object *engine_on_threaded_call( engine_t *engine, string function_name, vframe_
 	/* call the function */
 	result = engine_exec( engine, &stack, body );
 
+	/*
+	 * Check for unhandled exceptions and put them on the root
+	 * memory frame.
+	 */
+	if( stack.state.is(Exception) ){
+		frame->state.set( Exception, stack.state.value );
+	}
+
 	engine_dismiss_stack( engine, stack );
 
 	/* return function evaluation value */
@@ -1054,6 +1060,14 @@ Object *engine_on_threaded_call( engine_t *engine, Node *function, vframe_t *fra
 
 	/* call the function */
 	result = engine_exec( engine, &stack, body );
+
+	/*
+	 * Check for unhandled exceptions and put them on the root
+	 * memory frame.
+	 */
+	if( stack.state.is(Exception) ){
+		frame->state.set( Exception, stack.state.value );
+	}
 
 	engine_dismiss_stack( engine, stack );
 
