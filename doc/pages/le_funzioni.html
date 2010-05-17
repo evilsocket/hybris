@@ -1,4 +1,12 @@
 
+
+
+
+
+
+
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="it"
@@ -164,14 +172,14 @@ proprio grazie a questo espediente.
 
 Nel caso in cui volessimo definire una funzione <sup><a href="#fn__1" name="fnt__1" id="fnt__1" class="fn_top">1)</a></sup> che non richiede un numero definito di argomenti, ma ne può accettare un qualsiasi numero decida l&#039;utente, la si può definire nel seguente modo :
 </p>
-<pre class="code hybris"><span class="kw2">function</span> foo<span class="br0">&#40;</span> ... <span class="br0">&#41;</span><span class="br0">&#123;</span>
+<pre class="code hybris"><span class="kw2">function</span> foo<span class="br0">&#40;</span> <span class="sy0">...</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
 &nbsp;
 <span class="br0">&#125;</span></pre>
 
 <p>
 In questo caso, per accedere agli argomenti, si deve usare l&#039;<a href="altri.html" class="wikilink1" title="altri">operatore @</a> nel seguente modo :
 </p>
-<pre class="code hybris"><span class="kw2">function</span> foo<span class="br0">&#40;</span> ... <span class="br0">&#41;</span><span class="br0">&#123;</span>
+<pre class="code hybris"><span class="kw2">function</span> foo<span class="br0">&#40;</span> <span class="sy0">...</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
     <span class="kw1">foreach</span><span class="br0">&#40;</span> argomento <span class="kw1">of</span> <span class="sy0">@</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
         <span class="kw3">println</span><span class="br0">&#40;</span> argomento <span class="br0">&#41;</span><span class="sy0">;</span>
     <span class="br0">&#125;</span>
@@ -191,7 +199,7 @@ moo</pre>
 <p>
 Se volessimo definire una funzione che, <strong>pretende</strong> almeno un parametro, ma ne può accettare anche più di uno opzionalmente, scriveremo :
 </p>
-<pre class="code hybris"><span class="kw2">function</span> foo<span class="br0">&#40;</span> primo<span class="sy0">,</span> ... <span class="br0">&#41;</span><span class="br0">&#123;</span>
+<pre class="code hybris"><span class="kw2">function</span> foo<span class="br0">&#40;</span> primo<span class="sy0">,</span> <span class="sy0">...</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
 &nbsp;
 <span class="br0">&#125;</span></pre>
 

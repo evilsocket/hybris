@@ -1,4 +1,10 @@
 
+
+
+
+
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="it"
@@ -53,7 +59,7 @@ Ad esempio, il classico script “Hello World” in modalità <acronym title="Co
 </p>
 <pre class="code hybris">#<span class="sy0">!/</span>usr<span class="sy0">/</span>bin<span class="sy0">/</span>hybris <span class="sy0">--</span>cgi
 &nbsp;
-<span class="kw2">import</span> std.<span class="sy0">*;</span>
+<span class="kw2">import</span> std<span class="sy0">.*;</span>
 &nbsp;
 <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Content-Type: text/html<span class="es0">\n</span><span class="es0">\n</span>&quot;</span> <span class="sy0">+</span>
          <span class="st0">&quot;&lt;b&gt;Hello World !&lt;/b&gt;&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
@@ -79,7 +85,7 @@ Ad esempio, se volessimo replicare l&#039;esempio di prima tramite questa classe
 </p>
 <pre class="code hybris">#<span class="sy0">!/</span>usr<span class="sy0">/</span>bin<span class="sy0">/</span>hybris <span class="sy0">--</span>cgi
 &nbsp;
-<span class="kw2">include</span> std.<span class="me1">io</span>.<span class="me1">network</span>.<span class="me1">CGI</span><span class="sy0">;</span>
+<span class="kw2">include</span> std<span class="sy0">.</span><span class="me1">io</span><span class="sy0">.</span><span class="me1">network</span><span class="sy0">.</span><span class="me1">CGI</span><span class="sy0">;</span>
 &nbsp;
 cgi <span class="sy0">=</span> <span class="kw2">new</span> CGI<span class="br0">&#40;</span> <span class="st0">&quot;text/html&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
@@ -90,17 +96,17 @@ Oppure, per stampare le variabili in GET e POST :
 </p>
 <pre class="code hybris">#<span class="sy0">!/</span>usr<span class="sy0">/</span>bin<span class="sy0">/</span>hybris <span class="sy0">--</span>cgi
 &nbsp;
-<span class="kw2">include</span> std.<span class="me1">io</span>.<span class="me1">network</span>.<span class="me1">CGI</span><span class="sy0">;</span>
+<span class="kw2">include</span> std<span class="sy0">.</span><span class="me1">io</span><span class="sy0">.</span><span class="me1">network</span><span class="sy0">.</span><span class="me1">CGI</span><span class="sy0">;</span>
 &nbsp;
 cgi <span class="sy0">=</span> <span class="kw2">new</span> CGI<span class="br0">&#40;</span> <span class="st0">&quot;text/html&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
 <span class="co1">// stampo le variabili GET</span>
-<span class="kw1">foreach</span><span class="br0">&#40;</span> name <span class="sy0">-&gt;</span> value <span class="kw1">of</span> cgi.<span class="me1">GET</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
+<span class="kw1">foreach</span><span class="br0">&#40;</span> name <span class="sy0">-&gt;</span> value <span class="kw1">of</span> cgi<span class="sy0">.</span><span class="me1">GET</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
     cgi <span class="sy0">&lt;&lt;</span> name <span class="sy0">&lt;&lt;</span> <span class="st0">&quot; = &quot;</span> <span class="sy0">&lt;&lt;</span> value <span class="sy0">&lt;&lt;</span> <span class="st0">&quot;&lt;br&gt;&quot;</span><span class="sy0">;</span>
 <span class="br0">&#125;</span>
 &nbsp;
 <span class="co1">// stampo le variabili POST</span>
-<span class="kw1">foreach</span><span class="br0">&#40;</span> name <span class="sy0">-&gt;</span> value <span class="kw1">of</span> cgi.<span class="me1">POST</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
+<span class="kw1">foreach</span><span class="br0">&#40;</span> name <span class="sy0">-&gt;</span> value <span class="kw1">of</span> cgi<span class="sy0">.</span><span class="me1">POST</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
     cgi <span class="sy0">&lt;&lt;</span> name <span class="sy0">&lt;&lt;</span> <span class="st0">&quot; = &quot;</span> <span class="sy0">&lt;&lt;</span> value <span class="sy0">&lt;&lt;</span> <span class="st0">&quot;&lt;br&gt;&quot;</span><span class="sy0">;</span>
 <span class="br0">&#125;</span></pre>
 
@@ -119,17 +125,17 @@ Se si deve eseguire un operazione potenzialmente lunga o che comunque richiede m
 </p>
 <pre class="code hybris">#<span class="sy0">!/</span>usr<span class="sy0">/</span>bin<span class="sy0">/</span>hybris <span class="sy0">-</span>cg 10K
 &nbsp;
-<span class="kw2">include</span> std.<span class="me1">io</span>.<span class="me1">network</span>.<span class="me1">CGI</span><span class="sy0">;</span>
+<span class="kw2">include</span> std<span class="sy0">.</span><span class="me1">io</span><span class="sy0">.</span><span class="me1">network</span><span class="sy0">.</span><span class="me1">CGI</span><span class="sy0">;</span>
 &nbsp;
 cgi <span class="sy0">=</span> <span class="kw2">new</span> CGI<span class="br0">&#40;</span> <span class="st0">&quot;text/html&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
 <span class="co1">// stampo le variabili GET</span>
-<span class="kw1">foreach</span><span class="br0">&#40;</span> name <span class="sy0">-&gt;</span> value <span class="kw1">of</span> cgi.<span class="me1">GET</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
+<span class="kw1">foreach</span><span class="br0">&#40;</span> name <span class="sy0">-&gt;</span> value <span class="kw1">of</span> cgi<span class="sy0">.</span><span class="me1">GET</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
     cgi <span class="sy0">&lt;&lt;</span> name <span class="sy0">&lt;&lt;</span> <span class="st0">&quot; = &quot;</span> <span class="sy0">&lt;&lt;</span> value <span class="sy0">&lt;&lt;</span> <span class="st0">&quot;&lt;br&gt;&quot;</span><span class="sy0">;</span>
 <span class="br0">&#125;</span>
 &nbsp;
 <span class="co1">// stampo le variabili POST</span>
-<span class="kw1">foreach</span><span class="br0">&#40;</span> name <span class="sy0">-&gt;</span> value <span class="kw1">of</span> cgi.<span class="me1">POST</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
+<span class="kw1">foreach</span><span class="br0">&#40;</span> name <span class="sy0">-&gt;</span> value <span class="kw1">of</span> cgi<span class="sy0">.</span><span class="me1">POST</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
     cgi <span class="sy0">&lt;&lt;</span> name <span class="sy0">&lt;&lt;</span> <span class="st0">&quot; = &quot;</span> <span class="sy0">&lt;&lt;</span> value <span class="sy0">&lt;&lt;</span> <span class="st0">&quot;&lt;br&gt;&quot;</span><span class="sy0">;</span>
 <span class="br0">&#125;</span></pre>
 
@@ -145,14 +151,14 @@ L&#039;esempio mostrerà un form nel quale l&#039;utente dovrà inserire la quan
 </p>
 <pre class="code hybris">#<span class="sy0">!/</span>usr<span class="sy0">/</span>bin<span class="sy0">/</span>hybris <span class="sy0">-</span>cg 10K
 &nbsp;
-<span class="kw2">import</span>  std.<span class="sy0">*;</span>
-<span class="kw2">include</span> std.<span class="me1">io</span>.<span class="me1">network</span>.<span class="me1">CGI</span><span class="sy0">;</span>
+<span class="kw2">import</span>  std<span class="sy0">.*;</span>
+<span class="kw2">include</span> std<span class="sy0">.</span><span class="me1">io</span><span class="sy0">.</span><span class="me1">network</span><span class="sy0">.</span><span class="me1">CGI</span><span class="sy0">;</span>
 &nbsp;
 cgi <span class="sy0">=</span> <span class="kw2">new</span> CGI<span class="br0">&#40;</span><span class="st0">&quot;text/html&quot;</span><span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
-<span class="kw1">if</span><span class="br0">&#40;</span> cgi.<span class="me1">POST</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
+<span class="kw1">if</span><span class="br0">&#40;</span> cgi<span class="sy0">.</span><span class="me1">POST</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
 	start  <span class="sy0">=</span> <span class="kw3">ticks</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
-	tofind <span class="sy0">=</span> <span class="kw3">toint</span><span class="br0">&#40;</span> cgi.<span class="me1">POST</span><span class="br0">&#91;</span><span class="st0">&quot;n&quot;</span><span class="br0">&#93;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+	tofind <span class="sy0">=</span> <span class="kw3">toint</span><span class="br0">&#40;</span> cgi<span class="sy0">.</span><span class="me1">POST</span><span class="br0">&#91;</span><span class="st0">&quot;n&quot;</span><span class="br0">&#93;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 	found  <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">;</span>
 	n      <span class="sy0">=</span> <span class="nu0">3</span><span class="sy0">;</span>
 	primes <span class="sy0">=</span> <span class="br0">&#91;</span><span class="br0">&#93;</span><span class="sy0">;</span>
@@ -194,7 +200,7 @@ cgi <span class="sy0">=</span> <span class="kw2">new</span> CGI<span class="br0"
 &lt;br&gt;
 &quot;</span><span class="sy0">;</span>
 &nbsp;
-	cgi <span class="sy0">&lt;&lt;</span> primes.<span class="me1">join</span><span class="br0">&#40;</span> <span class="st0">&quot;, &quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+	cgi <span class="sy0">&lt;&lt;</span> primes<span class="sy0">.</span><span class="me1">join</span><span class="br0">&#40;</span> <span class="st0">&quot;, &quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 <span class="br0">&#125;</span>
 <span class="kw1">else</span><span class="br0">&#123;</span>
 	cgi <span class="sy0">&lt;&lt;</span> <span class="st0">&quot;

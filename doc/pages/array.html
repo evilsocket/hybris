@@ -1,4 +1,11 @@
 
+
+
+
+
+
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="it"
@@ -48,7 +55,7 @@ Questa tipologia ha dei <a href="classe.html" class="wikilink1" title="classe">m
 
 Restituisce il numero di elementi che contiene l&#039;array.
 </p>
-<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span>.<span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span><span class="sy0">.</span><span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">3</pre>
 
 </div>
@@ -60,7 +67,7 @@ Restituisce il numero di elementi che contiene l&#039;array.
 
 Rimuove l&#039;ultimo elemento dell&#039;array e ne restituisce un istanza .
 </p>
-<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span>.<span class="kw3">pop</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span><span class="sy0">.</span><span class="me1">pop</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">meh</pre>
 
 </div>
@@ -72,7 +79,7 @@ Rimuove l&#039;ultimo elemento dell&#039;array e ne restituisce un istanza .
 
 Rimuove un elemento dall&#039;array ad un indice specifico e ne restituisce un istanza.
 </p>
-<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span>.<span class="kw3">remove</span><span class="br0">&#40;</span>1<span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span><span class="sy0">.</span><span class="me1">remove</span><span class="br0">&#40;</span>1<span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">bar</pre>
 
 </div>
@@ -84,9 +91,9 @@ Rimuove un elemento dall&#039;array ad un indice specifico e ne restituisce un i
 
 Restituisce <strong>true</strong> se l&#039;array contiene l&#039;elemento specificato, altrimenti <strong>false</strong> .
 </p>
-<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span>.<span class="kw3">contains</span><span class="br0">&#40;</span> <span class="st0">&quot;foo&quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span><span class="sy0">.</span><span class="me1">contains</span><span class="br0">&#40;</span> <span class="st0">&quot;foo&quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
-<span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span>.<span class="kw3">contains</span><span class="br0">&#40;</span> <span class="st0">&quot;moo&quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span><span class="sy0">.</span><span class="me1">contains</span><span class="br0">&#40;</span> <span class="st0">&quot;moo&quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">true
 false </pre>
 
@@ -99,14 +106,14 @@ false </pre>
 
 Restituisce una stringa con tutti gli elementi dell&#039;array concatenati tramite il carattere o la stringa &#039;glue&#039;.
 </p>
-<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span>.<span class="me1">join</span><span class="br0">&#40;</span> <span class="st0">&quot;, &quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;foo&quot;</span><span class="sy0">,</span> <span class="st0">&quot;bar&quot;</span><span class="sy0">,</span> <span class="st0">&quot;meh&quot;</span> <span class="br0">&#93;</span><span class="sy0">.</span><span class="me1">join</span><span class="br0">&#40;</span> <span class="st0">&quot;, &quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">foo, bar, meh</pre>
 
 </div>
 <!-- SECTION "join( glue )" [1302-1530] -->
 <h1><a name="esempio" id="esempio">Esempio</a></h1>
 <div class="level1">
-<pre class="code hybris"><span class="kw2">import</span> std.<span class="sy0">*;</span>
+<pre class="code hybris"><span class="kw2">import</span> std<span class="sy0">.*;</span>
 &nbsp;
 <span class="co1">// inizializzo un array con valori di tipi misti, uno dei quali è un array a sua volta</span>
 a     <span class="sy0">=</span> <span class="br0">&#91;</span> <span class="nu0">0</span><span class="sy0">,</span> 
@@ -114,7 +121,7 @@ a     <span class="sy0">=</span> <span class="br0">&#91;</span> <span class="nu0
 	  <span class="br0">&#91;</span> <span class="nu0">2</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span><span class="sy0">,</span> 2 <span class="sy0">+</span> 0 <span class="br0">&#93;</span><span class="sy0">,</span> 
 	  3 <span class="br0">&#93;</span><span class="sy0">;</span>
 <span class="co1">// la variabile intera 'elems' ora contiene il numero di elementi dell'array 'a'</span>
-elems <span class="sy0">=</span> a.<span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
+elems <span class="sy0">=</span> a<span class="sy0">.</span><span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
 <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;L'array 'a' ha &quot;</span> <span class="sy0">+</span> elems <span class="sy0">+</span> <span class="st0">&quot; elementi :<span class="es0">\n</span>&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 <span class="co1">// stampo ogni elemento di 'a', nel caso dell'array all'indice 2 verrà stampata la sua struttura </span>
@@ -125,8 +132,8 @@ elems <span class="sy0">=</span> a.<span class="me1">size</span><span class="br0
 &nbsp;
 <span class="co1">// rimuovo il secondo elemento da 'a' e stampo nuovamente il contenuto</span>
 <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;<span class="es0">\n</span>a - 2° elemento : <span class="es0">\n</span>&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
-a.<span class="kw3">remove</span><span class="br0">&#40;</span> 1 <span class="br0">&#41;</span><span class="sy0">;</span>
-elems <span class="sy0">=</span> a.<span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
+a<span class="sy0">.</span><span class="me1">remove</span><span class="br0">&#40;</span> 1 <span class="br0">&#41;</span><span class="sy0">;</span>
+elems <span class="sy0">=</span> a<span class="sy0">.</span><span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
 <span class="kw1">for</span><span class="br0">&#40;</span> i <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">;</span> i <span class="sy0">&lt;</span> elems<span class="sy0">;</span> i<span class="sy0">++</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
 	<span class="kw3">print</span><span class="br0">&#40;</span> <span class="st0">&quot;elemento &quot;</span> <span class="sy0">+</span> i <span class="sy0">+</span> <span class="st0">&quot; : &quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 	<span class="kw3">println</span><span class="br0">&#40;</span> a<span class="br0">&#91;</span>i<span class="br0">&#93;</span> <span class="br0">&#41;</span><span class="sy0">;</span>	
@@ -145,9 +152,9 @@ elems <span class="sy0">=</span> a.<span class="me1">size</span><span class="br0
 &nbsp;
 <span class="co1">// rimuovo gli elementi residui di a</span>
 <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;<span class="es0">\n</span>Svuoto 'a' :<span class="es0">\n</span>&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
-elems <span class="sy0">=</span> a.<span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
+elems <span class="sy0">=</span> a<span class="sy0">.</span><span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
 <span class="kw1">for</span><span class="br0">&#40;</span> i <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">;</span> i <span class="sy0">&lt;</span> elems<span class="sy0">;</span> i<span class="sy0">++</span> <span class="br0">&#41;</span><span class="br0">&#123;</span>
-	a.<span class="kw3">pop</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
+	a<span class="sy0">.</span><span class="me1">pop</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
 	<span class="kw3">println</span><span class="br0">&#40;</span>a<span class="br0">&#41;</span><span class="sy0">;</span>	
 <span class="br0">&#125;</span></pre>
 <pre class="code">L&#039;array &#039;a&#039; ha 4 elementi :

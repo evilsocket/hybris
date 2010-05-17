@@ -1,4 +1,11 @@
 
+
+
+
+
+
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="it"
@@ -44,7 +51,7 @@ Questa tipologia ha dei <a href="classe.html" class="wikilink1" title="classe">m
 
 Restituisce il numero di caratteri che contiene la stringa .
 </p>
-<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;hello world&quot;</span>.<span class="me1">length</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;hello world&quot;</span><span class="sy0">.</span><span class="me1">length</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">11</pre>
 
 </div>
@@ -58,9 +65,9 @@ Cerca una stringa o un carattere all&#039;interno della stringa principale, rest
 </p>
 <pre class="code hybris">s <span class="sy0">=</span> <span class="st0">&quot;hello world&quot;</span><span class="sy0">;</span>
 &nbsp;
-<span class="kw3">println</span><span class="br0">&#40;</span> s.<span class="me1">find</span><span class="br0">&#40;</span><span class="st0">&quot;wor&quot;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+<span class="kw3">println</span><span class="br0">&#40;</span> s<span class="sy0">.</span><span class="me1">find</span><span class="br0">&#40;</span><span class="st0">&quot;wor&quot;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
-<span class="kw3">println</span><span class="br0">&#40;</span> s.<span class="me1">find</span><span class="br0">&#40;</span><span class="st0">&quot;foo&quot;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<span class="kw3">println</span><span class="br0">&#40;</span> s<span class="sy0">.</span><span class="me1">find</span><span class="br0">&#40;</span><span class="st0">&quot;foo&quot;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">6
 -1</pre>
 
@@ -76,9 +83,9 @@ Se il parametro length non è specificato, restituisce una sottostringa dall&#03
 </p>
 <pre class="code hybris">s <span class="sy0">=</span> <span class="st0">&quot;hello world&quot;</span><span class="sy0">;</span>
 &nbsp;
-<span class="kw3">println</span><span class="br0">&#40;</span> s.<span class="kw3">substr</span><span class="br0">&#40;</span>6<span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+<span class="kw3">println</span><span class="br0">&#40;</span> s<span class="sy0">.</span><span class="me1">substr</span><span class="br0">&#40;</span>6<span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
-<span class="kw3">println</span><span class="br0">&#40;</span> s.<span class="kw3">substr</span><span class="br0">&#40;</span>6<span class="sy0">,</span>4<span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<span class="kw3">println</span><span class="br0">&#40;</span> s<span class="sy0">.</span><span class="me1">substr</span><span class="br0">&#40;</span>6<span class="sy0">,</span>4<span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">world
 worl</pre>
 
@@ -93,7 +100,7 @@ Restituisce una stringa tutte le occorrenze di &#039;find&#039; nella quale sono
 </p>
 <pre class="code hybris">s <span class="sy0">=</span> <span class="st0">&quot;hello world&quot;</span><span class="sy0">;</span>
 &nbsp;
-<span class="kw3">println</span><span class="br0">&#40;</span> s.<span class="me1">replace</span><span class="br0">&#40;</span> <span class="st0">&quot;world&quot;</span><span class="sy0">,</span> <span class="st0">&quot;hybris&quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<span class="kw3">println</span><span class="br0">&#40;</span> s<span class="sy0">.</span><span class="me1">replace</span><span class="br0">&#40;</span> <span class="st0">&quot;world&quot;</span><span class="sy0">,</span> <span class="st0">&quot;hybris&quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">hello hybris</pre>
 
 </div>
@@ -107,7 +114,7 @@ Divide la stringa in un array di stringhe, utilizzando il separatore specificato
 </p>
 <pre class="code hybris">s <span class="sy0">=</span> <span class="st0">&quot;hello world from hybris&quot;</span><span class="sy0">;</span>
 &nbsp;
-<span class="kw3">println</span><span class="br0">&#40;</span> s.<span class="me1">split</span><span class="br0">&#40;</span> <span class="st0">&quot; &quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<span class="kw3">println</span><span class="br0">&#40;</span> s<span class="sy0">.</span><span class="me1">split</span><span class="br0">&#40;</span> <span class="st0">&quot; &quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">array {
       hello
       world
@@ -126,7 +133,7 @@ Elimina ogni carattere “white space” (tab, new line, line feed, ecc) dall&#0
 </p>
 <pre class="code hybris">s <span class="sy0">=</span> <span class="st0">&quot;hello world from hybris&quot;</span><span class="sy0">;</span>
 &nbsp;
-<span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;<span class="es0">\t</span><span class="es0">\n</span><span class="es0">\r</span> hello world<span class="es0">\n</span>&quot;</span>.<span class="kw3">trim</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;<span class="es0">\t</span><span class="es0">\n</span><span class="es0">\r</span> hello world<span class="es0">\n</span>&quot;</span><span class="sy0">.</span><span class="me1">trim</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">hello world</pre>
 
 </div>
@@ -136,7 +143,7 @@ Elimina ogni carattere “white space” (tab, new line, line feed, ecc) dall&#0
 <pre class="code hybris"> <span class="co1">// dichiaro una stringa</span>
  stringa <span class="sy0">=</span> <span class="st0">&quot;Ciao mondo !&quot;</span><span class="sy0">;</span>
  <span class="co1">// ne calcolo la lunghezza inserendola nell intero</span>
- lunghezza <span class="sy0">=</span> stringa.<span class="me1">length</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
+ lunghezza <span class="sy0">=</span> stringa<span class="sy0">.</span><span class="me1">length</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">;</span>
  <span class="co1">// stampo la stringa</span>
  <span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;Stringa originale : ’&quot;</span> <span class="sy0">+</span> stringa <span class="sy0">+</span> <span class="st0">&quot;‘&quot;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
  <span class="co1">// nel ciclo, la variabile ’i' viene contemporaneamente dichiarata ed inizializzata</span>

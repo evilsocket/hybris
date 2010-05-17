@@ -1,4 +1,13 @@
 
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="it"
@@ -54,7 +63,7 @@ Questa tipologia ha dei <a href="classe.html" class="wikilink1" title="classe">m
 
 Restituisce il numero di elementi che contiene la mappa.
 </p>
-<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> <span class="st0">&quot;uno&quot;</span> <span class="sy0">:</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span> <span class="sy0">:</span> 2 <span class="br0">&#93;</span>.<span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> <span class="st0">&quot;uno&quot;</span> <span class="sy0">:</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span> <span class="sy0">:</span> 2 <span class="br0">&#93;</span><span class="sy0">.</span><span class="me1">size</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">3</pre>
 
 </div>
@@ -66,7 +75,7 @@ Restituisce il numero di elementi che contiene la mappa.
 
 Rimuove l&#039;ultimo elemento dalla mappa e ne restituisce un istanza.
 </p>
-<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> <span class="st0">&quot;uno&quot;</span> <span class="sy0">:</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span> <span class="sy0">:</span> 2 <span class="br0">&#93;</span>.<span class="kw3">pop</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> <span class="st0">&quot;uno&quot;</span> <span class="sy0">:</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span> <span class="sy0">:</span> 2 <span class="br0">&#93;</span><span class="sy0">.</span><span class="me1">pop</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">2</pre>
 
 </div>
@@ -78,7 +87,7 @@ Rimuove l&#039;ultimo elemento dalla mappa e ne restituisce un istanza.
 
 Rimuove l&#039;elemento mappato con la chiave &#039;key&#039; e ne restituisce un istanza.
 </p>
-<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> <span class="st0">&quot;uno&quot;</span> <span class="sy0">:</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span> <span class="sy0">:</span> 2 <span class="br0">&#93;</span>.<span class="kw3">unmap</span><span class="br0">&#40;</span><span class="st0">&quot;uno&quot;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> <span class="st0">&quot;uno&quot;</span> <span class="sy0">:</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span> <span class="sy0">:</span> <span class="nu0">2</span> <span class="br0">&#93;</span><span class="sy0">.</span><span class="me1">unmap</span><span class="br0">&#40;</span><span class="st0">&quot;uno&quot;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">1</pre>
 
 </div>
@@ -90,9 +99,9 @@ Rimuove l&#039;elemento mappato con la chiave &#039;key&#039; e ne restituisce u
 
 Restituisce <strong>true</strong> se la mappa contiene un elemenento mappato con la chiave &#039;key&#039;, altrimenti restituisce <strong>false</strong> .
 </p>
-<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> <span class="st0">&quot;uno&quot;</span> <span class="sy0">:</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span> <span class="sy0">:</span> <span class="nu0">2</span> <span class="br0">&#93;</span>.<span class="me1">has</span><span class="br0">&#40;</span> <span class="st0">&quot;uno&quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> <span class="st0">&quot;uno&quot;</span> <span class="sy0">:</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span> <span class="sy0">:</span> <span class="nu0">2</span> <span class="br0">&#93;</span><span class="sy0">.</span><span class="me1">has</span><span class="br0">&#40;</span> <span class="st0">&quot;uno&quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
-<span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> <span class="st0">&quot;uno&quot;</span> <span class="sy0">:</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span> <span class="sy0">:</span> <span class="nu0">2</span> <span class="br0">&#93;</span>.<span class="me1">has</span><span class="br0">&#40;</span> <span class="st0">&quot;tre&quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> <span class="st0">&quot;uno&quot;</span> <span class="sy0">:</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span> <span class="sy0">:</span> <span class="nu0">2</span> <span class="br0">&#93;</span><span class="sy0">.</span><span class="me1">has</span><span class="br0">&#40;</span> <span class="st0">&quot;tre&quot;</span> <span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">true
 false</pre>
 
@@ -105,7 +114,7 @@ false</pre>
 
 Restituisce un <a href="array.html" class="wikilink1" title="array">array</a> contenente le chiavi della mappa.
 </p>
-<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> <span class="st0">&quot;uno&quot;</span> <span class="sy0">:</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span> <span class="sy0">:</span> 2 <span class="br0">&#93;</span>.<span class="me1">keys</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> <span class="st0">&quot;uno&quot;</span> <span class="sy0">:</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span> <span class="sy0">:</span> 2 <span class="br0">&#93;</span><span class="sy0">.</span><span class="me1">keys</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">array {
       zero
       uno
@@ -121,7 +130,7 @@ Restituisce un <a href="array.html" class="wikilink1" title="array">array</a> co
 
 Restituisce un <a href="array.html" class="wikilink1" title="array">array</a> contenente i valori della mappa.
 </p>
-<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> <span class="st0">&quot;uno&quot;</span> <span class="sy0">:</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span> <span class="sy0">:</span> 2 <span class="br0">&#93;</span>.<span class="me1">values</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> <span class="st0">&quot;uno&quot;</span> <span class="sy0">:</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="st0">&quot;due&quot;</span> <span class="sy0">:</span> 2 <span class="br0">&#93;</span><span class="sy0">.</span><span class="me1">values</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">array {
       0
       1
@@ -132,7 +141,7 @@ Restituisce un <a href="array.html" class="wikilink1" title="array">array</a> co
 <!-- SECTION "values()" [1708-1922] -->
 <h1><a name="esempio" id="esempio">Esempio</a></h1>
 <div class="level1">
-<pre class="code hybris"><span class="kw2">import</span> std.<span class="sy0">*;</span>
+<pre class="code hybris"><span class="kw2">import</span> std<span class="sy0">.*;</span>
 &nbsp;
 <span class="co1">// creo una mappa con elementi e chiavi di tipologia mista e la stampo</span>
 m <span class="sy0">=</span> <span class="br0">&#91;</span> <span class="st0">&quot;zero&quot;</span> <span class="sy0">:</span> <span class="nu0">0</span><span class="sy0">,</span> 
@@ -150,7 +159,7 @@ m<span class="br0">&#91;</span><span class="nu0">144</span><span class="br0">&#9
 <span class="kw3">print</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
 <span class="co1">// rimuovo l'elemento mappato con la chiave &quot;uno&quot;</span>
-m.<span class="kw3">unmap</span><span class="br0">&#40;</span><span class="st0">&quot;uno&quot;</span><span class="br0">&#41;</span><span class="sy0">;</span>
+m<span class="sy0">.</span><span class="me1">unmap</span><span class="br0">&#40;</span><span class="st0">&quot;uno&quot;</span><span class="br0">&#41;</span><span class="sy0">;</span>
 <span class="kw3">print</span><span class="br0">&#40;</span>m<span class="br0">&#41;</span><span class="sy0">;</span>
 &nbsp;
 <span class="co1">// anche un decimale può essere usato come chiave</span>
