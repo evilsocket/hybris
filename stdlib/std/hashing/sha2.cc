@@ -306,15 +306,7 @@ void sha2_finish( sha2_context *vm, unsigned char output[32] )
 }
 
 HYBRIS_DEFINE_FUNCTION(hsha2){
-    int is224 = SHA256;
-    if( ob_argc() == 2 ){
-    	ob_argv_type_assert( 1, otInteger, "sha2" );
-		is224 = int_argv(1);
-		if( is224 != SHA256 && is224 != SHA224 ){
-			 hyb_error( H_ET_SYNTAX, "function 'sha2' admits as second parameter only SHA256 or SHA224 constants" );
-		}
-	}
-
+    int 		  is224    = SHA256;
 	string        str 	   = string_argv(0),
 				  str_hash("");
 	unsigned char hash[32] = {0};

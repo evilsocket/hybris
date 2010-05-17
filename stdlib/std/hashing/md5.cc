@@ -263,11 +263,6 @@ void md5_finish( md5_context *vm, unsigned char output[16] )
 }
 
 HYBRIS_DEFINE_FUNCTION(hmd5){
-    if( ob_argc() != 1 ){
-        hyb_error( H_ET_SYNTAX, "function 'md5' requires 1 parameter (called with %d)", ob_argc() );
-    }
-    ob_argv_type_assert( 0, otString, "md5" );
-
 	string        str 	   = string_argv(0),
 				  str_hash("");
 	unsigned char hash[16] = {0};
