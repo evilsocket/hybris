@@ -334,7 +334,7 @@ IMPLEMENT_TYPE(Map) {
 	/** type name **/
     "map",
 	/** type basic size **/
-    0,
+    OB_COLLECTION_SIZE,
     /** type builtin methods **/
     {
 		{ "size",   (ob_type_builtin_method_t *)__map_size },

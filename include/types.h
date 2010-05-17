@@ -220,6 +220,12 @@ enum H_OBJECT_TYPE {
     otReference
 };
 
+/*
+ * Set the object_type_t::size field to zero for collections, the
+ * ob_get_size will return the number of elements instead the field.
+ */
+#define OB_COLLECTION_SIZE 0
+
 __force_inline const char *ob_type_to_string( H_OBJECT_TYPE type ){
 	switch(type){
 		case otVoid      : return "void";

@@ -135,7 +135,7 @@ IMPLEMENT_TYPE(Structure) {
 	/** type name **/
     "struct",
 	/** type basic size **/
-    0,
+    OB_COLLECTION_SIZE,
     /** type builtin methods **/
     { OB_BUILIN_METHODS_END_MARKER },
 

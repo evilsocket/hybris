@@ -505,7 +505,7 @@ IMPLEMENT_TYPE(String) {
 	/** type name **/
     "string",
 	/** type basic size **/
-    0,
+    OB_COLLECTION_SIZE,
     /** type builtin methods **/
     {
     	{ "length",  (ob_type_builtin_method_t *)__string_length },
