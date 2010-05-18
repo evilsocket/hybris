@@ -394,8 +394,11 @@ Object *engine_exec( engine_t *engine, vframe_t *frame, Node *node ){
         case H_NT_IDENTIFIER :
             return engine_on_identifier( engine, frame, node );
         /* attribute */
-        case H_NT_MEMBER  :
-            return engine_on_member_request( engine, frame, node );
+        case H_NT_ATTRIBUTE  :
+            return engine_on_attribute_request( engine, frame, node );
+		/* attribute */
+		case H_NT_METHOD_CALL :
+			return engine_on_method_call( engine, frame, node );
         /* constant value */
         case H_NT_CONSTANT   :
             return engine_on_constant( engine, frame, node );
@@ -687,79 +690,62 @@ Object *engine_on_identifier( engine_t *engine, vframe_t *frame, Node *node ){
 	}
 }
 
-Object *engine_on_member_request( engine_t *engine, vframe_t *frame, Node *node ){
-	Object  *cobj      = engine_exec( engine, frame, node->value.m_owner ),
-		    *attribute = H_UNDEFINED,
-		    *value	   = H_UNDEFINED,
-		    *result    = H_UNDEFINED;
+Object *engine_on_attribute_request( engine_t *engine, vframe_t *frame, Node *node ){
+	Object  *cobj      = H_UNDEFINED,
+		    *attribute = H_UNDEFINED;
 	char    *name,
 			*owner_id;
 	access_t access;
-	Node    *member = node->value.m_member,
-			*method = H_UNDEFINED;
-	vframe_t stack;
-	int      argc,
-			 method_argc,
-			 i;
+	Node    *member = node->value.m_member;
 
+	cobj      = engine_exec( engine, frame, node->value.m_owner );
+	owner_id  = (char *)node->value.m_owner->value.m_identifier.c_str();
+	name      = (char *)member->value.m_identifier.c_str();
+	attribute = ob_get_attribute( cobj, name, true );
+
+	if( attribute == H_UNDEFINED ){
+		hyb_error( H_ET_SYNTAX, "'%s' is not an attribute of object '%s'", name, ob_typename(cobj) );
+	}
+	/*
+	 * Check attribute access.
+	 */
+	access = ob_attribute_access( cobj, name );
+	/*
+	 * If the attribute has public access, skip the access checking
+	 * because everyone can access it.
+	 */
+	if( access != asPublic ){
+		/*
+		 * Protected attributes can be accessed only by the class itself
+		 * or derived classes.
+		 */
+		if( access == asProtected && strcmp( owner_id, "me" ) != 0 ){
+			hyb_error( H_ET_SYNTAX, "Protected attribute '%s' can be accessed only by derived classes of '%s'", name, ob_typename(cobj) );
+		}
+		/*
+		 * The attribute is private, so only the owner can use it.
+		 * Let's check if the class pointed by 'me' it's the owner of
+		 * the private attribute.
+		 */
+		else if( access == asPrivate && strcmp( owner_id, "me" ) != 0 ){
+			hyb_error( H_ET_SYNTAX, "Private attribute '%s' can be accessed only within '%s' class", name, ob_typename(cobj) );
+		}
+	}
+
+	return attribute;
+}
+
+Object *engine_on_method_call( engine_t *engine, vframe_t *frame, Node *node ){
+	Object  *cobj   = H_UNDEFINED;
+	char    *name,
+			*owner_id;
+	Node    *member = node->value.m_member;
+
+	cobj 	 = engine_exec( engine, frame, node->value.m_owner );
 	owner_id = (char *)node->value.m_owner->value.m_identifier.c_str();
+	name 	 = (char *)member->value.m_call.c_str();
 
-	if( member->type() == H_NT_IDENTIFIER ){
-		name      = (char *)member->value.m_identifier.c_str();
-		attribute = ob_get_attribute( cobj, name, true );
-
-		if( attribute == H_UNDEFINED ){
-			hyb_error( H_ET_SYNTAX, "'%s' is not an attribute of object '%s'", name, ob_typename(cobj) );
-		}
-
-		/*
-		 * Check attribute access.
-		 */
-		access = ob_attribute_access( cobj, name );
-		/*
-		 * If the attribute has public access, skip the access checking
-		 * because everyone can access it.
-		 */
-		if( access != asPublic ){
-			/*
-			 * The attribute is protected.
-			 */
-			if( access == asProtected ){
-				/*
-				 * Protected attributes can be accessed only by the class itself
-				 * or derived classes.
-				 */
-				if( strcmp( owner_id, "me" ) != 0 ){
-					hyb_error( H_ET_SYNTAX, "Protected attribute '%s' can be accessed only by derived classes of '%s'", name, ob_typename(cobj) );
-				}
-			}
-			/*
-			 * The attribute is private, so only the owner can use it.
-			 */
-			else if( access == asPrivate ){
-				/*
-				 * Let's check if the class pointed by 'me' it's the owner of
-				 * the private attribute.
-				 */
-				if( strcmp( owner_id, "me" ) != 0 ){
-					hyb_error( H_ET_SYNTAX, "Private attribute '%s' can be accessed only within '%s' class", name, ob_typename(cobj) );
-				}
-			}
-		}
-
-		return attribute;
-	}
-	else if( member->type() == H_NT_CALL ){
-		name   = (char *)member->value.m_call.c_str();
-
-		return ob_call_method( engine, frame, cobj, owner_id, name, member );
-	}
-	else{
-		/*
-		 * THIS SHOULD NEVER HAPPEN!
-		 */
-		assert( false );
-	}
+	return ob_call_method( engine, frame, cobj, owner_id, name, member );
 }
 
 Object *engine_on_constant( engine_t *engine, vframe_t *frame, Node *node ){
@@ -868,7 +854,7 @@ Object *engine_on_class_declaration( engine_t *engine, vframe_t *frame, Node *no
 		/*
 		 * Define a method
 		 */
-		else if( node->child(i)->type() == H_NT_METHOD ){
+		else if( node->child(i)->type() == H_NT_METHOD_DECL ){
 			ob_define_method( c, (char *)node->child(i)->value.m_method.c_str(), node->child(i) );
 		}
 		/*
@@ -1887,9 +1873,9 @@ Object *engine_on_assign( engine_t *engine, vframe_t *frame, Node *node ){
     }
     /*
      * If not, we evaluate the first node as a "owner->child->..." sequence,
-     * just like the engine_on_member_request handler.
+     * just like the engine_on_attribute_request handler.
      */
-    else if( lexpr->type() == H_NT_MEMBER ){
+    else if( lexpr->type() == H_NT_ATTRIBUTE ){
     	Node *member    = lexpr,
 			 *owner     = member->value.m_owner,
 			 *attribute = member->value.m_member;

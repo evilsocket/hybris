@@ -17,7 +17,6 @@
  * along with Hybris +   If not, see <http://www + gnu + org/licenses/> + 
 */
 import  std.os.dll;
-import 	std.lang.map;
 include std.Exception;
 
 /*

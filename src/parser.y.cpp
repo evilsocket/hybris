@@ -48,7 +48,8 @@
 #define MK_CONST_NODE(a)          new ConstantNode(a)
 #define MK_ARRAY_NODE(a)		  new ExpressionNode( T_ARRAY, a )
 #define MK_MAP_NODE(a)			  new ExpressionNode( T_MAP, a )
-#define MK_MREQ_NODE(a,b)         new MemberRequestNode(a,b)
+#define MK_ATTRIBUTE_REQUEST_NODE(a,b) new AttributeRequestNode(a,b)
+#define MK_METHOD_CALL_NODE(a,b)  new MethodCallNode(a,b)
 /* statements */
 #define MK_EXPLODE_NODE(a,b)	  new StatementNode( T_EXPLODE, a, b )
 #define MK_WHILE_NODE(a, b)       new StatementNode( T_WHILE, 2, a, b )
@@ -69,8 +70,8 @@
 #define MK_FUNCTION_NODE(a, b)    new FunctionNode( a, 1, b )
 #define MK_STRUCT_NODE(a, b)      new StructureNode( a, b )
 #define MK_CLASS_NODE(a, b, c)    new ClassNode( a, b, c )
-#define MK_METHOD_NODE(a, b, c)   new MethodNode( a, b, 1, c )
-#define MK_STATIC_METHOD_NODE(a,b) new MethodNode( asPublic, a, true, 1, b )
+#define MK_METHOD_DECL_NODE(a, b, c)    new MethodDeclarationNode( a, b, 1, c )
+#define MK_STATIC_METHOD_DECL_NODE(a,b) new MethodDeclarationNode( asPublic, a, true, 1, b )
 /* expressions */
 #define MK_BACKTICK_NODE(a)       new ExpressionNode( T_BACKTICK, 1, a )
 #define MK_EOSTMT_NODE(a, b)      new ExpressionNode( T_EOSTMT, 2, a, b )
@@ -311,19 +312,19 @@ attrList  : accessSpecifier identList T_EOSTMT attrList {
 
 methodList : accessSpecifier T_METHOD_PROTOTYPE '{' statements '}' methodList {
 				 $$ = MK_NODE($6);
-				 $$->head( MK_METHOD_NODE( $1, $2, $4 ) );
+				 $$->head( MK_METHOD_DECL_NODE( $1, $2, $4 ) );
 		   }
 		   | accessSpecifier T_METHOD_PROTOTYPE '{' statements '}' {
 				 $$ = MK_NODE_LIST();
-				 $$->head( MK_METHOD_NODE( $1, $2, $4 ) );
+				 $$->head( MK_METHOD_DECL_NODE( $1, $2, $4 ) );
 		   }
 		   | T_STATIC T_METHOD_PROTOTYPE '{' statements '}' methodList {
 				 $$ = MK_NODE($6);
-				 $$->head( MK_STATIC_METHOD_NODE( $2, $4 ) );
+				 $$->head( MK_STATIC_METHOD_DECL_NODE( $2, $4 ) );
 		   }
 		   | T_STATIC T_METHOD_PROTOTYPE '{' statements '}' {
 				 $$ = MK_NODE_LIST();
-				 $$->head( MK_STATIC_METHOD_NODE( $2, $4 ) );
+				 $$->head( MK_STATIC_METHOD_DECL_NODE( $2, $4 ) );
 		   };
 
 classMembers : attrList methodList classMembers {
@@ -455,7 +456,7 @@ logicExpression : T_L_NOT expression                 			   { $$ = MK_LNOT_NODE( 
 				| '(' expression '?' expression ':' expression ')' { $$ = MK_QUESTION_NODE( $2, $4, $6 ); };
 
 callExpression : /* expression . <identifier>( ... ) */
-				 expression T_GET_MEMBER T_IDENT '(' argumentList ')' { $$ = MK_MREQ_NODE( $1, MK_CALL_NODE( $3, $5 ) ); }
+				 expression T_GET_MEMBER T_IDENT '(' argumentList ')' { $$ = MK_METHOD_CALL_NODE( $1, MK_CALL_NODE( $3, $5 ) ); }
 				 /* new <identifier>( ... ) */
 			   | T_NEW T_IDENT '(' argumentList ')' 				  { $$ = MK_NEW_NODE( $2, $4 ); }
 			     /* <identifier>( ... ) */
@@ -472,7 +473,7 @@ expression : T_BOOLEAN										  { $$ = MK_CONST_NODE($1); }
            | '[' itemList ']'                                 { $$ = MK_ARRAY_NODE($2); }
            | '[' mapList ']'								  { $$ = MK_MAP_NODE($2); }
            /* expression . <identifier> */
-           | expression T_GET_MEMBER T_IDENT 				  { $$ = MK_MREQ_NODE( $1, MK_IDENT_NODE($3) ); free($3); }
+           | expression T_GET_MEMBER T_IDENT 				  { $$ = MK_ATTRIBUTE_REQUEST_NODE( $1, MK_IDENT_NODE($3) ); free($3); }
            /* identifier */
            | T_IDENT                                          { $$ = MK_IDENT_NODE($1); }
            /* @ arguments vector */

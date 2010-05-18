@@ -38,10 +38,11 @@ enum H_NODE_TYPE {
     H_NT_FUNCTION    = 5,
     H_NT_CALL        = 6,
     H_NT_STRUCT      = 7,
-    H_NT_MEMBER      = 8,
-    H_NT_METHOD		 = 9,
-    H_NT_CLASS		 = 10,
-    H_NT_NEW	     = 11
+    H_NT_ATTRIBUTE   = 8,
+    H_NT_METHOD_CALL = 9,
+    H_NT_METHOD_DECL = 10,
+    H_NT_CLASS		 = 11,
+    H_NT_NEW	     = 12
 };
 
 #ifndef H_ACCESS_SPECIFIER
@@ -214,11 +215,20 @@ class IdentifierNode : public Node {
         Node *clone();
 };
 
-/* structure attribute expression */
-class MemberRequestNode : public Node {
+/* attribute request expression */
+class AttributeRequestNode : public Node {
     public :
 
-		MemberRequestNode( Node *owner, Node *member );
+		AttributeRequestNode( Node *owner, Node *member );
+
+		Node *clone();
+};
+
+/* class method call */
+class MethodCallNode : public Node {
+    public :
+
+		MethodCallNode( Node *owner, Node *call );
 
 		Node *clone();
 };
@@ -261,11 +271,11 @@ class StructureNode : public Node {
 };
 
 /* method declarations */
-class MethodNode : public Node {
+class MethodDeclarationNode : public Node {
 	public :
-		MethodNode( access_t access, method_decl_t *declaration, int argc, ... );
-		MethodNode( access_t access, method_decl_t *declaration, bool is_static, int argc, ... );
-		MethodNode( const char *name, access_t access );
+		MethodDeclarationNode( access_t access, method_decl_t *declaration, int argc, ... );
+		MethodDeclarationNode( access_t access, method_decl_t *declaration, bool is_static, int argc, ... );
+		MethodDeclarationNode( const char *name, access_t access );
 
 		Node *clone();
 };

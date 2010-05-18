@@ -120,11 +120,15 @@ Object 	 *engine_exec( engine_t *engine, vframe_t *frame, Node *node );
  */
 Object 	 *engine_on_identifier( engine_t *engine, vframe_t *, Node * );
 /*
- * expression->expression or expression->expression( ... ), evaluate
- * first expression to find out if it's a class or a structure, and then
- * lookup inside it the second one.
+ * expression->expression, evaluate first expression to find out if
+ * it's a class or a structure, and then lookup inside it the second one.
  */
-Object   *engine_on_member_request( engine_t *engine, vframe_t *, Node * );
+Object   *engine_on_attribute_request( engine_t *engine, vframe_t *, Node * );
+/*
+ * expression->expression(...), evaluate first expression to find out if
+ * it's a class or a structure, and then lookup inside it the second one.
+ */
+Object   *engine_on_method_call( engine_t *engine, vframe_t *, Node * );
 /*
  * Constant found, just return it from the evaluation tree.
  */

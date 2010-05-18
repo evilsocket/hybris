@@ -278,14 +278,24 @@ Node *IdentifierNode::clone(){
     return clone;
 }
 
-/* structure or class member request */
-MemberRequestNode::MemberRequestNode( Node *owner, Node *member ) : Node(H_NT_MEMBER) {
+/* attribute request expression */
+AttributeRequestNode::AttributeRequestNode( Node *owner, Node *member ) : Node(H_NT_ATTRIBUTE) {
 	value.m_owner  = owner;
 	value.m_member = member;
 }
 
-Node *MemberRequestNode::clone(){
-	return new MemberRequestNode( value.m_owner, value.m_member );
+Node *AttributeRequestNode::clone(){
+	return new AttributeRequestNode( value.m_owner, value.m_member );
+}
+
+/* class method call */
+MethodCallNode::MethodCallNode( Node *owner, Node *call ) : Node(H_NT_METHOD_CALL) {
+	value.m_owner  = owner;
+	value.m_member = call;
+}
+
+Node *MethodCallNode::clone(){
+	return new MethodCallNode( value.m_owner, value.m_member );
 }
 
 /* functions */
@@ -420,7 +430,7 @@ StructureNode::StructureNode( char *s_name, NodeList *attributes ) : Node(H_NT_S
 }
 
 /* methods */
-MethodNode::MethodNode( access_t access, method_decl_t *declaration, int argc, ... ) : Node(H_NT_METHOD) {
+MethodDeclarationNode::MethodDeclarationNode( access_t access, method_decl_t *declaration, int argc, ... ) : Node(H_NT_METHOD_DECL) {
     value.m_method = declaration->method;
     value.m_vargs  = declaration->vargs;
     value.m_access = access;
@@ -441,7 +451,7 @@ MethodNode::MethodNode( access_t access, method_decl_t *declaration, int argc, .
 	va_end(ap);
 }
 
-MethodNode::MethodNode( access_t access, method_decl_t *declaration, bool is_static, int argc, ... ) : Node(H_NT_METHOD) {
+MethodDeclarationNode::MethodDeclarationNode( access_t access, method_decl_t *declaration, bool is_static, int argc, ... ) : Node(H_NT_METHOD_DECL) {
     value.m_method = declaration->method;
     value.m_vargs  = declaration->vargs;
     value.m_access = access;
@@ -463,13 +473,13 @@ MethodNode::MethodNode( access_t access, method_decl_t *declaration, bool is_sta
 	va_end(ap);
 }
 
-MethodNode::MethodNode( const char *name, access_t access ) : Node(H_NT_METHOD) {
+MethodDeclarationNode::MethodDeclarationNode( const char *name, access_t access ) : Node(H_NT_METHOD_DECL) {
 	value.m_method = name;
 	value.m_access = access;
 }
 
-Node *MethodNode::clone(){
-	Node *clone = new MethodNode( value.m_method.c_str(), value.m_access );
+Node *MethodDeclarationNode::clone(){
+	Node *clone = new MethodDeclarationNode( value.m_method.c_str(), value.m_access );
 	int   i, sz(size());
 
 	clone->value.m_static = value.m_static;

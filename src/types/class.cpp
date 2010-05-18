@@ -702,6 +702,15 @@ Object *class_call_method( engine_t *engine, vframe_t *frame, Object *me, char *
 	 */
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, frame, argv->child(i) );
+		/*
+		 * Check if engine_exec raised an exception.
+		 */
+		engine_check_frame_exit(frame);
+		/*
+		 * Check if i >= argc for vargs methods :
+		 *
+		 * i.e. public method foo( bar, ... ){ }
+		 */
 		if( i >= argc ){
 			stack.push( value );
 		}
