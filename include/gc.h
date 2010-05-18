@@ -139,14 +139,13 @@ typedef struct _gc {
     size_t			mm_threshold;
 	pthread_mutex_t mutex;
 
-    _gc() : collections(0),
-			items(0),
-			usage(0),
-			gc_threshold(GC_DEFAULT_MEMORY_THRESHOLD),
-			mm_threshold(GC_ALLOWED_MEMORY_THRESHOLD),
-			mutex(PTHREAD_MUTEX_INITIALIZER)
-	{
-
+	_gc(){
+		collections  = 0;
+		items 		 = 0;
+		usage        = 0;
+		gc_threshold = GC_DEFAULT_MEMORY_THRESHOLD;
+		mm_threshold = GC_ALLOWED_MEMORY_THRESHOLD;
+		mutex        = PTHREAD_MUTEX_INITIALIZER;
 	}
 }
 gc_t;

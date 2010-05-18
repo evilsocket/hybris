@@ -14,7 +14,7 @@ CXX           = 'g++'
 WFLAGS        = '-w'
 OPTIMIZATION  = '-O3 -pipe -fomit-frame-pointer -ffast-math'
 CXXFLAGS      = "-Iinclude/ #{WFLAGS} #{OPTIMIZATION}" 
-LDFLAGS       = '-ldl -lpcre -lpthread'
+LDFLAGS       = "-L./build#{PREFIX}/lib/ -ldl -lpcre -lpthread -lhybris"
 LIBXML_CFLAGS = "`xml2-config --cflags`"
 LIBXML_LFLAGS = "`xml2-config --libs`"
 LIBFFI_CFLAGS = "`pkg-config libffi --cflags`"
@@ -35,8 +35,8 @@ CLEAN.include( 'src/**/*.o',
 SRC = FileList['src/**/*.cpp'] - ['src/lexer.l.cpp', 'src/parser.y.cpp'] + ['src/lexer.cpp', 'src/parser.cpp']
 
 SOURCES = {
-    :BIN => SRC,
-    :LIB => SRC - ['src/main.cpp'],
+    :BIN => FileList['src/main.cpp'],
+    :LIB => SRC   - ['src/main.cpp'],
     :STD => FileList['stdlib/**/*.cc']
 }
 
@@ -52,7 +52,7 @@ task :interpreter => TARGET
 task :library     => "lib#{TARGET}.so.1.0"
 task :modules     => OBJECTS[:STD]
 
-task :exec    => [ :checkdeps, :config_h, :interpreter, :library ]
+task :exec    => [ :checkdeps, :config_h, :library, :interpreter ]
 task :all     => [ :exec, :modules ]
 task :debug do
 	CXXFLAGS = "-Iinclude/ #{WFLAGS} -g -pg" 

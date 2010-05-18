@@ -19,7 +19,7 @@
 #include "engine.h"
 #include "parser.hpp"
 
-engine_t *engine_create( vm_t* vm ){
+engine_t *engine_init( vm_t* vm ){
 	engine_t *engine = new engine_t;
 
 	engine->vm    = vm;

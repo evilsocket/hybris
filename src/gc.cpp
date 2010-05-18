@@ -25,7 +25,7 @@ extern void hyb_error( H_ERROR_TYPE type, const char *format, ... );
 /*
  * The main garbage collector global structure.
  */
-gc_t __gc;
+static gc_t __gc;
 
 /*
  * Lock the gc mutex.
@@ -136,6 +136,7 @@ void gc_free( gc_list_t *list, gc_item_t *item ){
      */
     gc_pool_remove( list, item );
 }
+
 /*
  * Set collection threshold.
  */

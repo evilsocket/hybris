@@ -69,7 +69,7 @@ engine_t;
 /*
  * Alloc an instance of the engine.
  */
-engine_t *engine_create( vm_t* vm );
+engine_t *engine_init( vm_t* vm );
 /*
  * Pretty self explainatory.
  */

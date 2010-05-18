@@ -95,7 +95,7 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
     char name[0xFF] = {0};
 
     /* create code engine */
-    vm->engine = engine_create( vm );
+    vm->engine = engine_init( vm );
     /* save interpreter directory */
     getcwd( vm->args.rootpath, 0xFF );
     /* initialize pthread mutexes */
@@ -107,6 +107,9 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
     /* set signal handler */
     signal( SIGSEGV, vm_signal_handler );
 
+    /*
+     * Eventually set garbage collector user defined thresholds.
+     */
     if( vm->args.gc_threshold > 0 ){
     	gc_set_collect_threshold(vm->args.gc_threshold);
     }
@@ -383,11 +386,10 @@ void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){
 		unsigned int j, stop, pad, k, args, last;
 		string name;
 		vframe_t *frame;
-		extern gc_t __gc;
 
 		stop = (vm->frames.size() >= MAX_RECURSION_THRESHOLD ? 10 : vm->frames.size());
 
-		fprintf( stderr, "\nCall Stack [memory usage %d bytes] :\n\n", __gc.usage );
+		fprintf( stderr, "\nCall Stack [memory usage %d bytes] :\n\n", gc_mm_usage() );
 
 		fprintf( stderr, "%s\n", vm->vmem.owner.c_str() );
 		for( i = vm->frames.begin(), j = 1; i != vm->frames.end() && j < stop; i++, ++j ){
