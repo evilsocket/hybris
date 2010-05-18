@@ -20,13 +20,13 @@
 #	define _HVCODE_H_
 
 #include "node.h"
-#include "hashmap.h"
+#include "itree.h"
 #include "memory.h"
 
 /*
  * This class represent user defined functions.
  */
-class CodeSegment : public HashMap<Node> {
+class CodeSegment : public ITree<Node> {
     public :
 
         CodeSegment();

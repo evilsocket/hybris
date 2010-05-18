@@ -18,7 +18,7 @@
 */
 #include "code.h"
 
-CodeSegment::CodeSegment() : HashMap<Node>() {
+CodeSegment::CodeSegment() : ITree<Node>() {
 
 }
 

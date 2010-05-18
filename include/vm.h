@@ -130,7 +130,7 @@ module_t;
 typedef void (*initializer_t)( vm_t * );
 
 typedef vector<module_t *>        h_modules_t;
-typedef HashMap<named_function_t> h_mcache_t;
+typedef ITree<named_function_t> h_mcache_t;
 
 typedef struct _vm_t {
 	/*
@@ -194,7 +194,7 @@ typedef struct _vm_t {
 	/*
 	 * Compiled regular expressions cache.
 	 */
-	HashMap<pcre>  pcre_cache;
+	ITree<pcre>  pcre_cache;
 	/*
 	 * Regexp cache mutex.
 	 */

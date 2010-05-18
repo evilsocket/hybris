@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef _HMAP_H_
-#	define _HMAP_H_
+#ifndef _ITREE_H_
+#	define _ITREE_H_
 
 #include "asciitree.h"
 
@@ -45,15 +45,17 @@ using std::string;
  * This class is the base for all the lookup tables inside Hybris.
  * It's used by MemorySegment, CodeSegment, cache tables and so on.
  *
- * HashMap has two main containers.
+ * ITree has two main containers.
  *
  * m_map   : A vector to have items fast access by index.
  * m_table : An ascii tree to have fast access by label.
  *
  * They points to the same objects so, changing the value of an item in
  * the vector will change that value inside the table, and viceversa.
+ * With those two references, the class represent an indexed ascii tree,
+ * adding by-index access capabilities to the ascii tree data type.
  */
-H_TEMPLATE_T class HashMap {
+H_TEMPLATE_T class ITree {
 protected :
 	/*
 	 * Structure rapresentation for an item the the map.
@@ -111,8 +113,8 @@ public  :
         return m_map.rend();
     }
 
-    HashMap();
-    ~HashMap();
+    ITree();
+    ~ITree();
 
     /* Get the number of items mapped here. f*/
     __force_inline unsigned int size(){
@@ -136,16 +138,16 @@ public  :
     void     clear();
 };
 
-H_TEMPLATE_T HashMap<value_t>::HashMap(){
+H_TEMPLATE_T ITree<value_t>::ITree(){
 	at_init_tree(m_tree);
     m_elements = 0;
 }
 
-H_TEMPLATE_T HashMap<value_t>::~HashMap(){
+H_TEMPLATE_T ITree<value_t>::~ITree(){
 	clear();
 }
 
-H_TEMPLATE_T value_t * HashMap<value_t>::insert( char *label, value_t *value ){
+H_TEMPLATE_T value_t * ITree<value_t>::insert( char *label, value_t *value ){
 	pair_t *pair = new pair_t( label, value );
 	m_map.push_back( pair );
 
@@ -156,7 +158,7 @@ H_TEMPLATE_T value_t * HashMap<value_t>::insert( char *label, value_t *value ){
     return value;
 }
 
-H_TEMPLATE_T value_t * HashMap<value_t>::find( char *label ){
+H_TEMPLATE_T value_t * ITree<value_t>::find( char *label ){
 	pair_t *item = (pair_t *)at_find( &m_tree, label, strlen(label) );
     if( item ){
         return item->value;
@@ -164,7 +166,7 @@ H_TEMPLATE_T value_t * HashMap<value_t>::find( char *label ){
     return H_UNDEFINED;
 }
 
-H_TEMPLATE_T value_t * HashMap<value_t>::replace( char *label, value_t *old_value, value_t *new_value ){
+H_TEMPLATE_T value_t * ITree<value_t>::replace( char *label, value_t *old_value, value_t *new_value ){
 	pair_t *item;
 
 	if( (item = (pair_t *)at_find( &m_tree, label, strlen(label) )) != NULL ){
@@ -174,7 +176,7 @@ H_TEMPLATE_T value_t * HashMap<value_t>::replace( char *label, value_t *old_valu
 	return old_value;
 }
 
-H_TEMPLATE_T void HashMap<value_t>::clear(){
+H_TEMPLATE_T void ITree<value_t>::clear(){
     unsigned int i, size(m_elements);
     for( i = 0; i < size; ++i ){
         delete m_map[i];

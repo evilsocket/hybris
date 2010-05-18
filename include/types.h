@@ -20,7 +20,7 @@
 #	define _HOBJECT_H_
 
 #include "gc.h"
-#include "hashmap.h"
+#include "itree.h"
 #include <stdarg.h>
 #include <string>
 #include <vector>
@@ -916,7 +916,7 @@ DECLARE_TYPE(Structure);
 typedef struct _StructureObject {
     BASE_OBJECT_HEADER;
     size_t           items;
-    HashMap<Object>  s_attributes;
+    ITree<Object>  s_attributes;
 
     _StructureObject() : items(0), BASE_OBJECT_HEADER_INIT(Structure) {
 
@@ -924,7 +924,7 @@ typedef struct _StructureObject {
 }
 StructureObject;
 
-typedef HashMap<Object>::iterator StructureObjectAttributeIterator;
+typedef ITree<Object>::iterator StructureObjectAttributeIterator;
 
 #define ob_is_struct(o)    ob_is_typeof(o,Structure)
 #define ob_struct_ucast(o) ((StructureObject *)(o))
@@ -980,8 +980,8 @@ typedef struct _ClassObject {
     BASE_OBJECT_HEADER;
     string name;
 
-    HashMap<class_attribute_t> c_attributes;
-    HashMap<class_method_t>	   c_methods;
+    ITree<class_attribute_t> c_attributes;
+    ITree<class_method_t>	   c_methods;
 
     _ClassObject() : BASE_OBJECT_HEADER_INIT(Class) {
 
@@ -989,8 +989,8 @@ typedef struct _ClassObject {
 }
 ClassObject;
 
-typedef HashMap<class_attribute_t>::iterator ClassObjectAttributeIterator;
-typedef HashMap<class_method_t>::iterator	 ClassObjectMethodIterator;
+typedef ITree<class_attribute_t>::iterator ClassObjectAttributeIterator;
+typedef ITree<class_method_t>::iterator	 ClassObjectMethodIterator;
 typedef vector<Node *>::iterator	 		 ClassObjectPrototypesIterator;
 
 #define ob_is_class(o)    ob_is_typeof(o,Class)

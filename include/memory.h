@@ -21,7 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "hashmap.h"
+#include "itree.h"
 #include "types.h"
 
 /* helper macro to obtain the address of a pointer */
@@ -90,7 +90,7 @@ vframe_state_t;
  * This class represent a memory segment where constants
  * and variables are defined.
  */
-class MemorySegment : public HashMap<Object> {
+class MemorySegment : public ITree<Object> {
     public :
 		/*
 		 * Name of the function/method that owns this stack.
