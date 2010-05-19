@@ -197,7 +197,7 @@ Object *xmlNode2Object( xmlNode *node ){
 }
 
 string Object2Xml( Object *o, unsigned int tabs = 0 ){
-	unsigned int i, j;
+	unsigned int i;
 	char         byte[3] = {0};
 	string       xtabs;
 	stringstream xml;
@@ -258,7 +258,6 @@ string Object2Xml( Object *o, unsigned int tabs = 0 ){
 
 HYBRIS_DEFINE_FUNCTION(hfromxml){
 	xmlDoc  *doc  = NULL;
-	xmlNode *root = NULL;
 
 	LIBXML_TEST_VERSION
 

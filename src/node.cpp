@@ -160,8 +160,8 @@ ExpressionNode::ExpressionNode( int expression, int argc, ... ) : Node(H_NT_EXPR
 
 Node *ExpressionNode::clone(){
 	Node *clone = new ExpressionNode( value.m_expression, 0 );
-	int   i, sz(size());
-    for( int i = 0; i < sz; ++i ){
+	int  i, sz(size());
+    for( i = 0; i < sz; ++i ){
     	if( child(i) ){
     		clone->push_back( child(i)->clone() );
     	}
@@ -190,10 +190,8 @@ StatementNode::StatementNode( int statement, int argc, ... ) : Node(H_NT_STATEME
 
 StatementNode::StatementNode( int statement, NodeList *identList, Node *expr ) : Node(H_NT_STATEMENT) {
     value.m_statement = statement;
-    va_list ap;
-	int i;
 
-	reserve( identList->size() + 1 );
+    reserve( identList->size() + 1 );
 
 	push_back(expr);
 
@@ -274,7 +272,6 @@ IdentifierNode::IdentifierNode( access_t access, bool is_static, char *identifie
 
 Node *IdentifierNode::clone(){
 	Node *clone = new IdentifierNode( (char *)value.m_identifier.c_str() );
-	int   i, sz(size());
 
 	clone->value.m_access = value.m_access;
     clone->value.m_static = value.m_static;

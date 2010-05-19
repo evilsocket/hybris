@@ -51,8 +51,6 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 static Object *__termios_type = H_UNDEFINED;
 
 static void termios_h2c( Object *h_attr, struct termios *c_attr ){
-	struct termios attributes;
-
 	c_attr->c_iflag  = ob_int_val( ob_get_attribute( h_attr, "c_iflag") );
 	c_attr->c_oflag  = ob_int_val( ob_get_attribute( h_attr, "c_oflag") );
 	c_attr->c_cflag  = ob_int_val( ob_get_attribute( h_attr, "c_cflag") );
@@ -418,8 +416,7 @@ HYBRIS_DEFINE_FUNCTION(hserial_set_attr){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_set_ispeed){
-	int 	speed 	  = int_argv(1),
-			i;
+	int 	speed 	  = int_argv(1);
 	Object *h_termios = ob_ref_ucast( ob_argv(0) )->value;
 
 	struct termios attributes;
@@ -437,8 +434,7 @@ HYBRIS_DEFINE_FUNCTION(hserial_set_ispeed){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_set_ospeed){
-	int 	speed 	  = int_argv(1),
-			i;
+	int 	speed 	  = int_argv(1);
 	Object *h_termios = ob_ref_ucast( ob_argv(0) )->value;
 
 	struct termios attributes;

@@ -371,7 +371,6 @@ void gc_collect( vm_t *vm ){
  */
 void gc_release(){
 	gc_item_t *item;
-	int i;
 
 	gc_lock();
 

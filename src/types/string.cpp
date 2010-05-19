@@ -227,7 +227,7 @@ Object *string_to_fd( Object *o, int fd, size_t size ){
 }
 
 Object *string_from_fd( Object *o, int fd, size_t size ){
-	int rd = 0, n;
+	int rd = 0;
 	if( size ){
 		char *tmp = (char *)alloca(size + 1);
 		memset( tmp, 0x00, size + 1 );

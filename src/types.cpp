@@ -729,13 +729,12 @@ Object *ob_call_method( engine_t *engine, vframe_t *frame, Object *owner, char *
 }
 
 Object *ob_call_method( vm_t *vm, Object *c, char *c_name, char *method_name, Object *argv ){
-	Node    *identifier = H_UNDEFINED,
-		    *method     = H_UNDEFINED;
+	Node    *method = H_UNDEFINED;
 	vframe_t stack;
 	Object  *value  = H_UNDEFINED,
 			*result = H_UNDEFINED;
 	IntegerObject index(0);
-	unsigned int i, j, argc( ob_get_size(argv) );
+	unsigned int j, argc( ob_get_size(argv) );
 
 	method = ob_get_method( c, method_name, 2 );
 	if( method == H_UNDEFINED ){
@@ -768,13 +767,12 @@ Object *ob_call_method( vm_t *vm, Object *c, char *c_name, char *method_name, Ob
 }
 
 Object *ob_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *method_name, Node *argv ){
-	Node    *identifier = H_UNDEFINED,
-		    *method     = H_UNDEFINED;
+	Node    *method = H_UNDEFINED;
 	vframe_t stack,
 			*frame;
 	Object  *value  = H_UNDEFINED,
 			*result = H_UNDEFINED;
-	unsigned int i, j, argc(argv->children());
+	unsigned int i, argc(argv->children());
 
 	method = ob_get_method( c, "__method", 2 );
 	if( method == H_UNDEFINED ){
@@ -815,9 +813,8 @@ Object *ob_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *metho
 }
 
 ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_id ){
-	size_t 					  i;
-	ob_type_builtin_method_t *method  = NULL;
-	ob_builtin_methods_t     *methods = c->type->builtin_methods;
+	size_t 				  i;
+	ob_builtin_methods_t *methods = c->type->builtin_methods;
 	/*
 	 * Builtin methods are supposed to be only a few, so a loop with a string
 	 * comparision is faster than an hashmap/asciitree initialization and

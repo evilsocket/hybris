@@ -85,7 +85,6 @@ void hyb_error( H_ERROR_TYPE type, const char *format, ... ){
     char message[MAX_MESSAGE_SIZE] = {0},
          error[MAX_MESSAGE_SIZE] = {0};
     va_list ap;
-    extern int yylineno;
 
     va_start( ap, format );
         vsnprintf( message, MAX_MESSAGE_SIZE, format, ap );

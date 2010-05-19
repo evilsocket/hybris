@@ -114,7 +114,6 @@ Object *xml_traverse( xmlNode *node ){
 HYBRIS_DEFINE_FUNCTION(hxml_load){
 	string   filename = string_argv(0);
 	xmlDoc  *doc  = NULL;
-	xmlNode *root = NULL;
 
 	LIBXML_TEST_VERSION
 
@@ -134,7 +133,6 @@ HYBRIS_DEFINE_FUNCTION(hxml_load){
 HYBRIS_DEFINE_FUNCTION(hxml_parse){
 	string   xml  = string_argv(0);
 	xmlDoc  *doc  = NULL;
-	xmlNode *root = NULL;
 
 	LIBXML_TEST_VERSION
 

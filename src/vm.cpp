@@ -355,8 +355,7 @@ void vm_load_module( vm_t *vm, char *module ){
 
 Object *vm_raise_exception( const char *fmt, ... ){
 	extern vm_t *__hyb_vm;
-    char message[MAX_MESSAGE_SIZE] = {0},
-	     error[MAX_MESSAGE_SIZE] = {0};
+    char message[MAX_MESSAGE_SIZE] = {0};
 	va_list ap;
 
 	vm_mm_lock( __hyb_vm );
@@ -383,7 +382,7 @@ Object *vm_raise_exception( const char *fmt, ... ){
 void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){
 	if( vm->args.stacktrace || force ){
 		list<vframe_t *>::iterator i;
-		unsigned int j, stop, pad, k, args, last;
+		unsigned int j, stop, pad, args, last;
 		string name;
 		vframe_t *frame;
 

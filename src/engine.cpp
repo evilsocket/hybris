@@ -631,7 +631,6 @@ Object *engine_exec( engine_t *engine, vframe_t *frame, Node *node ){
 
 Object *engine_on_identifier( engine_t *engine, vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
-    int     idx;
     Node   *function   = H_UNDEFINED;
     char   *identifier = (char *)node->value.m_identifier.c_str();
 
@@ -802,7 +801,7 @@ Object *engine_on_structure_declaration( engine_t *engine, vframe_t *frame, Node
 }
 
 Object *engine_on_class_declaration( engine_t *engine, vframe_t *frame, Node *node ){
-	int        i, j, members( node->children() );
+	int        i, members( node->children() );
 	char      *classname = (char *)node->value.m_identifier.c_str(),
 			  *attrname;
 	Node      *attribute;
@@ -917,10 +916,7 @@ Object *engine_on_builtin_function_call( engine_t *engine, vframe_t *frame, Node
     char        *callname = (char *)call->value.m_call.c_str();
     named_function_t* function;
     vframe_t     stack;
-    unsigned int i(0),
-                 children( call->children() );
-    Object      *value  = H_UNDEFINED,
-				*result = H_UNDEFINED;
+    Object      *result = H_UNDEFINED;
 
     if( (function = vm_get_function( engine->vm, callname )) == H_UNDEFINED ){
         return H_UNDEFINED;
@@ -948,11 +944,9 @@ Object *engine_on_builtin_function_call( engine_t *engine, vframe_t *frame, Node
 }
 
 Object *engine_on_threaded_call( engine_t *engine, string function_name, vframe_t *frame, vmem_t *argv ){
-	Node    *function             = H_UNDEFINED,
-			*identifier           = H_UNDEFINED;
+	Node    *function             = H_UNDEFINED;
 	vframe_t stack;
-	Object  *value                = H_UNDEFINED,
-			*result               = H_UNDEFINED;
+	Object  *result               = H_UNDEFINED;
 	Node    *body                 = H_UNDEFINED;
 
 	vector<string> identifiers;
@@ -1013,11 +1007,9 @@ Object *engine_on_threaded_call( engine_t *engine, string function_name, vframe_
 }
 
 Object *engine_on_threaded_call( engine_t *engine, Node *function, vframe_t *frame, vmem_t *argv ){
-	Node    *identifier           = H_UNDEFINED;
 	vframe_t stack;
-	Object  *value                = H_UNDEFINED,
-			*result               = H_UNDEFINED;
-	Node    *body                 = H_UNDEFINED;
+	Object  *result = H_UNDEFINED;
+	Node    *body   = H_UNDEFINED;
 
 	vector<string> identifiers;
 	unsigned int i(0), children;
@@ -1062,13 +1054,10 @@ Object *engine_on_threaded_call( engine_t *engine, Node *function, vframe_t *fra
 }
 
 Object *engine_on_user_function_call( engine_t *engine, vframe_t *frame, Node *call ){
-    char    *callname             = (char *)call->value.m_call.c_str();
-    Node    *function             = H_UNDEFINED,
-            *identifier           = H_UNDEFINED;
+    Node    *function = H_UNDEFINED;
     vframe_t stack;
-    Object  *value                = H_UNDEFINED,
-            *result               = H_UNDEFINED;
-    Node    *body                 = H_UNDEFINED;
+    Object  *result   = H_UNDEFINED;
+    Node    *body     = H_UNDEFINED;
 
     vector<string> identifiers;
     unsigned int i(0), children;
@@ -1236,13 +1225,11 @@ Object *engine_on_new_operator( engine_t *engine, vframe_t *frame, Node *type ){
 }
 
 Object *engine_on_dll_function_call( engine_t *engine, vframe_t *frame, Node *call ){
-    char    *callname      = (char *)call->value.m_call.c_str();
+    char    *callname   = (char *)call->value.m_call.c_str();
     vframe_t stack;
-    Object  *value         = H_UNDEFINED,
-            *result        = H_UNDEFINED,
-            *fn_pointer    = H_UNDEFINED;
-    unsigned int children,
-                 i;
+    Object  *result     = H_UNDEFINED,
+            *fn_pointer = H_UNDEFINED;
+
     /*
      * We assume that dll module is already loaded, otherwise there shouldn't be
      * any onDllFunctionCall call .

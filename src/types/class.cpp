@@ -291,7 +291,6 @@ string class_svalue( Object *me ){
 }
 
 void class_print( Object *me, int tabs ){
-	int j;
 	Object *svalue = class_call_overloaded_descriptor( me, "__to_string", false, 0 );
 
 	ob_print( svalue, tabs );

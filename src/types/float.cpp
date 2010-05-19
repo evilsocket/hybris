@@ -37,7 +37,7 @@ size_t float_get_size( Object *me ){
 }
 
 byte *float_serialize( Object *o, size_t size ){
-	size_t i, s   = (size > ob_get_size(o) ? ob_get_size(o) : size != 0 ? size : ob_get_size(o) );
+	size_t s  	  = (size > ob_get_size(o) ? ob_get_size(o) : size != 0 ? size : ob_get_size(o) );
 	byte  *buffer = new byte[s];
 
 	memcpy( buffer, &(ob_float_ucast(o)->value), s );
@@ -134,8 +134,6 @@ Object *float_assign( Object *me, Object *op ){
         ob_float_ucast(me)->value = ob_float_ucast(op)->value;
     }
     else {
-        Object *clone = ob_clone(op);
-
         me = ob_clone(op);
     }
 
