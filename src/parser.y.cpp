@@ -244,13 +244,16 @@ vm_t *__hyb_vm;
 %type <access> accessSpecifier
 %%
 
-program    : body           { vm_timer( __hyb_vm, HYB_TIMER_STOP ); }
+main : statements {
 
-body       : body statement { vm_timer( __hyb_vm, HYB_TIMER_START );
-                              engine_exec( __hyb_vm->engine, &__hyb_vm->vmem, $2 );
-                              RM_NODE($2);
-                            }
-           | /* empty */ ;
+	vm_timer( __hyb_vm, HYB_TIMER_START );
+
+	engine_exec( __hyb_vm->engine, &__hyb_vm->vmem, $1 );
+
+	vm_timer( __hyb_vm, HYB_TIMER_STOP );
+
+	RM_NODE($1);
+}
 
 mapList : expression ':' expression ',' mapList { $$ = MK_NODE($5);    $$->head($1,$3); }
 	    | expression ':' expression 			{ $$ = MK_NODE_LIST(); $$->tail($1,$3); }
@@ -413,10 +416,9 @@ statement  : T_EOSTMT                                                   { $$ = M
         	   free($7);
            };
 
-
-statements : /* empty */          { $$ = MK_NODE(0);  }
-           | statement            { $$ = MK_NODE($1); }
-           | statements statement { $$ = MK_EOSTMT_NODE( $1, $2 ); };
+statements : /* empty */ 		  { $$ = MK_NODE(0); }
+		   | statement 			  { $$ = MK_NODE($1); }
+		   | statements statement { $$ = MK_EOSTMT_NODE( $1, $2 ); };
 
 arithmeticExpression : T_MINUS expression %prec T_UMINUS { $$ = MK_UMINUS_NODE( $2 ); }
 					 | expression T_PLUS expression      { $$ = MK_PLUS_NODE( $1, $3 ); }
@@ -504,4 +506,3 @@ expression : T_BOOLEAN										  { $$ = MK_CONST_NODE($1); }
            | '(' expression ')'                               { $$ = MK_NODE($2); };
 
 %%
-

@@ -14,7 +14,7 @@ CXX           = 'g++'
 WFLAGS        = '-w'
 OPTIMIZATION  = '-O3 -pipe -fomit-frame-pointer -ffast-math'
 CXXFLAGS      = "-Iinclude/ #{WFLAGS} #{OPTIMIZATION}" 
-LDFLAGS       = '-ldl -lpcre -lpthread'
+LDFLAGS       = "-L./build#{PREFIX}/lib/ -ldl -lpcre -lpthread -lhybris"
 LIBXML_CFLAGS = "`xml2-config --cflags`"
 LIBXML_LFLAGS = "`xml2-config --libs`"
 LIBFFI_CFLAGS = "`pkg-config libffi --cflags`"
@@ -35,7 +35,7 @@ CLEAN.include( 'src/**/*.o',
 SRC = FileList['src/**/*.cpp'] - ['src/lexer.l.cpp', 'src/parser.y.cpp'] + ['src/lexer.cpp', 'src/parser.cpp']
 
 SOURCES = {
-    :BIN => SRC,
+    :BIN => FileList['src/main.cpp'],
     :LIB => SRC   - ['src/main.cpp'],
     :STD => FileList['stdlib/**/*.cc']
 }

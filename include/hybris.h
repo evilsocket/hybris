@@ -37,14 +37,10 @@ extern IntegerObject __default_error_value;
 #define H_DEFAULT_RETURN (Object *)&__default_return_value
 #define H_DEFAULT_ERROR  (Object *)&__default_error_value
 #define H_VOID_VALUE     H_DEFAULT_RETURN
-
-
-#define HYB_PARSE_STRING(s) extern int   yyparse(void); \
-							extern void *yy_scan_string(const char *); \
-							extern void  yypop_buffer_state(void); \
-							yy_scan_string(s); \
-							yyparse(); \
-							yypop_buffer_state()
+/*
+ * Parse and execute a string.
+ */
+void hyb_parse_string( const char *str );
 
 #endif
 

@@ -88,10 +88,6 @@ enum H_ERROR_TYPE {
  */
 void yyerror( char *error );
 /*
- * Parse and execute a string.
- */
-void hyb_parse_string( const char *str );
-/*
  * Throw an error with a given type and a give message,
  * if type == H_ET_WARNING the process will continue, otherwise
  * the process will be hard killed.

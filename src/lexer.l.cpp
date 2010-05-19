@@ -41,6 +41,7 @@ typedef vector<string> matches_t;
 #define LEX_FETCH(c)   (c = LEX_NEXT())
 #define LEX_UNFETCH(c) unput(c)
 
+
 void             yyerror(char *);
 // check if a give name is a directory or a file
 bool  			 hyb_is_dir( const char *filename );
@@ -71,6 +72,8 @@ vector<int>	   __hyb_line_stack;
 
 extern int     yylineno;
 extern vm_t   *__hyb_vm;
+
+int yyparse(void);
 
 %}
 
@@ -537,4 +540,32 @@ method_decl_t *hyb_lex_operator( char * text ){
 	}
 
     return declaration;
+}
+
+void hyb_parse_string( const char *str ){
+	YY_BUFFER_STATE prev, current;
+	FILE		   *in;
+	int				state;
+	int				lineno;
+
+	prev    = YY_CURRENT_BUFFER_LVALUE;
+	in 	    = yyin;
+	state   = YYSTATE;
+	lineno  = yylineno;
+
+	yy_scan_string(str);
+
+	BEGIN(INITIAL);
+
+	yyparse();
+
+	current = YY_CURRENT_BUFFER;
+
+	if( prev ){
+		yy_switch_to_buffer( prev );
+	}
+	yy_delete_buffer(current);
+	yyin = in;
+	BEGIN(state);
+	yylineno = lineno;
 }
