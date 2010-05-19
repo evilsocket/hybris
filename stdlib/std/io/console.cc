@@ -195,6 +195,13 @@ HYBRIS_DEFINE_FUNCTION(hreadline){
 	string line;
 
 	getline( cin, line );
+	/*
+	 * Handle CTRL+D for input stream EOF.
+	 */
+	if( cin.eof() ){
+		cin.clear();
+		cin.ignore();
+	}
 
 	return (Object *)gc_new_string( line.c_str() );
 }
