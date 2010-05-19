@@ -1744,10 +1744,10 @@ Object *engine_on_explode( engine_t *engine, vframe_t *frame, Node *node ){
 		   i;
 
 	/*
-	 * Initialize all the identifiers with a <null>.
+	 * Initialize all the identifiers with a <false>.
 	 */
 	for( i = 0; i < n_ids; ++i ){
-		frame->add( (char *)node->child(i + 1)->value.m_identifier.c_str(), (Object *)gc_new_reference(NULL) );
+		frame->add( (char *)node->child(i + 1)->value.m_identifier.c_str(), (Object *)gc_new_boolean(false) );
 	}
 	/*
 	 * Fill initializers until the iterable object ends, leave
@@ -1778,10 +1778,10 @@ Object *engine_on_throw( engine_t *engine, vframe_t *frame, Node *node ){
 }
 
 Object *engine_on_try_catch( engine_t *engine, vframe_t *frame, Node *node ){
-	Node   *main_body    = node->child(0),
-		   *ex_ident     = node->child(1),
-		   *catch_body   = node->child(2),
-		   *finally_body = node->child(3);
+	Node   *main_body    = node->value.m_try_block,
+		   *ex_ident     = node->value.m_exp_id,
+		   *catch_body   = node->value.m_catch_block,
+		   *finally_body = node->value.m_finally_block;
 	Object *exception    = H_UNDEFINED;
 
 	engine_exec( engine, frame, main_body );

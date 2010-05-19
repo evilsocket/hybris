@@ -34,7 +34,11 @@ NodeValue::NodeValue() :
     m_switch(NULL),
     m_default(NULL),
     m_owner(NULL),
-    m_member(NULL) {
+    m_member(NULL),
+    m_try_block(NULL),
+    m_exp_id(NULL),
+    m_catch_block(NULL),
+    m_finally_block(NULL) {
 
 }
 
@@ -390,6 +394,23 @@ Node *CallNode::clone(){
     }
 
     return clone;
+}
+
+/* try/catch/finally statements */
+TryCatchNode::TryCatchNode( int statement, Node *try_block, Node *exp_id, Node *catch_block, Node *finally_block ) : Node(H_NT_STATEMENT) {
+	value.m_statement 	  = statement;
+	value.m_try_block     = try_block;
+	value.m_exp_id	      = exp_id;
+	value.m_catch_block   = catch_block;
+	value.m_finally_block = finally_block;
+}
+
+Node *TryCatchNode::clone(){
+	return new TryCatchNode( value.m_statement,
+							 value.m_try_block,
+							 value.m_exp_id,
+							 value.m_catch_block,
+							 value.m_finally_block );
 }
 
 /* structure or class creation */

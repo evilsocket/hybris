@@ -104,6 +104,11 @@ class NodeValue {
         Node    *m_owner;
         Node    *m_member;
 
+        Node	*m_try_block;
+        Node	*m_exp_id;
+        Node    *m_catch_block;
+        Node	*m_finally_block;
+
         NodeValue();
         ~NodeValue();
 };
@@ -252,6 +257,15 @@ class CallNode : public Node {
         CallNode( Node *alias, NodeList *argv );
 
         Node *clone();
+};
+
+/* try/catch/finally statements */
+class TryCatchNode : public Node {
+public :
+
+	TryCatchNode( int statement, Node *try_block, Node	*exp_id, Node *catch_block, Node *finally_block );
+
+	Node *clone();
 };
 
 /* structure or class creation */

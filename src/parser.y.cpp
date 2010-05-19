@@ -105,7 +105,7 @@ extern int yylex( hyb_token_value* yylval, YYLTYPE *yyloc );
 #define MK_SWITCH_NODE(a, b)      new StatementNode( T_SWITCH, a, b )
 #define MK_SWITCH_DEF_NODE(a,b,c) new StatementNode( T_SWITCH, a, b, c )
 #define MK_THROW_NODE(a)		  new StatementNode( T_THROW, 1, a )
-#define MK_TRYCATCH_NODE(a,b,c,d) new StatementNode( T_TRY, 4, a, b, c, d )
+#define MK_TRYCATCH_NODE(a,b,c,d) new TryCatchNode( T_TRY, a, b, c, d )
 #define MK_FUNCTION_NODE(a, b)    new FunctionNode( a, 1, b )
 #define MK_STRUCT_NODE(a, b)      new StructureNode( a, b )
 #define MK_CLASS_NODE(a, b, c)    new ClassNode( a, b, c )
@@ -427,12 +427,12 @@ statement  : T_EOSTMT                                                   { $$ = M
         	   $$ = MK_CLASS_NODE( $2, $3, $5 );
            }
            /* exception handling */
-           | T_TRY '{' statements '}' T_CATCH '(' T_IDENT ')' '{' statements '}' finallyBlock {
-        	   $$ = MK_TRYCATCH_NODE( $3, MK_IDENT_NODE($7), $10, $12 );
-        	   free($7);
+           | T_TRY statements T_CATCH '(' T_IDENT ')' statements finallyBlock {
+        	   $$ = MK_TRYCATCH_NODE( $2, MK_IDENT_NODE($5), $7, $8 );
+        	   free($5);
            };
 
-statements : /* empty */ 		  { $$ = MK_NODE(0); }
+statements : /* empty */ 		  { $$ = MK_NODE(NULL); }
 		   | statement 			  { $$ = MK_NODE($1); }
 		   | statements statement { $$ = MK_EOSTMT_NODE( $1, $2 ); };
 
