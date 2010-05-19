@@ -23,9 +23,9 @@ include std.Exception;
 	EXAMPLE :
 
 	try{
-		libc = new Dll( "libc + so + 6" );
+		libc = new Dll( "libc.so.6" );
 
-		foreach( i of 1 +  + 100 ){
+		foreach( i of 1..100 ){
 			libc.printf( "Hello world from the number %d !\n", i ); 
 		}
 
@@ -47,7 +47,7 @@ class Dll {
  		me.link  = dllopen( me.name );
 		
 		if( !me.link ){
-			throw new Exception( __FILE__, __LINE__, "Could not open " + me.name + " dynamic library + " );
+			throw new Exception( __FILE__, __LINE__, "Could not open " + me.name + " dynamic library." );
 		}
 	}
 
@@ -66,7 +66,7 @@ class Dll {
 		else{
 			symbol = dlllink( me.link, name );
 			if( !symbol ){
-				throw new Exception( __FILE__, __LINE__, "Could not load " + name + " symbol from " + me.name + " dynamic library + " );
+				throw new Exception( __FILE__, __LINE__, "Could not load " + name + " symbol from " + me.name + " dynamic library." );
 			}
 			else{
 				me.cache[name] = symbol;			

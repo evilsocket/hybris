@@ -54,32 +54,13 @@ extern "C" void hybris_module_init( vm_t * vm ){
 }
 
 HYBRIS_DEFINE_FUNCTION(heval){
-	extern int  yy_scan_string(const char *);
-	extern int  yyparse(void);
-	extern void yypop_buffer_state(void);
 
-	/*
-	 * Create a buffer from a string and make yyin points to it instead of
-	 * a file handle.
-	 */
-	yy_scan_string( ob_svalue( ob_argv(0) ).c_str() );
-	/*
-	 * Do actual parsing (yyparse calls yylex).
-	 */
-	yyparse();
-	/*
-	 * Restore previous buffer.
-	 */
-	yypop_buffer_state();
+	hyb_parse_string( string_argv(0).c_str() );
 
 	return H_DEFAULT_RETURN;
 }
 
 HYBRIS_DEFINE_FUNCTION(hload){
-	extern int  yy_scan_string(const char *);
-	extern int  yyparse(void);
-	extern void yypop_buffer_state(void);
-
 	string filename = ob_svalue( ob_argv(0) ),
 		   buffer;
 
@@ -96,19 +77,7 @@ HYBRIS_DEFINE_FUNCTION(hload){
 
 	fclose(fp);
 
-	/*
-	 * Create a buffer from a string and make yyin points to it instead of
-	 * a file handle.
-	 */
-	yy_scan_string( buffer.c_str() );
-	/*
-	 * Do actual parsing (yyparse calls yylex).
-	 */
-	yyparse();
-	/*
-	 * Restore previous buffer.
-	 */
-	yypop_buffer_state();
+	hyb_parse_string(buffer.c_str());
 
 	return H_DEFAULT_RETURN;
 }
