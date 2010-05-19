@@ -161,6 +161,7 @@ size_t gc_set_mm_threshold( size_t threshold ){
 
 	return old;
 }
+
 /*
  * Add an object to the gc pool and start to track
  * it for reference changes.

@@ -75,6 +75,13 @@ typedef MemorySegment vframe_t;
                                    attributes(H_OA_NONE), \
                                    type(&t ## _Type)
 /*
+ * Macro to initialize default fields of an Object pointer.
+ */
+#define OB_BASE_INIT(o,t) o->gc_mark = false; \
+						  o->attributes = H_OA_NONE; \
+						  o->type = &t ## _Type
+
+/*
  * This macro compare the object type structure pointer with a given
  * type, assuming that all type structure pointers are declared as :
  *      static Object {type}_Type = { ... }

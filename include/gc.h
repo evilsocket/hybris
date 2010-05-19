@@ -194,6 +194,7 @@ void            gc_collect( struct _vm_t *vm );
  * used when the program is exiting, not before.
  */
 void            gc_release();
+
 /*
  * Object allocation macros.
  *
@@ -201,19 +202,19 @@ void            gc_release();
  * 2 .: Downcast to Object * and let the gc track it.
  * 3 .: Upcast back to specialized type pointer and return to user.
  */
-#define gc_new_boolean(v)    ob_bool_ucast(   gc_track( ob_dcast( new BooleanObject( static_cast<bool>(v) ) ), 	    sizeof(BooleanObject) ) )
-#define gc_new_integer(v)    ob_int_ucast(    gc_track( ob_dcast( new IntegerObject( static_cast<long>(v) ) ), 	    sizeof(IntegerObject) ) )
-#define gc_new_alias(v)      ob_alias_ucast(  gc_track( ob_dcast( new AliasObject( static_cast<long>(v) ) ),   	    sizeof(AliasObject) ) )
-#define gc_new_extern(v)     ob_extern_ucast( gc_track( ob_dcast( new ExternObject( static_cast<long>(v) ) ),  	    sizeof(ExternObject) ) )
-#define gc_new_float(v)      ob_float_ucast(  gc_track( ob_dcast( new FloatObject( static_cast<double>(v) ) ), 	    sizeof(FloatObject) ) )
-#define gc_new_char(v)       ob_char_ucast(   gc_track( ob_dcast( new CharObject( static_cast<char>(v) ) ),    	    sizeof(CharObject) ) )
-#define gc_new_string(v)     ob_string_ucast( gc_track( ob_dcast( new StringObject( (char *)(v) ) ),           	    sizeof(StringObject) ) )
-#define gc_new_binary(d)     ob_binary_ucast( gc_track( ob_dcast( new BinaryObject(d) ),                       	    sizeof(BinaryObject) ) )
-#define gc_new_vector()      ob_vector_ucast( gc_track( ob_dcast( new VectorObject() ),                        	    sizeof(VectorObject) ) )
-#define gc_new_map()         ob_map_ucast(    gc_track( ob_dcast( new MapObject() ),                           	    sizeof(MapObject) ) )
-#define gc_new_struct()      ob_struct_ucast( gc_track( ob_dcast( new StructureObject() ),                     	    sizeof(StructureObject) ) )
-#define gc_new_class()       ob_class_ucast(  gc_track( ob_dcast( new ClassObject() ),                              sizeof(ClassObject) ) )
-#define gc_new_reference(o)  ob_ref_ucast(    gc_track( ob_dcast( new ReferenceObject(o) ),                         sizeof(ReferenceObject) ) )
-#define gc_new_handle(o)     ob_handle_ucast( gc_track( ob_dcast( new HandleObject( reinterpret_cast<void *>(o)) ), sizeof(HandleObject) ) )
+#define gc_new_boolean(v)    (BooleanObject *)   gc_track( (Object *)( new BooleanObject( static_cast<bool>(v) ) ), 	 sizeof(BooleanObject) )
+#define gc_new_integer(v)    (IntegerObject *)   gc_track( (Object *)( new IntegerObject( static_cast<long>(v) ) ), 	 sizeof(IntegerObject) )
+#define gc_new_alias(v)      (AliasObject *)     gc_track( (Object *)( new AliasObject( static_cast<long>(v) ) ),   	 sizeof(AliasObject) )
+#define gc_new_extern(v)     (ExternObject *)    gc_track( (Object *)( new ExternObject( static_cast<long>(v) ) ),  	 sizeof(ExternObject) )
+#define gc_new_float(v)      (FloatObject *)     gc_track( (Object *)( new FloatObject( static_cast<double>(v) ) ), 	 sizeof(FloatObject) )
+#define gc_new_char(v)       (CharObject *)      gc_track( (Object *)( new CharObject( static_cast<char>(v) ) ),    	 sizeof(CharObject) )
+#define gc_new_string(v)     (StringObject *)    gc_track( (Object *)( new StringObject( (char *)(v) ) ),           	 sizeof(StringObject) )
+#define gc_new_binary(d)     (BinaryObject *)    gc_track( (Object *)( new BinaryObject(d) ),                       	 sizeof(BinaryObject) )
+#define gc_new_vector()      (VectorObject *)    gc_track( (Object *)( new VectorObject() ),                        	 sizeof(VectorObject) )
+#define gc_new_map()         (MapObject *)       gc_track( (Object *)( new MapObject() ),                           	 sizeof(MapObject) )
+#define gc_new_struct()      (StructureObject *) gc_track( (Object *)( new StructureObject() ),                     	 sizeof(StructureObject) )
+#define gc_new_class()       (ClassObject *)     gc_track( (Object *)( new ClassObject() ),                              sizeof(ClassObject) )
+#define gc_new_reference(o)  (ReferenceObject *) gc_track( (Object *)( new ReferenceObject(o) ),                         sizeof(ReferenceObject) )
+#define gc_new_handle(o)     (HandleObject *)    gc_track( (Object *)( new HandleObject( reinterpret_cast<void *>(o)) ), sizeof(HandleObject) )
 
 #endif
