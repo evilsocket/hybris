@@ -538,24 +538,3 @@ method_decl_t *hyb_lex_operator( char * text ){
 
     return declaration;
 }
-
-void hyb_parse_string( const char *str ){
-	extern int yyparse(void);
-	YY_BUFFER_STATE prev, next;
-	/*
-	 * Save current buffer.
-	 */
-	prev = YY_CURRENT_BUFFER;
-	/*
-	 * yy_scan_string will call yy_switch_to_buffer.
-	 */
-	next = yy_scan_string( str );
-	/*
-	 * Do actual parsing (yyparse calls yylex).
-	 */
-	yyparse();
-	/*
-	 * Restore previous buffer.
-	 */
-	yy_switch_to_buffer(prev);
-}

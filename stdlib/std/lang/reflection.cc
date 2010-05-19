@@ -55,7 +55,7 @@ extern "C" void hybris_module_init( vm_t * vm ){
 
 HYBRIS_DEFINE_FUNCTION(heval){
 
-	hyb_parse_string( string_argv(0).c_str() );
+	HYB_PARSE_STRING( string_argv(0).c_str() );
 
 	return H_DEFAULT_RETURN;
 }
@@ -77,7 +77,7 @@ HYBRIS_DEFINE_FUNCTION(hload){
 
 	fclose(fp);
 
-	hyb_parse_string(buffer.c_str());
+	HYB_PARSE_STRING( buffer.c_str() );
 
 	return H_DEFAULT_RETURN;
 }
