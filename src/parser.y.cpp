@@ -34,6 +34,45 @@
  */
 #define YYERROR_VERBOSE 1
 
+union hyb_token_value {
+	/* base types */
+	bool    boolean;
+	long    integer;
+	double  real;
+	char    byte;
+	char    string[MAX_STRING_SIZE];
+	/* variable identifier */
+	char   *identifier;
+	/* function prototype declaration */
+	function_decl_t *function;
+	/* method prototype declaration */
+	method_decl_t *method;
+	/* node list for multiple nodes on one statement */
+	NodeList *list;
+	/* not reduced node */
+	Node *node;
+	/* access specifiers */
+	access_t access;
+};
+
+#define YYSTYPE hyb_token_value
+
+#if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
+typedef struct YYLTYPE
+{
+  int first_line;
+  int first_column;
+  int last_line;
+  int last_column;
+} YYLTYPE;
+# define yyltype YYLTYPE /* obsolescent; will be withdrawn */
+# define YYLTYPE_IS_DECLARED 1
+# define YYLTYPE_IS_TRIVIAL 1
+#endif
+
+extern int yyparse(void);
+extern int yylex( hyb_token_value* yylval, YYLTYPE *yyloc );
+
 /** macros to define parse tree **/
 /* get the node evaluation */
 #define MK_NODE(a)                a
@@ -122,9 +161,6 @@
 #define MK_METHOD_CALL_NODE(a,b)  new MethodCallNode( a, b )
 #define MK_QUESTION_NODE(a, b, c) new StatementNode( T_QUESTION, 3, a, b, c )
 
-extern int yyparse(void);
-extern int yylex(void);
-
 /*
  * The global virtual machine holder.
  */
@@ -132,28 +168,8 @@ vm_t *__hyb_vm;
 
 %}
 
-%union {
-    /* base types */
-	bool    boolean;
-    long    integer;
-    double  real;
-    char    byte;
-    char    string[MAX_STRING_SIZE];
-    /* variable identifier */
-    char   *identifier;
-    /* function prototype declaration */
-    function_decl_t *function;
-    /* method prototype declaration */
-    method_decl_t *method;
-    /* node list for multiple nodes on one statement */
-    NodeList *list;
-    /* not reduced node */
-    Node *node;
-    /* access specifiers */
-    access_t access;
-};
-
 %locations
+%pure_parser
 
 %token <boolean>    T_BOOLEAN;
 %token <integer>    T_INTEGER;
