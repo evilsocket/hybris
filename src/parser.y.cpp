@@ -427,7 +427,11 @@ statement  : T_EOSTMT                                                   { $$ = M
         	   $$ = MK_CLASS_NODE( $2, $3, $5 );
            }
            /* exception handling */
-           | T_TRY statements T_CATCH '(' T_IDENT ')' statements finallyBlock {
+           | T_TRY
+			   statement
+			 T_CATCH '(' T_IDENT ')'
+			   statement
+			 finallyBlock {
         	   $$ = MK_TRYCATCH_NODE( $2, MK_IDENT_NODE($5), $7, $8 );
         	   free($5);
            };
