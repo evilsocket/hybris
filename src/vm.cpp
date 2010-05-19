@@ -149,7 +149,7 @@ void vm_release( vm_t *vm ){
     vm_th_pool_lock( vm );
         if( vm->th_pool.size() > 0 ){
             fprintf( stdout, "[WARNING] Hard killing remaining running threads ... " );
-            for( int pool_i = 0; pool_i < vm->th_pool.size(); ++pool_i ){
+            for( size_t pool_i = 0; pool_i < vm->th_pool.size(); ++pool_i ){
                 pthread_kill( vm->th_pool[pool_i], SIGTERM );
             }
             vm->th_pool.clear();
@@ -227,7 +227,7 @@ void vm_load_namespace( vm_t *vm, string path ){
 }
 
 void vm_load_module( vm_t *vm, string path, string name ){
-    unsigned int i, a, j, k, max_argc = 0, sz(vm->modules.size());
+    int i, a, j, k, max_argc = 0, sz(vm->modules.size());
     /* check that the module isn't already loaded */
     for( i = 0; i < sz; ++i ){
         if( vm->modules[i]->name == name ){
@@ -384,7 +384,7 @@ void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){
 		list<vframe_t *>::iterator i;
 		unsigned int j, stop, pad, args, last;
 		string name;
-		vframe_t *frame;
+		vframe_t *frame = NULL;
 
 		stop = (vm->frames.size() >= MAX_RECURSION_THRESHOLD ? 10 : vm->frames.size());
 

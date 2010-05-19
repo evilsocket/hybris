@@ -734,7 +734,7 @@ Object *ob_call_method( vm_t *vm, Object *c, char *c_name, char *method_name, Ob
 	Object  *value  = H_UNDEFINED,
 			*result = H_UNDEFINED;
 	IntegerObject index(0);
-	unsigned int j, argc( ob_get_size(argv) );
+	size_t j, argc( ob_get_size(argv) );
 
 	method = ob_get_method( c, method_name, 2 );
 	if( method == H_UNDEFINED ){
@@ -742,7 +742,7 @@ Object *ob_call_method( vm_t *vm, Object *c, char *c_name, char *method_name, Ob
 	}
 	stack.owner = string(c_name) + "::" + method_name;
 	stack.insert( "me", c );
-	for( ; index.value < argc; ++index.value ){
+	for( ; (unsigned)index.value < argc; ++index.value ){
 		value = ob_cl_at( argv, (Object *)&index );
 		stack.insert( (char *)method->child(j)->value.m_identifier.c_str(), value  );
 	}
@@ -772,9 +772,9 @@ Object *ob_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *metho
 			*frame;
 	Object  *value  = H_UNDEFINED,
 			*result = H_UNDEFINED;
-	unsigned int i, argc(argv->children());
+	size_t i, argc(argv->children());
 
-	method = ob_get_method( c, "__method", 2 );
+	method = ob_get_method( c, (char *)"__method", 2 );
 	if( method == H_UNDEFINED ){
 		return H_UNDEFINED;
 	}

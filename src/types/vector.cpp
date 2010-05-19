@@ -45,7 +45,7 @@ Object *__vector_contains( engine_t *engine, Object *me, vframe_t *data ){
 	Object *array = me,
 		   *find  = ob_argv(0);
 	IntegerObject index(0);
-	unsigned int size( ob_get_size(array) );
+	int size( ob_get_size(array) );
 
 	for( ; index.value < size; ++index.value ){
 		if( ob_cmp( ob_cl_at( array, (Object *)&index ), find ) == 0 ){
@@ -79,7 +79,7 @@ const char *vector_typename( Object *o ){
 }
 
 Object *vector_traverse( Object *me, int index ){
-	return (index >= ((VectorObject *)me)->value.size() ? NULL : ((VectorObject *)me)->value.at(index));
+	return ((unsigned)index >= ((VectorObject *)me)->value.size() ? NULL : ((VectorObject *)me)->value.at(index));
 }
 
 Object *vector_clone( Object *me ){
@@ -210,8 +210,7 @@ Object *vector_cl_push_reference( Object *me, Object *o ){
 }
 
 Object *vector_cl_pop( Object *me ){
-    size_t last_idx = ob_vector_ucast(me)->items - 1;
-
+    int last_idx = ob_vector_ucast(me)->items - 1;
     if( last_idx < 0 ){
     	return vm_raise_exception( "could not pop an element from an empty array" );
     }

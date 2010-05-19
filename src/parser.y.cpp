@@ -88,7 +88,6 @@ extern int yylex( hyb_token_value* yylval, YYLTYPE *yyloc );
 #define MK_ARRAY_NODE(a)		  new ExpressionNode( T_ARRAY, a )
 #define MK_MAP_NODE(a)			  new ExpressionNode( T_MAP, a )
 #define MK_ATTRIBUTE_REQUEST_NODE(a,b) new AttributeRequestNode(a,b)
-#define MK_METHOD_CALL_NODE(a,b)  new MethodCallNode(a,b)
 /* statements */
 #define MK_EXPLODE_NODE(a,b)	  new StatementNode( T_EXPLODE, a, b )
 #define MK_WHILE_NODE(a, b)       new StatementNode( T_WHILE, 2, a, b )

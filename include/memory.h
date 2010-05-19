@@ -71,7 +71,7 @@ typedef struct _vframe_state {
 	}
 
 	__force_inline bool is( state_t s ){
-		return (mask & s) == s;
+		return (mask & s) == (unsigned)s;
 	}
 
 	__force_inline void assign( struct _vframe_state& s ){

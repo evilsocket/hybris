@@ -154,8 +154,8 @@ public  :
     	return NULL;
     }
 
-    __force_inline int callDefinedArgc(){
-    	int argc(0), i, sz( size() );
+    __force_inline size_t callDefinedArgc(){
+    	size_t argc(0), i, sz( size() );
 		for( i = 0; i < sz; ++i ){
 			if( at(i)->type() == H_NT_IDENTIFIER ){
 				++argc;

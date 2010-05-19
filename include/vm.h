@@ -388,12 +388,13 @@ __force_inline named_function_t *vm_get_function( vm_t *vm, char *identifier ){
 
 	return H_UNDEFINED;
 }
+
 /*
  * Define a structure inside the vtypes member.
  */
-__force_inline Object * vm_define_structure( vm_t *vm, char *name, int nattrs, char *attributes[] ){
+__force_inline Object * vm_define_structure( vm_t *vm, char *name, size_t nattrs, char *attributes[] ){
    StructureObject *type = new StructureObject();
-   unsigned int     i;
+   size_t	        i;
 
    for( i = 0; i < nattrs; ++i ){
 	   ob_add_attribute( (Object *)type, attributes[i] );
