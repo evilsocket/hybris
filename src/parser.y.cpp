@@ -34,6 +34,45 @@
  */
 #define YYERROR_VERBOSE 1
 
+union hyb_token_value {
+	/* base types */
+	bool    boolean;
+	long    integer;
+	double  real;
+	char    byte;
+	char    string[MAX_STRING_SIZE];
+	/* variable identifier */
+	char   *identifier;
+	/* function prototype declaration */
+	function_decl_t *function;
+	/* method prototype declaration */
+	method_decl_t *method;
+	/* node list for multiple nodes on one statement */
+	NodeList *list;
+	/* not reduced node */
+	Node *node;
+	/* access specifiers */
+	access_t access;
+};
+
+#define YYSTYPE hyb_token_value
+
+#if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
+typedef struct YYLTYPE
+{
+  int first_line;
+  int first_column;
+  int last_line;
+  int last_column;
+} YYLTYPE;
+# define yyltype YYLTYPE /* obsolescent; will be withdrawn */
+# define YYLTYPE_IS_DECLARED 1
+# define YYLTYPE_IS_TRIVIAL 1
+#endif
+
+extern int yyparse(void);
+extern int yylex( hyb_token_value* yylval, YYLTYPE *yyloc );
+
 /** macros to define parse tree **/
 /* get the node evaluation */
 #define MK_NODE(a)                a
@@ -122,9 +161,6 @@
 #define MK_METHOD_CALL_NODE(a,b)  new MethodCallNode( a, b )
 #define MK_QUESTION_NODE(a, b, c) new StatementNode( T_QUESTION, 3, a, b, c )
 
-extern int yyparse(void);
-extern int yylex(void);
-
 /*
  * The global virtual machine holder.
  */
@@ -132,28 +168,8 @@ vm_t *__hyb_vm;
 
 %}
 
-%union {
-    /* base types */
-	bool    boolean;
-    long    integer;
-    double  real;
-    char    byte;
-    char    string[MAX_STRING_SIZE];
-    /* variable identifier */
-    char   *identifier;
-    /* function prototype declaration */
-    function_decl_t *function;
-    /* method prototype declaration */
-    method_decl_t *method;
-    /* node list for multiple nodes on one statement */
-    NodeList *list;
-    /* not reduced node */
-    Node *node;
-    /* access specifiers */
-    access_t access;
-};
-
 %locations
+%pure_parser
 
 %token <boolean>    T_BOOLEAN;
 %token <integer>    T_INTEGER;
@@ -244,13 +260,16 @@ vm_t *__hyb_vm;
 %type <access> accessSpecifier
 %%
 
-program    : body           { vm_timer( __hyb_vm, HYB_TIMER_STOP ); }
+main : statements {
 
-body       : body statement { vm_timer( __hyb_vm, HYB_TIMER_START );
-                              engine_exec( __hyb_vm->engine, &__hyb_vm->vmem, $2 );
-                              RM_NODE($2);
-                            }
-           | /* empty */ ;
+	vm_timer( __hyb_vm, HYB_TIMER_START );
+
+	engine_exec( __hyb_vm->engine, &__hyb_vm->vmem, $1 );
+
+	vm_timer( __hyb_vm, HYB_TIMER_STOP );
+
+	RM_NODE($1);
+}
 
 mapList : expression ':' expression ',' mapList { $$ = MK_NODE($5);    $$->head($1,$3); }
 	    | expression ':' expression 			{ $$ = MK_NODE_LIST(); $$->tail($1,$3); }
@@ -413,10 +432,9 @@ statement  : T_EOSTMT                                                   { $$ = M
         	   free($7);
            };
 
-
-statements : /* empty */          { $$ = MK_NODE(0);  }
-           | statement            { $$ = MK_NODE($1); }
-           | statements statement { $$ = MK_EOSTMT_NODE( $1, $2 ); };
+statements : /* empty */ 		  { $$ = MK_NODE(0); }
+		   | statement 			  { $$ = MK_NODE($1); }
+		   | statements statement { $$ = MK_EOSTMT_NODE( $1, $2 ); };
 
 arithmeticExpression : T_MINUS expression %prec T_UMINUS { $$ = MK_UMINUS_NODE( $2 ); }
 					 | expression T_PLUS expression      { $$ = MK_PLUS_NODE( $1, $3 ); }
@@ -504,4 +522,3 @@ expression : T_BOOLEAN										  { $$ = MK_CONST_NODE($1); }
            | '(' expression ')'                               { $$ = MK_NODE($2); };
 
 %%
-

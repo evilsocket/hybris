@@ -72,17 +72,59 @@ vector<int>	   __hyb_line_stack;
 extern int     yylineno;
 extern vm_t   *__hyb_vm;
 
+int yyparse(void);
+
+union hyb_token_value {
+	/* base types */
+	bool    boolean;
+	long    integer;
+	double  real;
+	char    byte;
+	char    string[MAX_STRING_SIZE];
+	/* variable identifier */
+	char   *identifier;
+	/* function prototype declaration */
+	function_decl_t *function;
+	/* method prototype declaration */
+	method_decl_t *method;
+	/* node list for multiple nodes on one statement */
+	NodeList *list;
+	/* not reduced node */
+	Node *node;
+	/* access specifiers */
+	access_t access;
+};
+
+#define YYSTYPE hyb_token_value
+
+#if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
+typedef struct YYLTYPE
+{
+  int first_line;
+  int first_column;
+  int last_line;
+  int last_column;
+} YYLTYPE;
+# define yyltype YYLTYPE /* obsolescent; will be withdrawn */
+# define YYLTYPE_IS_DECLARED 1
+# define YYLTYPE_IS_TRIVIAL 1
+#endif
+
+#define YY_DECL int yylex( hyb_token_value* yylval, YYLTYPE *yyloc )
+
 %}
+
+%x T_INCLUSION
 
 %option noyywrap
 %option batch
-
-%x T_INCLUSION
+%option stack
 
 exponent   [eE][-+]?[0-9]+
 spaces     [ \n\t]+
 identifier [a-zA-Z\_][a-zA-Z0-9\_]*
 operators  "[]"|"[]="|"[]<"|".."|"+"|"+="|"-"|"-="|"/"|"/="|"*"|"*="|"%"|"%="|"++"|"--"|"^"|"^="|"~"|"&"|"&="|"|"|"|="|"<<"|"<<="|">>"|"!"|"<"|">"|">="|"<="|"=="|"!="|"&&"|"||"|"~="
+
 %%
 
 [ \t]+ ;
@@ -271,53 +313,53 @@ include          BEGIN(T_INCLUSION);
 "return"        return T_RETURN;
 
 "function"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*([ \n\t]*\.\.\.)?[ \n\t]*")" {
-	yylval.function   = hyb_lex_function(yytext);
+	yylval->function   = hyb_lex_function(yytext);
 	return T_FUNCTION_PROTOTYPE;
 }
 
 "method"[ \n\t]+{identifier}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*([ \n\t]*\.\.\.)?[ \n\t]*")" {
-	yylval.method = hyb_lex_method(yytext);
+	yylval->method = hyb_lex_method(yytext);
 	return T_METHOD_PROTOTYPE;
 }
 
 "operator"[ \n\t]+{operators}[ \n\t]*"("([ \n\t]*{identifier}[ \n\t]*,?)*")" {
-	yylval.method = hyb_lex_operator(yytext);
+	yylval->method = hyb_lex_operator(yytext);
 	return T_METHOD_PROTOTYPE;
 }
 
 "__FILE__" {
 	if( __hyb_file_stack.size() ){
-		strncpy( yylval.string, __hyb_file_stack.back().c_str(), MAX_STRING_SIZE );
+		strncpy( yylval->string, __hyb_file_stack.back().c_str(), MAX_STRING_SIZE );
 	}
 	else{
-		strncpy( yylval.string,  "<unknown>", MAX_STRING_SIZE );
+		strncpy( yylval->string,  "<unknown>", MAX_STRING_SIZE );
 	}
 	return T_STRING;
 }
 
 "__LINE__" {
 	if( __hyb_line_stack.size() ){
-		yylval.integer = __hyb_line_stack.back();
+		yylval->integer = __hyb_line_stack.back();
 	}
 	else{
-		yylval.integer = 0;
+		yylval->integer = 0;
 	}
 	return T_INTEGER;
 }
 
-"true"|"false"						   { yylval.boolean = !strcmp( yytext, "true"); return T_BOOLEAN; }
--?[0-9]+                               { yylval.integer = atol(yytext);             return T_INTEGER; }
--?0x[A-Fa-f0-9]+                       { yylval.integer = strtol(yytext,0,16);      return T_INTEGER; }
--?([0-9]+|([0-9]*\.[0-9]+){exponent}?) { yylval.real    = atof(yytext);             return T_REAL; }
-"'"                                    { yylval.byte    = hyb_lex_char('\'');    	return T_CHAR; }
-"\""                                   { hyb_lex_string( '"', yylval.string ); 		return T_STRING; }
+"true"|"false"						   { yylval->boolean = !strcmp( yytext, "true"); return T_BOOLEAN; }
+-?[0-9]+                               { yylval->integer = atol(yytext);             return T_INTEGER; }
+-?0x[A-Fa-f0-9]+                       { yylval->integer = strtol(yytext,0,16);      return T_INTEGER; }
+-?([0-9]+|([0-9]*\.[0-9]+){exponent}?) { yylval->real    = atof(yytext);             return T_REAL; }
+"'"                                    { yylval->byte    = hyb_lex_char('\'');    	return T_CHAR; }
+"\""                                   { hyb_lex_string( '"', yylval->string ); 		return T_STRING; }
 
 {identifier} {
 	if( strlen(yytext) > MAX_IDENT_SIZE ){
 		hyb_error( H_ET_GENERIC, "Identifier name above max size" );
 	}
 
-	yylval.identifier = strdup( yytext );
+	yylval->identifier = strdup( yytext );
 
 	return T_IDENT;
 }
@@ -537,4 +579,51 @@ method_decl_t *hyb_lex_operator( char * text ){
 	}
 
     return declaration;
+}
+
+void hyb_parse_string( const char *str ){
+	YY_BUFFER_STATE prev, current;
+	int				state;
+	int				lineno;
+	FILE		   *prev_yyin;
+	/*
+	 * Save buffer value, lex state, input file pointer
+	 * and line number.
+	 */
+	prev      = YY_CURRENT_BUFFER_LVALUE;
+	state     = YYSTATE;
+	prev_yyin = yyin;
+	lineno    = yylineno;
+	/*
+	 * yy_scan_string will call yy_switch_to_buffer with
+	 * the newly created buffer from str.
+	 */
+	yy_scan_string(str);
+	/*
+	 * Reset lex state to initial.
+	 */
+	BEGIN(INITIAL);
+	/*
+	 * Parse the str, yyparse will call yylex.
+	 */
+	yyparse();
+	/*
+	 * Get current buffer, and switch to the previous
+	 * one.
+	 */
+	current = YY_CURRENT_BUFFER;
+	if( prev ){
+		yy_switch_to_buffer( prev );
+	}
+	/*
+	 * We don't need this buffer anymore, delete it.
+	 */
+	yy_delete_buffer(current);
+	/*
+	 * Restore lex state, line number and input file pointer.
+	 */
+	BEGIN(state);
+
+	yylineno = lineno;
+	yyin 	 = prev_yyin;
 }

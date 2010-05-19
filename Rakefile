@@ -14,7 +14,7 @@ CXX           = 'g++'
 WFLAGS        = '-w'
 OPTIMIZATION  = '-O3 -pipe -fomit-frame-pointer -ffast-math'
 CXXFLAGS      = "-Iinclude/ #{WFLAGS} #{OPTIMIZATION}" 
-LDFLAGS       = '-ldl -lpcre -lpthread'
+LDFLAGS       = "-L./build#{PREFIX}/lib/ -ldl -lpcre -lpthread -lhybris"
 LIBXML_CFLAGS = "`xml2-config --cflags`"
 LIBXML_LFLAGS = "`xml2-config --libs`"
 LIBFFI_CFLAGS = "`pkg-config libffi --cflags`"
@@ -27,22 +27,22 @@ CLEAN.include( 'src/**/*.o',
                'src/**/*.lo', 
                TARGET, 
 			   'include/config.h',
-               'src/lexer.cpp', 'src/parser.cpp', 'src/parser.hpp', 
+               'src/parser.cpp', 'src/lexer.cpp', 'src/parser.hpp', 
 			   'build' )
 
 #----------------------------- Files ----------------------------
 
-SRC = FileList['src/**/*.cpp'] - ['src/lexer.l.cpp', 'src/parser.y.cpp'] + ['src/lexer.cpp', 'src/parser.cpp']
+SRC = FileList['src/**/*.cpp'] - ['src/lexer.l.cpp', 'src/parser.y.cpp'] + ['src/parser.cpp', 'src/lexer.cpp']
 
 SOURCES = {
-    :BIN => SRC,
+    :BIN => FileList['src/main.cpp'],
     :LIB => SRC   - ['src/main.cpp'],
     :STD => FileList['stdlib/**/*.cc']
 }
 
 OBJECTS = {
-	:BIN => ['src/lexer.cpp', 'src/parser.cpp'] + SOURCES[:BIN].ext('o'),
-	:LIB => ['src/lexer.cpp', 'src/parser.cpp'] + SOURCES[:LIB].ext('lo'),
+	:BIN => ['src/parser.cpp', 'src/lexer.cpp'] + SOURCES[:BIN].ext('o'),
+	:LIB => ['src/parser.cpp', 'src/lexer.cpp'] + SOURCES[:LIB].ext('lo'),
 	:STD => SOURCES[:STD].ext('so')
 }
 
@@ -187,14 +187,14 @@ end
 file TARGET => OBJECTS[:BIN]  do
 	puts "@ Linking #{TARGET}"
 	sh "mkdir -p build#{PREFIX}/bin/"
-	BIN_OBJECTS = (OBJECTS[:BIN].uniq - ['src/lexer.cpp', 'src/parser.cpp']).join(' ')
+	BIN_OBJECTS = (OBJECTS[:BIN].uniq - ['src/parser.cpp', 'src/lexer.cpp']).join(' ')
     sh "#{CXX} #{CXXFLAGS} -o build#{PREFIX}/bin/#{TARGET} #{BIN_OBJECTS} #{LDFLAGS}"
 end
 
 file "lib#{TARGET}.so.1.0" => OBJECTS[:LIB] do
 	puts "@ Linking lib#{TARGET}.so.1.0"
 	sh "mkdir -p build#{PREFIX}/lib/"
-	LIB_OBJECTS = (OBJECTS[:LIB].uniq - ['src/lexer.cpp', 'src/parser.cpp']).join(' ')
+	LIB_OBJECTS = (OBJECTS[:LIB].uniq - ['src/parser.cpp', 'src/lexer.cpp']).join(' ')
 	sh "#{CXX} -shared -Wl,-soname,lib#{TARGET}.so.1 -o build#{PREFIX}/lib/lib#{TARGET}.so.1.0 #{LIB_OBJECTS} #{STDLIB_LFLAGS}"
 	sh "ln -sf lib#{TARGET}.so.1.0 build#{PREFIX}/lib/lib#{TARGET}.so"
 	sh "ln -sf lib#{TARGET}.so.1.0 build#{PREFIX}/lib/lib#{TARGET}.so.1"	
