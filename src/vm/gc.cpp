@@ -161,7 +161,30 @@ size_t gc_set_mm_threshold( size_t threshold ){
 
 	return old;
 }
-
+/*
+ * Set the object and all the objects referenced by him
+ * as non collectable.
+ */
+void gc_set_uncollectable( Object *o ){
+	Object *child(NULL);
+	size_t i(0);
+	o->gc_mark = true;
+	while( (child = ob_traverse( o, i++ )) != NULL ){
+		gc_set_uncollectable(child);
+	}
+}
+/*
+ * Set the object and all the objects referenced by him
+ * as collectable.
+ */
+void gc_set_collectable( Object *o ){
+	Object *child(NULL);
+	size_t i(0);
+	o->gc_mark = false;
+	while( (child = ob_traverse( o, i++ )) != NULL ){
+		gc_set_collectable(child);
+	}
+}
 /*
  * Add an object to the gc pool and start to track
  * it for reference changes.
@@ -227,7 +250,7 @@ void gc_mark( Object *o ){
 		/*
 		 * This object is not collectable right now.
 		 */
-		GC_SET_ALIVE(o);
+		o->gc_mark = true;
 		/*
 		 * Loop all the objects it 'contains' (such as vector items) and
 		 * call gc_mark recursively on each one.
@@ -269,7 +292,7 @@ void gc_sweep_generation( gc_list_t *generation ){
 			 * Reset its gc_marked flag to false.
 			 */
 			if( o->gc_mark ){
-				GC_RESET(o);
+				o->gc_mark = false;
 				/*
 				 * If this generation is not the lag space, check if the object
 				 * has to be moved to the lag space.

@@ -57,13 +57,6 @@ typedef unsigned long ulong;
  * Default value: 128M
  */
 #define GC_ALLOWED_MEMORY_THRESHOLD	134217728
-/*
- * Macros to set object state.
- */
-#define GC_SET_UNTOUCHABLE(o) (o)->gc_mark = true
-#define GC_SET_ALIVE		  GC_SET_UNTOUCHABLE
-#define GC_SET_GARBAGE(o) 	  (o)->gc_mark = false
-#define GC_RESET              GC_SET_GARBAGE
 
 struct _Object;
 struct _vm_t;
@@ -160,6 +153,16 @@ size_t			gc_set_collect_threshold( size_t threshold );
  * Return the old threshold value.
  */
 size_t			gc_set_mm_threshold( size_t threshold );
+/*
+ * Set the object and all the objects referenced by him
+ * as non collectable.
+ */
+void 			gc_set_uncollectable( struct _Object *o );
+/*
+ * Set the object and all the objects referenced by him
+ * as collectable.
+ */
+void 			gc_set_collectable( struct _Object *o );
 /* 
  * Add an object to the gc pool and start to track
  * it for reference changes.

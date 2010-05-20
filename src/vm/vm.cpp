@@ -370,7 +370,7 @@ Object *vm_raise_exception( const char *fmt, ... ){
 	 * Make sure the exception object will not be freed until someone
 	 * catches it or the program ends.
 	 */
-	GC_SET_UNTOUCHABLE(exception);
+	gc_set_uncollectable(exception);
 
 	vm_frame(__hyb_vm)->state.set( Exception, exception );
 

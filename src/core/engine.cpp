@@ -833,7 +833,7 @@ __force_inline Object *engine_on_class_declaration( engine_t *engine, vframe_t *
 				 * Static attributes are not garbage collectable until the end of
 				 * the program is reached because they reside in a global scope.
 				 */
-				GC_SET_UNTOUCHABLE(static_attr_value);
+				gc_set_uncollectable(static_attr_value);
 				/*
 				 * Initialize the attribute definition in the prototype.
 				 */
@@ -1560,7 +1560,7 @@ __force_inline Object *engine_on_foreach( engine_t *engine, vframe_t *frame, Nod
      *
      * 		foreach( i of 1..10 )
      */
-    GC_SET_UNTOUCHABLE(v);
+    gc_set_uncollectable(v);
 
     for( ; index.value < size; ++index.value ){
         frame->add( identifier, ob_cl_at( v, (Object *)&index ) );
@@ -1568,7 +1568,7 @@ __force_inline Object *engine_on_foreach( engine_t *engine, vframe_t *frame, Nod
         result = engine_exec( engine, frame, body );
 
         if( frame->state.is(Exception) || frame->state.is(Return) ){
-        	GC_RESET(v);
+        	gc_set_collectable(v);
         	return frame->state.value;
 	    }
 
@@ -1579,7 +1579,7 @@ __force_inline Object *engine_on_foreach( engine_t *engine, vframe_t *frame, Nod
 		}
     }
 
-    GC_RESET(v);
+    gc_set_collectable(v);
 
     return result;
 }
@@ -1604,7 +1604,7 @@ __force_inline Object *engine_on_foreach_mapping( engine_t *engine, vframe_t *fr
      *
      * 		foreach( i of map( ... ) )
      */
-    GC_SET_UNTOUCHABLE(map);
+    gc_set_uncollectable(map);
 
     for( i = 0; i < size; ++i ){
         frame->add( key_identifier,   ob_map_ucast(map)->keys[i] );
@@ -1613,7 +1613,7 @@ __force_inline Object *engine_on_foreach_mapping( engine_t *engine, vframe_t *fr
         result = engine_exec( engine, frame, body );
 
         if( frame->state.is(Exception) || frame->state.is(Return) ){
-			GC_RESET(map);
+        	gc_set_collectable(map);
 			return frame->state.value;
 		}
 
@@ -1624,7 +1624,7 @@ __force_inline Object *engine_on_foreach_mapping( engine_t *engine, vframe_t *fr
 		}
     }
 
-    GC_RESET(map);
+    gc_set_collectable(map);
 
     return result;
 }
@@ -1757,7 +1757,7 @@ __force_inline Object *engine_on_throw( engine_t *engine, vframe_t *frame, Node 
 	 * Make sure the exception object will not be freed until someone
 	 * catches it or the program ends.
 	 */
-	GC_SET_UNTOUCHABLE(exception);
+	gc_set_uncollectable(exception);
 
 	frame->state.set( Exception, exception );
 
@@ -1789,7 +1789,7 @@ __force_inline Object *engine_on_try_catch( engine_t *engine, vframe_t *frame, N
 		 *
 		 * Now the exception is garbage collectable.
 		 */
-		GC_RESET(exception);
+		gc_set_collectable(exception);
 	}
 
 	if( finally_body != NULL ){

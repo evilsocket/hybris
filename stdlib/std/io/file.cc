@@ -225,7 +225,11 @@ void readdir_recurse( char *root, char *dir, VectorObject *vector ){
 
 		ob_cl_push_reference( (Object *)(vector), (Object *)(file) );
 
-        if( ent->d_type == DT_DIR && strcmp( ent->d_name, ".." ) != 0 && strcmp( ent->d_name, "." ) != 0 ){
+        if( ent->d_type == DT_DIR &&
+        	strcmp( ent->d_name, ".." ) != 0 &&
+        	strcmp( ent->d_name, "." ) != 0 &&
+			strstr( path, "/.." ) == NULL &&
+			strstr( path, "./" ) == NULL ){
             readdir_recurse( path, ent->d_name, vector );
         }
     }

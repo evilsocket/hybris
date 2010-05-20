@@ -39,6 +39,13 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 		hyb_error( H_ET_SYNTAX, "class %s does not overload '%s' operator", ob_typename(me), op_name );
 	}
 
+	/*
+	 * Check for heavy recursions and/or nested calls.
+	 */
+	if( __hyb_vm->engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+	}
+
 	op_argc = op->children() - 1;
 	op_argc = (op_argc < 0 ? 0 : op_argc);
 
@@ -103,6 +110,13 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 		else{
 			return H_UNDEFINED;
 		}
+	}
+
+	/*
+	 * Check for heavy recursions and/or nested calls.
+	 */
+	if( __hyb_vm->engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
 	}
 
 	ds_argc = ds->children() - 1;
