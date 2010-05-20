@@ -457,7 +457,13 @@ Object *string_cl_set( Object *me, Object *i, Object *v ){
     	return vm_raise_exception( "index out of bounds" );
     }
 
-    ob_string_ucast(me)->value[idx] = ob_ivalue(v);
+    char c = (char)ob_ivalue(v);
+    if( c == 0x00 ){
+    	ob_string_ucast(me)->value.erase(idx);
+    }
+    else{
+    	ob_string_ucast(me)->value[idx] = c;
+    }
 
     return me;
 }
