@@ -48,6 +48,8 @@ bool  			 hyb_is_dir( const char *filename );
 void             hyb_lex_skip_comment();
 // handle multi line comments
 void             hyb_lex_skip_line();
+// handle string escaping
+char 			*hyb_lex_parse_string( char *str );
 // handle string constants
 char *           hyb_lex_string( char delimiter, char *buffer );
 // handle char constants
@@ -440,6 +442,106 @@ char hyb_lex_char( char delimiter ){
 	}
 }
 
+char *hyb_lex_parse_string( char *str ){
+	char *s, *t, *end, next;
+
+	s 	 = t = str;
+	end  = s + strlen(str);
+
+	while( s < end ){
+		/*
+		 * Non escaped character.
+		 */
+		if( *s != '\\' ) {
+			*t++ = *s;
+		}
+		/*
+		 * Escaped character.
+		 */
+		else{
+			/*
+			 * Go to the next character after the \
+			 */
+			if( ++s >= end ){
+				*t++ = '\\';
+				break;
+			}
+
+			switch( *s ){
+				case 'n' : *t++ = '\n'; break;
+				case 'r' : *t++ = '\r'; break;
+				case 't' : *t++ = '\t'; break;
+				case 'f' : *t++ = '\f'; break;
+				case 'v' : *t++ = '\v'; break;
+				case '"' :
+				case '`' :
+				case '\\': *t++ = *s; 	break;
+
+				case 'x':
+				case 'X':
+					/*
+					 * Handle hex characters.
+					 */
+					next = *( s + 1 );
+					if( (next >= 'A' && next <= 'F') || (next >= 'a' && next <= 'f') || (next >= '0' && next <= '9') ){
+						char s_hex[3] = {0x00};
+
+						s_hex[0] = *(++s);
+						next 	 = *( s + 1 );
+
+						if( (next >= 'A' && next <= 'F') || (next >= 'a' && next <= 'f') || (next >= '0' && next <= '9') ){
+							s_hex[1] = *(++s);
+						}
+
+						*t++ = (char)strtol( s_hex, NULL, 16 );
+					}
+					/*
+					 * Not a hex character.
+					 */
+					else {
+						*t++ = '\\';
+						*t++ = *s;
+					}
+				break;
+
+				default:
+					/*
+					 * Eventually handle octal characters.
+					 */
+					if( *s >= '0' && *s <= '7' ){
+						char s_oct[4] = {0x00};
+
+						s_oct[0] = *s;
+						if( *(s + 1) >= '0' && *(s + 1) <= '7' ){
+							s_oct[1] = *(++s);
+							if( *(s + 1) >= '0' && *(s + 1) <= '7' ){
+								s_oct[2] = *(++s);
+							}
+						}
+						*t++ = (char)strtol( s_oct, NULL, 8 );
+					}
+					/*
+					 * Simply an escaped character.
+					 */
+					else {
+						*t++ = '\\';
+						*t++ = *s;
+					}
+			}
+		}
+		/*
+		 * Loop to the next character.
+		 */
+		s++;
+	}
+	/*
+	 * Null terminate the string.
+	 */
+	*t = 0x00;
+
+	return str;
+}
+
 char *hyb_lex_string( char delimiter, char *buffer ){
     char *ptr  = NULL;
     int offset = 0, c, prev = 0x00;
@@ -448,7 +550,9 @@ char *hyb_lex_string( char delimiter, char *buffer ){
     ptr = buffer;
 
 	for(;;){
-		/* break on non-escaped delimiter */
+		/*
+		 * Break on non-escaped delimiter.
+		 */
 		if( LEX_FETCH(c) == delimiter && prev != '\\' ){
 			break;
 		}
@@ -461,8 +565,10 @@ char *hyb_lex_string( char delimiter, char *buffer ){
 		}
 	}
     *ptr = 0x00;
-
-    return buffer;
+    /*
+     * Do special characters escaping and return the result.
+     */
+    return (buffer = hyb_lex_parse_string(buffer));
 }
 
 matches_t hyb_pcre_matches( string pattern, char *subject ){

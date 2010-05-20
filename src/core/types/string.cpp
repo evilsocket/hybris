@@ -35,68 +35,6 @@ size_t string_replace( string &source, const string find, string replace ) {
     return count;
 }
 
-
-
-void string_parse( string& s ){
-    /* newline */
-    string_replace( s, "\\n", "\n" );
-    /* carriage return */
-    string_replace( s, "\\r", "\r" );
-    /* horizontal tab */
-    string_replace( s, "\\t", "\t" );
-    /* vertical tab */
-    string_replace( s, "\\v", "\v" );
-    /* audible bell */
-    string_replace( s, "\\a", "\a" );
-    /* backspace */
-    string_replace( s, "\\b", "\b" );
-    /* formfeed */
-    string_replace( s, "\\f", "\f" );
-    /* escaped double quote */
-    string_replace( s, "\\\"", "\"" );
-
-    // handle hex characters
-    size_t j, i;
-    for( ; (j = s.find( "\\x" )) != string::npos; ){
-		string s_hex, repl;
-		long   l_hex;
-		for( i = j + 2; i < s.length(); ++i ){
-			// hex digit ?
-			if( (s[i] >= 'A' && s[i] <= 'F') || (s[i] >= 'a' && s[i] <= 'f') || (s[i] >= '0' && s[i] <= '9') ){
-				s_hex += s[i];
-			}
-			else{
-				break;
-			}
-		}
-
-		l_hex = strtol( ( "0x" + s_hex ).c_str(), 0, 16 );
-		repl += (char)l_hex;
-		string_replace( s, "\\x" + s_hex, repl );
-    }
-
-    // handle octal characters
-    /*
-    for( ; (j = s.find( "\\0" )) != string::npos; ){
-		string s_oct, repl;
-		long   l_oct;
-		for( i = j + 1; i < s.length(); ++i ){
-			// hex digit ?
-			if( s[i] >= '0' && s[i] <= '7' ){
-				s_oct += s[i];
-			}
-			else{
-				break;
-			}
-		}
-
-		l_oct = strtol( ( "0" + s_oct ).c_str(), 0, 8 );
-		repl += (char)l_oct;
-		string_replace( s, "\\0" + s_oct, repl );
-    }
-    */
-}
-
 /** builtin methods **/
 Object *__string_length( engine_t *engine, Object *me, vframe_t *data ){
 	return (Object *)gc_new_integer( ob_string_ucast(me)->value.size() );

@@ -817,7 +817,6 @@ CharObject;
 
 DECLARE_TYPE(String);
 
-void   string_parse( string& s );
 size_t string_replace( string &source, const string find, string replace );
 void   string_parse_pcre( string& raw, string& regex, int& opts );
 
@@ -826,8 +825,8 @@ typedef struct _StringObject {
     size_t items;
     string value;
 
-    _StringObject( char *v ) : items(0), BASE_OBJECT_HEADER_INIT(String), value(v) {
-        string_parse(value);
+    _StringObject( char *v ) : items(0), BASE_OBJECT_HEADER_INIT(String) {
+    	value = v;
         items = value.size();
     }
 }
