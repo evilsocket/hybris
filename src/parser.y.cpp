@@ -235,12 +235,13 @@ vm_t *__hyb_vm;
 %left T_RANGE T_REGEX_OP
 %left T_PLUSE T_MINUSE T_XORE
 %left T_DIVE T_MULE T_ANDE T_ORE
-%left T_PLUS T_MINUS T_XOR
+%left T_PLUS T_XOR
 %left T_DIV T_MUL T_AND T_OR
 %left T_MOD T_MODE
 %left T_SHIFTL T_SHIFTLE T_SHIFTR T_SHIFTRE T_DOLLAR
+%left T_UMINUS
+%left T_MINUS
 
-%nonassoc T_UMINUS
 %nonassoc T_FACT
 %nonassoc T_NOT
 %nonassoc T_INC T_DEC
@@ -439,8 +440,7 @@ statements : /* empty */ 		  { $$ = MK_NODE(NULL); }
 		   | statement 			  { $$ = MK_NODE($1); }
 		   | statements statement { $$ = MK_EOSTMT_NODE( $1, $2 ); };
 
-arithmeticExpression : T_MINUS expression %prec T_UMINUS { $$ = MK_UMINUS_NODE( $2 ); }
-					 | expression T_PLUS expression      { $$ = MK_PLUS_NODE( $1, $3 ); }
+arithmeticExpression : expression T_PLUS expression      { $$ = MK_PLUS_NODE( $1, $3 ); }
 					 | expression T_PLUSE expression     { $$ = MK_PLUSE_NODE( $1, $3 ); }
 					 | expression T_MINUS expression     { $$ = MK_MINUS_NODE( $1, $3 ); }
 					 | expression T_MINUSE expression    { $$ = MK_MINUSE_NODE( $1, $3 ); }
@@ -449,6 +449,7 @@ arithmeticExpression : T_MINUS expression %prec T_UMINUS { $$ = MK_UMINUS_NODE( 
 					 | expression T_DIV expression       { $$ = MK_DIV_NODE( $1, $3 ); }
 					 | expression T_DIVE expression      { $$ = MK_DIVE_NODE( $1, $3 ); }
 					 | expression T_MOD expression       { $$ = MK_MOD_NODE( $1, $3 ); }
+					 | T_MINUS expression %prec T_UMINUS { $$ = MK_UMINUS_NODE( $2 ); }
 					 | expression T_INC                  { $$ = MK_INC_NODE( $1 ); }
 					 | expression T_DEC                  { $$ = MK_DEC_NODE( $1 ); };
 
