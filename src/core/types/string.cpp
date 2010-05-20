@@ -74,7 +74,7 @@ void string_parse( string& s ){
     }
 
     // handle octal characters
-    for( ; (j = s.find( "\\" )) != string::npos; ){
+    for( ; (j = s.find( "\\0" )) != string::npos; ){
 		string s_oct, repl;
 		long   l_oct;
 		for( i = j + 1; i < s.length(); ++i ){
@@ -89,8 +89,9 @@ void string_parse( string& s ){
 
 		l_oct = strtol( ( "0" + s_oct ).c_str(), 0, 8 );
 		repl += (char)l_oct;
-		string_replace( s, "\\" + s_oct, repl );
-	}
+		string_replace( s, "\\0" + s_oct, repl );
+    }
+
 }
 
 /** builtin methods **/
