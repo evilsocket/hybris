@@ -789,6 +789,9 @@ Object *ob_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *metho
 	stack.add( "name", (Object *)gc_new_string(method_name) );
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( vm->engine, frame, argv->child(i) );
+
+		engine_check_frame_exit(frame);
+
 		ob_cl_push( (Object *)args, value );
 	}
 	stack.add( "argv", (Object *)args );

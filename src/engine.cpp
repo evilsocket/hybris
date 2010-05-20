@@ -1232,7 +1232,7 @@ __force_inline Object *engine_on_dll_function_call( engine_t *engine, vframe_t *
 
     /*
      * We assume that dll module is already loaded, otherwise there shouldn't be
-     * any onDllFunctionCall call .
+     * any engine_on_dll_function_call call .
      */
     named_function_t *dllcall = vm_get_function( engine->vm, (char *)"dllcall" );
 
