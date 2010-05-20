@@ -943,7 +943,7 @@ __force_inline Object *engine_on_builtin_function_call( engine_t *engine, vframe
     return result;
 }
 
-__force_inline Object *engine_on_threaded_call( engine_t *engine, string function_name, vframe_t *frame, vmem_t *argv ){
+Object *engine_on_threaded_call( engine_t *engine, string function_name, vframe_t *frame, vmem_t *argv ){
 	Node    *function             = H_UNDEFINED;
 	vframe_t stack;
 	Object  *result               = H_UNDEFINED;
@@ -1006,7 +1006,7 @@ __force_inline Object *engine_on_threaded_call( engine_t *engine, string functio
 	return result;
 }
 
-__force_inline Object *engine_on_threaded_call( engine_t *engine, Node *function, vframe_t *frame, vmem_t *argv ){
+Object *engine_on_threaded_call( engine_t *engine, Node *function, vframe_t *frame, vmem_t *argv ){
 	vframe_t stack;
 	Object  *result = H_UNDEFINED;
 	Node    *body   = H_UNDEFINED;
@@ -1256,7 +1256,7 @@ __force_inline Object *engine_on_dll_function_call( engine_t *engine, vframe_t *
     return result;
 }
 
-__force_inline Object *engine_on_function_call( engine_t *engine, vframe_t *frame, Node *call ){
+Object *engine_on_function_call( engine_t *engine, vframe_t *frame, Node *call ){
     Object *result = H_UNDEFINED;
 
     /* check if function is a builtin function */
