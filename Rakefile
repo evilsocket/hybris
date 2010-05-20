@@ -27,7 +27,7 @@ CLEAN.include( 'src/**/*.o',
                'src/**/*.lo', 
                TARGET, 
 			   'include/config.h',
-               'src/parser.cpp', 'src/lexer.cpp', 'src/parser.hpp', 
+               'src/parser.cpp', 'src/lexer.cpp', 'include/parser.h', 
 			   'build' )
 
 #----------------------------- Files ----------------------------
@@ -161,7 +161,7 @@ end
 
 rule 'src/parser.cpp' => 'src/parser.y.cpp' do |t|
 	puts "@ Creating #{t.name}"
-    sh "#{BISON} -y -d -o#{t.name} #{t.source}"
+    sh "#{BISON} -y --defines=include/parser.h -o#{t.name} #{t.source}"
 end
 
 rule '.lo' => '.cpp' do |t|

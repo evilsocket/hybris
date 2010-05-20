@@ -17,7 +17,7 @@
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "engine.h"
-#include "parser.hpp"
+#include "parser.h"
 
 engine_t *engine_init( vm_t* vm ){
 	engine_t *engine = new engine_t;

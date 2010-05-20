@@ -20,7 +20,7 @@
 
 #include "node.h"
 #include "common.h"
-#include "parser.hpp"
+#include "parser.h"
 #include "vm.h"
 #include <stdio.h>
 #include <string.h>

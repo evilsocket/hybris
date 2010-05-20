@@ -9,7 +9,7 @@ hybris
 include/lexer.h
 src/lexer.cpp
 src/parser.cpp
-src/parser.hpp
+include/parser.h
 # Eclipse files and directories
 .cproject
 .project
