@@ -56,22 +56,41 @@ void string_parse( string& s ){
     // handle hex characters
     size_t j, i;
     for( ; (j = s.find( "\\x" )) != string::npos; ){
-    string s_hex, repl;
-    long l_hex;
-    for( i = j + 2; i < s.length(); ++i ){
-        // hex digit ?
-        if( (s[i] >= 'A' && s[i] <= 'F') || (s[i] >= 'a' && s[i] <= 'f') || (s[i] >= '0' && s[i] <= '9') ){
-            s_hex += s[i];
-        }
-        else{
-            break;
-        }
+		string s_hex, repl;
+		long   l_hex;
+		for( i = j + 2; i < s.length(); ++i ){
+			// hex digit ?
+			if( (s[i] >= 'A' && s[i] <= 'F') || (s[i] >= 'a' && s[i] <= 'f') || (s[i] >= '0' && s[i] <= '9') ){
+				s_hex += s[i];
+			}
+			else{
+				break;
+			}
+		}
+
+		l_hex = strtol( ( "0x" + s_hex ).c_str(), 0, 16 );
+		repl += (char)l_hex;
+		string_replace( s, "\\x" + s_hex, repl );
     }
 
-    l_hex = strtol( ( "0x" + s_hex ).c_str(), 0, 16 );
-            repl += (char)l_hex;
-            string_replace( s, "\\x" + s_hex, repl );
-    }
+    // handle octal characters
+    for( ; (j = s.find( "\\" )) != string::npos; ){
+		string s_oct, repl;
+		long   l_oct;
+		for( i = j + 1; i < s.length(); ++i ){
+			// hex digit ?
+			if( s[i] >= '0' && s[i] <= '7' ){
+				s_oct += s[i];
+			}
+			else{
+				break;
+			}
+		}
+
+		l_oct = strtol( ( "0" + s_oct ).c_str(), 0, 8 );
+		repl += (char)l_oct;
+		string_replace( s, "\\" + s_oct, repl );
+	}
 }
 
 /** builtin methods **/
