@@ -85,6 +85,14 @@ Object * handle_to_int( Object *me ){
     return (Object *)gc_new_integer( H_ADDRESS_OF(ob_handle_ucast(me)->value) );
 }
 
+Object *handle_assign( Object *me, Object *op ){
+	((HandleObject *)me)->value = NULL;
+
+    Object *clone = ob_clone(op);
+
+    return (me = clone);
+}
+
 /** logic operators **/
 Object *handle_l_not( Object *me ){
     return (Object *)gc_new_integer( !ob_lvalue(me) );
@@ -171,7 +179,7 @@ IMPLEMENT_TYPE(Handle) {
 	0, // regexp
 
 	/** arithmetic operators **/
-	0, // assign
+	handle_assign, // assign
     0, // factorial
     0, // increment
     0, // decrement
