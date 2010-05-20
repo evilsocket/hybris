@@ -35,6 +35,8 @@ size_t string_replace( string &source, const string find, string replace ) {
     return count;
 }
 
+
+
 void string_parse( string& s ){
     /* newline */
     string_replace( s, "\\n", "\n" );
@@ -74,6 +76,7 @@ void string_parse( string& s ){
     }
 
     // handle octal characters
+    /*
     for( ; (j = s.find( "\\0" )) != string::npos; ){
 		string s_oct, repl;
 		long   l_oct;
@@ -91,7 +94,7 @@ void string_parse( string& s ){
 		repl += (char)l_oct;
 		string_replace( s, "\\0" + s_oct, repl );
     }
-
+    */
 }
 
 /** builtin methods **/
