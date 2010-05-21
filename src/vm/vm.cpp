@@ -27,6 +27,9 @@
 
 void vm_signal_handler( int signo ){
     if( signo == SIGSEGV ){
+    	/*
+    	 * This will cause the stack trace to be printed.
+    	 */
         hyb_error( H_ET_GENERIC, "SIGSEGV Signal Catched" );
     }
 }
@@ -46,8 +49,18 @@ vm_t *vm_create(){
 	vm_t *vm = new vm_t;
 
     memset( &vm->args, 0x00, sizeof(h_args_t) );
+    /*
+     * Input file handle.
+     */
     vm->fp 	      = NULL;
+    /*
+     * Releasing flag.
+     */
     vm->releasing = false;
+    /*
+	* Set the initial vm state.
+	*/
+   vm->state = vmNone;
 
     return vm;
 }
@@ -56,7 +69,7 @@ FILE *vm_fopen( vm_t *vm ){
 	extern vector<string> __hyb_file_stack;
 	extern vector<int>	  __hyb_line_stack;
 
-    if( vm->args.source[0] != 0x00 ){
+    if( *vm->args.source ){
     	__hyb_file_stack.push_back( vm->args.source);
     	__hyb_line_stack.push_back(0);
 
@@ -73,13 +86,15 @@ FILE *vm_fopen( vm_t *vm ){
 }
 
 void vm_fclose( vm_t *vm ){
-    if( vm->args.source[0] != 0x00 && vm->fp ){
+    if( *vm->args.source && vm->fp ){
         fclose(vm->fp);
     }
 }
 
 int vm_chdir( vm_t *vm ){
-	/* compute source path and chdir to it */
+	/*
+	 * Compute source path and chdir to it.
+	 */
 	char *ptr = strrchr( vm->args.source, '/' );
 	if( ptr != NULL ){
 		unsigned int pos = ptr - vm->args.source + 1;
@@ -94,17 +109,24 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
     int i;
     char name[0xFF] = {0};
 
-    /* create code engine */
+    /*
+     * Create code engine
+     */
     vm->engine = engine_init( vm );
-    /* save interpreter directory */
+    /*
+     * Save interpreter directory
+     */
     getcwd( vm->args.rootpath, 0xFF );
-    /* initialize pthread mutexes */
+    /*
+     * Initialize vm mutexes
+     */
     vm->th_pool_mutex = PTHREAD_MUTEX_INITIALIZER;
     vm->mm_pool_mutex = PTHREAD_MUTEX_INITIALIZER;
     vm->mcache_mutex  = PTHREAD_MUTEX_INITIALIZER;
     vm->pcre_mutex	  = PTHREAD_MUTEX_INITIALIZER;
-
-    /* set signal handler */
+    /*
+     * Set segmentation fault signal handler
+     */
     signal( SIGSEGV, vm_signal_handler );
 
     /*
@@ -125,15 +147,18 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
 
     int h_argc = argc - 1;
 
-    /* initialize command line arguments */
+    /*
+     * Initialize command line arguments
+     */
     HYBRIS_DEFINE_CONSTANT( vm, "argc", gc_new_integer(h_argc) );
     for( i = 1; i < argc; ++i ){
         sprintf( name, "%d", i - 1);
         HYBRIS_DEFINE_CONSTANT( vm, name, gc_new_string(argv[i]) );
     }
-    /* initialize misc constants */
+    /*
+     * Initialize misc constants
+     */
     HYBRIS_DEFINE_CONSTANT( vm, "null",  gc_new_reference(NULL) );
-
     HYBRIS_DEFINE_CONSTANT( vm, "__VERSION__",  gc_new_string(VERSION) );
     HYBRIS_DEFINE_CONSTANT( vm, "__LIB_PATH__", gc_new_string(LIB_PATH) );
     HYBRIS_DEFINE_CONSTANT( vm, "__INC_PATH__", gc_new_string(INC_PATH) );

@@ -132,7 +132,20 @@ typedef void (*initializer_t)( vm_t * );
 typedef vector<module_t *>        h_modules_t;
 typedef ITree<named_function_t> h_mcache_t;
 
+enum vm_state_t {
+	vmNone    = 0,
+	vmParsing,
+	vmExecuting
+};
+
 typedef struct _vm_t {
+	/*
+	 * The current state of the vm.
+	 *
+	 * NOTE : The state is set only by the main process, so
+	 * it's safe to not have a mutex here.
+	 */
+	vm_state_t state;
 	/*
 	 * Running threads pool vector, used to hard terminate remaining threads
 	 * when the vm is released.

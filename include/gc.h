@@ -153,16 +153,6 @@ size_t			gc_set_collect_threshold( size_t threshold );
  * Return the old threshold value.
  */
 size_t			gc_set_mm_threshold( size_t threshold );
-/*
- * Set the object and all the objects referenced by him
- * as non collectable.
- */
-void 			gc_set_uncollectable( struct _Object *o );
-/*
- * Set the object and all the objects referenced by him
- * as collectable.
- */
-void 			gc_set_collectable( struct _Object *o );
 /* 
  * Add an object to the gc pool and start to track
  * it for reference changes.
@@ -187,6 +177,20 @@ size_t			gc_collect_threshold();
  * Return the maximum allowed memory usage threshold.
  */
 size_t			gc_mm_threshold();
+/*
+ * Recursively mark an object (and its inner items).
+ */
+void 			gc_mark( struct _Object *o, bool mark = true );
+/*
+ * Set the object and all the objects referenced by him
+ * as non collectable.
+ */
+#define	gc_set_uncollectable(o) gc_mark( o, true )
+/*
+ * Set the object and all the objects referenced by him
+ * as collectable.
+ */
+#define gc_set_collectable(o) gc_mark( o, false )
 /*
  * Fire the collection routines if the memory usage is
  * above the threshold.

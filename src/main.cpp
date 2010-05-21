@@ -246,6 +246,8 @@ int main( int argc, char *argv[], char* envp[] ){
      */
     yyin = vm_fopen( __hyb_vm );
 
+    __hyb_vm->state = vmParsing;
+
     while( !feof(yyin) ){
         yyparse();
     }

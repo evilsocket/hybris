@@ -20,8 +20,6 @@
 #include "gc.h"
 #include "vm.h"
 
-extern void hyb_error( H_ERROR_TYPE type, const char *format, ... );
-
 /*
  * The main garbage collector global structure.
  */
@@ -120,7 +118,6 @@ __force_inline void gc_pool_migrate( gc_list_t *src, gc_list_t *dst, gc_item_t *
 void gc_free( gc_list_t *list, gc_item_t *item ){
     __gc.items--;
     __gc.usage -= item->size;
-
     /*
      * If the object is a collection, ob_free is needed to free its elements,
      * because gc_free isn't applied recursively on each object as gc_mark, so
@@ -131,10 +128,11 @@ void gc_free( gc_list_t *list, gc_item_t *item ){
 	 * Finally delete the object pointer itself.
 	 */
     delete item->pobj;
+
     /*
      * And remove the item from the gc pool.
      */
-    gc_pool_remove( list, item );
+	gc_pool_remove( list, item );
 }
 
 /*
@@ -162,36 +160,12 @@ size_t gc_set_mm_threshold( size_t threshold ){
 	return old;
 }
 /*
- * Set the object and all the objects referenced by him
- * as non collectable.
- */
-void gc_set_uncollectable( Object *o ){
-	Object *child(NULL);
-	size_t i(0);
-	o->gc_mark = true;
-	while( (child = ob_traverse( o, i++ )) != NULL ){
-		gc_set_uncollectable(child);
-	}
-}
-/*
- * Set the object and all the objects referenced by him
- * as collectable.
- */
-void gc_set_collectable( Object *o ){
-	Object *child(NULL);
-	size_t i(0);
-	o->gc_mark = false;
-	while( (child = ob_traverse( o, i++ )) != NULL ){
-		gc_set_collectable(child);
-	}
-}
-/*
  * Add an object to the gc pool and start to track
  * it for reference changes.
  * Size must be passed explicitly due to the downcasting
  * possibility.
  */
-struct _Object *gc_track( struct _Object *o, size_t size ){
+struct _Object *gc_track( Object *o, size_t size ){
 	/*
 	 * We assume that 'o' was previously allocated with one of the gc_new_*
 	 * macros, therefore, if its pointer is null, most of it there was a memory
@@ -240,17 +214,17 @@ size_t gc_mm_threshold(){
 	return __gc.mm_threshold;
 }
 /*
- * Recursively mark an object (and its inner items) as alive.
+ * Recursively mark an object (and its inner items).
  */
-void gc_mark( Object *o ){
+void gc_mark( Object *o, bool mark /*= true*/ ){
 	/*
 	 * Valid and already marked?
 	 */
-	if( o && !o->gc_mark ){
+	if( o && o->gc_mark != mark ){
 		/*
-		 * This object is not collectable right now.
+		 * Mark the object.
 		 */
-		o->gc_mark = true;
+		o->gc_mark = mark;
 		/*
 		 * Loop all the objects it 'contains' (such as vector items) and
 		 * call gc_mark recursively on each one.
@@ -258,7 +232,7 @@ void gc_mark( Object *o ){
 		Object *child = NULL;
 		int i = 0;
 		while( (child = ob_traverse( o, i++ )) != NULL ){
-			gc_mark(child);
+			gc_mark( child, mark );
 		}
 	}
 }
@@ -292,7 +266,7 @@ void gc_sweep_generation( gc_list_t *generation ){
 			 * Reset its gc_marked flag to false.
 			 */
 			if( o->gc_mark ){
-				o->gc_mark = false;
+				gc_set_collectable(o);
 				/*
 				 * If this generation is not the lag space, check if the object
 				 * has to be moved to the lag space.
@@ -358,7 +332,7 @@ void gc_collect( vm_t *vm ){
 				/*
 				 * Mark the object and its referenced objects as live objects.
 				 */
-				gc_mark( frame->at(j) );
+				gc_set_uncollectable( frame->at(j) );
 			}
 		}
 		/*

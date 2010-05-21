@@ -1405,7 +1405,6 @@ __force_inline Object *engine_on_subscript_push( engine_t *engine, vframe_t *fra
            *res    = H_UNDEFINED;
 
     array  = engine_exec( engine, frame, node->child(0) );
-
 	object = engine_exec( engine, frame, node->child(1) );
 
 	engine_check_frame_exit(frame)
@@ -1451,7 +1450,7 @@ __force_inline Object *engine_on_subscript_set( engine_t *engine, vframe_t *fram
            *index  = H_UNDEFINED,
            *object = H_UNDEFINED;
 
-    array = engine_exec( engine, frame, node->child(0) );
+    array  = engine_exec( engine, frame, node->child(0) );
    	index  = engine_exec( engine, frame, node->child(1) );
    	object = engine_exec( engine, frame, node->child(2) );
 

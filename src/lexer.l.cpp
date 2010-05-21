@@ -112,7 +112,11 @@ typedef struct YYLTYPE
 # define YYLTYPE_IS_TRIVIAL 1
 #endif
 
-#define YY_DECL int yylex( hyb_token_value* yylval, YYLTYPE *yyloc )
+#define YY_DECL int yylex( hyb_token_value* yylval, YYLTYPE *yylloc )
+/*
+ * Make sure every rule yylloc is correctly updated.
+ */
+#define YY_USER_ACTION yylloc->first_line = yylineno;
 
 %}
 
@@ -709,6 +713,8 @@ void hyb_parse_string( const char *str ){
 	 * Reset lex state to initial.
 	 */
 	BEGIN(INITIAL);
+
+	yylineno  = 1;
 	/*
 	 * Parse the str, yyparse will call yylex.
 	 */

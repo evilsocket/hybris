@@ -264,7 +264,11 @@ main : statements {
 
 	vm_timer( __hyb_vm, HYB_TIMER_START );
 
+	__hyb_vm->state = vmExecuting;
+
 	engine_exec( __hyb_vm->engine, &__hyb_vm->vmem, $1 );
+
+	__hyb_vm->state = vmNone;
 
 	vm_timer( __hyb_vm, HYB_TIMER_STOP );
 
