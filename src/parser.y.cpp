@@ -268,8 +268,6 @@ main : statements {
 
 	engine_exec( __hyb_vm->engine, &__hyb_vm->vmem, $1 );
 
-	__hyb_vm->state = vmNone;
-
 	vm_timer( __hyb_vm, HYB_TIMER_STOP );
 
 	RM_NODE($1);
