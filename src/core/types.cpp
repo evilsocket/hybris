@@ -56,7 +56,6 @@ const char *ob_typename( Object * o ){
 }
 
 Object *ob_traverse( Object *o, int index ){
-	// printf( "ob_traverse( %p->%d, %d )\n", o, o->type, index );
 	/*
 	 * Every object has to implement its own traverse.
 	 */
