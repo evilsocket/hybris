@@ -18,6 +18,8 @@
 */
 #include <hybris.h>
 #include <math.h>
+#include <time.h>
+#include <sys/time.h>
 
 HYBRIS_DEFINE_FUNCTION(hacos);
 HYBRIS_DEFINE_FUNCTION(hasin);
@@ -38,6 +40,7 @@ HYBRIS_DEFINE_FUNCTION(hsinh);
 HYBRIS_DEFINE_FUNCTION(hsqrt);
 HYBRIS_DEFINE_FUNCTION(htan);
 HYBRIS_DEFINE_FUNCTION(htanh);
+HYBRIS_DEFINE_FUNCTION(hrand);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "acos",  hacos,  H_REQ_ARGC( 1 ), { H_REQ_TYPES( otInteger, otFloat ) } },
@@ -59,6 +62,7 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "sqrt",  hsqrt,  H_REQ_ARGC( 1 ), { H_REQ_TYPES( otInteger, otFloat ) } },
 	{ "tan",   htan,   H_REQ_ARGC( 1 ), { H_REQ_TYPES( otInteger, otFloat ) } },
 	{ "tanh",  htanh,  H_REQ_ARGC( 1 ), { H_REQ_TYPES( otInteger, otFloat ) } },
+	{ "rand",  hrand,  H_REQ_ARGC(0,2), { H_REQ_TYPES( otInteger ), H_REQ_TYPES( otInteger ) } },
 
     { "", NULL }
 };
@@ -297,7 +301,30 @@ HYBRIS_DEFINE_FUNCTION(htanh){
     }
 }
 
+HYBRIS_DEFINE_FUNCTION(hrand){
+	/*
+	 * Init the seed baby.
+	 */
+    timeval ts;
+    gettimeofday(&ts,0);
 
+    srand( ts.tv_sec * 1000 + (ts.tv_usec / 1000) );
+
+    int n = rand();
+
+    if( ob_argc() == 2 ){
+    	int a   = int_argv(0),
+			b   = int_argv(1),
+			min = (a < b ? a : b),
+			max = (a > b ? a : b);
+
+    	max++;
+    	n =  (max ? (int)(n % max) : 0);
+    	n += min;
+    }
+
+    return (Object *)gc_new_integer(n);
+}
 
 
 
