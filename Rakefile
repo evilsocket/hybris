@@ -43,7 +43,7 @@ SOURCES = {
 OBJECTS = {
 	:BIN => ['src/parser.cpp', 'src/lexer.cpp'] + SOURCES[:BIN].ext('o'),
 	:LIB => ['src/parser.cpp', 'src/lexer.cpp'] + SOURCES[:LIB].ext('lo'),
-	:STD => SOURCES[:STD].ext('so')
+	:STD => SOURCES[:STD].pathmap("%{^stdlib,build#{PREFIX}/lib/hybris/library/}X.so")
 }
 
 #----------------------------- Tasks ----------------------------
@@ -174,13 +174,13 @@ rule '.o' => '.cpp' do |t|
     sh "#{CXX} #{CXXFLAGS} -o #{t.name} -c #{t.source}"
 end
 
-rule '.so' => '.cc' do |t|
-	puts "@ Compiling #{t.source}"
-	output = t.source.ext("so")
-	output['stdlib'] = "build#{PREFIX}/lib/hybris/library"
-	sh "mkdir -p #{File.dirname(output)}"
-	sh "#{CXX} #{t.source} -o#{output} #{STDLIB_CFLAGS} #{STDLIB_LFLAGS}"
+rule '.so' => ["%{build#{PREFIX}/lib/hybris/library,stdlib}X.cc"] do |t|
+   puts "@ Compiling #{t.source}"
+   sh "mkdir -p #{File.dirname(t.name)}"
+   sh "#{CXX} #{t.source} -o#{t.name} #{STDLIB_CFLAGS} #{STDLIB_LFLAGS}"
 end
+
+
 
 #----------------------------- Linking ----------------------------
 
