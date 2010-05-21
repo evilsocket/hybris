@@ -316,9 +316,8 @@ HYBRIS_DEFINE_FUNCTION(hrand){
     	int a   = int_argv(0),
 			b   = int_argv(1),
 			min = (a < b ? a : b),
-			max = (a > b ? a : b);
+			max = (a > b ? a : b) + 1;
 
-    	max++;
     	n =  (max ? (int)(n % max) : 0);
     	n += min;
     }

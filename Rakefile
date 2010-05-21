@@ -174,7 +174,7 @@ rule '.o' => '.cpp' do |t|
     sh "#{CXX} #{CXXFLAGS} -o #{t.name} -c #{t.source}"
 end
 
-rule '.so' => ["%{build#{PREFIX}/lib/hybris/library,stdlib}X.cc"] do |t|
+rule '.so' => ["%{build#{PREFIX}/lib/hybris/library/,stdlib}X.cc"] do |t|
    puts "@ Compiling #{t.source}"
    sh "mkdir -p #{File.dirname(t.name)}"
    sh "#{CXX} #{t.source} -o#{t.name} #{STDLIB_CFLAGS} #{STDLIB_LFLAGS}"
