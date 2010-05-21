@@ -116,14 +116,15 @@ class NodeValue {
 /* node base class */
 class Node : public vector<Node *> {
 
-private :
+protected :
 
     H_NODE_TYPE  m_type;
+    size_t		 m_lineno;
 
 public  :
 
     Node();
-    Node( H_NODE_TYPE type );
+    Node( H_NODE_TYPE type, size_t lineno );
     ~Node();
 
     NodeValue value;
@@ -131,6 +132,10 @@ public  :
     __force_inline H_NODE_TYPE type(){
         return m_type;
     }
+
+    __force_inline size_t lineno(){
+		return m_lineno;
+	}
 
     __force_inline unsigned int children(){
         return size();
@@ -175,11 +180,11 @@ public  :
 class ConstantNode : public Node {
     public :
 
-        ConstantNode( long v );
-        ConstantNode( double v );
-        ConstantNode( char v );
-        ConstantNode( char *v );
-        ConstantNode( bool v );
+        ConstantNode( size_t lineno, long v );
+        ConstantNode( size_t lineno, double v );
+        ConstantNode( size_t lineno, char v );
+        ConstantNode( size_t lineno, char *v );
+        ConstantNode( size_t lineno, bool v );
 
         Node *clone();
 };
@@ -188,9 +193,9 @@ class ConstantNode : public Node {
 class ExpressionNode : public Node {
     public :
 
-        ExpressionNode( int expression );
-        ExpressionNode( int expression, NodeList *list );
-        ExpressionNode( int expression, int argc, ... );
+        ExpressionNode( size_t lineno, int expression );
+        ExpressionNode( size_t lineno, int expression, NodeList *list );
+        ExpressionNode( size_t lineno, int expression, int argc, ... );
 
         Node *clone();
 };
@@ -199,11 +204,11 @@ class ExpressionNode : public Node {
 class StatementNode : public Node {
     public :
 
-        StatementNode( int statement );
-        StatementNode( int statement, int argc, ... );
-        StatementNode( int statement, NodeList *identList, Node *expr );
-        StatementNode( int statement, Node *sw, NodeList *caselist );
-        StatementNode( int statement, Node *sw, NodeList *caselist, Node *deflt );
+        StatementNode( size_t lineno, int statement );
+        StatementNode( size_t lineno, int statement, int argc, ... );
+        StatementNode( size_t lineno, int statement, NodeList *identList, Node *expr );
+        StatementNode( size_t lineno, int statement, Node *sw, NodeList *caselist );
+        StatementNode( size_t lineno, int statement, Node *sw, NodeList *caselist, Node *deflt );
 
         Node *clone();
 };
@@ -212,10 +217,10 @@ class StatementNode : public Node {
 class IdentifierNode : public Node {
     public :
 
-        IdentifierNode( char *identifier );
-        IdentifierNode( access_t access, Node *i );
-        IdentifierNode( access_t access, char *identifier );
-        IdentifierNode( access_t access, bool is_static, char *identifier, Node *v );
+        IdentifierNode( size_t lineno, char *identifier );
+        IdentifierNode( size_t lineno, access_t access, Node *i );
+        IdentifierNode( size_t lineno, access_t access, char *identifier );
+        IdentifierNode( size_t lineno, access_t access, bool is_static, char *identifier, Node *v );
 
         Node *clone();
 };
@@ -224,7 +229,7 @@ class IdentifierNode : public Node {
 class AttributeRequestNode : public Node {
     public :
 
-		AttributeRequestNode( Node *owner, Node *member );
+		AttributeRequestNode( size_t lineno, Node *owner, Node *member );
 
 		Node *clone();
 };
@@ -233,7 +238,7 @@ class AttributeRequestNode : public Node {
 class MethodCallNode : public Node {
     public :
 
-		MethodCallNode( Node *owner, Node *call );
+		MethodCallNode( size_t lineno, Node *owner, Node *call );
 
 		Node *clone();
 };
@@ -242,9 +247,9 @@ class MethodCallNode : public Node {
 class FunctionNode : public Node {
     public :
 
-        FunctionNode( function_decl_t *declaration );
-        FunctionNode( function_decl_t *declaration, int argc, ... );
-        FunctionNode( const char *name );
+        FunctionNode( size_t lineno, function_decl_t *declaration );
+        FunctionNode( size_t lineno, function_decl_t *declaration, int argc, ... );
+        FunctionNode( size_t lineno, const char *name );
 
         Node *clone();
 };
@@ -253,8 +258,8 @@ class FunctionNode : public Node {
 class CallNode : public Node {
     public :
 
-        CallNode( char *name, NodeList *argv );
-        CallNode( Node *alias, NodeList *argv );
+        CallNode( size_t lineno, char *name, NodeList *argv );
+        CallNode( size_t lineno, Node *alias, NodeList *argv );
 
         Node *clone();
 };
@@ -263,7 +268,7 @@ class CallNode : public Node {
 class TryCatchNode : public Node {
 public :
 
-	TryCatchNode( int statement, Node *try_block, Node	*exp_id, Node *catch_block, Node *finally_block );
+	TryCatchNode( size_t lineno, int statement, Node *try_block, Node	*exp_id, Node *catch_block, Node *finally_block );
 
 	Node *clone();
 };
@@ -272,7 +277,7 @@ public :
 class NewNode : public Node {
 	public :
 
-		NewNode( char *type, NodeList *argv );
+		NewNode( size_t lineno, char *type, NodeList *argv );
 
 		Node *clone();
 };
@@ -281,15 +286,15 @@ class NewNode : public Node {
 class StructureNode : public Node {
     public :
 
-        StructureNode( char *s_name, NodeList *attributes );
+        StructureNode( size_t lineno, char *s_name, NodeList *attributes );
 };
 
 /* method declarations */
 class MethodDeclarationNode : public Node {
 	public :
-		MethodDeclarationNode( access_t access, method_decl_t *declaration, int argc, ... );
-		MethodDeclarationNode( access_t access, method_decl_t *declaration, bool is_static, int argc, ... );
-		MethodDeclarationNode( const char *name, access_t access );
+		MethodDeclarationNode( size_t lineno, access_t access, method_decl_t *declaration, int argc, ... );
+		MethodDeclarationNode( size_t lineno, access_t access, method_decl_t *declaration, bool is_static, int argc, ... );
+		MethodDeclarationNode( size_t lineno, const char *name, access_t access );
 
 		Node *clone();
 };
@@ -298,7 +303,7 @@ class MethodDeclarationNode : public Node {
 class ClassNode : public Node {
 	public :
 		NodeList m_extends;
-		ClassNode( char *classname, NodeList *extends, NodeList *members );
+		ClassNode( size_t lineno, char *classname, NodeList *extends, NodeList *members );
 };
 
 #endif

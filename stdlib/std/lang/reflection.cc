@@ -139,27 +139,22 @@ HYBRIS_DEFINE_FUNCTION(hmethods){
 }
 
 HYBRIS_DEFINE_FUNCTION(hcall){
-	Node *call         = new Node(H_NT_CALL);
-    call->value.m_call = string_argv(0);
+	vmem_t stack;
+
+	vm_pool( vm );
+
 	if( ob_argc() > 1 ){
 		unsigned int i;
 		for( i = 1; i < ob_argc(); ++i ){
-			switch( ob_argv(i)->type->code ){
-				case otInteger : call->addChild( new ConstantNode( int_argv(i) ) );   break;
-				case otFloat   : call->addChild( new ConstantNode( float_argv(i) ) ); break;
-				case otChar    : call->addChild( new ConstantNode( char_argv(i) ) );   break;
-				case otString  : call->addChild( new ConstantNode( (char *)string_argv(i).c_str() ) ); break;
-
-				default :
-                    hyb_error( H_ET_GENERIC, "type %s not supported for reflected call", ob_argv(i)->type->name );
-			}
+			stack.push( ob_argv(i) );
 		}
 	}
 
-	Object *_return = engine_on_function_call( vm->engine, data, call );
-	delete call;
+	Object *state = engine_on_threaded_call( vm->engine, string_argv(0), data, &stack );
 
-	return _return;
+	vm_depool( vm );
+
+	return state;
 }
 
 HYBRIS_DEFINE_FUNCTION(hcall_method){

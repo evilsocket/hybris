@@ -111,7 +111,10 @@ typedef struct YYLTYPE
 # define YYLTYPE_IS_DECLARED 1
 # define YYLTYPE_IS_TRIVIAL 1
 #endif
-
+/*
+ * We got a pure parser here, so we have to define our
+ * yylex prototype with correct yylval and yyloc types.
+ */
 #define YY_DECL int yylex( hyb_token_value* yylval, YYLTYPE *yylloc )
 /*
  * Make sure every rule yylloc is correctly updated.

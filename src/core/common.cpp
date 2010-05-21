@@ -30,7 +30,6 @@
 #define MAX_MESSAGE_SIZE MAX_STRING_SIZE + 0xFF
 
 void yyerror( char *error ){
-    extern int yylineno;
     extern vm_t *__hyb_vm;
 
     /*
@@ -52,7 +51,7 @@ void yyerror( char *error ){
      * Print line number only for syntax errors.
      */
     if( strstr( error, "Syntax error" ) ){
-    	fprintf( stderr, "[LINE %d] %s%c", yylineno, error, (strchr( error, '\n' ) ? 0x00 : '\n') );
+    	fprintf( stderr, "[LINE %d] %s%c", vm_get_lineno(__hyb_vm), error, (strchr( error, '\n' ) ? 0x00 : '\n') );
     }
     else{
     	fprintf( stderr, "%s%c", error, (strchr( error, '\n' ) ? 0x00 : '\n') );

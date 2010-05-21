@@ -389,6 +389,11 @@ Object *engine_exec( engine_t *engine, vframe_t *frame, Node *node ){
     	return H_DEFAULT_RETURN;
     }
 
+	/*
+	 * Set current line number.
+	 */
+	vm_set_lineno( engine->vm, node->lineno() );
+
     switch( node->type() ){
         /* identifier */
         case H_NT_IDENTIFIER :

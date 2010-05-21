@@ -147,6 +147,14 @@ typedef struct _vm_t {
 	 */
 	vm_state_t state;
 	/*
+	 * Current executing/parsing line number.
+	 */
+	size_t lineno;
+	/*
+	 * Mutex to lock to change lineno.
+	 */
+	pthread_mutex_t line_mutex;
+	/*
 	 * Running threads pool vector, used to hard terminate remaining threads
 	 * when the vm is released.
 	 */
@@ -228,6 +236,8 @@ vm_t;
 /*
  * Macros to lock and unlock the vm mutexes.
  */
+#define vm_line_lock( vm )      pthread_mutex_lock( &vm->line_mutex )
+#define vm_line_unlock( vm )    pthread_mutex_unlock( &vm->line_mutex )
 #define vm_th_pool_lock( vm )   pthread_mutex_lock( &vm->th_pool_mutex )
 #define vm_th_pool_unlock( vm ) pthread_mutex_unlock( &vm->th_pool_mutex )
 #define vm_mm_lock( vm )  	    pthread_mutex_lock( &vm->mm_pool_mutex )
@@ -299,6 +309,42 @@ Object 	   *vm_raise_exception( const char *fmt, ... );
  * Print the calling stack trace.
  */
 void 		vm_print_stack_trace( vm_t *vm, bool force = false );
+/*
+ * Set current line number.
+ */
+#define vm_set_lineno( vm, line ) vm_line_lock(vm); \
+								  vm->lineno = line; \
+								  vm_line_unlock(vm)
+/*
+ * Return current line number accordingly to the vm state.
+ */
+__force_inline size_t vm_get_lineno( vm_t *vm ){
+	/*
+	 * None state, no lines processed yet.
+	 */
+	if( vm->state == vmNone ){
+		return 0;
+	}
+	/*
+	 * Parsing state, return global line counter.
+	 */
+	else if( vm->state == vmParsing ){
+		extern int yylineno;
+		return yylineno;
+	}
+	/*
+	 * Executing state, return inner line counter.
+	 */
+	else if( vm->state == vmExecuting ){
+		return vm->lineno;
+	}
+	else{
+		/*
+		 * THIS SHOULD NEVER HAPPEN!
+		 */
+		assert(false);
+	}
+}
 /*
  * Add a thread to the threads pool.
  */
