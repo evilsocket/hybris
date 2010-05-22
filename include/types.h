@@ -19,6 +19,7 @@
 #ifndef _HOBJECT_H_
 #	define _HOBJECT_H_
 
+#include "common.h"
 #include "gc.h"
 #include "itree.h"
 #include <stdarg.h>
@@ -111,6 +112,54 @@ typedef MemorySegment vframe_t;
  * Macro to downcast any type structure to the base one.
  */
 #define ob_dcast(o)      (Object *)(o)
+/*
+ * Type checking and casting macros.
+ */
+#define ob_is_boolean(o)    ob_is_typeof(o,Boolean)
+#define ob_bool_ucast(o)    ((Boolean *)(o))
+#define ob_bool_val(o)      (((Boolean *)(o))->value)
+#define ob_is_int(o) 	    ob_is_typeof(o,Integer)
+#define ob_is_alias(o)      ob_is_typeof(o,Alias)
+#define ob_is_extern(o)     ob_is_typeof(o,Extern)
+#define ob_int_ucast(o)     (Integer *)(o)
+#define ob_alias_ucast(o)   (Alias *)(o)
+#define ob_extern_ucast(o)  (Extern *)(o)
+#define ob_int_val(o)       (((Integer *)(o))->value)
+#define ob_alias_val(o)     (((Alias *)(o))->value)
+#define ob_extern_val(o)    (((Extern *)(o))->value)
+#define ob_is_float(o)      ob_is_typeof(o,Float)
+#define ob_float_ucast(o)   ((Float *)(o))
+#define ob_float_val(o)     (((Float *)(o))->value)
+#define ob_is_char(o)       ob_is_typeof(o,Char)
+#define ob_char_ucast(o)    ((Char *)(o))
+#define ob_char_val(o)      ((Char *)(o))->value
+#define ob_is_string(o)     ob_is_typeof(o,String)
+#define ob_string_ucast(o)  ((String *)(o))
+#define ob_string_val(o)    ((String *)(o))->value
+#define ob_lpcstr_val(o)    (ob_string_val(o).c_str())
+#define ob_is_binary(o)     ob_is_typeof(o,Binary)
+#define ob_binary_ucast(o)  ((Binary *)(o))
+#define ob_is_vector(o)     ob_is_typeof(o,Vector)
+#define ob_vector_ucast(o)  ((Vector *)(o))
+#define ob_vector_val(o)    (((Vector *)(o)))
+#define ob_is_map(o)        ob_is_typeof(o,Map)
+#define ob_map_ucast(o)     ((Map *)(o))
+#define ob_map_val(o)	    (Map *)(o)
+#define ob_is_struct(o)     ob_is_typeof(o,Structure)
+#define ob_struct_ucast(o)  ((Structure *)(o))
+#define ob_is_class(o)      ob_is_typeof(o,Class)
+#define ob_class_ucast(o)   ((Class *)(o))
+#define ob_class_val(o)     ((Class *)o)
+#define ob_is_reference(o)  ob_is_typeof(o,Reference)
+#define ob_ref_ucast(o)     ((Reference *)(o))
+#define ob_reference_val(o) ((Reference *)o)
+#define ob_is_handle(o)     ob_is_typeof(o,Handle)
+#define ob_handle_ucast(o)  ((Handle *)(o))
+#define ob_handle_val(o)    ((Handle *)o)->value
+/*
+ * A macro to cast any pointer into an Integer representing its address.
+ */
+#define PTR_TO_INT_OBJ(p) gc_new_integer( H_ADDRESS_OF(p) )
 /*
  * Pre declaration to implement basic object type .
  */
@@ -233,7 +282,7 @@ enum H_OBJECT_TYPE {
  */
 #define OB_COLLECTION_SIZE 0
 
-__force_inline const char *ob_type_to_string( H_OBJECT_TYPE type ){
+INLINE const char *ob_type_to_string( H_OBJECT_TYPE type ){
 	switch(type){
 		case otVoid      : return "void";
 		case otBoolean   : return "boolean";
@@ -380,11 +429,6 @@ object_type_t;
  * on each type, type compatibility, reference counting and so on .
  * They MUST be used on every access on type functions instead of the function pointers directly.
  */
-
-/*
- * Return true if 'o' is of one of the types specified by arguments, otherwise false.
- */
-bool    ob_is_type_in( Object *o, ... );
 /*
  * Return the type name of the object.
  */
@@ -697,49 +741,31 @@ Node   *ob_get_method( Object *c, char *name, int argc = -1 );
  * Execute a class method.
  */
 Object *ob_call_method( engine_t *engine, vframe_t *frame, Object *owner, char *owner_id, char *method_id, Node *argv );
-/*
-* Special function to execute a class method.
-*/
-Object *ob_call_method( vm_t *vm, Object *c, char *c_name, char *method_name, Object *argv );
-/*
- * Special function to execute a __method class descriptor.
- */
-Object *ob_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *method_name, Node *argv );
-/*
- * Check if the object 'c' has the builtin method 'method_id' and return
- * a pointer to it, otherwise return NULL.
- */
-ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_id );
-
 /**
  * Types definition.
  */
 DECLARE_TYPE(Boolean);
 
-typedef struct _BooleanObject {
+typedef struct _Boolean {
     BASE_OBJECT_HEADER;
     bool value;
 
-    _BooleanObject( bool v ) : BASE_OBJECT_HEADER_INIT(Boolean), value(v) {
+    _Boolean( bool v ) : BASE_OBJECT_HEADER_INIT(Boolean), value(v) {
 
     }
 }
-BooleanObject;
-
-#define ob_is_boolean(o) ob_is_typeof(o,Boolean)
-#define ob_bool_ucast(o) ((BooleanObject *)(o))
-#define ob_bool_val(o)   (((BooleanObject *)(o))->value)
+Boolean;
 
 DECLARE_TYPE(Integer);
 
-typedef struct _IntegerObject {
+typedef struct _Integer {
     BASE_OBJECT_HEADER;
     long value;
 
-    _IntegerObject( long v ) : BASE_OBJECT_HEADER_INIT(Integer), value(v) {
+    _Integer( long v ) : BASE_OBJECT_HEADER_INIT(Integer), value(v) {
     }
 }
-IntegerObject;
+Integer;
 /*
  * Alias and Extern types, are basically Integers, but used as local function
  * pointer (the alias) and external (dynamically loaded dlls) functions
@@ -747,111 +773,84 @@ IntegerObject;
  */
 DECLARE_TYPE(Alias);
 
-typedef struct _AliasObject {
+typedef struct _Alias {
     BASE_OBJECT_HEADER;
     long value;
 
-    _AliasObject( long v ) : BASE_OBJECT_HEADER_INIT(Alias), value(v) {
+    _Alias( long v ) : BASE_OBJECT_HEADER_INIT(Alias), value(v) {
 
     }
 }
-AliasObject;
+Alias;
 
 DECLARE_TYPE(Extern);
 
-typedef struct _ExternObject {
+typedef struct _Extern {
     BASE_OBJECT_HEADER;
     long value;
 
-    _ExternObject( long v ) : BASE_OBJECT_HEADER_INIT(Extern), value(v) {
+    _Extern( long v ) : BASE_OBJECT_HEADER_INIT(Extern), value(v) {
 
     }
 }
-ExternObject;
-
-#define ob_is_int(o) 	   ob_is_typeof(o,Integer)
-#define ob_is_alias(o)     ob_is_typeof(o,Alias)
-#define ob_is_extern(o)    ob_is_typeof(o,Extern)
-#define ob_int_ucast(o)    (IntegerObject *)(o)
-#define ob_alias_ucast(o)  (AliasObject *)(o)
-#define ob_extern_ucast(o) (ExternObject *)(o)
-#define ob_int_val(o)      (((IntegerObject *)(o))->value)
-#define ob_alias_val(o)    (((AliasObject *)(o))->value)
-#define ob_extern_val(o)   (((ExternObject *)(o))->value)
-/*
- * A macro to cast any pointer into an Integer representing its address.
- */
-#define PTR_TO_INT_OBJ(p) gc_new_integer( H_ADDRESS_OF(p) )
+Extern;
 
 DECLARE_TYPE(Float);
 
-typedef struct _FloatObject {
+typedef struct _Float {
     BASE_OBJECT_HEADER;
     double value;
 
-    _FloatObject( double v ) : BASE_OBJECT_HEADER_INIT(Float), value(v) {
+    _Float( double v ) : BASE_OBJECT_HEADER_INIT(Float), value(v) {
 
     }
 }
-FloatObject;
-
-#define ob_is_float(o)    ob_is_typeof(o,Float)
-#define ob_float_ucast(o) ((FloatObject *)(o))
-#define ob_float_val(o)   (((FloatObject *)(o))->value)
+Float;
 
 DECLARE_TYPE(Char);
 
-typedef struct _CharObject {
+typedef struct _Char {
     BASE_OBJECT_HEADER;
     char value;
 
-    _CharObject( char v ) : BASE_OBJECT_HEADER_INIT(Char), value(v) {
+    _Char( char v ) : BASE_OBJECT_HEADER_INIT(Char), value(v) {
 
     }
 }
-CharObject;
-
-#define ob_is_char(o)    ob_is_typeof(o,Char)
-#define ob_char_ucast(o) ((CharObject *)(o))
-#define ob_char_val(o)   ((CharObject *)(o))->value
+Char;
 
 DECLARE_TYPE(String);
 
 size_t string_replace( string &source, const string find, string replace );
 void   string_parse_pcre( string& raw, string& regex, int& opts );
 
-typedef struct _StringObject {
+typedef struct _String {
     BASE_OBJECT_HEADER;
     size_t items;
     string value;
 
-    _StringObject( char *v ) : items(0), BASE_OBJECT_HEADER_INIT(String) {
+    _String( char *v ) : items(0), BASE_OBJECT_HEADER_INIT(String) {
     	value = v;
         items = value.size();
     }
 }
-StringObject;
-
-#define ob_is_string(o)    ob_is_typeof(o,String)
-#define ob_string_ucast(o) ((StringObject *)(o))
-#define ob_string_val(o)   ((StringObject *)(o))->value
-#define ob_lpcstr_val(o)   (ob_string_val(o).c_str())
+String;
 
 DECLARE_TYPE(Binary);
 
-typedef struct _BinaryObject {
+typedef struct _Binary {
     BASE_OBJECT_HEADER;
     size_t           items;
     vector<Object *> value;
 
-    _BinaryObject() : items(0), BASE_OBJECT_HEADER_INIT(Binary) {
+    _Binary() : items(0), BASE_OBJECT_HEADER_INIT(Binary) {
         // define to test space reservation optimization
         #ifdef RESERVED_VECTORS_SPACE
             value.reserve( RESERVE_VECTORS_SPACE );
         #endif
     }
 
-    _BinaryObject( vector<unsigned char>& data ) : items(0), BASE_OBJECT_HEADER_INIT(Binary) {
+    _Binary( vector<unsigned char>& data ) : items(0), BASE_OBJECT_HEADER_INIT(Binary) {
         // define to test space reservation optimization
         #ifdef RESERVED_VECTORS_SPACE
             value.reserve( RESERVE_VECTORS_SPACE );
@@ -862,46 +861,39 @@ typedef struct _BinaryObject {
         }
     }
 }
-BinaryObject;
+Binary;
 
-typedef vector<Object *>::iterator BinaryObjectIterator;
-
-#define ob_is_binary(o)    ob_is_typeof(o,Binary)
-#define ob_binary_ucast(o) ((BinaryObject *)(o))
+typedef vector<Object *>::iterator BinaryIterator;
 
 DECLARE_TYPE(Vector);
 
-typedef struct _VectorObject {
+typedef struct _Vector {
     BASE_OBJECT_HEADER;
     size_t           items;
     vector<Object *> value;
 
-    _VectorObject() : items(0), BASE_OBJECT_HEADER_INIT(Vector) {
+    _Vector() : items(0), BASE_OBJECT_HEADER_INIT(Vector) {
         // define to test space reservation optimization
         #ifdef RESERVED_VECTORS_SPACE
             value.reserve( RESERVE_VECTORS_SPACE );
         #endif
     }
 }
-VectorObject;
+Vector;
 
-typedef vector<Object *>::iterator VectorObjectIterator;
-
-#define ob_is_vector(o)    ob_is_typeof(o,Vector)
-#define ob_vector_ucast(o) ((VectorObject *)(o))
-#define ob_vector_val(o)   (((VectorObject *)(o)))
+typedef vector<Object *>::iterator VectorIterator;
 
 DECLARE_TYPE(Map);
 
 int map_find( Object *m, Object *key );
 
-typedef struct _MapObject {
+typedef struct _Map {
     BASE_OBJECT_HEADER;
     size_t           items;
     vector<Object *> keys;
     vector<Object *> values;
 
-    _MapObject() : items(0), BASE_OBJECT_HEADER_INIT(Map) {
+    _Map() : items(0), BASE_OBJECT_HEADER_INIT(Map) {
         // define to test space reservation optimization
         #ifdef RESERVED_VECTORS_SPACE
             keys.reserve( RESERVE_VECTORS_SPACE );
@@ -909,31 +901,24 @@ typedef struct _MapObject {
         #endif
     }
 }
-MapObject;
+Map;
 
-typedef vector<Object *>::iterator MapObjectIterator;
-
-#define ob_is_map(o)    ob_is_typeof(o,Map)
-#define ob_map_ucast(o) ((MapObject *)(o))
-#define ob_map_val(o)	(MapObject *)(o)
+typedef vector<Object *>::iterator MapIterator;
 
 DECLARE_TYPE(Structure);
 
-typedef struct _StructureObject {
+typedef struct _Structure {
     BASE_OBJECT_HEADER;
     size_t           items;
     ITree<Object>  s_attributes;
 
-    _StructureObject() : items(0), BASE_OBJECT_HEADER_INIT(Structure) {
+    _Structure() : items(0), BASE_OBJECT_HEADER_INIT(Structure) {
 
     }
 }
-StructureObject;
+Structure;
 
-typedef ITree<Object>::iterator StructureObjectAttributeIterator;
-
-#define ob_is_struct(o)    ob_is_typeof(o,Structure)
-#define ob_struct_ucast(o) ((StructureObject *)(o))
+typedef ITree<Object>::iterator StructureAttributeIterator;
 
 DECLARE_TYPE(Class);
 
@@ -953,11 +938,11 @@ typedef struct _class_attribute_t {
 
 	}
 
-	__force_inline void lock(){
+	INLINE void lock(){
 		if( is_static ){ pthread_mutex_lock(&mutex); }
 	}
 
-	__force_inline void unlock(){
+	INLINE void unlock(){
 		if( is_static ){ pthread_mutex_unlock(&mutex); }
 	}
 }
@@ -982,58 +967,703 @@ typedef struct _class_method_t {
 }
 class_method_t;
 
-typedef struct _ClassObject {
+typedef struct _Class {
     BASE_OBJECT_HEADER;
     string name;
 
     ITree<class_attribute_t> c_attributes;
     ITree<class_method_t>	 c_methods;
 
-    _ClassObject() : BASE_OBJECT_HEADER_INIT(Class) {
+    _Class() : BASE_OBJECT_HEADER_INIT(Class) {
 
     }
 }
-ClassObject;
+Class;
 
-typedef ITree<class_attribute_t>::iterator ClassObjectAttributeIterator;
-typedef ITree<class_method_t>::iterator	 ClassObjectMethodIterator;
-typedef vector<Node *>::iterator	 		 ClassObjectPrototypesIterator;
-
-#define ob_is_class(o)    ob_is_typeof(o,Class)
-#define ob_class_ucast(o) ((ClassObject *)(o))
-#define ob_class_val(o)   ((ClassObject *)o)
+typedef ITree<class_attribute_t>::iterator ClassAttributeIterator;
+typedef ITree<class_method_t>::iterator	   ClassMethodIterator;
+typedef vector<Node *>::iterator	 	   ClassPrototypesIterator;
 
 DECLARE_TYPE(Reference);
 
-typedef struct _ReferenceObject {
+typedef struct _Reference {
     BASE_OBJECT_HEADER;
     Object *value;
 
-    _ReferenceObject( Object *v ) : BASE_OBJECT_HEADER_INIT(Reference), value(v) {
+    _Reference( Object *v ) : BASE_OBJECT_HEADER_INIT(Reference), value(v) {
 
     }
 }
-ReferenceObject;
-
-#define ob_is_reference(o)  ob_is_typeof(o,Reference)
-#define ob_ref_ucast(o)     ((ReferenceObject *)(o))
-#define ob_reference_val(o) ((ReferenceObject *)o)
+Reference;
 
 DECLARE_TYPE(Handle);
 
-typedef struct _HandleObject {
+typedef struct _Handle {
     BASE_OBJECT_HEADER;
     void *value;
 
-    _HandleObject( void *v ) : BASE_OBJECT_HEADER_INIT(Handle), value(v) {
+    _Handle( void *v ) : BASE_OBJECT_HEADER_INIT(Handle), value(v) {
 
     }
 }
-HandleObject;
+Handle;
+/*
+ * Inline handlers implementation
+ */
+INLINE const char *ob_typename( Object * o ){
+	return (o->type->type_name ? o->type->type_name(o) : o->type->name);
+}
 
-#define ob_is_handle(o)     ob_is_typeof(o,Handle)
-#define ob_handle_ucast(o)  ((HandleObject *)(o))
-#define ob_handle_val(o)    ((HandleObject *)o)->value
+INLINE Object *ob_traverse( Object *o, int index ){
+	#ifdef GC_DEBUG
+		fprintf( stdout, "[GC DEBUG] Traversing object at %p, index %d.\n", o, index );
+	#endif
+	return (o->type->traverse ? o->type->traverse(o,index) : NULL);
+}
+
+INLINE Object* ob_clone( Object *o ){
+    /*
+	 * Every object has to implement its own clone.
+	 */
+	return o->type->clone(o);
+}
+
+INLINE bool ob_free( Object *o ){
+    if( o->type->free != NULL ){
+    	/*
+    	 * The free function is defined only for collection types or
+    	 * types that handles pointers anyway.
+    	 */
+        o->type->free(o);
+
+        return true;
+    }
+
+    return false;
+}
+
+INLINE size_t ob_get_size( Object *o ){
+	return (o->type->get_size ? o->type->get_size(o) : o->type->size);
+}
+
+INLINE byte * ob_serialize( Object *o, size_t size ){
+	if( o->type->serialize != NULL ){
+		return o->type->serialize(o,size);
+	}
+	hyb_error( H_ET_SYNTAX, "couldn't serialize '%s'", ob_typename(o) );
+}
+
+INLINE Object *ob_deserialize( Object *o, byte *buffer, size_t size ){
+	if( o->type->deserialize != NULL ){
+		return o->type->deserialize(o,buffer,size);
+	}
+	hyb_error( H_ET_SYNTAX, "couldn't deserialize '%s'", ob_typename(o) );
+}
+
+INLINE Object *ob_to_fd( Object *o, int fd, size_t size ){
+	if( o->type->to_fd != NULL ){
+		return o->type->to_fd(o,fd,size);
+	}
+	hyb_error( H_ET_SYNTAX, "couldn't write object '%s' to file descriptor", ob_typename(o) );
+}
+
+INLINE Object *ob_from_fd( Object *o, int fd, size_t size ){
+	if( o->type->from_fd != NULL ){
+		return o->type->from_fd(o,fd,size);
+	}
+	hyb_error( H_ET_SYNTAX, "couldn't read object '%s' from file descriptor", ob_typename(o) );
+}
+
+INLINE int ob_cmp( Object *o, Object * cmp ){
+    if( o->type->cmp != NULL ){
+        return o->type->cmp(o,cmp);
+    }
+    hyb_error( H_ET_SYNTAX, "couldn't compare '%s' object with '%s' object", ob_typename(o), ob_typename(cmp) );
+}
+
+INLINE long ob_ivalue( Object * o ){
+    if( ob_is_int(o) ){
+        return (ob_int_ucast(o))->value;
+    }
+    else if( o->type->ivalue != NULL ){
+        return o->type->ivalue(o);
+    }
+    else if( o->type->lvalue != NULL ){
+        return (long)o->type->lvalue(o);
+    }
+    else{
+        hyb_error( H_ET_SYNTAX, "couldn't get the integer value of type '%s'", ob_typename(o) );
+    }
+    return 0;
+}
+
+INLINE double ob_fvalue( Object *o ){
+    if( ob_is_float(o) ){
+        return ob_float_ucast(o)->value;
+    }
+    else if( o->type->fvalue != NULL ){
+        return o->type->fvalue(o);
+    }
+    else if( o->type->ivalue != NULL ){
+        return (double)o->type->ivalue(o);
+    }
+    else if( o->type->lvalue != NULL ){
+        return (double)o->type->lvalue(o);
+    }
+    else{
+        hyb_error( H_ET_SYNTAX, "couldn't get the float value of type '%s'", ob_typename(o) );
+    }
+    return 0.0;
+}
+
+INLINE bool ob_lvalue( Object *o ){
+    if( o->type->lvalue != NULL ){
+        return o->type->lvalue(o);
+    }
+    else{
+        hyb_error( H_ET_SYNTAX, "couldn't get the logical value of the object type '%s'", ob_typename(o) );
+    }
+}
+
+INLINE string ob_svalue( Object *o ){
+    if( o->type->svalue != NULL ){
+        return o->type->svalue(o);
+    }
+    else{
+        hyb_error( H_ET_SYNTAX, "couldn't get the string rapresentation of the object type '%s'", ob_typename(o) );
+    }
+}
+
+INLINE void ob_print( Object *o, int tabs /*= 0*/ ){
+    if( o->type->print != NULL ){
+        return o->type->print(o,tabs);
+    }
+    else{
+        hyb_error( H_ET_SYNTAX, "couldn't print the object type '%s'", ob_typename(o) );
+    }
+}
+
+INLINE void ob_input( Object *o ){
+    if( o->type->scanf != NULL ){
+        return o->type->scanf(o);
+    }
+    else{
+        hyb_error( H_ET_SYNTAX, "couldn't read the object type '%s' from stdin", ob_typename(o) );
+    }
+}
+
+INLINE Object *ob_to_string( Object *o ){
+	if( o->type->to_string != NULL ){
+		return o->type->to_string(o);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "couldn't convert object type '%s' to string", ob_typename(o) );
+	}
+}
+
+INLINE Object *ob_to_int( Object *o ){
+	if( o->type->to_int != NULL ){
+		return o->type->to_int(o);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "couldn't convert object type '%s' to int", ob_typename(o) );
+	}
+}
+
+INLINE Object *ob_range( Object *a, Object *b ){
+	if( a->type->range != NULL ){
+		return a->type->range(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '..' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_apply_regexp( Object *a, Object *b ){
+	if( a->type->regexp != NULL ){
+		return a->type->regexp(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '~=' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_assign( Object *a, Object *b ){
+	/*
+	 * Every object has to implement its own assign.
+     *
+	 * NOTE: If 'a' is already defined, the assign method will just replace
+	 * its value.
+	 */
+	return a->type->assign(a,b);
+}
+
+INLINE Object *ob_factorial( Object *o ){
+	if( o->type->factorial != NULL ){
+		return o->type->factorial(o);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '!' operator for object type '%s'", ob_typename(o) );
+	}
+}
+
+INLINE Object *ob_increment( Object *o ){
+	if( o->type->increment != NULL ){
+		return o->type->increment(o);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '++' operator for object type '%s'", ob_typename(o) );
+	}
+}
+
+INLINE Object *ob_decrement( Object *o ){
+	if( o->type->decrement != NULL ){
+		return o->type->decrement(o);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '--' operator for object type '%s'", ob_typename(o) );
+	}
+}
+
+INLINE Object *ob_uminus( Object *o ){
+	if( o->type->minus != NULL ){
+		return o->type->minus(o);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '-' operator for object type '%s'", ob_typename(o) );
+	}
+}
+
+INLINE Object *ob_add( Object *a, Object *b ){
+	if( a->type->add != NULL ){
+		return a->type->add(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '+' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_sub( Object *a, Object *b ){
+	if( a->type->sub != NULL ){
+		return a->type->sub(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '-' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_mul( Object *a, Object *b ){
+	if( a->type->mul != NULL ){
+		return a->type->mul(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '*' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_div( Object *a, Object *b ){
+	if( a->type->div != NULL ){
+		return a->type->div(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '/' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_mod( Object *a, Object *b ){
+	if( a->type->mod != NULL ){
+		return a->type->mod(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '%' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_inplace_add( Object *a, Object *b ){
+	if( a->type->inplace_add != NULL ){
+		return a->type->inplace_add(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '+=' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_inplace_sub( Object *a, Object *b ){
+	if( a->type->inplace_sub != NULL ){
+		return a->type->inplace_sub(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '-=' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_inplace_mul( Object *a, Object *b ){
+	if( a->type->inplace_mul != NULL ){
+		return a->type->inplace_mul(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '*=' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_inplace_div( Object *a, Object *b ){
+	if( a->type->inplace_div != NULL ){
+		return a->type->inplace_div(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '/=' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_inplace_mod( Object *a, Object *b ){
+	if( a->type->inplace_mod != NULL ){
+		return a->type->inplace_mod(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '%=' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_bw_and( Object *a, Object *b ){
+	if( a->type->bw_and != NULL ){
+		return a->type->bw_and(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '&' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_bw_or( Object *a, Object *b ){
+	if( a->type->bw_or != NULL ){
+		return a->type->bw_or(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '|' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_bw_not( Object *o ){
+	if( o->type->bw_not != NULL ){
+		return o->type->bw_not(o);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '~' operator for object type '%s'", ob_typename(o) );
+	}
+}
+
+INLINE Object *ob_bw_xor( Object *a, Object *b ){
+	if( a->type->bw_xor != NULL ){
+		return a->type->bw_xor(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '^' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_bw_lshift( Object *a, Object *b ){
+	if( a->type->bw_lshift != NULL ){
+		return a->type->bw_lshift(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '<<' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_bw_rshift( Object *a, Object *b ){
+	if( a->type->bw_rshift != NULL ){
+		return a->type->bw_rshift(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '>>' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_bw_inplace_and( Object *a, Object *b ){
+	if( a->type->bw_inplace_and != NULL ){
+		return a->type->bw_inplace_and(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '&=' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_bw_inplace_or( Object *a, Object *b ){
+	if( a->type->bw_inplace_or != NULL ){
+		return a->type->bw_inplace_or(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '|=' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_bw_inplace_xor( Object *a, Object *b ){
+	if( a->type->bw_inplace_xor != NULL ){
+		return a->type->bw_inplace_xor(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '^=' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_bw_inplace_lshift( Object *a, Object *b ){
+	if( a->type->bw_inplace_lshift != NULL ){
+		return a->type->bw_inplace_lshift(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '<<=' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_bw_inplace_rshift( Object *a, Object *b ){
+	if( a->type->bw_inplace_rshift != NULL ){
+		return a->type->bw_inplace_rshift(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '>>=' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_l_not( Object *o ){
+	if( o->type->l_not != NULL ){
+		return o->type->l_not(o);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '!' operator for object type '%s'", ob_typename(o) );
+	}
+}
+
+INLINE Object *ob_l_same( Object *a, Object *b ){
+	if( a->type->l_same != NULL ){
+		return a->type->l_same(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '==' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_l_diff( Object *a, Object *b ){
+	if( a->type->l_diff != NULL ){
+		return a->type->l_diff(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '!=' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_l_less( Object *a, Object *b ){
+	if( a->type->l_less != NULL ){
+		return a->type->l_less(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '<' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_l_greater( Object *a, Object *b ){
+	if( a->type->l_greater != NULL ){
+		return a->type->l_greater(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '>' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_l_less_or_same( Object *a, Object *b ){
+	if( a->type->l_less_or_same != NULL ){
+		return a->type->l_less_or_same(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '<=' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_l_greater_or_same( Object *a, Object *b ){
+	if( a->type->l_greater_or_same != NULL ){
+		return a->type->l_greater_or_same(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '>=' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_l_or( Object *a, Object *b ){
+	if( a->type->l_or != NULL ){
+		return a->type->l_or(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '||' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_l_and( Object *a, Object *b ){
+	if( a->type->l_and != NULL ){
+		return a->type->l_and(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "invalid '&&' operator for object type '%s'", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_cl_push( Object *a, Object *b ){
+	if( a->type->cl_push != NULL ){
+		return a->type->cl_push(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "'%s' not iterable or not editable object type", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_cl_push_reference( Object *a, Object *b ){
+	if( a->type->cl_push_reference != NULL ){
+		return a->type->cl_push_reference(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "'%s' not iterable or not editable object type", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_cl_pop( Object *o ){
+	if( o->type->cl_pop != NULL ){
+		Object *item = o->type->cl_pop(o);
+		return item;
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "'%s' not iterable or not editable object type", ob_typename(o) );
+	}
+}
+
+INLINE Object *ob_cl_remove( Object *a, Object *b ){
+	if( a->type->cl_remove != NULL ){
+		Object *item = a->type->cl_remove(a,b);
+		return item;
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "'%s' not iterable or not editable object type", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_cl_at( Object *a, Object *b ){
+	if( a->type->cl_at != NULL ){
+		return a->type->cl_at(a,b);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "'%s' not iterable object type", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_cl_set( Object *a, Object *b, Object *c ){
+    if( a->type->cl_set != NULL ){
+		return a->type->cl_set(a,b,c);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "'%s' not iterable or not editable object type", ob_typename(a) );
+	}
+}
+
+INLINE Object *ob_cl_set_reference( Object *a, Object *b, Object *c ){
+    if( a->type->cl_set_reference != NULL ){
+		return a->type->cl_set_reference(a,b,c);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "'%s' not iterable or not editable object type", ob_typename(a) );
+	}
+}
+
+INLINE void ob_define_attribute( Object *o, char *name, access_t a, bool is_static /*= false*/  ){
+	if( o->type->define_attribute != NULL ){
+		return o->type->define_attribute(o,name,a,is_static);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", ob_typename(o) );
+	}
+}
+
+INLINE access_t ob_attribute_access( Object *o, char * a ){
+	if( o->type->attribute_access != NULL ){
+		return o->type->attribute_access(o,a);
+	}
+	else{
+		return asPublic;
+	}
+}
+
+INLINE bool ob_attribute_is_static( Object *o, char *a ){
+	if( o->type->attribute_is_static != NULL ){
+		return o->type->attribute_is_static(o,a);
+	}
+	else{
+		return false;
+	}
+}
+
+INLINE void ob_set_attribute_access( Object *o, char *name, access_t a ){
+	if( o->type->set_attribute_access != NULL ){
+		return o->type->set_attribute_access(o,name,a);
+	}
+}
+
+INLINE void ob_add_attribute( Object *s, char *a ){
+    if( s->type->add_attribute != NULL ){
+		return s->type->add_attribute(s,a);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", ob_typename(s) );
+	}
+}
+
+INLINE Object *ob_get_attribute( Object *s, char *a, bool with_descriptor /*= true*/ ){
+    if( s->type->get_attribute != NULL ){
+		return s->type->get_attribute(s,a,with_descriptor);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", ob_typename(s) );
+	}
+}
+
+INLINE void ob_set_attribute( Object *s, char *a, Object *v ){
+    if( s->type->set_attribute != NULL ){
+		return s->type->set_attribute(s,a,v);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", ob_typename(s) );
+	}
+}
+
+INLINE void ob_set_attribute_reference( Object *s, char *a, Object *v ){
+    if( s->type->set_attribute_reference != NULL ){
+		return s->type->set_attribute_reference(s,a,v);
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a structure nor a class", ob_typename(s) );
+	}
+}
+
+INLINE void ob_define_method( Object *c, char *name, Node *code ){
+	if( c->type->define_method != NULL ){
+		c->type->define_method( c, name, code );
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a class", ob_typename(c) );
+	}
+}
+
+INLINE Node *ob_get_method( Object *c, char *name, int argc /*= -1*/ ){
+	if( c->type->get_method != NULL ){
+		return c->type->get_method( c, name, argc );
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a class", ob_typename(c) );
+	}
+}
+
+INLINE Object *ob_call_method( engine_t *engine, vframe_t *frame, Object *owner, char *owner_id, char *method_id, Node *argv ){
+	if( owner->type->call_method != NULL ){
+		return owner->type->call_method( engine, frame, owner, owner_id, method_id, argv );
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a class neither has builtin methods", ob_typename(owner) );
+	}
+}
 
 #endif
 

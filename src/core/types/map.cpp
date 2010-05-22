@@ -21,8 +21,25 @@
 #include "vm.h"
 
 /** helpers **/
+INLINE ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_id ){
+	size_t 				  i;
+	ob_builtin_methods_t *methods = c->type->builtin_methods;
+	/*
+	 * Builtin methods are supposed to be only a few, so a loop with a string
+	 * comparision is faster than an hashmap/asciitree initialization and
+	 * further search.
+	 */
+	for( i = 0; methods[i].method != NULL; ++i ){
+		if( methods[i].name == method_id ){
+			return methods[i].method;
+		}
+	}
+
+	return NULL;
+}
+
 int map_find( Object *m, Object *key ){
-    MapObject *mm = (MapObject *)m;
+    Map *mm = (Map *)m;
     size_t     i;
 
 	for( i = 0; i < mm->items; ++i ){
@@ -59,7 +76,7 @@ Object *__map_has( engine_t *engine, Object *me, vframe_t *data ){
 }
 
 Object *__map_keys( engine_t *engine, Object *me, vframe_t *data ){
-	MapObject *mme  = ob_map_ucast(me);
+	Map *mme  = ob_map_ucast(me);
 	Object    *keys = (Object *)gc_new_vector();
 	int		   i, sz( mme->keys.size() );
 
@@ -71,7 +88,7 @@ Object *__map_keys( engine_t *engine, Object *me, vframe_t *data ){
 }
 
 Object *__map_values( engine_t *engine, Object *me, vframe_t *data ){
-	MapObject *mme    = ob_map_ucast(me);
+	Map *mme    = ob_map_ucast(me);
 	Object    *values = (Object *)gc_new_vector();
 	int		   i, sz( mme->values.size() );
 
@@ -84,7 +101,7 @@ Object *__map_values( engine_t *engine, Object *me, vframe_t *data ){
 
 /** generic function pointers **/
 Object *map_traverse( Object *me, int index ){
-	MapObject *mme = (MapObject *)me;
+	Map *mme = (Map *)me;
 
 	if( index < mme->keys.size() ){
 		return mme->keys.at(index);
@@ -98,9 +115,9 @@ Object *map_traverse( Object *me, int index ){
 }
 
 Object *map_clone( Object *me ){
-    MapObjectIterator ki, vi;
-    MapObject *mclone = gc_new_map(),
-              *mme    = (MapObject *)me;
+    MapIterator ki, vi;
+    Map *mclone = gc_new_map(),
+              *mme    = (Map *)me;
     Object    *kclone,
               *vclone;
 
@@ -117,7 +134,7 @@ Object *map_clone( Object *me ){
 }
 
 void map_free( Object *me ){
-	MapObject *mme = (MapObject *)me;
+	Map *mme = (Map *)me;
 
     mme->keys.clear();
     mme->values.clear();
@@ -133,8 +150,8 @@ int map_cmp( Object *me, Object *cmp ){
         return 1;
     }
     else {
-        MapObject *mme  = (MapObject *)me,
-                  *mcmp = (MapObject *)cmp;
+        Map *mme  = (Map *)me,
+                  *mcmp = (Map *)cmp;
         size_t     mme_ksize( mme->keys.size() ),
                    mcmp_ksize( mcmp->keys.size() ),
                    mme_vsize( mme->values.size() ),
@@ -185,8 +202,8 @@ string map_svalue( Object *o ){
 }
 
 void map_print( Object *me, int tabs ){
-    MapObjectIterator ki, vi;
-    MapObject *mme = (MapObject *)me;
+    MapIterator ki, vi;
+    Map *mme = (Map *)me;
     Object    *kitem,
               *vitem;
     int        j;
@@ -224,11 +241,11 @@ Object *map_cl_pop( Object *me ){
     	return vm_raise_exception( "could not pop an element from an empty map" );
     }
 
-    Object *kitem = ((MapObject *)me)->keys[last_idx],
-           *vitem = ((MapObject *)me)->values[last_idx];
+    Object *kitem = ((Map *)me)->keys[last_idx],
+           *vitem = ((Map *)me)->values[last_idx];
 
-    ((MapObject *)me)->keys.pop_back();
-    ((MapObject *)me)->values.pop_back();
+    ((Map *)me)->keys.pop_back();
+    ((Map *)me)->values.pop_back();
 
     ob_map_ucast(me)->items--;
 
@@ -240,11 +257,11 @@ Object *map_cl_pop( Object *me ){
 Object *map_cl_remove( Object *me, Object *k ){
     int idx = map_find( me, k );
     if( idx != -1 ){
-        Object *kitem = ((MapObject *)me)->keys[idx],
-               *vitem = ((MapObject *)me)->values[idx];
+        Object *kitem = ((Map *)me)->keys[idx],
+               *vitem = ((Map *)me)->values[idx];
 
-		((MapObject *)me)->keys.erase( ((MapObject *)me)->keys.begin() + idx );
-		((MapObject *)me)->values.erase( ((MapObject *)me)->values.begin() + idx );
+		((Map *)me)->keys.erase( ((Map *)me)->keys.begin() + idx );
+		((Map *)me)->values.erase( ((Map *)me)->values.begin() + idx );
 
 		ob_map_ucast(me)->items--;
 
@@ -258,7 +275,7 @@ Object *map_cl_remove( Object *me, Object *k ){
 Object *map_cl_at( Object *me, Object *k ){
     int idx = map_find( me, k );
     if( idx != -1 ){
-        return ((MapObject *)me)->values[idx];
+        return ((Map *)me)->values[idx];
     }
     else{
     	return vm_raise_exception( "no mapped values for label '%s'", ob_svalue(k).c_str() );
@@ -269,14 +286,14 @@ Object *map_cl_at( Object *me, Object *k ){
 Object *map_cl_set_reference( Object *me, Object *k, Object *v ){
     int idx = map_find( me, k );
     if( idx != -1 ){
-        Object *item = ((MapObject *)me)->values[idx];
+        Object *item = ((Map *)me)->values[idx];
         ob_free(item);
 
-        ((MapObject *)me)->values[idx] = v;
+        ((Map *)me)->values[idx] = v;
     }
     else{
-        ((MapObject *)me)->keys.push_back( k );
-        ((MapObject *)me)->values.push_back( v );
+        ((Map *)me)->keys.push_back( k );
+        ((Map *)me)->values.push_back( v );
         ob_map_ucast(me)->items++;
     }
 

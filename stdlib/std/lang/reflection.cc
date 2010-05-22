@@ -84,7 +84,7 @@ HYBRIS_DEFINE_FUNCTION(hload){
 
 HYBRIS_DEFINE_FUNCTION(hvar_names){
 	unsigned int i;
-	VectorObject *array = gc_new_vector();
+	Vector *array = gc_new_vector();
 	for( i = 0; i < vm->vmem.size(); ++i ){
 		ob_cl_push_reference( ob_dcast(array), ob_dcast( gc_new_string(vm->vmem.label(i)) ) );
 	}
@@ -93,7 +93,7 @@ HYBRIS_DEFINE_FUNCTION(hvar_names){
 
 HYBRIS_DEFINE_FUNCTION(hvar_values){
 	unsigned int i;
-	VectorObject *array = gc_new_vector();
+	Vector *array = gc_new_vector();
 	for( i = 0; i < vm->vmem.size(); ++i ){
 		ob_cl_push( ob_dcast(array), vm->vmem.at(i) );
 	}
@@ -102,7 +102,7 @@ HYBRIS_DEFINE_FUNCTION(hvar_values){
 
 HYBRIS_DEFINE_FUNCTION(huser_functions){
 	unsigned int i;
-	VectorObject *array = gc_new_vector();
+	Vector *array = gc_new_vector();
 	for( i = 0; i < vm->vcode.size(); ++i ){
 		ob_cl_push_reference( ob_dcast(array), ob_dcast( gc_new_string(vm->vcode.label(i)) ) );
 	}
@@ -127,9 +127,9 @@ HYBRIS_DEFINE_FUNCTION(hdyn_functions){
 }
 
 HYBRIS_DEFINE_FUNCTION(hmethods){
-	ClassObject  *co = (ClassObject *)ob_argv(0);
+	Class  *co = (Class *)ob_argv(0);
 	Object 		 *vo = (Object *)gc_new_vector();
-	ClassObjectMethodIterator i;
+	ClassMethodIterator i;
 
 	for( i = co->c_methods.begin(); i != co->c_methods.end(); i++ ){
 		ob_cl_push_reference( vo, (Object *)gc_new_string( (*i)->label.c_str() ) );
@@ -155,8 +155,44 @@ HYBRIS_DEFINE_FUNCTION(hcall){
 
 HYBRIS_DEFINE_FUNCTION(hcall_method){
 	Object *classref   = ob_argv(0);
-	char   *methodname = (char *)((StringObject *)ob_argv(1))->value.c_str();
+	char   *classname  = (char *)ob_typename(classref),
+		   *methodname = (char *)((String *)ob_argv(1))->value.c_str();
+	Object *argv 	   = ob_argv(2);
 
-	return ob_call_method( vm, classref, (char *)ob_typename(classref), methodname, ob_argv(2) );
+	Node    *method = H_UNDEFINED;
+	vframe_t stack;
+	Object  *value  = H_UNDEFINED,
+			*result = H_UNDEFINED;
+	Integer index(0);
+	size_t j, argc( ob_get_size(argv) );
+
+	method = ob_get_method( classref, methodname, 2 );
+	if( method == H_UNDEFINED ){
+		hyb_error( H_ET_SYNTAX, "'%s' does not name a method neither an attribute of '%s'", methodname, classname );
+	}
+	stack.owner = string(classname) + "::" + methodname;
+	stack.insert( "me", classref );
+	for( ; (unsigned)index.value < argc; ++index.value ){
+		value = ob_cl_at( argv, (Object *)&index );
+		stack.insert( (char *)method->child(j)->value.m_identifier.c_str(), value  );
+	}
+
+	vm_add_frame( vm, &stack );
+
+	/* call the method */
+	result = engine_exec( vm->engine, &stack, method->callBody() );
+
+	vm_pop_frame( vm );
+
+	/*
+	 * Check for unhandled exceptions and put them on the root
+	 * memory frame.
+	 */
+	if( stack.state.is(Exception) ){
+		vm_frame( vm )->state.set( Exception, stack.state.value );
+	}
+
+	/* return method evaluation value */
+	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
 }
 

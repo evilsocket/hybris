@@ -32,16 +32,16 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 };
 
 
-__force_inline char a2i(char ch) {
+INLINE char a2i(char ch) {
 	return isdigit(ch) ? ch - '0' : tolower(ch) - 'a' + 10;
 }
 
-__force_inline char i2a(char code) {
+INLINE char i2a(char code) {
 	static char hex[] = "0123456789abcdef";
 	return hex[code & 15];
 }
 
-__force_inline bool is_base64(unsigned char c) {
+INLINE bool is_base64(unsigned char c) {
 	return (isalnum(c) || (c == '+') || (c == '/'));
 }
 

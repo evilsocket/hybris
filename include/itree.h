@@ -29,8 +29,8 @@
 #   define H_UNDEFINED          NULL
 #endif
 
-#ifndef __force_inline
-#	define __force_inline __inline__ __attribute__((always_inline))
+#ifndef INLINE
+#	define INLINE __inline__ __attribute__((always_inline))
 #endif
 
 #include <vector>
@@ -81,35 +81,35 @@ public  :
     typedef typename vector<map_pair *>::reverse_iterator       reverse_iterator;
     typedef typename vector<map_pair *>::const_reverse_iterator const_reverse_iterator;
 
-    __force_inline iterator begin(){
+    INLINE iterator begin(){
         return m_map.begin();
     }
 
-    __force_inline const_iterator begin() const {
+    INLINE const_iterator begin() const {
         return m_map.begin();
     }
 
-    __force_inline iterator end() {
+    INLINE iterator end() {
         return m_map.end();
     }
 
-    __force_inline const_iterator end() const {
+    INLINE const_iterator end() const {
         return m_map.end();
     }
 
-    __force_inline reverse_iterator rbegin(){
+    INLINE reverse_iterator rbegin(){
         return m_map.rbegin();
     }
 
-    __force_inline const_reverse_iterator rbegin() const {
+    INLINE const_reverse_iterator rbegin() const {
         return m_map.rbegin();
     }
 
-    __force_inline reverse_iterator rend() {
+    INLINE reverse_iterator rend() {
         return m_map.rend();
     }
 
-    __force_inline const_reverse_iterator rend() const {
+    INLINE const_reverse_iterator rend() const {
         return m_map.rend();
     }
 
@@ -117,15 +117,15 @@ public  :
     ~ITree();
 
     /* Get the number of items mapped here. f*/
-    __force_inline unsigned int size(){
+    INLINE unsigned int size(){
 		return m_elements;
 	}
     /* Get the value of the item at 'index' position */
-    __force_inline value_t *at( unsigned int index ){
+    INLINE value_t *at( unsigned int index ){
         return m_map[index]->value;
 	}
     /* Get the label of the item at 'index' position */
-    __force_inline const char * label( unsigned int index ){
+    INLINE const char * label( unsigned int index ){
 		return m_map[index]->label.c_str();
 	}
 	/* Insert the value if it's not already mapped, otherwise change the old reference to this. */

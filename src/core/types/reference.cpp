@@ -32,11 +32,11 @@ const char *ref_typename( Object *o ){
 }
 
 Object *ref_traverse( Object *me, int index ){
-	return (index > 0 ? NULL : ((ReferenceObject *)me)->value);
+	return (index > 0 ? NULL : ((Reference *)me)->value);
 }
 
 Object *ref_clone( Object *me ){
-	ReferenceObject *rme	= ob_ref_ucast(me),
+	Reference *rme	= ob_ref_ucast(me),
 					*rclone = gc_new_reference( rme->value );
 
     return (me = (Object *)(rclone));

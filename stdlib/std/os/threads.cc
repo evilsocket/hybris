@@ -124,7 +124,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create_argv){
 	gc_set_alive( ob_argv(0) );
 
 	for( i = 0; i < argc; ++i ){
-    	Object *item = ((VectorObject *)ob_argv(1))->value[i];
+    	Object *item = ((Vector *)ob_argv(1))->value[i];
 		/*
 		 * Make sure that the new stack is not garbage collected
 		 * before the engine_on_threaded_call is executed.

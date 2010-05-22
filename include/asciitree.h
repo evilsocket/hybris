@@ -47,8 +47,8 @@ ascii_tree_t;
 
 typedef ascii_tree_t ascii_item_t;
 
-#ifndef __force_inline
-#	define __force_inline __inline__ __attribute__((always_inline))
+#ifndef INLINE
+#	define INLINE __inline__ __attribute__((always_inline))
 #endif
 
 /*

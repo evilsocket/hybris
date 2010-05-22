@@ -194,7 +194,7 @@ HYBRIS_DEFINE_FUNCTION(hfile){
     return (Object *)( gc_new_string(buffer.c_str()) );
 }
 
-void readdir_recurse( char *root, char *dir, VectorObject *vector ){
+void readdir_recurse( char *root, char *dir, Vector *vector ){
     char 		   path[0xFF] = {0};
     DIR           *dirh;
     struct dirent *ent;
@@ -212,7 +212,7 @@ void readdir_recurse( char *root, char *dir, VectorObject *vector ){
     }
 
     while( (ent = readdir(dirh)) != NULL ){
-        MapObject *file = gc_new_map();
+        Map *file = gc_new_map();
         string name  = "";
         if( path[strlen(path) - 1] != '/' && ent->d_name[0] != '/' ){
 			name = string(path) + "/" + string(ent->d_name);
@@ -245,10 +245,10 @@ HYBRIS_DEFINE_FUNCTION(hreaddir){
     	return vm_raise_exception( "could not open directory '%s' for reading", string_argv(0).c_str() );
     }
 
-    VectorObject *files 	= gc_new_vector();
+    Vector *files 	= gc_new_vector();
 	bool          recursive = ( ob_argc() > 1 && ob_lvalue(ob_argv(1)) );
     while( (ent = readdir(dir)) != NULL ){
-    	MapObject *file = gc_new_map();
+    	Map *file = gc_new_map();
 
     	ob_cl_set_reference( (Object *)(file), (Object *)( gc_new_string("name") ), (Object *)( gc_new_string(ent->d_name) ) );
     	ob_cl_set_reference( (Object *)(file), (Object *)( gc_new_string("type") ), (Object *)( gc_new_integer(ent->d_type) ) );

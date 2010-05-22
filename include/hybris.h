@@ -31,8 +31,8 @@
  * Declared inside the object to optimize allocations
  * of the same object.
  */
-extern IntegerObject __default_return_value;
-extern IntegerObject __default_error_value;
+extern Integer __default_return_value;
+extern Integer __default_error_value;
 
 #define H_DEFAULT_RETURN (Object *)&__default_return_value
 #define H_DEFAULT_ERROR  (Object *)&__default_error_value

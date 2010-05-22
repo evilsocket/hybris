@@ -59,7 +59,7 @@ static void termios_h2c( Object *h_attr, struct termios *c_attr ){
 	c_attr->c_ispeed = ob_int_val( ob_get_attribute( h_attr, "c_ispeed") );
 	c_attr->c_ospeed = ob_int_val( ob_get_attribute( h_attr, "c_ospeed") );
 
-	BinaryObject *termios_c_cc = (BinaryObject *)ob_get_attribute( h_attr, "c_cc" );
+	Binary *termios_c_cc = (Binary *)ob_get_attribute( h_attr, "c_cc" );
 	for( int i = 0; i < NCCS; ++i ){
 		c_attr->c_cc[i] = ob_int_val( termios_c_cc->value[i] );
 	}
@@ -76,7 +76,7 @@ static void termios_c2h(  struct termios *c_attr, Object *h_attr ){
 
 	Object *termios_c_cc = ob_get_attribute( h_attr, "c_cc" );
 	for( int i = 0; i < NCCS; ++i ){
-		ob_cl_push_reference( termios_c_cc, (Object *)new CharObject( c_attr->c_cc[i] ) );
+		ob_cl_push_reference( termios_c_cc, (Object *)new Char( c_attr->c_cc[i] ) );
 	}
 }
 
@@ -96,11 +96,11 @@ extern "C" void hybris_module_init( vm_t * vm ){
 
     __termios_type = HYBRIS_DEFINE_STRUCTURE( vm, "termios", 8, termios_attributes );
 
-    Object *termios_c_cc   = (Object *)new BinaryObject(),
-		   *termios_c_line = (Object *)new CharObject(0x00);
+    Object *termios_c_cc   = (Object *)new Binary(),
+		   *termios_c_line = (Object *)new Char(0x00);
 
     for( int i = 0; i < NCCS; ++i ){
-    	ob_cl_push_reference( termios_c_cc, (Object *)new CharObject(0x00) );
+    	ob_cl_push_reference( termios_c_cc, (Object *)new Char(0x00) );
     }
 
     ob_set_attribute_reference( (Object *)__termios_type, "c_cc",   termios_c_cc );

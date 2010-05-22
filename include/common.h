@@ -30,8 +30,6 @@
 #include <unistd.h>
 #include <sstream>
 
-#include "types.h"
-
 #define MAX_STRING_SIZE 1024
 #define MAX_IDENT_SIZE  100
 

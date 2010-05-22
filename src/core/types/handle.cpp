@@ -20,7 +20,7 @@
 
 /** generic function pointers **/
 Object *handle_traverse( Object *me, int index ){
-	return (index > 0 ? NULL : (Object *)((HandleObject *)me)->value);
+	return (index > 0 ? NULL : (Object *)((Handle *)me)->value);
 }
 
 Object *handle_clone( Object *me ){
@@ -78,7 +78,7 @@ Object * handle_to_int( Object *me ){
 }
 
 Object *handle_assign( Object *me, Object *op ){
-	((HandleObject *)me)->value = NULL;
+	((Handle *)me)->value = NULL;
 
     Object *clone = ob_clone(op);
 

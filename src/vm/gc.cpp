@@ -27,19 +27,19 @@ static gc_t __gc;
 /*
  * Lock the gc mutex.
  */
-__force_inline void gc_lock(){
+INLINE void gc_lock(){
 	pthread_mutex_lock( &__gc.mutex );
 }
 /*
  * Unlock the gc mutex.
  */
-__force_inline void gc_unlock(){
+INLINE void gc_unlock(){
 	pthread_mutex_unlock( &__gc.mutex );
 }
 /*
  * Append 'item' to 'list'.
  */
-__force_inline void gc_pool_append( gc_list_t *list, gc_item_t *item ){
+INLINE void gc_pool_append( gc_list_t *list, gc_item_t *item ){
 	if( list->head == NULL ){
 		list->head = item;
 		item->prev = NULL;
@@ -58,7 +58,7 @@ __force_inline void gc_pool_append( gc_list_t *list, gc_item_t *item ){
 /*
  * Remove 'item' from 'list' and free the structure that holds it.
  */
-__force_inline void gc_pool_remove( gc_list_t *list, gc_item_t *item ) {
+INLINE void gc_pool_remove( gc_list_t *list, gc_item_t *item ) {
 	if( item->prev == NULL ){
 		list->head = item->next;
 	}
@@ -84,7 +84,7 @@ __force_inline void gc_pool_remove( gc_list_t *list, gc_item_t *item ) {
 /*
  * Move 'item' from 'src' list to 'dst' list.
  */
-__force_inline void gc_pool_migrate( gc_list_t *src, gc_list_t *dst, gc_item_t *item ) {
+INLINE void gc_pool_migrate( gc_list_t *src, gc_list_t *dst, gc_item_t *item ) {
 	if( item->prev == NULL ){
 		src->head = item->next;
 	}

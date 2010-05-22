@@ -27,6 +27,23 @@
 extern void hyb_error( H_ERROR_TYPE type, const char *format, ... );
 
 /** helpers **/
+INLINE ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_id ){
+	size_t 				  i;
+	ob_builtin_methods_t *methods = c->type->builtin_methods;
+	/*
+	 * Builtin methods are supposed to be only a few, so a loop with a string
+	 * comparision is faster than an hashmap/asciitree initialization and
+	 * further search.
+	 */
+	for( i = 0; methods[i].method != NULL; ++i ){
+		if( methods[i].name == method_id ){
+			return methods[i].method;
+		}
+	}
+
+	return NULL;
+}
+
 size_t string_replace( string &source, const string find, string replace ) {
     size_t j, count(0);
     for( ; (j = source.find( find )) != string::npos; count++ ){

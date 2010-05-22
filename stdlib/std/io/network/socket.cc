@@ -229,8 +229,8 @@ HYBRIS_DEFINE_FUNCTION(hgetsockname){
 		inet_ntop( AF_INET6, &s->sin6_addr, ipstr, INET6_ADDRSTRLEN );
 	}
 
-	ReferenceObject *raddress = (ReferenceObject *)ob_argv(1),
-					*rport	  = (ReferenceObject *)ob_argv(2);
+	Reference *raddress = (Reference *)ob_argv(1),
+					*rport	  = (Reference *)ob_argv(2);
 
 	ob_assign( (Object *)raddress, (Object *)gc_new_string(ipstr) );
 	ob_assign( (Object *)rport,    (Object *)gc_new_integer(port) );
@@ -266,8 +266,8 @@ HYBRIS_DEFINE_FUNCTION(hgetpeername){
 	    inet_ntop( AF_INET6, &s->sin6_addr, ipstr, INET6_ADDRSTRLEN );
 	}
 
-	ReferenceObject *raddress = (ReferenceObject *)ob_argv(1),
-					*rport	  = (ReferenceObject *)ob_argv(2);
+	Reference *raddress = (Reference *)ob_argv(1),
+					*rport	  = (Reference *)ob_argv(2);
 
 	ob_assign( (Object *)raddress, (Object *)gc_new_string(ipstr) );
 	ob_assign( (Object *)rport,    (Object *)gc_new_integer(port) );

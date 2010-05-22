@@ -24,13 +24,13 @@
 
 /** generic function pointers **/
 Object *binary_traverse( Object *me, int index ){
-	return (index >= ((BinaryObject *)me)->value.size() ? NULL : ((BinaryObject *)me)->value.at(index));
+	return (index >= ((Binary *)me)->value.size() ? NULL : ((Binary *)me)->value.at(index));
 }
 
 Object *binary_clone( Object *me ){
-    BinaryObjectIterator i;
-    BinaryObject *bclone = gc_new_binary(),
-                 *bme    = (BinaryObject *)me;
+    BinaryIterator i;
+    Binary *bclone = gc_new_binary(),
+                 *bme    = (Binary *)me;
 
     for( i = bme->value.begin(); i != bme->value.end(); i++ ){
         ob_cl_push_reference( (Object *)bclone, ob_clone( *i ) );
@@ -40,7 +40,7 @@ Object *binary_clone( Object *me ){
 }
 
 void binary_free( Object *me ){
-    BinaryObject *bme = (BinaryObject *)me;
+    Binary *bme = (Binary *)me;
 
     bme->items = 0;
     bme->value.clear();
@@ -53,7 +53,7 @@ size_t binary_get_size( Object *me ){
 byte *binary_serialize( Object *o, size_t size ){
 	size_t i, s   = (size > ob_get_size(o) ? ob_get_size(o) : size != 0 ? size : ob_get_size(o) );
 	byte  *buffer = new byte[s];
-	BinaryObject *bme = (BinaryObject *)o;
+	Binary *bme = (Binary *)o;
 
 	for( i = 0; i < s; ++i ){
 		buffer[i] = (byte)ob_ivalue( bme->value[i] );
@@ -80,8 +80,8 @@ int binary_cmp( Object *me, Object *cmp ){
         return 1;
     }
     else {
-        BinaryObject *bme  = (BinaryObject *)me,
-                     *bcmp = (BinaryObject *)cmp;
+        Binary *bme  = (Binary *)me,
+                     *bcmp = (Binary *)cmp;
         size_t        bme_size( bme->value.size() ),
                       bcmp_size( bcmp->value.size() );
 
@@ -126,8 +126,8 @@ string binary_svalue( Object *me ){
 }
 
 void binary_print( Object *me, int tabs ){
-    BinaryObjectIterator i;
-    BinaryObject *bme = (BinaryObject *)me;
+    BinaryIterator i;
+    Binary *bme = (Binary *)me;
     Object       *item;
     int           j;
 
@@ -137,7 +137,7 @@ void binary_print( Object *me, int tabs ){
     fprintf( stdout, "binary {\n" );
     for( i = bme->value.begin(); i != bme->value.end(); i++ ){
         item = *i;
-        fprintf( stdout, "%.2X", ((CharObject *)item)->value );
+        fprintf( stdout, "%.2X", ((Char *)item)->value );
     }
     for( j = 0; j < tabs; ++j ) fprintf( stdout, "\t" );
     fprintf( stdout, "\n}\n" );
@@ -162,11 +162,11 @@ Object *binary_cl_push_reference( Object *me, Object *o ){
     DECLARE_TYPE(Integer);
     DECLARE_TYPE(Float);
 
-    if( ob_is_type_in( o, &Char_Type, &Integer_Type, &Float_Type, NULL ) == false ){
+    if( ob_is_char(o) == false && ob_is_int(o) == false && ob_is_float(o) == false ){
         hyb_error( H_ET_SYNTAX, "binary type allows only char, int or float types in its subscript operator" );
     }
 
-    ((BinaryObject *)me)->value.push_back( o );
+    ((Binary *)me)->value.push_back( o );
     ob_binary_ucast(me)->items++;
 
     return me;
@@ -179,7 +179,7 @@ Object *binary_cl_at( Object *me, Object *i ){
     	return vm_raise_exception( "index out of bounds" );
     }
 
-    return ((BinaryObject *)me)->value[idx];
+    return ((Binary *)me)->value[idx];
 }
 
 Object *binary_cl_set( Object *me, Object *i, Object *v ){
@@ -197,15 +197,15 @@ Object *binary_cl_set_reference( Object *me, Object *i, Object *v ){
     DECLARE_TYPE(Integer);
     DECLARE_TYPE(Float);
 
-    if( ob_is_type_in( v, &Char_Type, &Integer_Type, &Float_Type, NULL ) == false ){
+    if( ob_is_char(v) == false && ob_is_int(v) == false && ob_is_float(v) == false ){
         hyb_error( H_ET_SYNTAX, "binary type allows only char, int or float types in its subscript operator" );
     }
 
-    Object *old = ((BinaryObject *)me)->value[idx];
+    Object *old = ((Binary *)me)->value[idx];
 
     ob_free(old);
 
-    ((BinaryObject *)me)->value[idx] = v;
+    ((Binary *)me)->value[idx] = v;
 
     return me;
 }

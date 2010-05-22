@@ -19,6 +19,9 @@
 #include "types.h"
 #include <math.h>
 
+Integer __default_return_value(0);
+Integer __default_error_value(-1);
+
 /** generic function pointers **/
 Object *int_clone( Object *me ){
     return (Object *)gc_new_integer( (ob_int_ucast(me))->value );

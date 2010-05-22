@@ -86,7 +86,7 @@ void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack,
 void 	  engine_prepare_stack( engine_t *engine, vframe_t &stack, string owner, Object *cobj, Node *ids, int argc, ... );
 void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, vmem_t *argv );
 void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, Node *argv );
-void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, ExternObject *fn_pointer, Node *argv );
+void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, Extern *fn_pointer, Node *argv );
 void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, Node *argv );
 void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, named_function_t *function, vframe_t &stack, string owner, Node *argv );
 void 	  engine_dismiss_stack( engine_t *engine, vframe_t &stack );

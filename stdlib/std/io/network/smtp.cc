@@ -138,7 +138,7 @@ string base64( unsigned char *data, unsigned int size ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hsmtp_send){
-	MapObject *login_map = NULL;
+	Map *login_map = NULL;
 	if( ob_argc() == 3 ) {
 		login_map = map_argv(2);
 	}
@@ -152,7 +152,7 @@ HYBRIS_DEFINE_FUNCTION(hsmtp_send){
            login_pass(""),
            buffer("");
     vector<string> receivers;
-	MapObject *headers = map_argv(1);
+	Map *headers = map_argv(1);
 
 	for( i = 0; i < headers->items ; ++i ){
 		string  name  = ob_string_val(headers->keys[i]);

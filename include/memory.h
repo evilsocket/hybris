@@ -57,29 +57,29 @@ typedef struct _vframe_state {
 
 	}
 
-	__force_inline void set( state_t s ){
+	INLINE void set( state_t s ){
 		mask |= s;
 	}
 
-	__force_inline void set( state_t s, Object *v ){
+	INLINE void set( state_t s, Object *v ){
 		mask |= s;
 		value = v;
 	}
 
-	__force_inline void unset( state_t s ){
+	INLINE void unset( state_t s ){
 		mask &= ~s;
 	}
 
-	__force_inline bool is( state_t s ){
+	INLINE bool is( state_t s ){
 		return (mask & s) == (unsigned)s;
 	}
 
-	__force_inline void assign( struct _vframe_state& s ){
+	INLINE void assign( struct _vframe_state& s ){
 		mask  = s.mask;
 		value = s.value;
 	}
 
-	__force_inline void reset(){
+	INLINE void reset(){
 		mask  = None;
 		value = NULL;
 	}
@@ -107,7 +107,7 @@ class MemorySegment : public ITree<Object> {
 
 		MemorySegment();
 
-		__force_inline Object *operator [] ( int index ){
+		INLINE Object *operator [] ( int index ){
 			return m_map[index]->value;
 		}
 
@@ -115,7 +115,7 @@ class MemorySegment : public ITree<Object> {
 		 * Return an object instance if defined as 'identifier',
 		 * otherwise return H_UNDEFINED (NULL).
 		 */
-        __force_inline Object *get( char *identifier ){
+        INLINE Object *get( char *identifier ){
         	return find(identifier);
         }
         /*
@@ -134,7 +134,7 @@ class MemorySegment : public ITree<Object> {
          * Unlikely ::add, this method will not clone the object, but just
          * define it and mark it as a constant value.
          */
-        __force_inline Object *addConstant( char *identifier, Object *object ){
+        INLINE Object *addConstant( char *identifier, Object *object ){
         	/*
         	 * Insert the object.
         	 */
@@ -155,7 +155,7 @@ class MemorySegment : public ITree<Object> {
          * 			builtin functions, so we do not care about reference overwriting
          * 			or issues like that.
          */
-        __force_inline Object *push( Object *value ){
+        INLINE Object *push( Object *value ){
         	char label[0xFF] = {0};
         	sprintf( label, "HANONYMOUSIDENTIFIER%d", m_elements );
         	return insert( label, value );
@@ -169,7 +169,7 @@ class MemorySegment : public ITree<Object> {
          * Inner objects will not be freed until the next gc_collect
          * is called.
          */
-        __force_inline void release(){
+        INLINE void release(){
         	clear();
         }
 };

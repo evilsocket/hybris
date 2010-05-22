@@ -21,13 +21,13 @@
 
 /** generic function pointers **/
 Object *struct_traverse( Object *me, int index ){
-	return (index >= ((StructureObject *)me)->s_attributes.size() ? NULL : ((StructureObject *)me)->s_attributes.at(index));
+	return (index >= ((Structure *)me)->s_attributes.size() ? NULL : ((Structure *)me)->s_attributes.at(index));
 }
 
 Object *struct_clone( Object *me ){
-    StructureObject *sclone = gc_new_struct(),
+    Structure *sclone = gc_new_struct(),
                     *sme    = ob_struct_ucast(me);
-    StructureObjectAttributeIterator ai;
+    StructureAttributeIterator ai;
 
     for( ai = sme->s_attributes.begin(); ai != sme->s_attributes.end(); ai++ ){
     	ob_set_attribute( (Object *)sclone, (char *)(*ai)->label.c_str(), (*ai)->value );
@@ -43,7 +43,7 @@ size_t struct_get_size( Object *me ){
 }
 
 void struct_free( Object *me ){
-    StructureObject *sme = ob_struct_ucast(me);
+    Structure *sme = ob_struct_ucast(me);
 
     sme->s_attributes.clear();
     sme->items = 0;
@@ -66,8 +66,8 @@ string struct_svalue( Object *me ){
 }
 
 void struct_print( Object *me, int tabs ){
-    StructureObject *sme = ob_struct_ucast(me);
-    StructureObjectAttributeIterator ai;
+    Structure *sme = ob_struct_ucast(me);
+    StructureAttributeIterator ai;
     int i;
 
     fprintf( stdout, "struct {\n" );
@@ -92,7 +92,7 @@ Object *struct_assign( Object *me, Object *op ){
 
 /** structure operators **/
 void struct_define_attribute( Object *me, char *name, access_t a, bool is_static /*= false*/ ){
-	StructureObject *sme = ob_struct_ucast(me);
+	Structure *sme = ob_struct_ucast(me);
 
 	sme->s_attributes.insert( name, (Object *)gc_new_integer(0) );
 	sme->items = sme->s_attributes.size();
@@ -103,12 +103,12 @@ void struct_add_attribute( Object *me, char *name ){
 }
 
 Object *struct_get_attribute( Object *me, char *name, bool with_descriptor ){
-    StructureObject *sme = ob_struct_ucast(me);
+    Structure *sme = ob_struct_ucast(me);
     return sme->s_attributes.find(name);
 }
 
 void struct_set_attribute_reference( Object *me, char *name, Object *value ){
-    StructureObject *sme = ob_struct_ucast(me);
+    Structure *sme = ob_struct_ucast(me);
     Object          *o;
 
     o = sme->s_attributes.find(name);

@@ -320,7 +320,7 @@ void 		vm_print_stack_trace( vm_t *vm, bool force = false );
 /*
  * Return current line number accordingly to the vm state.
  */
-__force_inline size_t vm_get_lineno( vm_t *vm ){
+INLINE size_t vm_get_lineno( vm_t *vm ){
 	/*
 	 * None state, no lines processed yet.
 	 */
@@ -350,7 +350,7 @@ __force_inline size_t vm_get_lineno( vm_t *vm ){
 /*
  * Add a thread to the threads pool.
  */
-__force_inline void vm_pool( vm_t *vm, pthread_t tid = 0 ){
+INLINE void vm_pool( vm_t *vm, pthread_t tid = 0 ){
 	tid = (tid == 0 ? pthread_self() : tid);
 	vm_mm_lock(vm);
 		vm->th_frames[tid] = new vm_scope_t;
@@ -359,7 +359,7 @@ __force_inline void vm_pool( vm_t *vm, pthread_t tid = 0 ){
 /*
  * Remove a thread from the threads pool.
  */
-__force_inline void vm_depool( vm_t *vm, pthread_t tid = 0 ){
+INLINE void vm_depool( vm_t *vm, pthread_t tid = 0 ){
 	tid = (tid == 0 ? pthread_self() : tid);
 	vm_mm_lock( vm );
 	vm_thread_scope_t::iterator i_scope = vm->th_frames.find(tid);
@@ -370,7 +370,7 @@ __force_inline void vm_depool( vm_t *vm, pthread_t tid = 0 ){
 	vm_mm_unlock( vm );
 }
 
-__force_inline vm_scope_t *vm_find_scope( vm_t *vm ){
+INLINE vm_scope_t *vm_find_scope( vm_t *vm ){
 	pthread_t tid = pthread_self();
 	/*
 	 * Main thread id, return main scope.
@@ -398,7 +398,7 @@ __force_inline vm_scope_t *vm_find_scope( vm_t *vm ){
 /*
  * Compute execution time and print it.
  */
-__force_inline void vm_timer( vm_t *vm, int start = 0 ){
+INLINE void vm_timer( vm_t *vm, int start = 0 ){
     if( vm->args.tm_timer ){
         /* first call */
         if( vm->args.tm_start == 0 && start ){
@@ -418,7 +418,7 @@ __force_inline void vm_timer( vm_t *vm, int start = 0 ){
  * loaded module and return its pointer.
  * Handle function pointer caching.
  */
-__force_inline named_function_t *vm_get_function( vm_t *vm, char *identifier ){
+INLINE named_function_t *vm_get_function( vm_t *vm, char *identifier ){
 	unsigned int i, j,
 				 ndyns( vm->modules.size() ),
 				 nfuncs;
@@ -455,8 +455,8 @@ __force_inline named_function_t *vm_get_function( vm_t *vm, char *identifier ){
 /*
  * Define a structure inside the vtypes member.
  */
-__force_inline Object * vm_define_structure( vm_t *vm, char *name, size_t nattrs, char *attributes[] ){
-   StructureObject *type = new StructureObject();
+INLINE Object * vm_define_structure( vm_t *vm, char *name, size_t nattrs, char *attributes[] ){
+   Structure *type = new Structure();
    size_t	        i;
 
    for( i = 0; i < nattrs; ++i ){
@@ -471,7 +471,7 @@ __force_inline Object * vm_define_structure( vm_t *vm, char *name, size_t nattrs
  * Same as before, but the structure or the class will be defined from an alreay
  * created object.
  */
-__force_inline void vm_define_type( vm_t *vm, char *name, Object *type ){
+INLINE void vm_define_type( vm_t *vm, char *name, Object *type ){
   /*
    * Prevent the structure or class definition from being deleted by the gc.
    */
@@ -480,13 +480,13 @@ __force_inline void vm_define_type( vm_t *vm, char *name, Object *type ){
 /*
  * Find the object pointer of a user defined type (i.e. structures or classes).
  */
-__force_inline Object * vm_get_type( vm_t *vm, char *name ){
+INLINE Object * vm_get_type( vm_t *vm, char *name ){
    return vm->vtypes.find(name);
 }
 /*
  * Compile a regular expression and put it in a global cache.
  */
-__force_inline pcre *vm_pcre_compile( vm_t *vm, string& pattern, int opts, const char **perror, int *poffset ){
+INLINE pcre *vm_pcre_compile( vm_t *vm, string& pattern, int opts, const char **perror, int *poffset ){
 	pcre *compiled;
 	/*
 	 * Is it cached ?

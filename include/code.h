@@ -32,7 +32,7 @@ class CodeSegment : public ITree<Node> {
         CodeSegment();
         ~CodeSegment();
 
-        __force_inline Node *get( char *identifier ){
+        INLINE Node *get( char *identifier ){
         	return find(identifier);
         }
 

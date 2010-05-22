@@ -32,7 +32,7 @@ engine_t *engine_init( vm_t* vm ){
 }
 
 
-__force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner,  Object *cobj, int argc, Node *prototype, Node *argv ){
+INLINE void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner,  Object *cobj, int argc, Node *prototype, Node *argv ){
 	int 	i, n_ids(prototype->children());
 	Object *value;
 
@@ -73,7 +73,7 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	vm_add_frame( engine->vm, &stack );
 }
 
-__force_inline void engine_prepare_stack( engine_t *engine, vframe_t &stack, string owner, Object *cobj, Node *ids, int argc, ... ){
+INLINE void engine_prepare_stack( engine_t *engine, vframe_t &stack, string owner, Object *cobj, Node *ids, int argc, ... ){
 	va_list ap;
 	int i, n_ids(ids->children());
 	Object *value;
@@ -105,7 +105,7 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t &stack, str
 	vm_add_frame( engine->vm, &stack );
 }
 
-__force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, vmem_t *argv ){
+INLINE void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, vmem_t *argv ){
 	int 	i, n_ids( ids.size() ), argc;
 	Object *value;
 
@@ -137,7 +137,7 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	vm_add_frame( engine->vm, &stack );
 }
 
-__force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, Node *argv ){
+INLINE void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, Node *argv ){
 	int 	i, n_ids( ids.size() ), argc;
 	Object *value;
 
@@ -175,7 +175,7 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	vm_add_frame( engine->vm, &stack );
 }
 
-__force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, ExternObject *fn_pointer, Node *argv ){
+INLINE void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, Extern *fn_pointer, Node *argv ){
 	int 	i, argc;
 	Object *value;
 
@@ -206,7 +206,7 @@ __force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vfra
 	vm_add_frame( engine->vm, &stack );
 }
 
-__force_inline void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, Node *argv ){
+INLINE void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, Node *argv ){
 	int 	i, argc;
 	Object *value;
 
@@ -330,11 +330,11 @@ void engine_prepare_stack( engine_t *engine, vframe_t *root, named_function_t *f
 	vm_add_frame( engine->vm, &stack );
 }
 
-__force_inline void engine_dismiss_stack( engine_t *engine, vframe_t &stack ){
+INLINE void engine_dismiss_stack( engine_t *engine, vframe_t &stack ){
 	vm_pop_frame( engine->vm );
 }
 
-__force_inline Node * engine_find_function( engine_t *engine, vframe_t *frame, Node *call ){
+INLINE Node * engine_find_function( engine_t *engine, vframe_t *frame, Node *call ){
     char *callname = (char *)call->value.m_call.c_str();
 
     /* search first in the code segment */
@@ -343,13 +343,13 @@ __force_inline Node * engine_find_function( engine_t *engine, vframe_t *frame, N
 		return function;
 	}
 	/* then search for a function alias */
-	AliasObject *alias = (AliasObject *)frame->get( callname );
+	Alias *alias = (Alias *)frame->get( callname );
 	if( alias != H_UNDEFINED && ob_is_alias(alias) ){
 		return (Node *)alias->value;
 	}
 	/* try to evaluate the call as an alias itself */
 	if( call->value.m_alias_call != NULL ){
-		alias = (AliasObject *)engine_exec( engine, frame, call->value.m_alias_call );
+		alias = (Alias *)engine_exec( engine, frame, call->value.m_alias_call );
 		if( ob_is_alias(alias) ){
 			return (Node *)alias->value;
 		}
@@ -634,7 +634,7 @@ Object *engine_exec( engine_t *engine, vframe_t *frame, Node *node ){
     return H_DEFAULT_RETURN;
 }
 
-__force_inline Object *engine_on_identifier( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_identifier( engine_t *engine, vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
     Node   *function   = H_UNDEFINED;
     char   *identifier = (char *)node->value.m_identifier.c_str();
@@ -694,7 +694,7 @@ __force_inline Object *engine_on_identifier( engine_t *engine, vframe_t *frame, 
 	}
 }
 
-__force_inline Object *engine_on_attribute_request( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_attribute_request( engine_t *engine, vframe_t *frame, Node *node ){
 	Object  *cobj      = H_UNDEFINED,
 		    *attribute = H_UNDEFINED;
 	char    *name,
@@ -739,7 +739,7 @@ __force_inline Object *engine_on_attribute_request( engine_t *engine, vframe_t *
 	return attribute;
 }
 
-__force_inline Object *engine_on_method_call( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_method_call( engine_t *engine, vframe_t *frame, Node *node ){
 	Object  *cobj   = H_UNDEFINED;
 	char    *name,
 			*owner_id;
@@ -752,7 +752,7 @@ __force_inline Object *engine_on_method_call( engine_t *engine, vframe_t *frame,
 	return ob_call_method( engine, frame, cobj, owner_id, name, member );
 }
 
-__force_inline Object *engine_on_constant( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_constant( engine_t *engine, vframe_t *frame, Node *node ){
 	/*
 	 * Constants are obviously not evaluated every time, just
 	 * the first time when the parser is traveling around the
@@ -766,7 +766,7 @@ __force_inline Object *engine_on_constant( engine_t *engine, vframe_t *frame, No
     return node->value.m_constant;
 }
 
-__force_inline Object *engine_on_function_declaration( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_function_declaration( engine_t *engine, vframe_t *frame, Node *node ){
     char *function_name = (char *)node->value.m_function.c_str();
 
     /* check for double definition */
@@ -782,7 +782,7 @@ __force_inline Object *engine_on_function_declaration( engine_t *engine, vframe_
     return H_UNDEFINED;
 }
 
-__force_inline Object *engine_on_structure_declaration( engine_t *engine, vframe_t *frame, Node * node ){
+INLINE Object *engine_on_structure_declaration( engine_t *engine, vframe_t *frame, Node * node ){
     int        i, attributes( node->children() );
     char      *structname = (char *)node->value.m_identifier.c_str();
 
@@ -791,7 +791,7 @@ __force_inline Object *engine_on_structure_declaration( engine_t *engine, vframe
 	}
 
 	/* structure prototypes are not garbage collected */
-    Object *s = (Object *)(new StructureObject());
+    Object *s = (Object *)(new Structure());
 
     for( i = 0; i < attributes; ++i ){
         ob_add_attribute( s, (char *)node->child(i)->value.m_identifier.c_str() );
@@ -805,7 +805,7 @@ __force_inline Object *engine_on_structure_declaration( engine_t *engine, vframe
     return H_UNDEFINED;
 }
 
-__force_inline Object *engine_on_class_declaration( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_class_declaration( engine_t *engine, vframe_t *frame, Node *node ){
 	int        i, members( node->children() );
 	char      *classname = (char *)node->value.m_identifier.c_str(),
 			  *attrname;
@@ -817,11 +817,11 @@ __force_inline Object *engine_on_class_declaration( engine_t *engine, vframe_t *
 	}
 
 	/* class prototypes are not garbage collected */
-	Object *c = (Object *)(new ClassObject());
+	Object *c = (Object *)(new Class());
 	/*
 	 * Set specific class name.
 	 */
-	((ClassObject *)c)->name = classname;
+	((Class *)c)->name = classname;
 
 	for( i = 0; i < members; ++i ){
 		/*
@@ -884,10 +884,10 @@ __force_inline Object *engine_on_class_declaration( engine_t *engine, vframe_t *
 				hyb_error( H_ET_SYNTAX, "couldn't extend from '%s' type", type->type->name );
 			}
 
-			ClassObject 			     *cobj = ob_class_ucast(type);
-			ClassObjectAttributeIterator  ai;
-			ClassObjectMethodIterator 	  mi;
-			ClassObjectPrototypesIterator pi;
+			Class 			     *cobj = ob_class_ucast(type);
+			ClassAttributeIterator  ai;
+			ClassMethodIterator 	  mi;
+			ClassPrototypesIterator pi;
 
 			for( ai = cobj->c_attributes.begin(); ai != cobj->c_attributes.end(); ai++ ){
 				attrname  = (char *)(*ai)->label.c_str();
@@ -917,7 +917,7 @@ __force_inline Object *engine_on_class_declaration( engine_t *engine, vframe_t *
 	vm_define_type( engine->vm, classname, c );
 }
 
-__force_inline Object *engine_on_builtin_function_call( engine_t *engine, vframe_t *frame, Node * call ){
+INLINE Object *engine_on_builtin_function_call( engine_t *engine, vframe_t *frame, Node * call ){
     char        *callname = (char *)call->value.m_call.c_str();
     named_function_t* function;
     vframe_t     stack;
@@ -1058,7 +1058,7 @@ Object *engine_on_threaded_call( engine_t *engine, Node *function, vframe_t *fra
 	return result;
 }
 
-__force_inline Object *engine_on_user_function_call( engine_t *engine, vframe_t *frame, Node *call ){
+INLINE Object *engine_on_user_function_call( engine_t *engine, vframe_t *frame, Node *call ){
     Node    *function = H_UNDEFINED;
     vframe_t stack;
     Object  *result   = H_UNDEFINED;
@@ -1120,7 +1120,7 @@ __force_inline Object *engine_on_user_function_call( engine_t *engine, vframe_t 
     return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
 }
 
-__force_inline Object *engine_on_new_operator( engine_t *engine, vframe_t *frame, Node *type ){
+INLINE Object *engine_on_new_operator( engine_t *engine, vframe_t *frame, Node *type ){
     char      *type_name = (char *)type->value.m_identifier.c_str();
     Object    *user_type = H_UNDEFINED,
               *newtype   = H_UNDEFINED,
@@ -1142,7 +1142,7 @@ __force_inline Object *engine_on_new_operator( engine_t *engine, vframe_t *frame
 	 * you can not set more attributes than the structure/class have.
 	 */
 	if( ob_is_struct(newtype) ){
-		StructureObject *stype = (StructureObject *)newtype;
+		Structure *stype = (Structure *)newtype;
 
 		if( children > stype->items ){
 			hyb_error( H_ET_SYNTAX, "structure '%s' has %d attributes, initialized with %d",
@@ -1160,7 +1160,7 @@ __force_inline Object *engine_on_new_operator( engine_t *engine, vframe_t *frame
 		/*
 		 * Set specific class type name.
 		 */
-		((ClassObject *)newtype)->name = type_name;
+		((Class *)newtype)->name = type_name;
 		/*
 		 * First of all, check if the user has declared an explicit
 		 * class constructor, in that case consider it instead of the
@@ -1229,7 +1229,7 @@ __force_inline Object *engine_on_new_operator( engine_t *engine, vframe_t *frame
     return newtype;
 }
 
-__force_inline Object *engine_on_dll_function_call( engine_t *engine, vframe_t *frame, Node *call ){
+INLINE Object *engine_on_dll_function_call( engine_t *engine, vframe_t *frame, Node *call ){
     char    *callname   = (char *)call->value.m_call.c_str();
     vframe_t stack;
     Object  *result     = H_UNDEFINED,
@@ -1248,7 +1248,7 @@ __force_inline Object *engine_on_dll_function_call( engine_t *engine, vframe_t *
         return H_UNDEFINED;
     }
 
-    engine_prepare_stack( engine, frame, stack, string(callname), (ExternObject *)fn_pointer, call );
+    engine_prepare_stack( engine, frame, stack, string(callname), (Extern *)fn_pointer, call );
 
     engine_check_frame_exit(frame);
 
@@ -1283,7 +1283,7 @@ Object *engine_on_function_call( engine_t *engine, vframe_t *frame, Node *call )
     return result;
 }
 
-__force_inline Object *engine_on_reference( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_reference( engine_t *engine, vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
     o = engine_exec( engine, frame, node->child(0) );
@@ -1291,7 +1291,7 @@ __force_inline Object *engine_on_reference( engine_t *engine, vframe_t *frame, N
     return (Object *)gc_new_reference(o);
 }
 
-__force_inline Object *engine_on_dollar( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_dollar( engine_t *engine, vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
     Node *function = H_UNDEFINED;
     string svalue;
@@ -1343,7 +1343,7 @@ __force_inline Object *engine_on_dollar( engine_t *engine, vframe_t *frame, Node
 	}
 }
 
-__force_inline Object *engine_on_return( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_return( engine_t *engine, vframe_t *frame, Node *node ){
 	/*
 	 * Set break and return state to make every loop and/or condition
 	 * statement to exit with this return value.
@@ -1355,7 +1355,7 @@ __force_inline Object *engine_on_return( engine_t *engine, vframe_t *frame, Node
     return frame->state.value;
 }
 
-__force_inline Object *engine_on_backtick( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_backtick( engine_t *engine, vframe_t *frame, Node *node ){
 	Object *cmd  = engine_exec( engine, frame, node->child(0) );
 	FILE   *pipe = popen( ob_svalue(cmd).c_str(), "r" );
 
@@ -1376,7 +1376,7 @@ __force_inline Object *engine_on_backtick( engine_t *engine, vframe_t *frame, No
 	return (Object *)gc_new_string( result.c_str() );
 }
 
-__force_inline Object *engine_on_vargs( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_vargs( engine_t *engine, vframe_t *frame, Node *node ){
 	Object *vargs = (Object *)gc_new_vector();
 	int i, argc( frame->size() );
 
@@ -1389,7 +1389,7 @@ __force_inline Object *engine_on_vargs( engine_t *engine, vframe_t *frame, Node 
 	return vargs;
 }
 
-__force_inline Object *engine_on_range( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_range( engine_t *engine, vframe_t *frame, Node *node ){
     Object *range = H_UNDEFINED,
            *from  = H_UNDEFINED,
            *to    = H_UNDEFINED;
@@ -1404,7 +1404,7 @@ __force_inline Object *engine_on_range( engine_t *engine, vframe_t *frame, Node 
 	return range;
 }
 
-__force_inline Object *engine_on_subscript_push( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_subscript_push( engine_t *engine, vframe_t *frame, Node *node ){
     Object *array  = H_UNDEFINED,
            *object = H_UNDEFINED,
            *res    = H_UNDEFINED;
@@ -1419,7 +1419,7 @@ __force_inline Object *engine_on_subscript_push( engine_t *engine, vframe_t *fra
 	return res;
 }
 
-__force_inline Object *engine_on_subscript_get( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_subscript_get( engine_t *engine, vframe_t *frame, Node *node ){
     Object *identifier = H_UNDEFINED,
            *array      = H_UNDEFINED,
            *index      = H_UNDEFINED,
@@ -1450,7 +1450,7 @@ __force_inline Object *engine_on_subscript_get( engine_t *engine, vframe_t *fram
 		return result;
 }
 
-__force_inline Object *engine_on_subscript_set( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_subscript_set( engine_t *engine, vframe_t *frame, Node *node ){
     Object *array  = H_UNDEFINED,
            *index  = H_UNDEFINED,
            *object = H_UNDEFINED;
@@ -1466,7 +1466,7 @@ __force_inline Object *engine_on_subscript_set( engine_t *engine, vframe_t *fram
    	return array;
 }
 
-__force_inline Object *engine_on_while( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_while( engine_t *engine, vframe_t *frame, Node *node ){
     Node   *condition,
 		   *body;
     Object *result  = H_UNDEFINED;
@@ -1489,7 +1489,7 @@ __force_inline Object *engine_on_while( engine_t *engine, vframe_t *frame, Node 
     return result;
 }
 
-__force_inline Object *engine_on_do( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_do( engine_t *engine, vframe_t *frame, Node *node ){
     Node *condition,
          *body;
 
@@ -1513,7 +1513,7 @@ __force_inline Object *engine_on_do( engine_t *engine, vframe_t *frame, Node *no
     return result;
 }
 
-__force_inline Object *engine_on_for( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_for( engine_t *engine, vframe_t *frame, Node *node ){
     Node   *condition,
            *increment,
 		   *body;
@@ -1545,13 +1545,13 @@ __force_inline Object *engine_on_for( engine_t *engine, vframe_t *frame, Node *n
     return result;
 }
 
-__force_inline Object *engine_on_foreach( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_foreach( engine_t *engine, vframe_t *frame, Node *node ){
     int     size;
     Node   *body;
     Object *v      = H_UNDEFINED,
            *result = H_UNDEFINED;
     char   *identifier;
-    IntegerObject index(0);
+    Integer index(0);
 
     identifier = (char *)node->child(0)->value.m_identifier.c_str();
     v          = engine_exec( engine, frame, node->child(1) );
@@ -1585,7 +1585,7 @@ __force_inline Object *engine_on_foreach( engine_t *engine, vframe_t *frame, Nod
     return result;
 }
 
-__force_inline Object *engine_on_foreach_mapping( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_foreach_mapping( engine_t *engine, vframe_t *frame, Node *node ){
     int     i, size;
     Node   *body;
     Object *map    = H_UNDEFINED,
@@ -1627,7 +1627,7 @@ __force_inline Object *engine_on_foreach_mapping( engine_t *engine, vframe_t *fr
     return result;
 }
 
-__force_inline Object *engine_on_unless( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_unless( engine_t *engine, vframe_t *frame, Node *node ){
 	Object *boolean = H_UNDEFINED,
 		   *result  = H_UNDEFINED;
 
@@ -1642,7 +1642,7 @@ __force_inline Object *engine_on_unless( engine_t *engine, vframe_t *frame, Node
 	return H_UNDEFINED;
 }
 
-__force_inline Object *engine_on_if( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_if( engine_t *engine, vframe_t *frame, Node *node ){
     Object *boolean = H_UNDEFINED,
            *result  = H_UNDEFINED;
 
@@ -1661,7 +1661,7 @@ __force_inline Object *engine_on_if( engine_t *engine, vframe_t *frame, Node *no
     return H_UNDEFINED;
 }
 
-__force_inline Object *engine_on_question( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_question( engine_t *engine, vframe_t *frame, Node *node ){
     Object *boolean = H_UNDEFINED,
            *result  = H_UNDEFINED;
 
@@ -1679,7 +1679,7 @@ __force_inline Object *engine_on_question( engine_t *engine, vframe_t *frame, No
     return result;
 }
 
-__force_inline Object *engine_on_switch( engine_t *engine, vframe_t *frame, Node *node){
+INLINE Object *engine_on_switch( engine_t *engine, vframe_t *frame, Node *node){
     Node   *case_node = H_UNDEFINED,
            *stmt_node = H_UNDEFINED;
     Object *target    = H_UNDEFINED,
@@ -1716,7 +1716,7 @@ __force_inline Object *engine_on_switch( engine_t *engine, vframe_t *frame, Node
     return result;
 }
 
-__force_inline Object *engine_on_explode( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_explode( engine_t *engine, vframe_t *frame, Node *node ){
 	Node   *expr  = H_UNDEFINED;
 	Object *value = H_UNDEFINED;
 
@@ -1738,7 +1738,7 @@ __force_inline Object *engine_on_explode( engine_t *engine, vframe_t *frame, Nod
 	 * Fill initializers until the iterable object ends, leave
 	 * the rest of them to <null>.
 	 */
-	IntegerObject index(0);
+	Integer index(0);
 	for( ; (unsigned)index.value < n_end; ++index.value ){
 		frame->add( (char *)node->child(index.value + 1)->value.m_identifier.c_str(), ob_cl_at( value, (Object *)&index ) );
 	}
@@ -1746,7 +1746,7 @@ __force_inline Object *engine_on_explode( engine_t *engine, vframe_t *frame, Nod
 	return value;
 }
 
-__force_inline Object *engine_on_throw( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_throw( engine_t *engine, vframe_t *frame, Node *node ){
 	Object *exception = H_UNDEFINED;
 
 	exception = engine_exec( engine, frame, node->child(0) );
@@ -1762,7 +1762,7 @@ __force_inline Object *engine_on_throw( engine_t *engine, vframe_t *frame, Node 
 	return exception;
 }
 
-__force_inline Object *engine_on_try_catch( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_try_catch( engine_t *engine, vframe_t *frame, Node *node ){
 	Node   *main_body    = node->value.m_try_block,
 		   *ex_ident     = node->value.m_exp_id,
 		   *catch_body   = node->value.m_catch_block,
@@ -1790,7 +1790,7 @@ __force_inline Object *engine_on_try_catch( engine_t *engine, vframe_t *frame, N
 	return H_DEFAULT_RETURN;
 }
 
-__force_inline Object *engine_on_eostmt( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_eostmt( engine_t *engine, vframe_t *frame, Node *node ){
     Object *res_1 = H_UNDEFINED,
            *res_2 = H_UNDEFINED;
 
@@ -1802,8 +1802,8 @@ __force_inline Object *engine_on_eostmt( engine_t *engine, vframe_t *frame, Node
     return res_2;
 }
 
-__force_inline Object *engine_on_array( engine_t *engine, vframe_t *frame, Node *node ){
-	VectorObject *v = gc_new_vector();
+INLINE Object *engine_on_array( engine_t *engine, vframe_t *frame, Node *node ){
+	Vector *v = gc_new_vector();
 	size_t i, items( node->children() );
 
 	for( i = 0; i < items; ++i ){
@@ -1813,8 +1813,8 @@ __force_inline Object *engine_on_array( engine_t *engine, vframe_t *frame, Node 
 	return (Object *)v;
 }
 
-__force_inline Object *engine_on_map( engine_t *engine, vframe_t *frame, Node *node ){
-	MapObject *m = gc_new_map();
+INLINE Object *engine_on_map( engine_t *engine, vframe_t *frame, Node *node ){
+	Map *m = gc_new_map();
 	size_t i, items( node->children() );
 
 	for( i = 0; i < items; i += 2 ){
@@ -1826,7 +1826,7 @@ __force_inline Object *engine_on_map( engine_t *engine, vframe_t *frame, Node *n
 	return (Object *)m;
 }
 
-__force_inline Object *engine_on_assign( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_assign( engine_t *engine, vframe_t *frame, Node *node ){
     Object *object = H_UNDEFINED,
            *value  = H_UNDEFINED;
     Node   *lexpr  = node->child(0);
@@ -1876,7 +1876,7 @@ __force_inline Object *engine_on_assign( engine_t *engine, vframe_t *frame, Node
     }
 }
 
-__force_inline Object *engine_on_uminus( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_uminus( engine_t *engine, vframe_t *frame, Node *node ){
     Object *o      = H_UNDEFINED,
            *result = H_UNDEFINED;
 
@@ -1889,7 +1889,7 @@ __force_inline Object *engine_on_uminus( engine_t *engine, vframe_t *frame, Node
     return result;
 }
 
-__force_inline Object *engine_on_regex( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_regex( engine_t *engine, vframe_t *frame, Node *node ){
     Object *o      = H_UNDEFINED,
            *regexp = H_UNDEFINED,
            *result = H_UNDEFINED;
@@ -1904,7 +1904,7 @@ __force_inline Object *engine_on_regex( engine_t *engine, vframe_t *frame, Node 
 	return result;
 }
 
-__force_inline Object *engine_on_add( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_add( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -1919,7 +1919,7 @@ __force_inline Object *engine_on_add( engine_t *engine, vframe_t *frame, Node *n
 	return c;
 }
 
-__force_inline Object *engine_on_inplace_add( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_inplace_add( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -1933,7 +1933,7 @@ __force_inline Object *engine_on_inplace_add( engine_t *engine, vframe_t *frame,
 	return a;
 }
 
-__force_inline Object *engine_on_sub( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_sub( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -1948,7 +1948,7 @@ __force_inline Object *engine_on_sub( engine_t *engine, vframe_t *frame, Node *n
 	return c;
 }
 
-__force_inline Object *engine_on_inplace_sub( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_inplace_sub( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -1962,7 +1962,7 @@ __force_inline Object *engine_on_inplace_sub( engine_t *engine, vframe_t *frame,
 	return a;
 }
 
-__force_inline Object *engine_on_mul( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_mul( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -1977,7 +1977,7 @@ __force_inline Object *engine_on_mul( engine_t *engine, vframe_t *frame, Node *n
 	return c;
 }
 
-__force_inline Object *engine_on_inplace_mul( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_inplace_mul( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -1991,7 +1991,7 @@ __force_inline Object *engine_on_inplace_mul( engine_t *engine, vframe_t *frame,
 	return a;
 }
 
-__force_inline Object *engine_on_div( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_div( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -2006,7 +2006,7 @@ __force_inline Object *engine_on_div( engine_t *engine, vframe_t *frame, Node *n
 	return c;
 }
 
-__force_inline Object *engine_on_inplace_div( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_inplace_div( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -2020,7 +2020,7 @@ __force_inline Object *engine_on_inplace_div( engine_t *engine, vframe_t *frame,
 	return a;
 }
 
-__force_inline Object *engine_on_mod( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_mod( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -2035,7 +2035,7 @@ __force_inline Object *engine_on_mod( engine_t *engine, vframe_t *frame, Node *n
 	return c;
 }
 
-__force_inline Object *engine_on_inplace_mod( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_inplace_mod( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -2049,7 +2049,7 @@ __force_inline Object *engine_on_inplace_mod( engine_t *engine, vframe_t *frame,
 	return a;
 }
 
-__force_inline Object *engine_on_inc( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_inc( engine_t *engine, vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
     o = engine_exec( engine, frame, node->child(0) );
@@ -2059,7 +2059,7 @@ __force_inline Object *engine_on_inc( engine_t *engine, vframe_t *frame, Node *n
 	return ob_increment(o);
 }
 
-__force_inline Object *engine_on_dec( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_dec( engine_t *engine, vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
 
     o = engine_exec( engine, frame, node->child(0) );
@@ -2069,7 +2069,7 @@ __force_inline Object *engine_on_dec( engine_t *engine, vframe_t *frame, Node *n
 	return ob_decrement(o);
 }
 
-__force_inline Object *engine_on_xor( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_xor( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -2084,7 +2084,7 @@ __force_inline Object *engine_on_xor( engine_t *engine, vframe_t *frame, Node *n
 	return c;
 }
 
-__force_inline Object *engine_on_inplace_xor( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_inplace_xor( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -2098,7 +2098,7 @@ __force_inline Object *engine_on_inplace_xor( engine_t *engine, vframe_t *frame,
 	return a;
 }
 
-__force_inline Object *engine_on_and( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_and( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -2113,7 +2113,7 @@ __force_inline Object *engine_on_and( engine_t *engine, vframe_t *frame, Node *n
 	return c;
 }
 
-__force_inline Object *engine_on_inplace_and( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_inplace_and( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -2127,7 +2127,7 @@ __force_inline Object *engine_on_inplace_and( engine_t *engine, vframe_t *frame,
 	return a;
 }
 
-__force_inline Object *engine_on_or( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_or( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -2142,7 +2142,7 @@ __force_inline Object *engine_on_or( engine_t *engine, vframe_t *frame, Node *no
 	return c;
 }
 
-__force_inline Object *engine_on_inplace_or( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_inplace_or( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -2156,7 +2156,7 @@ __force_inline Object *engine_on_inplace_or( engine_t *engine, vframe_t *frame, 
 	return a;
 }
 
-__force_inline Object *engine_on_shiftl( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_shiftl( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -2175,7 +2175,7 @@ __force_inline Object *engine_on_shiftl( engine_t *engine, vframe_t *frame, Node
 	return c;
 }
 
-__force_inline Object *engine_on_inplace_shiftl( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_inplace_shiftl( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -2189,7 +2189,7 @@ __force_inline Object *engine_on_inplace_shiftl( engine_t *engine, vframe_t *fra
 	return a;
 }
 
-__force_inline Object *engine_on_shiftr( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_shiftr( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -2204,7 +2204,7 @@ __force_inline Object *engine_on_shiftr( engine_t *engine, vframe_t *frame, Node
 	return c;
 }
 
-__force_inline Object *engine_on_inplace_shiftr( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_inplace_shiftr( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED;
 
@@ -2218,7 +2218,7 @@ __force_inline Object *engine_on_inplace_shiftr( engine_t *engine, vframe_t *fra
 	return a;
 }
 
-__force_inline Object *engine_on_fact( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_fact( engine_t *engine, vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED,
            *r = H_UNDEFINED;
 
@@ -2231,7 +2231,7 @@ __force_inline Object *engine_on_fact( engine_t *engine, vframe_t *frame, Node *
     return r;
 }
 
-__force_inline Object *engine_on_not( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_not( engine_t *engine, vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED,
            *r = H_UNDEFINED;
 
@@ -2244,7 +2244,7 @@ __force_inline Object *engine_on_not( engine_t *engine, vframe_t *frame, Node *n
    	return r;
 }
 
-__force_inline Object *engine_on_lnot( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_lnot( engine_t *engine, vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED,
            *r = H_UNDEFINED;
 
@@ -2257,7 +2257,7 @@ __force_inline Object *engine_on_lnot( engine_t *engine, vframe_t *frame, Node *
 	return r;
 }
 
-__force_inline Object *engine_on_less( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_less( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -2272,7 +2272,7 @@ __force_inline Object *engine_on_less( engine_t *engine, vframe_t *frame, Node *
 	return c;
 }
 
-__force_inline Object *engine_on_greater( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_greater( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -2287,7 +2287,7 @@ __force_inline Object *engine_on_greater( engine_t *engine, vframe_t *frame, Nod
 	return c;
 }
 
-__force_inline Object *engine_on_ge( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_ge( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -2302,7 +2302,7 @@ __force_inline Object *engine_on_ge( engine_t *engine, vframe_t *frame, Node *no
 	return c;
 }
 
-__force_inline Object *engine_on_le( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_le( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -2317,7 +2317,7 @@ __force_inline Object *engine_on_le( engine_t *engine, vframe_t *frame, Node *no
 	return c;
 }
 
-__force_inline Object *engine_on_ne( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_ne( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -2332,7 +2332,7 @@ __force_inline Object *engine_on_ne( engine_t *engine, vframe_t *frame, Node *no
 	return c;
 }
 
-__force_inline Object *engine_on_eq( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_eq( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -2347,7 +2347,7 @@ __force_inline Object *engine_on_eq( engine_t *engine, vframe_t *frame, Node *no
 	return c;
 }
 
-__force_inline Object *engine_on_land( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_land( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;
@@ -2362,7 +2362,7 @@ __force_inline Object *engine_on_land( engine_t *engine, vframe_t *frame, Node *
 	return c;
 }
 
-__force_inline Object *engine_on_lor( engine_t *engine, vframe_t *frame, Node *node ){
+INLINE Object *engine_on_lor( engine_t *engine, vframe_t *frame, Node *node ){
     Object *a = H_UNDEFINED,
            *b = H_UNDEFINED,
            *c = H_UNDEFINED;

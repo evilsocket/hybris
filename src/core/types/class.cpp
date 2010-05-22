@@ -23,6 +23,58 @@
 #include "vm.h"
 
 /*
+ * Special function to execute a __method class descriptor.
+ */
+Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *method_name, Node *argv ){
+	Node    *method = H_UNDEFINED;
+	vframe_t stack,
+			*frame;
+	Object  *value  = H_UNDEFINED,
+			*result = H_UNDEFINED;
+	size_t i, argc(argv->children());
+
+	method = ob_get_method( c, (char *)"__method", 2 );
+	if( method == H_UNDEFINED ){
+		return H_UNDEFINED;
+	}
+
+	frame = vm_frame(vm);
+
+	Vector *args = gc_new_vector();
+
+	stack.owner = string(c_name) + "::" + string("__method");
+
+	stack.insert( "me", c );
+	stack.add( "name", (Object *)gc_new_string(method_name) );
+	for( i = 0; i < argc; ++i ){
+		value = engine_exec( vm->engine, frame, argv->child(i) );
+
+		engine_check_frame_exit(frame);
+
+		ob_cl_push( (Object *)args, value );
+	}
+	stack.add( "argv", (Object *)args );
+
+	vm_add_frame( vm, &stack );
+
+	/* call the method */
+	result = engine_exec( vm->engine, &stack, method->callBody() );
+
+	vm_pop_frame( vm );
+
+	/*
+	 * Check for unhandled exceptions and put them on the root
+	 * memory frame.
+	 */
+	if( stack.state.is(Exception) ){
+		vm_frame( vm )->state.set( Exception, stack.state.value );
+	}
+
+	/* return method evaluation value */
+	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
+}
+
+/*
  * Call the operator 'op_name' of class 'me' with 'argc' arguments if overloaded,
  * otherwise print a syntax error.
  */
@@ -171,17 +223,17 @@ const char *class_typename( Object *o ){
 }
 
 Object *class_traverse( Object *me, int index ){
-	ClassObject       *cme  = (ClassObject *)me;
+	Class       *cme  = (Class *)me;
 	class_attribute_t *attr = (index >= cme->c_attributes.size() ? NULL : cme->c_attributes.at(index));
 	return (attr ? attr->value : NULL);
 }
 
 Object *class_clone( Object *me ){
-    ClassObject *cclone = gc_new_class(),
+    Class *cclone = gc_new_class(),
                 *cme    = ob_class_ucast(me);
-    ClassObjectAttributeIterator  ai;
-    ClassObjectMethodIterator     mi;
-    ClassObjectPrototypesIterator pi;
+    ClassAttributeIterator  ai;
+    ClassMethodIterator     mi;
+    ClassPrototypesIterator pi;
     prototypes_t 				  prototypes;
 
     for( ai = cme->c_attributes.begin(); ai != cme->c_attributes.end(); ai++ ){
@@ -230,10 +282,10 @@ size_t class_get_size( Object *me ){
 }
 
 void class_free( Object *me ){
-    ClassObjectAttributeIterator ai;
-    ClassObjectMethodIterator    mi;
-    ClassObjectPrototypesIterator pi;
-    ClassObject *cme = ob_class_ucast(me);
+    ClassAttributeIterator ai;
+    ClassMethodIterator    mi;
+    ClassPrototypesIterator pi;
+    Class *cme = ob_class_ucast(me);
     class_method_t *method;
     class_attribute_t *attribute;
 
@@ -472,13 +524,13 @@ Object *class_cl_set( Object *me, Object *index, Object *op ){
 
 /** class operators **/
 void class_define_attribute( Object *me, char *name, access_t access, bool is_static /*= false*/ ){
-	ClassObject *cme = ob_class_ucast(me);
+	Class *cme = ob_class_ucast(me);
 
 	cme->c_attributes.insert( name, new class_attribute_t( name, access, H_VOID_VALUE, is_static ) );
 }
 
 access_t class_attribute_access( Object *me, char *name ){
-	ClassObject *cme = ob_class_ucast(me);
+	Class *cme = ob_class_ucast(me);
 	class_attribute_t *attribute;
 
 	if( (attribute = cme->c_attributes.find(name)) != NULL ){
@@ -489,7 +541,7 @@ access_t class_attribute_access( Object *me, char *name ){
 }
 
 bool class_attribute_is_static( Object *me, char *name ){
-	ClassObject *cme = ob_class_ucast(me);
+	Class *cme = ob_class_ucast(me);
 	class_attribute_t *attribute;
 
 	if( (attribute = cme->c_attributes.find(name)) != NULL ){
@@ -500,7 +552,7 @@ bool class_attribute_is_static( Object *me, char *name ){
 }
 
 void class_set_attribute_access( Object *me, char *name, access_t access ){
-	ClassObject *cme = ob_class_ucast(me);
+	Class *cme = ob_class_ucast(me);
 	class_attribute_t *attribute;
 
 	if( (attribute = cme->c_attributes.find(name)) != NULL ){
@@ -513,7 +565,7 @@ void class_add_attribute( Object *me, char *name ){
 }
 
 Object *class_get_attribute( Object *me, char *name, bool with_descriptor /* = true */ ){
-    ClassObject *cme = ob_class_ucast(me);
+    Class *cme = ob_class_ucast(me);
     class_attribute_t *attribute;
 
     /*
@@ -538,7 +590,7 @@ Object *class_get_attribute( Object *me, char *name, bool with_descriptor /* = t
 }
 
 void class_set_attribute_reference( Object *me, char *name, Object *value ){
-    ClassObject *cme = ob_class_ucast(me);
+    Class *cme = ob_class_ucast(me);
     class_attribute_t *attribute;
 
 	if( (attribute = cme->c_attributes.find(name)) != NULL ){
@@ -566,7 +618,7 @@ void class_set_attribute( Object *me, char *name, Object *value ){
 }
 
 void class_define_method( Object *me, char *name, Node *code ){
-	ClassObject *cme = ob_class_ucast(me);
+	Class *cme = ob_class_ucast(me);
 	class_method_t *method;
 
 	/*
@@ -585,7 +637,7 @@ void class_define_method( Object *me, char *name, Node *code ){
 }
 
 Node *class_get_method( Object *me, char *name, int argc ){
-	ClassObject *cme = ob_class_ucast(me);
+	Class *cme = ob_class_ucast(me);
 	class_method_t *method;
 
 	if( method = cme->c_methods.find(name) ){
@@ -598,7 +650,7 @@ Node *class_get_method( Object *me, char *name, int argc ){
 		/*
 		 * Otherwise, find the best match.
 		 */
-		ClassObjectPrototypesIterator pi;
+		ClassPrototypesIterator pi;
 		Node *best_match = NULL;
 		int   best_match_argc, match_argc;
 
@@ -642,7 +694,7 @@ Object *class_call_method( engine_t *engine, vframe_t *frame, Object *me, char *
 		/*
 		 * Try to call the __method descriptor if it's overloaded.
 		 */
-		result = ob_call_undefined_method( engine->vm, me, me_id, method_id, argv );
+		result = class_call_undefined_method( engine->vm, me, me_id, method_id, argv );
 		if( result == H_UNDEFINED ){
 			hyb_error( H_ET_SYNTAX, "'%s' is not a method of object '%s'", method_id, ob_typename(me) );
 		}

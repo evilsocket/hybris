@@ -20,7 +20,7 @@
 /*
  * Find next link with 'ascii' byte.
  */
-__force_inline ascii_item_t *at_find_next_link( ascii_tree_t *at, char ascii ){
+INLINE ascii_item_t *at_find_next_link( ascii_tree_t *at, char ascii ){
 	int i, j, n_links(at->n_links), r_start(n_links - 1);
 
 	for( i = 0, j = r_start; i < n_links; ++i, --j ){

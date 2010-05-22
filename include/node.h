@@ -59,7 +59,7 @@ class  Node;
 
 class NodeList : public list<Node *> {
     public :
-        __force_inline void head( Node *a, Node *b ){
+        INLINE void head( Node *a, Node *b ){
             NodeList::iterator i;
 
             push_front(a);
@@ -68,16 +68,16 @@ class NodeList : public list<Node *> {
             insert( i, b );
         }
 
-        __force_inline void head( Node *a ){
+        INLINE void head( Node *a ){
             push_front(a);
         }
 
-        __force_inline void tail( Node *a, Node *b ){
+        INLINE void tail( Node *a, Node *b ){
             push_back(a);
             push_back(b);
         }
 
-        __force_inline void tail( Node *a ){
+        INLINE void tail( Node *a ){
             push_back(a);
         }
 };
@@ -129,27 +129,27 @@ public  :
 
     NodeValue value;
 
-    __force_inline H_NODE_TYPE type(){
+    INLINE H_NODE_TYPE type(){
         return m_type;
     }
 
-    __force_inline size_t lineno(){
+    INLINE size_t lineno(){
 		return m_lineno;
 	}
 
-    __force_inline unsigned int children(){
+    INLINE unsigned int children(){
         return size();
     }
 
-    __force_inline Node *child( unsigned int i ){
+    INLINE Node *child( unsigned int i ){
         return (*this)[i];
     }
 
-    __force_inline char *id(){
+    INLINE char *id(){
     	return (char *)value.m_identifier.c_str();
     }
 
-    __force_inline Node *callBody(){
+    INLINE Node *callBody(){
     	int i, sz( size() );
     	for( i = 0; i < sz; ++i ){
     		if( at(i)->type() != H_NT_IDENTIFIER ){
@@ -159,7 +159,7 @@ public  :
     	return NULL;
     }
 
-    __force_inline size_t callDefinedArgc(){
+    INLINE size_t callDefinedArgc(){
     	size_t argc(0), i, sz( size() );
 		for( i = 0; i < sz; ++i ){
 			if( at(i)->type() == H_NT_IDENTIFIER ){

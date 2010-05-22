@@ -54,7 +54,7 @@ Object *xml_traverse( xmlNode *node ){
 	if( node->type == XML_ELEMENT_NODE ){
 	    /* check for empty names (usually indentation) */
 		if( xml_isinvalid((char *)node->name) == 0 ){
-			MapObject *h_xmlAttributes = gc_new_map(),
+			Map *h_xmlAttributes = gc_new_map(),
 					  *h_xmlChildren   = gc_new_map();
 
             /* set node name */

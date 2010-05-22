@@ -21,6 +21,23 @@
 #include "vm.h"
 
 /** builtin methods **/
+INLINE ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_id ){
+	size_t 				  i;
+	ob_builtin_methods_t *methods = c->type->builtin_methods;
+	/*
+	 * Builtin methods are supposed to be only a few, so a loop with a string
+	 * comparision is faster than an hashmap/asciitree initialization and
+	 * further search.
+	 */
+	for( i = 0; methods[i].method != NULL; ++i ){
+		if( methods[i].name == method_id ){
+			return methods[i].method;
+		}
+	}
+
+	return NULL;
+}
+
 Object *__vector_size( engine_t *engine, Object *me, vframe_t *data ){
 	return (Object *)gc_new_integer( ob_vector_ucast(me)->items );
 }
@@ -44,7 +61,7 @@ Object *__vector_contains( engine_t *engine, Object *me, vframe_t *data ){
 
 	Object *array = me,
 		   *find  = ob_argv(0);
-	IntegerObject index(0);
+	Integer index(0);
 	int size( ob_get_size(array) );
 
 	for( ; index.value < size; ++index.value ){
@@ -75,12 +92,12 @@ Object *__vector_join( engine_t *engine, Object *me, vframe_t *data ){
 
 /** generic function pointers **/
 Object *vector_traverse( Object *me, int index ){
-	return ((unsigned)index >= ((VectorObject *)me)->items ? NULL : ((VectorObject *)me)->value.at(index));
+	return ((unsigned)index >= ((Vector *)me)->items ? NULL : ((Vector *)me)->value.at(index));
 }
 
 Object *vector_clone( Object *me ){
-    VectorObjectIterator i;
-    VectorObject *vclone = gc_new_vector(),
+    VectorIterator i;
+    Vector *vclone = gc_new_vector(),
                  *vme    = ob_vector_ucast(me);
 
     for( i = vme->value.begin(); i != vme->value.end(); i++ ){
@@ -91,7 +108,7 @@ Object *vector_clone( Object *me ){
 }
 
 void vector_free( Object *me ){
-    VectorObject *vme = ob_vector_ucast(me);
+    Vector *vme = ob_vector_ucast(me);
 
     vme->items = 0;
     vme->value.clear();
@@ -117,7 +134,7 @@ int vector_cmp( Object *me, Object *cmp ){
         return 1;
     }
     else {
-        VectorObject *vme  = ob_vector_ucast(me),
+        Vector *vme  = ob_vector_ucast(me),
                      *vcmp = ob_vector_ucast(cmp);
         size_t        vme_size( vme->value.size() ),
                       vcmp_size( vcmp->value.size() );
@@ -163,8 +180,8 @@ string vector_svalue( Object *o ){
 }
 
 void vector_print( Object *me, int tabs ){
-    VectorObjectIterator i;
-    VectorObject *vme = ob_vector_ucast(me);
+    VectorIterator i;
+    Vector *vme = ob_vector_ucast(me);
     Object       *item;
     int           j;
 

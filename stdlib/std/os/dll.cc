@@ -161,7 +161,7 @@ HYBRIS_DEFINE_FUNCTION(hdllcall){
 HYBRIS_DEFINE_FUNCTION(hdllcall_argv){
     vframe_t stack;
     int size( ob_get_size( ob_argv(1) ) );
-    IntegerObject index(0);
+    Integer index(0);
 
     stack.push( ob_argv(0) );
     for( ; index.value < size; ++index.value ){

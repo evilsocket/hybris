@@ -115,7 +115,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 	if( ob_argc() >= 4 ){
 		unsigned int i;
 		string header;
-		MapObject *headers = map_argv(3);
+		Map *headers = map_argv(3);
 
 		for( i = 0; i < headers->items; ++i ){
 			string name  = ob_svalue( headers->keys[i] ),
@@ -138,7 +138,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 		return ob_dcast( gc_new_string(buffer.c_str()) );
 	}
 	else{
-		VectorObject *array = gc_new_vector();
+		Vector *array = gc_new_vector();
 
 		ob_cl_push_reference( ob_dcast(array), ob_dcast( gc_new_string(hbuffer.c_str() ) ) );
 		ob_cl_push_reference( ob_dcast(array), ob_dcast( gc_new_string(buffer.c_str() ) ) );
@@ -153,7 +153,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 	struct curl_httppost *formpost=NULL;
 	struct curl_httppost *lastptr=NULL;
 	struct curl_slist    *headerlist = NULL;
-	MapObject *post = map_argv(2);
+	Map *post = map_argv(2);
 	string hbuffer,
 		   buffer,
 		   host = string_argv(0),
@@ -193,7 +193,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 
 	if( ob_argc() >= 5 ){
 		string header;
-		MapObject *headers = map_argv(4);
+		Map *headers = map_argv(4);
 
 		for( i = 0; i < headers->items; i++ ){
 			string name  = ob_svalue(headers->keys[i]),
@@ -230,7 +230,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 		return ob_dcast( gc_new_string(buffer.c_str()) );
 	}
 	else{
-		VectorObject *array = gc_new_vector();
+		Vector *array = gc_new_vector();
 
 		ob_cl_push_reference( ob_dcast(array), ob_dcast( gc_new_string(hbuffer.c_str() ) ) );
 		ob_cl_push_reference( ob_dcast(array), ob_dcast( gc_new_string(buffer.c_str() ) ) );
