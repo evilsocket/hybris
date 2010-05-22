@@ -74,10 +74,6 @@ Object *__vector_join( engine_t *engine, Object *me, vframe_t *data ){
 }
 
 /** generic function pointers **/
-const char *vector_typename( Object *o ){
-	return o->type->name;
-}
-
 Object *vector_traverse( Object *me, int index ){
 	return ((unsigned)index >= ((VectorObject *)me)->value.size() ? NULL : ((VectorObject *)me)->value.at(index));
 }
@@ -324,7 +320,7 @@ IMPLEMENT_TYPE(Vector) {
     },
 
 	/** generic function pointers **/
-    vector_typename, // type_name
+    0, // type_name
     vector_traverse, // traverse
 	vector_clone, // clone
 	vector_free, // free

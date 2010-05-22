@@ -20,20 +20,8 @@
 #include <math.h>
 
 /** generic function pointers **/
-const char *float_typename( Object *o ){
-	return o->type->name;
-}
-
-Object *float_traverse( Object *me, int index ){
-	return NULL;
-}
-
 Object *float_clone( Object *me ){
     return (Object *)gc_new_float( ob_float_ucast(me)->value );
-}
-
-size_t float_get_size( Object *me ){
-	return sizeof(double);
 }
 
 byte *float_serialize( Object *o, size_t size ){
@@ -387,11 +375,11 @@ IMPLEMENT_TYPE(Float) {
     { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
-    float_typename, // type_name
-    float_traverse, // traverse
+    0, // type_name
+    0, // traverse
 	float_clone, // clone
 	0, // free
-	float_get_size, // get_size
+	0, // get_size
 	float_serialize, // serialize
 	float_deserialize, // deserialize
 	float_to_fd, // to_fd

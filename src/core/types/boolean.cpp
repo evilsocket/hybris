@@ -19,20 +19,8 @@
 #include "types.h"
 
 /** generic function pointers **/
-const char *bool_typename( Object *o ){
-	return o->type->name;
-}
-
-Object *bool_traverse( Object *me, int index ){
-	return NULL;
-}
-
 Object *bool_clone( Object *me ){
     return (Object *)gc_new_boolean( ob_bool_ucast(me)->value );
-}
-
-size_t bool_get_size( Object *me ){
-	return sizeof(bool);
 }
 
 byte *bool_serialize( Object *o, size_t size ){
@@ -199,11 +187,11 @@ IMPLEMENT_TYPE(Boolean) {
     { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
-    bool_typename, // type_name
-    bool_traverse, // traverse
+    0, // type_name
+    0, // traverse
 	bool_clone, // clone
 	0, // free
-	bool_get_size, // get_size
+	0, // get_size
 	bool_serialize, // serialize
 	bool_deserialize, // deserialize
 	bool_to_fd, // to_fd

@@ -19,20 +19,12 @@
 #include "types.h"
 
 /** generic function pointers **/
-const char *handle_typename( Object *o ){
-	return o->type->name;
-}
-
 Object *handle_traverse( Object *me, int index ){
 	return (index > 0 ? NULL : (Object *)((HandleObject *)me)->value);
 }
 
 Object *handle_clone( Object *me ){
     return (Object *)gc_new_handle( ob_handle_ucast(me)->value );
-}
-
-size_t handle_get_size( Object *me ){
-	return sizeof(void *);
 }
 
 int handle_cmp( Object *me, Object *cmp ){
@@ -157,11 +149,11 @@ IMPLEMENT_TYPE(Handle) {
     { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
-    handle_typename, // type_name
+    0, // type_name
     handle_traverse, // traverse
 	handle_clone, // clone
 	0, // free
-	handle_get_size, // get_size
+	0, // get_size
 	0, // serialize
 	0, // deserialize
 	0, // to_fd

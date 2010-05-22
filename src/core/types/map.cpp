@@ -83,10 +83,6 @@ Object *__map_values( engine_t *engine, Object *me, vframe_t *data ){
 }
 
 /** generic function pointers **/
-const char *map_typename( Object *o ){
-	return o->type->name;
-}
-
 Object *map_traverse( Object *me, int index ){
 	MapObject *mme = (MapObject *)me;
 
@@ -348,7 +344,7 @@ IMPLEMENT_TYPE(Map) {
     },
 
 	/** generic function pointers **/
-    map_typename, // type_name
+    0, // type_name
     map_traverse, // traverse
 	map_clone, // clone
 	map_free, // free

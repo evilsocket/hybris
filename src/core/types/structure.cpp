@@ -20,10 +20,6 @@
 #include "types.h"
 
 /** generic function pointers **/
-const char *struct_typename( Object *o ){
-	return o->type->name;
-}
-
 Object *struct_traverse( Object *me, int index ){
 	return (index >= ((StructureObject *)me)->s_attributes.size() ? NULL : ((StructureObject *)me)->s_attributes.at(index));
 }
@@ -140,7 +136,7 @@ IMPLEMENT_TYPE(Structure) {
     { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
-    struct_typename, // type_name
+    0, // type_name
     struct_traverse, // traverse
 	struct_clone, // clone
 	struct_free, // free

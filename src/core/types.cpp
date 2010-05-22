@@ -47,19 +47,11 @@ bool ob_is_type_in( Object *o, ... ){
 }
 
 const char *ob_typename( Object * o ){
-	if( o->type->type_name != HYB_UNIMPLEMENTED_FUNCTION ){
-		return o->type->type_name(o);
-	}
-	else{
-		return "NULL";
-	}
+	return (o->type->type_name ? o->type->type_name(o) : o->type->name);
 }
 
 Object *ob_traverse( Object *o, int index ){
-	/*
-	 * Every object has to implement its own traverse.
-	 */
-	return o->type->traverse(o,index);
+	return (o->type->traverse ? o->type->traverse(o,index) : NULL);
 }
 
 Object* ob_clone( Object *o ){
@@ -84,10 +76,7 @@ bool ob_free( Object *o ){
 }
 
 size_t ob_get_size( Object *o ){
-	/*
-	 * Every object has to implement its own get_size.
-	 */
-	return o->type->get_size(o);
+	return (o->type->get_size ? o->type->get_size(o) : o->type->size);
 }
 
 byte * ob_serialize( Object *o, size_t size ){

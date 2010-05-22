@@ -20,22 +20,6 @@
 #include <math.h>
 
 /** generic function pointers **/
-const char *int_typename( Object *o ){
-	return o->type->name;
-}
-
-Object *int_traverse( Object *me, int index ){
-	return NULL;
-}
-
-const char *alias_typename( Object *o ){
-	return o->type->name;
-}
-
-const char *extern_typename( Object *o ){
-	return o->type->name;
-}
-
 Object *int_clone( Object *me ){
     return (Object *)gc_new_integer( (ob_int_ucast(me))->value );
 }
@@ -46,10 +30,6 @@ Object *alias_clone( Object *me ){
 
 Object *extern_clone( Object *me ){
     return (Object *)gc_new_extern( (ob_int_ucast(me))->value );
-}
-
-size_t int_get_size( Object *me ){
-	return sizeof(long);
 }
 
 byte *int_serialize( Object *o, size_t size ){
@@ -448,11 +428,11 @@ IMPLEMENT_TYPE(Integer) {
     { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
-    int_typename, // type_name
-    int_traverse, // traverse
+    0, // type_name
+    0, // traverse
 	int_clone, // clone
 	0, // free
-	int_get_size, // get_size
+	0, // get_size
 	int_serialize, // serialize
 	int_deserialize, // deserialize
 	int_to_fd, // to_fd
@@ -542,11 +522,11 @@ IMPLEMENT_TYPE(Alias) {
     { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
-    alias_typename, // type_name
-    int_traverse, // traverse
+    0, // type_name
+    0, // traverse
 	alias_clone, // clone
 	0, // free
-	int_get_size, // get_size
+	0, // get_size
 	int_serialize, // serialize
 	int_deserialize, // deserialize
 	0, // to_fd
@@ -636,11 +616,11 @@ IMPLEMENT_TYPE(Extern) {
     { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
-    extern_typename, // type_name
-    int_traverse, // traverse
+    0, // type_name
+    0, // traverse
 	extern_clone, // clone
 	0, // free
-	int_get_size, // get_size
+	0, // get_size
 	int_serialize, // serialize
 	int_deserialize, // deserialize
 	0, // to_fd

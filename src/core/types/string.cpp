@@ -127,14 +127,6 @@ Object *__string_trim( engine_t *engine, Object *me, vframe_t *data ){
 }
 
 /** generic function pointers **/
-const char *string_typename( Object *o ){
-	return o->type->name;
-}
-
-Object *string_traverse( Object *me, int index ){
-	return NULL;
-}
-
 Object *string_clone( Object *me ){
     return (Object *)gc_new_string( ob_string_ucast(me)->value.c_str() );
 }
@@ -486,8 +478,8 @@ IMPLEMENT_TYPE(String) {
     },
 
 	/** generic function pointers **/
-    string_typename, // type_name
-    string_traverse, // traverse
+    0, // type_name
+    0, // traverse
 	string_clone, // clone
 	0, // free
 	string_get_size, // get_size

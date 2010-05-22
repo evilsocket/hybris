@@ -20,20 +20,8 @@
 #include <math.h>
 
 /** generic function pointers **/
-const char *char_typename( Object *o ){
-	return o->type->name;
-}
-
-Object *char_traverse( Object *me, int index ){
-	return NULL;
-}
-
 Object *char_clone( Object *me ){
     return (Object *)gc_new_char( ob_char_ucast(me)->value );
-}
-
-size_t char_get_size( Object *me ){
-	return sizeof(char);
 }
 
 byte *char_serialize( Object *o, size_t size ){
@@ -422,11 +410,11 @@ IMPLEMENT_TYPE(Char) {
     { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
-    char_typename, // type_name
-    char_traverse, // traverse
+    0, // type_name
+    0, // traverse
 	char_clone, // clone
 	0, // free
-	char_get_size, // get_size
+	0, // get_size
 	char_serialize, // serialize
 	char_deserialize, // deserialize
 	char_to_fd, // to_fd

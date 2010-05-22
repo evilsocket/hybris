@@ -23,10 +23,6 @@
 #include <stdio.h>
 
 /** generic function pointers **/
-const char *binary_typename( Object *o ){
-	return o->type->name;
-}
-
 Object *binary_traverse( Object *me, int index ){
 	return (index >= ((BinaryObject *)me)->value.size() ? NULL : ((BinaryObject *)me)->value.at(index));
 }
@@ -225,7 +221,7 @@ IMPLEMENT_TYPE(Binary) {
     { OB_BUILIN_METHODS_END_MARKER },
 
 	/** generic function pointers **/
-    binary_typename, // type_name
+    0, // type_name
     binary_traverse, // traverse
 	binary_clone, // clone
 	binary_free, // free
