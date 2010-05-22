@@ -72,7 +72,12 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
 
     args->data = data->clone();
     args->vm  = vm;
-
+    /*
+     * TODO: BUG! This is not gc safe! If gc_collect is triggered
+     * between pthread_create and engine_on_threaded_call, the
+     * thread stack will be freed before we reach the thread function
+     * itself!!!
+     */
     if( (code = pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args )) == 0 ){
     	return ob_dcast( gc_new_integer(tid) );
     }
@@ -111,7 +116,12 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create_argv){
     for( i = 0; i < argc; ++i ){
     	args->data->push( ((VectorObject *)ob_argv(1))->value[i] );
     }
-
+    /*
+     * TODO: BUG! This is not gc safe! If gc_collect is triggered
+     * between pthread_create and engine_on_threaded_call, the
+     * thread stack will be freed before we reach the thread function
+     * itself!!!
+     */
     if( (code = pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args )) == 0 ){
     	return ob_dcast( gc_new_integer(tid) );
     }
@@ -149,7 +159,6 @@ HYBRIS_DEFINE_FUNCTION(hpthread_join){
     pthread_t tid = static_cast<pthread_t>( int_argv(0) );
     void *status;
 
-    // fix issue #0000014
     if( tid > 0 ){
     	pthread_join( tid, &status );
 		return H_DEFAULT_RETURN;

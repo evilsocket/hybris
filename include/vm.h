@@ -165,6 +165,11 @@ typedef struct _vm_t {
 	pthread_mutex_t   th_pool_mutex;
 	/*
 	 * The list of active memory frames.
+	 *
+	 * TODO: Each thread (including the main one) should have it's own
+	 * list so to have something like :
+	 *
+	 * map< pthread_t, list<vframe_t *> > frames;
 	 */
 	list<vframe_t *> frames;
 	/*
@@ -370,6 +375,12 @@ __force_inline void vm_depool( vm_t *vm, pthread_t tid = 0 ){
 	vm_th_pool_unlock( vm );
 }
 
+/*
+ * TODO: BUG! This is not thread safe!
+ * If a thread calls vm_pop_frame, we really don't
+ * know which frame it will pop.
+ * See note on vm.frames.
+ */
 /*
  * Push a frame to the trace stack.
  */
