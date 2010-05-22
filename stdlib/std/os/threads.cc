@@ -45,11 +45,11 @@ void * hyb_pthread_worker( void *arg ){
     vm_t      	  *vm  = args->vm;
     vmem_t        *data = args->data,
 				   stack;
+    size_t		   i;
 
     vm_pool( vm );
 
     if( ob_argc() > 1 ){
-		unsigned int i;
 		for( i = 1; i < ob_argc(); ++i ){
 			stack.push( ob_argv(i) );
 		}
@@ -67,17 +67,21 @@ void * hyb_pthread_worker( void *arg ){
 HYBRIS_DEFINE_FUNCTION(hpthread_create){
 	pthread_t tid;
     int       code;
+    size_t	  i, sz( ob_argc() );
 
     thread_args_t *args = new thread_args_t;
 
     args->data = data->clone();
-    args->vm  = vm;
+    args->vm   = vm;
+
     /*
-     * TODO: BUG! This is not gc safe! If gc_collect is triggered
-     * between pthread_create and engine_on_threaded_call, the
-     * thread stack will be freed before we reach the thread function
-     * itself!!!
+     * Make sure that the new stack is not garbage collected
+     * before the engine_on_threaded_call is executed.
      */
+    for( i = 1; i < sz; ++i ){
+    	gc_set_alive( args->data->at(i) );
+    }
+
     if( (code = pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args )) == 0 ){
     	return ob_dcast( gc_new_integer(tid) );
     }
@@ -109,19 +113,27 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create_argv){
     int       i, code, argc( ob_get_size( ob_argv(1) ) );
     thread_args_t *args = new thread_args_t;
 
-    args->data 	   = new vmem_t;
-    args->vm = vm;
+    args->data = new vmem_t;
+    args->vm   = vm;
 
 	args->data->push( ob_argv(0) );
-    for( i = 0; i < argc; ++i ){
-    	args->data->push( ((VectorObject *)ob_argv(1))->value[i] );
+	/*
+	 * Make sure that the new stack is not garbage collected
+	 * before the engine_on_threaded_call is executed.
+	 */
+	gc_set_alive( ob_argv(0) );
+
+	for( i = 0; i < argc; ++i ){
+    	Object *item = ((VectorObject *)ob_argv(1))->value[i];
+		/*
+		 * Make sure that the new stack is not garbage collected
+		 * before the engine_on_threaded_call is executed.
+		 */
+		gc_set_alive( item );
+
+    	args->data->push( item );
     }
-    /*
-     * TODO: BUG! This is not gc safe! If gc_collect is triggered
-     * between pthread_create and engine_on_threaded_call, the
-     * thread stack will be freed before we reach the thread function
-     * itself!!!
-     */
+
     if( (code = pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args )) == 0 ){
     	return ob_dcast( gc_new_integer(tid) );
     }

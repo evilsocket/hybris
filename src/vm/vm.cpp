@@ -110,6 +110,10 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
     char name[0xFF] = {0};
 
     /*
+     * Initialize main vm thread id.
+     */
+    vm->main_tid = pthread_self();
+    /*
      * Create code engine
      */
     vm->engine = engine_init( vm );
@@ -120,7 +124,6 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
     /*
      * Initialize vm mutexes
      */
-    vm->th_pool_mutex = PTHREAD_MUTEX_INITIALIZER;
     vm->mm_pool_mutex = PTHREAD_MUTEX_INITIALIZER;
     vm->mcache_mutex  = PTHREAD_MUTEX_INITIALIZER;
     vm->pcre_mutex	  = PTHREAD_MUTEX_INITIALIZER;
@@ -171,16 +174,18 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
 void vm_release( vm_t *vm ){
 	vm->releasing = true;
 
-    vm_th_pool_lock( vm );
-        if( vm->th_pool.size() > 0 ){
+    vm_mm_lock( vm );
+        if( vm->th_frames.size() ){
             fprintf( stdout, "[WARNING] Hard killing remaining running threads ... " );
-            for( size_t pool_i = 0; pool_i < vm->th_pool.size(); ++pool_i ){
-                pthread_kill( vm->th_pool[pool_i], SIGTERM );
+            vm_thread_scope_t::iterator ti;
+            for( ti = vm->th_frames.begin(); ti != vm->th_frames.end(); ti++ ){
+            	 pthread_kill( (pthread_t)ti->first, SIGTERM );
+            	 delete ti->second;
             }
-            vm->th_pool.clear();
+            vm->th_frames.clear();
             fprintf( stdout, "done .\n" );
         }
-    vm_th_pool_unlock( vm );
+    vm_mm_unlock( vm );
 
     /*
      * Handle unhandled exceptions in the main memory frame.
@@ -395,7 +400,7 @@ Object *vm_raise_exception( const char *fmt, ... ){
 	 * Make sure the exception object will not be freed until someone
 	 * catches it or the program ends.
 	 */
-	gc_set_uncollectable(exception);
+	gc_set_alive(exception);
 
 	vm_frame(__hyb_vm)->state.set( Exception, exception );
 
@@ -406,7 +411,7 @@ Object *vm_raise_exception( const char *fmt, ... ){
 
 void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){
 	if( vm->args.stacktrace || force ){
-		list<vframe_t *>::iterator i;
+		vm_scope_t::iterator i;
 		unsigned int j, stop, pad, args, last;
 		string name;
 		vframe_t *frame = NULL;

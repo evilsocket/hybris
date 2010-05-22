@@ -19,7 +19,6 @@
 #include "common.h"
 #include "gc.h"
 #include "vm.h"
-
 /*
  * The main garbage collector global structure.
  */
@@ -75,6 +74,10 @@ __force_inline void gc_pool_remove( gc_list_t *list, gc_item_t *item ) {
 
 	list->items--;
 	list->usage -= item->size;
+
+	#ifdef GC_DEBUG
+		fprintf( stdout, "[GC DEBUG] Removed object %p from the %s pool.\n", item->pobj, (list == &__gc.heap ? "heap" : "lag") );
+	#endif
 
 	delete item;
 }
@@ -182,6 +185,10 @@ struct _Object *gc_track( Object *o, size_t size ){
 
     gc_lock();
 
+	#ifdef GC_DEBUG
+		fprintf( stdout, "[GC DEBUG] Tracking new object at %p [%d bytes].\n", o, size );
+	#endif
+
     /*
      * Increment item number and memory usage counters.
      */
@@ -217,6 +224,9 @@ size_t gc_mm_threshold(){
  */
 void gc_mark( Object *o, bool mark /*= true*/ ){
 	if( o->gc_mark != mark ){
+		#ifdef GC_DEBUG
+			fprintf( stdout, "[GC DEBUG] Marking object at %p as %s.\n", o, (mark ? "alive" : "dead") );
+		#endif
 		/*
 		 * Mark the object.
 		 */
@@ -262,7 +272,7 @@ void gc_sweep_generation( gc_list_t *generation ){
 			 * Reset its gc_marked flag to false.
 			 */
 			if( o->gc_mark ){
-				gc_set_collectable(o);
+				o->gc_mark = false;
 				/*
 				 * If this generation is not the lag space, check if the object
 				 * has to be moved to the lag space.
@@ -302,7 +312,7 @@ void gc_collect( vm_t *vm ){
      * threshold.
      */
     if( __gc.usage >= __gc.gc_threshold ){
-		std::list<vframe_t *>::iterator i;
+		vm_scope_t::iterator i;
     	vframe_t *frame;
     	size_t j, size;
 
@@ -316,7 +326,7 @@ void gc_collect( vm_t *vm ){
 		#endif
 
 		/*
-		 * Loop each active memory frame and mark alive objects.
+		 * Loop each active main memory frame and mark alive objects.
 		 */
 		for( i = vm->frames.begin(); i != vm->frames.end(); i++ ){
 			frame = *i;
@@ -328,9 +338,32 @@ void gc_collect( vm_t *vm ){
 				/*
 				 * Mark the object and its referenced objects as live objects.
 				 */
-				gc_set_uncollectable( frame->at(j) );
+				gc_set_alive( frame->at(j) );
 			}
 		}
+		/*
+		 * If any, loop each active thread memory frame and mark alive objects.
+		 */
+		vm_thread_scope_t::iterator ti;
+		for( ti = vm->th_frames.begin(); ti != vm->th_frames.end(); ti++ ){
+			#ifdef GC_DEBUG
+				fprintf( stdout, "[GC DEBUG] Garbage collecting thread %p scope.\n", (pthread_t)ti->first );
+			#endif
+			for( i = ti->second->begin(); i != ti->second->end(); i++ ){
+				frame = *i;
+				size  = frame->size();
+				/*
+				 * Loop each object defined into this frame.
+				 */
+				for( j = 0; j < size; ++j ){
+					/*
+					 * Mark the object and its referenced objects as live objects.
+					 */
+					gc_set_alive( frame->at(j) );
+				}
+			}
+		}
+
 		/*
 		 * New collection, increment global collections counter.
 		 */
@@ -351,6 +384,10 @@ void gc_collect( vm_t *vm ){
 		 * Sweep younger objects in the heap space.
 		 */
 		gc_sweep_generation( &__gc.heap );
+
+		#ifdef GC_DEBUG
+			printf( "[GC DEBUG] Garbage collection cycle done.\n" );
+		#endif
 
 		/*
 		 * Unlock the virtual machine frames vector.

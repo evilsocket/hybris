@@ -51,6 +51,9 @@ const char *ob_typename( Object * o ){
 }
 
 Object *ob_traverse( Object *o, int index ){
+	#ifdef GC_DEBUG
+		fprintf( stdout, "[GC DEBUG] Traversing object at %p, index %d.\n", o, index );
+	#endif
 	return (o->type->traverse ? o->type->traverse(o,index) : NULL);
 }
 

@@ -24,6 +24,7 @@
 #include <dlfcn.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <map>
 #include "types.h"
 #include "memory.h"
 #include "code.h"
@@ -31,6 +32,7 @@
 
 using std::string;
 using std::vector;
+using std::map;
 
 typedef vector<string> vstr_t;
 
@@ -138,7 +140,14 @@ enum vm_state_t {
 	vmExecuting
 };
 
+typedef list< vframe_t * > 			   vm_scope_t;
+typedef map< pthread_t, vm_scope_t *> vm_thread_scope_t;
+
 typedef struct _vm_t {
+	/*
+	 * Main thread id.
+	 */
+	pthread_t main_tid;
 	/*
 	 * The current state of the vm.
 	 *
@@ -155,23 +164,13 @@ typedef struct _vm_t {
 	 */
 	pthread_mutex_t line_mutex;
 	/*
-	 * Running threads pool vector, used to hard terminate remaining threads
-	 * when the vm is released.
+	 * The list of active memory frames on the main thread.
 	 */
-	vector<pthread_t> th_pool;
+	vm_scope_t frames;
 	/*
-	 * Threads pool mutex.
+	 * The list of active memory frames on other threads.
 	 */
-	pthread_mutex_t   th_pool_mutex;
-	/*
-	 * The list of active memory frames.
-	 *
-	 * TODO: Each thread (including the main one) should have it's own
-	 * list so to have something like :
-	 *
-	 * map< pthread_t, list<vframe_t *> > frames;
-	 */
-	list<vframe_t *> frames;
+	vm_thread_scope_t th_frames;
 	/*
 	 * Frames list mutex.
 	 */
@@ -243,8 +242,6 @@ vm_t;
  */
 #define vm_line_lock( vm )      pthread_mutex_lock( &vm->line_mutex )
 #define vm_line_unlock( vm )    pthread_mutex_unlock( &vm->line_mutex )
-#define vm_th_pool_lock( vm )   pthread_mutex_lock( &vm->th_pool_mutex )
-#define vm_th_pool_unlock( vm ) pthread_mutex_unlock( &vm->th_pool_mutex )
 #define vm_mm_lock( vm )  	    pthread_mutex_lock( &vm->mm_pool_mutex )
 #define vm_mm_unlock( vm )   	pthread_mutex_unlock( &vm->mm_pool_mutex )
 #define vm_mcache_lock( vm )    pthread_mutex_lock( &vm->mcache_mutex )
@@ -355,55 +352,49 @@ __force_inline size_t vm_get_lineno( vm_t *vm ){
  */
 __force_inline void vm_pool( vm_t *vm, pthread_t tid = 0 ){
 	tid = (tid == 0 ? pthread_self() : tid);
-	vm_th_pool_lock(vm);
-		vm->th_pool.push_back(tid);
-	vm_th_pool_unlock(vm);
+	vm_mm_lock(vm);
+		vm->th_frames[tid] = new vm_scope_t;
+	vm_mm_unlock(vm);
 }
 /*
  * Remove a thread from the threads pool.
  */
 __force_inline void vm_depool( vm_t *vm, pthread_t tid = 0 ){
 	tid = (tid == 0 ? pthread_self() : tid);
-	int size( vm->th_pool.size() );
-	vm_th_pool_lock( vm );
-	for( int pool_i = 0; pool_i < size; ++pool_i ){
-		if( vm->th_pool[pool_i] == tid ){
-			vm->th_pool.erase( vm->th_pool.begin() + pool_i );
-			break;
-		}
+	vm_mm_lock( vm );
+	vm_thread_scope_t::iterator i_scope = vm->th_frames.find(tid);
+	if( i_scope != vm->th_frames.end() ){
+		delete i_scope->second;
+		vm->th_frames.erase( i_scope );
 	}
-	vm_th_pool_unlock( vm );
+	vm_mm_unlock( vm );
 }
 
-/*
- * TODO: BUG! This is not thread safe!
- * If a thread calls vm_pop_frame, we really don't
- * know which frame it will pop.
- * See note on vm.frames.
- */
+__force_inline vm_scope_t *vm_find_scope( vm_t *vm ){
+	pthread_t tid = pthread_self();
+	/*
+	 * Main thread id, return main scope.
+	 */
+	if( tid == vm->main_tid ){
+		return &vm->frames;
+	}
+	else{
+		return vm->th_frames.find(tid)->second;
+	}
+}
 /*
  * Push a frame to the trace stack.
  */
-#define vm_add_frame( vm, frame ) vm_mm_lock( vm ); \
-								  vm->frames.push_back(frame); \
-								  vm_mm_unlock( vm )
+#define vm_add_frame( vm, frame ) vm_find_scope(vm)->push_back(frame)
 /*
  * Remove the last frame from the trace stack.
  */
-#define vm_pop_frame( vm ) vm_mm_lock( vm ); \
-						   vm->frames.pop_back(); \
-						   vm_mm_unlock( vm )
-/*
- * Set the active frame (from threaded calls).
- */
-#define vm_set_frame( vm, frame ) vm_mm_lock( vm ); \
-								  vm->frames.pop_back(); \
-								  vm->frames.push_back(frame); \
-								  vm_mm_unlock( vm )
+#define vm_pop_frame( vm ) vm_find_scope(vm)->pop_back();
 /*
  * Return the active frame pointer (last in the list).
  */
-#define vm_frame( vm ) vm->frames.back()
+#define vm_frame( vm ) vm_find_scope(vm)->back()
+
 /*
  * Compute execution time and print it.
  */
@@ -444,11 +435,13 @@ __force_inline named_function_t *vm_get_function( vm_t *vm, char *identifier ){
 		nfuncs = vm->modules[i]->functions.size();
 		for( j = 0; j < nfuncs; ++j ){
 			if( vm->modules[i]->functions[j]->identifier == identifier ){
-				// fix issue #0000014
+
 				vm_mcache_lock( vm );
-					/* found it, add to the cache and return */
-					cache = vm->modules[i]->functions[j];
-					vm->mcache.insert( identifier, cache );
+
+				/* found it, add to the cache and return */
+				cache = vm->modules[i]->functions[j];
+				vm->mcache.insert( identifier, cache );
+
 				vm_mcache_unlock( vm );
 
 				return cache;

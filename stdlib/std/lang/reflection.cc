@@ -141,8 +141,6 @@ HYBRIS_DEFINE_FUNCTION(hmethods){
 HYBRIS_DEFINE_FUNCTION(hcall){
 	vmem_t stack;
 
-	vm_pool( vm );
-
 	if( ob_argc() > 1 ){
 		unsigned int i;
 		for( i = 1; i < ob_argc(); ++i ){
@@ -151,8 +149,6 @@ HYBRIS_DEFINE_FUNCTION(hcall){
 	}
 
 	Object *state = engine_on_threaded_call( vm->engine, string_argv(0), data, &stack );
-
-	vm_depool( vm );
 
 	return state;
 }

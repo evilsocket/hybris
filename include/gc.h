@@ -185,12 +185,12 @@ void 			gc_mark( struct _Object *o, bool mark = true );
  * Set the object and all the objects referenced by him
  * as non collectable.
  */
-#define	gc_set_uncollectable(o) gc_mark( o, true )
+#define	gc_set_alive(o) gc_mark( o, true )
 /*
  * Set the object and all the objects referenced by him
  * as collectable.
  */
-#define gc_set_collectable(o) gc_mark( o, false )
+#define gc_set_dead(o)  gc_mark( o, false )
 /*
  * Fire the collection routines if the memory usage is
  * above the threshold.
