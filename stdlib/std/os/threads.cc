@@ -67,6 +67,7 @@ void * hyb_pthread_worker( void *arg ){
 HYBRIS_DEFINE_FUNCTION(hpthread_create){
 	pthread_t tid;
     int       code;
+
     thread_args_t *args = new thread_args_t;
 
     args->data = data->clone();

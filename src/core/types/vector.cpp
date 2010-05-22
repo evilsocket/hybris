@@ -75,7 +75,7 @@ Object *__vector_join( engine_t *engine, Object *me, vframe_t *data ){
 
 /** generic function pointers **/
 Object *vector_traverse( Object *me, int index ){
-	return ((unsigned)index >= ((VectorObject *)me)->value.size() ? NULL : ((VectorObject *)me)->value.at(index));
+	return ((unsigned)index >= ((VectorObject *)me)->items ? NULL : ((VectorObject *)me)->value.at(index));
 }
 
 Object *vector_clone( Object *me ){

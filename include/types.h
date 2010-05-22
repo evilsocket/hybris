@@ -987,7 +987,7 @@ typedef struct _ClassObject {
     string name;
 
     ITree<class_attribute_t> c_attributes;
-    ITree<class_method_t>	   c_methods;
+    ITree<class_method_t>	 c_methods;
 
     _ClassObject() : BASE_OBJECT_HEADER_INIT(Class) {
 

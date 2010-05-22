@@ -56,7 +56,8 @@ task :exec    => [ :checkdeps, :config_h, :library, :interpreter ]
 task :all     => [ :exec, :modules ]
 task :debug do
 	CXXFLAGS = "-Iinclude/ #{WFLAGS} -g -pg" 
-	Rake::Task["exec"].invoke
+	STDLIB_CFLAGS = "#{WFLAGS} -L. -L./build#{PREFIX}/lib/ -I./include/ -g -pg -fPIC #{LIBXML_CFLAGS} #{LIBFFI_CFLAGS} -lhybris -lc -shared"
+	Rake::Task["all"].invoke
 end
 task :default => [ :all ]
 

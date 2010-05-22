@@ -128,7 +128,6 @@ void gc_free( gc_list_t *list, gc_item_t *item ){
 	 * Finally delete the object pointer itself.
 	 */
     delete item->pobj;
-
     /*
      * And remove the item from the gc pool.
      */
@@ -217,10 +216,7 @@ size_t gc_mm_threshold(){
  * Recursively mark an object (and its inner items).
  */
 void gc_mark( Object *o, bool mark /*= true*/ ){
-	/*
-	 * Valid and already marked?
-	 */
-	if( o && o->gc_mark != mark ){
+	if( o->gc_mark != mark ){
 		/*
 		 * Mark the object.
 		 */
@@ -229,9 +225,9 @@ void gc_mark( Object *o, bool mark /*= true*/ ){
 		 * Loop all the objects it 'contains' (such as vector items) and
 		 * call gc_mark recursively on each one.
 		 */
-		Object *child = NULL;
-		int i = 0;
-		while( (child = ob_traverse( o, i++ )) != NULL ){
+		Object *child;
+		int i;
+		for( i = 0, child = NULL; (child = ob_traverse( o, i )) != NULL; ++i ){
 			gc_mark( child, mark );
 		}
 	}
