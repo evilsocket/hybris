@@ -46,10 +46,8 @@ INLINE ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_
 
 size_t string_replace( string &source, const string find, string replace ) {
     size_t j, count(0);
-    string tmp = source;
-    for( ; (j = tmp.find( find )) != string::npos; count++ ){
+    for( ; (j = source.find( find )) != string::npos; count++ ){
         source.replace( j, find.length(), replace );
-        tmp = source.substr( j + find.length() + 1 );
     }
     return count;
 }
@@ -454,19 +452,25 @@ Object *string_call_method( engine_t *engine, vframe_t *frame, Object *me, char 
 	vframe_t stack;
 	size_t   i, argc = argv->children();
 
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( engine->vm, &stack );
+
 	stack.owner = ob_typename(me) + string("::") + method_id;
 	/*
 	 * Evaluate each object and insert it into the stack
 	 */
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, frame, argv->child(i) );
-		engine_check_frame_exit(frame);
+
+		if( frame->state.is(Exception) || frame->state.is(Return) ){
+			vm_pop_frame( engine->vm );
+			return frame->state.value;
+		}
+
 		stack.push( value );
 	}
-	/*
-	 * Add this frame as the active stack
-	 */
-	vm_add_frame( engine->vm, &stack );
 
 	/* execute the method */
 	result = ((ob_type_builtin_method_t)method)( engine, me, &stack );

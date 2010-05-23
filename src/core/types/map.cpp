@@ -102,16 +102,18 @@ Object *__map_values( engine_t *engine, Object *me, vframe_t *data ){
 /** generic function pointers **/
 Object *map_traverse( Object *me, int index ){
 	Map *mme = (Map *)me;
+	size_t items( mme->items );
 
-	if( index < mme->keys.size() ){
+	if( index < items ){
 		return mme->keys.at(index);
 	}
-	else if( index < mme->values.size() ){
-		return mme->values.at(index);
-	}
 	else{
-		return NULL;
+		index -= items;
+		if( index < items ){
+			return mme->values.at(index);
+		}
 	}
+	return NULL;
 }
 
 Object *map_clone( Object *me ){
@@ -316,19 +318,25 @@ Object *map_call_method( engine_t *engine, vframe_t *frame, Object *me, char *me
 	vframe_t stack;
 	size_t   i, argc = argv->children();
 
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( engine->vm, &stack );
+
 	stack.owner = ob_typename(me) + string("::") + method_id;
 	/*
 	 * Evaluate each object and insert it into the stack
 	 */
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, frame, argv->child(i) );
-		engine_check_frame_exit(frame);
+
+		if( frame->state.is(Exception) || frame->state.is(Return) ){
+			vm_pop_frame( engine->vm );
+			return frame->state.value;
+		}
+
 		stack.push( value );
 	}
-	/*
-	 * Add this frame as the active stack
-	 */
-	vm_add_frame( engine->vm, &stack );
 
 	/* execute the method */
 	result = ((ob_type_builtin_method_t)method)( engine, me, &stack );

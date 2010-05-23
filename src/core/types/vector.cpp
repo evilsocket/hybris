@@ -98,7 +98,7 @@ Object *vector_traverse( Object *me, int index ){
 Object *vector_clone( Object *me ){
     VectorIterator i;
     Vector *vclone = gc_new_vector(),
-                 *vme    = ob_vector_ucast(me);
+           *vme    = ob_vector_ucast(me);
 
     for( i = vme->value.begin(); i != vme->value.end(); i++ ){
         ob_cl_push_reference( (Object *)vclone, ob_clone( *i ) );
@@ -291,19 +291,25 @@ Object *vector_call_method( engine_t *engine, vframe_t *frame, Object *me, char 
 	vframe_t stack;
 	size_t   i, argc = argv->children();
 
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( engine->vm, &stack );
+
 	stack.owner = ob_typename(me) + string("::") + method_id;
 	/*
 	 * Evaluate each object and insert it into the stack
 	 */
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, frame, argv->child(i) );
-		engine_check_frame_exit(frame);
+
+		if( frame->state.is(Exception) || frame->state.is(Return) ){
+			vm_pop_frame( engine->vm );
+			return frame->state.value;
+		}
+
 		stack.push( value );
 	}
-	/*
-	 * Add this frame as the active stack
-	 */
-	vm_add_frame( engine->vm, &stack );
 
 	/* execute the method */
 	result = ((ob_type_builtin_method_t)method)( engine, me, &stack );

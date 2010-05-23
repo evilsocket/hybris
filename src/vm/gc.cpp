@@ -115,6 +115,7 @@ INLINE void gc_pool_migrate( gc_list_t *src, gc_list_t *dst, gc_item_t *item ) {
 	dst->items++;
 	dst->usage += item->size;
 }
+
 /*
  * Free 'item' and remove it from 'list'.
  */
@@ -188,7 +189,6 @@ struct _Object *gc_track( Object *o, size_t size ){
 	#ifdef GC_DEBUG
 		fprintf( stdout, "[GC DEBUG] Tracking new object at %p [%d bytes].\n", o, size );
 	#endif
-
     /*
      * Increment item number and memory usage counters.
      */
@@ -229,7 +229,7 @@ size_t gc_mm_threshold(){
  * Recursively mark an object (and its inner items).
  */
 void gc_mark( Object *o, bool mark /*= true*/ ){
-	if( o && o->gc_mark != mark ){
+	if( o ){
 		#ifdef GC_DEBUG
 			fprintf( stdout, "[GC DEBUG] Marking object at %p as %s.\n", o, (mark ? "alive" : "dead") );
 		#endif
@@ -395,7 +395,6 @@ void gc_release(){
 	gc_item_t *item;
 
 	gc_lock();
-
 	/*
 	 * Free every object in the heap.
 	 */

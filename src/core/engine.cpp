@@ -1108,7 +1108,6 @@ INLINE Object *engine_on_user_function_call( engine_t *engine, vframe_t *frame, 
     result = engine_exec( engine, &stack, body );
 
     engine_dismiss_stack( engine );
-
 	/*
 	 * Check for unhandled exceptions and put them on the root
 	 * memory frame.
@@ -1210,19 +1209,6 @@ INLINE Object *engine_on_new_operator( engine_t *engine, vframe_t *frame, Node *
 			 */
 			if( stack.state.is(Exception) ){
 				frame->state.set( Exception, stack.state.value );
-			}
-		}
-		else{
-			if( children > ob_class_ucast(newtype)->c_attributes.size() ){
-				hyb_error( H_ET_SYNTAX, "class '%s' has %d attributes, initialized with %d",
-										 type_name,
-										 ob_class_ucast(newtype)->c_attributes.size(),
-										 children );
-			}
-
-			for( i = 0; i < children; ++i ){
-				object = engine_exec( engine, frame, type->child(i) );
-				ob_set_attribute( newtype, (char *)ob_class_ucast(newtype)->c_attributes.at(i)->name.c_str(), object );
 			}
 		}
 	}
@@ -1565,7 +1551,7 @@ INLINE Object *engine_on_foreach( engine_t *engine, vframe_t *frame, Node *node 
      *
      * 		foreach( i of 1..10 )
      */
-    gc_set_alive(v);
+    frame->push(v);
 
     for( ; index.value < size; ++index.value ){
         frame->add( identifier, ob_cl_at( v, (Object *)&index ) );
@@ -1606,7 +1592,7 @@ INLINE Object *engine_on_foreach_mapping( engine_t *engine, vframe_t *frame, Nod
      *
      * 		foreach( i of map( ... ) )
      */
-    gc_set_alive(map);
+    frame->push(map);
 
     for( i = 0; i < size; ++i ){
         frame->add( key_identifier,   ob_map_ucast(map)->keys[i] );
@@ -1863,6 +1849,10 @@ INLINE Object *engine_on_assign( engine_t *engine, vframe_t *frame, Node *node )
     		   *value;
 
     	engine_check_frame_exit(frame)
+    	/*
+    	 * Prevent obj from being garbage collected.
+    	 */
+    	frame->push(obj);
 
 		value = engine_exec( engine, frame, node->child(1) );
 
@@ -1895,7 +1885,7 @@ INLINE Object *engine_on_regex( engine_t *engine, vframe_t *frame, Node *node ){
            *regexp = H_UNDEFINED,
            *result = H_UNDEFINED;
 
-    o = engine_exec( engine, frame, node->child(0) );
+    o 	   = engine_exec( engine, frame, node->child(0) );
 	regexp = engine_exec( engine, frame, node->child(1) );
 
 	engine_check_frame_exit(frame)

@@ -42,6 +42,12 @@ Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *me
 
 	Vector *args = gc_new_vector();
 
+	vm_add_frame( vm, &stack );
+	/*
+	 * Prevent args from being garbage collected.
+	 */
+	frame->push( (Object *)args );
+
 	stack.owner = string(c_name) + "::" + string("__method");
 
 	stack.insert( "me", c );
@@ -49,13 +55,14 @@ Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *me
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( vm->engine, frame, argv->child(i) );
 
-		engine_check_frame_exit(frame);
+		if( frame->state.is(Exception) || frame->state.is(Return) ){
+			vm_pop_frame( vm );
+			return frame->state.value;
+	    }
 
 		ob_cl_push( (Object *)args, value );
 	}
 	stack.add( "argv", (Object *)args );
-
-	vm_add_frame( vm, &stack );
 
 	/* call the method */
 	result = engine_exec( vm->engine, &stack, method->callBody() );
@@ -114,6 +121,8 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 
 	stack.owner = string(ob_typename(me)) + ":: operator " + string(op_name);
 
+	vm_add_frame( __hyb_vm, &stack );
+
 	stack.insert( "me", me );
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
@@ -121,8 +130,6 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 		stack.insert( (char *)op->child(i)->value.m_identifier.c_str(), value );
 	}
 	va_end(ap);
-
-	vm_add_frame( __hyb_vm, &stack );
 
 	/* call the operator */
 	result = engine_exec( __hyb_vm->engine, &stack, op->callBody() );
@@ -184,6 +191,8 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 								 argc );
 	}
 
+	vm_add_frame( __hyb_vm, &stack );
+
 	/*
 	 * Create the "me" reference to the class itself, used inside
 	 * methods for me->... calls.
@@ -197,8 +206,6 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 		stack.insert( (char *)ds->child(i)->value.m_identifier.c_str(), value );
 	}
 	va_end(ap);
-
-	vm_add_frame( __hyb_vm, &stack );
 
 	/* call the descriptor */
 	result = engine_exec( __hyb_vm->engine, &stack, ds->callBody() );
@@ -752,6 +759,11 @@ Object *class_call_method( engine_t *engine, vframe_t *frame, Object *me, char *
 	if( vm_scope_size(engine->vm) >= MAX_RECURSION_THRESHOLD ){
 		return vm_raise_exception( "Reached max number of nested calls" );
 	}
+
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( engine->vm, &stack );
 	/*
 	 * Set the stack owner
 	 */
@@ -770,7 +782,10 @@ Object *class_call_method( engine_t *engine, vframe_t *frame, Object *me, char *
 		/*
 		 * Check if engine_exec raised an exception.
 		 */
-		engine_check_frame_exit(frame);
+		if( frame->state.is(Exception) || frame->state.is(Return) ){
+			vm_pop_frame( engine->vm );
+			return frame->state.value;
+	    }
 		/*
 		 * Check if i >= argc for vargs methods :
 		 *
@@ -783,11 +798,6 @@ Object *class_call_method( engine_t *engine, vframe_t *frame, Object *me, char *
 			stack.insert( (char *)method->child(i)->value.m_identifier.c_str(), value );
 		}
 	}
-	/*
-	 * Add this frame as the active stack
-	 */
-	vm_add_frame( engine->vm, &stack );
-
 	/* execute the method */
 	result = engine_exec( engine, &stack, method->callBody() );
 
