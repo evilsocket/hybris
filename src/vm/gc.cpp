@@ -79,7 +79,7 @@ INLINE void gc_pool_remove( gc_list_t *list, gc_item_t *item ) {
 		fprintf( stdout, "[GC DEBUG] Removed object %p from the %s pool.\n", item->pobj, (list == &__gc.heap ? "heap" : "lag") );
 	#endif
 
-	delete item;
+	free(item);
 }
 /*
  * Move 'item' from 'src' list to 'dst' list.
@@ -130,7 +130,7 @@ void gc_free( gc_list_t *list, gc_item_t *item ){
 	/*
 	 * Finally delete the object pointer itself.
 	 */
-    delete item->pobj;
+	delete item->pobj;
     /*
      * And remove the item from the gc pool.
      */
@@ -194,10 +194,16 @@ struct _Object *gc_track( Object *o, size_t size ){
      */
     __gc.items++;
     __gc.usage += size;
+
     /*
      * Append the item to the gc pool.
      */
-    gc_pool_append( &__gc.heap, new gc_item_t(o,size) );
+    gc_item_t *item = (gc_item_t *)calloc( 1, sizeof(gc_item_t) );
+
+    item->pobj = o;
+	item->size = size;
+
+    gc_pool_append( &__gc.heap, item );
 
     gc_unlock();
 
@@ -223,7 +229,7 @@ size_t gc_mm_threshold(){
  * Recursively mark an object (and its inner items).
  */
 void gc_mark( Object *o, bool mark /*= true*/ ){
-	if( o->gc_mark != mark ){
+	if( o && o->gc_mark != mark ){
 		#ifdef GC_DEBUG
 			fprintf( stdout, "[GC DEBUG] Marking object at %p as %s.\n", o, (mark ? "alive" : "dead") );
 		#endif
@@ -241,6 +247,11 @@ void gc_mark( Object *o, bool mark /*= true*/ ){
 			gc_mark( child, mark );
 		}
 	}
+	#ifdef GC_DEBUG
+	else {
+		fprintf( stdout, "[GC DEBUG] Object at %p already marked as %s or null.\n", o, (mark ? "alive" : "dead") );
+	}
+	#endif
 }
 /*
  * Sweep dead objects from a given generation list.
@@ -320,15 +331,19 @@ void gc_collect( vm_t *vm ){
     	 * Lock the virtual machine to prevent new frames to be added.
     	 */
     	vm_mm_lock( vm );
+    	/*
+    	 * Get the scope to collect.
+    	 */
+    	vm_scope_t *scope = vm_find_scope(vm);
 
 		#ifdef GC_DEBUG
-			printf( "[GC DEBUG] GC quota (%d bytes) reached with %d bytes, collecting ...\n", __gc.gc_threshold, __gc.usage );
+			printf( "[GC DEBUG] GC quota (%d bytes) reached with %d bytes, collecting thread %p scope ...\n", __gc.gc_threshold, __gc.usage, pthread_self() );
 		#endif
 
 		/*
 		 * Loop each active main memory frame and mark alive objects.
 		 */
-		for( i = vm->frames.begin(); i != vm->frames.end(); i++ ){
+		for( i = scope->begin(); i != scope->end(); i++ ){
 			frame = *i;
 			size  = frame->size();
 			/*
@@ -341,29 +356,6 @@ void gc_collect( vm_t *vm ){
 				gc_set_alive( frame->at(j) );
 			}
 		}
-		/*
-		 * If any, loop each active thread memory frame and mark alive objects.
-		 */
-		vm_thread_scope_t::iterator ti;
-		for( ti = vm->th_frames.begin(); ti != vm->th_frames.end(); ti++ ){
-			#ifdef GC_DEBUG
-				fprintf( stdout, "[GC DEBUG] Garbage collecting thread %p scope.\n", (pthread_t)ti->first );
-			#endif
-			for( i = ti->second->begin(); i != ti->second->end(); i++ ){
-				frame = *i;
-				size  = frame->size();
-				/*
-				 * Loop each object defined into this frame.
-				 */
-				for( j = 0; j < size; ++j ){
-					/*
-					 * Mark the object and its referenced objects as live objects.
-					 */
-					gc_set_alive( frame->at(j) );
-				}
-			}
-		}
-
 		/*
 		 * New collection, increment global collections counter.
 		 */

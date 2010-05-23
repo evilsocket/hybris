@@ -89,7 +89,7 @@ void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack,
 void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, Extern *fn_pointer, Node *argv );
 void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, Node *argv );
 void 	  engine_prepare_stack( engine_t *engine, vframe_t *root, named_function_t *function, vframe_t &stack, string owner, Node *argv );
-void 	  engine_dismiss_stack( engine_t *engine, vframe_t &stack );
+void 	  engine_dismiss_stack( engine_t *engine );
 /*
  * Find the entry point (address) of a given user defined function.
  */

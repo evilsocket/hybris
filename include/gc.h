@@ -79,8 +79,6 @@ typedef struct _gc_item {
 
     _gc_item       *next;
     _gc_item       *prev;
-
-    _gc_item( struct _Object *p, size_t s ) : pobj(p), size(s), gc_count(0) { }
 }
 gc_item_t;
 

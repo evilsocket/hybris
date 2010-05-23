@@ -142,7 +142,7 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
 		gc_set_mm_threshold(vm->args.mm_threshold);
 	}
 
-    vm->vmem.owner = (argc > 1 ? argv[1] : "<stdin>");
+    vm->vmem.owner = "<main>";
     /*
      * The first frame is always the main one.
      */
@@ -420,7 +420,6 @@ void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){
 
 		fprintf( stderr, "\nCall Stack [memory usage %d bytes] :\n\n", gc_mm_usage() );
 
-		fprintf( stderr, "%s\n", vm->vmem.owner.c_str() );
 		for( i = vm->frames.begin(), j = 1; i != vm->frames.end() && j < stop; i++, ++j ){
 			frame = (*i);
 			args  = frame->size();
@@ -431,7 +430,12 @@ void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){
 				fprintf( stderr, "  " );
 			}
 
-			fprintf( stderr, "%s( )\n", frame->owner.c_str() );
+			if( frame->owner == "<main>" ){
+				fprintf( stderr, "<main>\n" );
+			}
+			else{
+				fprintf( stderr, "%s()\n", frame->owner.c_str() );
+			}
 		}
 
 		if( vm->frames.size() >= MAX_RECURSION_THRESHOLD ){

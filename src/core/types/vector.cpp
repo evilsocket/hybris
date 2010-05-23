@@ -207,7 +207,7 @@ Object *vector_assign( Object *me, Object *op ){
 
     Object *clone = ob_clone(op);
 
-    return clone;
+    return me = clone;
 }
 
 /** collection operators **/

@@ -46,8 +46,10 @@ INLINE ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_
 
 size_t string_replace( string &source, const string find, string replace ) {
     size_t j, count(0);
-    for( ; (j = source.find( find )) != string::npos; count++ ){
+    string tmp = source;
+    for( ; (j = tmp.find( find )) != string::npos; count++ ){
         source.replace( j, find.length(), replace );
+        tmp = source.substr( j + find.length() + 1 );
     }
     return count;
 }
@@ -96,12 +98,14 @@ Object *__string_replace( engine_t *engine, Object *me, vframe_t *data ){
 	ob_type_assert( ob_argv(1), otString, "replace" );
 
 	string str  = ob_string_ucast(me)->value,
+		   tmp  = str,
 		   find = string_argv(0),
 		   repl = string_argv(1);
 
 	size_t i, f_len( find.length() );
-	for( ; (i = str.find( find )) != string::npos ; ){
+	for( ; (i = tmp.find( find )) != string::npos ; ){
 		str.replace( i, f_len, repl );
+		tmp = str.substr( i + f_len + 1 );
 	}
 
 	return (Object *)gc_new_string( str.c_str() );

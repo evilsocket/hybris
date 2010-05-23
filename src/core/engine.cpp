@@ -39,13 +39,17 @@ INLINE void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &st
 	/*
 	 * Check for heavy recursions and/or nested calls.
 	 */
-	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+	if( vm_scope_size(engine->vm) >= MAX_RECURSION_THRESHOLD ){
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
 	}
 	/*
 	 * Set the stack owner
 	 */
 	stack.owner = owner;
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( engine->vm, &stack );
 	/*
 	 * Static methods can not use 'me' instance.
 	 */
@@ -58,7 +62,8 @@ INLINE void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &st
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->child(i) );
 		if( root->state.is(Exception) ){
-		   return;
+			engine_dismiss_stack( engine );
+			return;
 		}
 		if( i >= n_ids ){
 			stack.push( value );
@@ -67,10 +72,6 @@ INLINE void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &st
 			stack.insert( (char *)prototype->child(i)->value.m_identifier.c_str(), value );
 		}
 	}
-	/*
-	 * Add this frame as the active stack
-	 */
-	vm_add_frame( engine->vm, &stack );
 }
 
 INLINE void engine_prepare_stack( engine_t *engine, vframe_t &stack, string owner, Object *cobj, Node *ids, int argc, ... ){
@@ -81,7 +82,7 @@ INLINE void engine_prepare_stack( engine_t *engine, vframe_t &stack, string owne
 	/*
 	 * Check for heavy recursions and/or nested calls.
 	 */
-	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+	if( vm_scope_size(engine->vm) >= MAX_RECURSION_THRESHOLD ){
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
 	}
 	stack.owner = owner;
@@ -112,7 +113,7 @@ INLINE void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &st
 	/*
 	 * Check for heavy recursions and/or nested calls.
 	 */
-	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+	if( vm_scope_size(engine->vm) >= MAX_RECURSION_THRESHOLD ){
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
 	}
 	/*
@@ -144,23 +145,27 @@ INLINE void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &st
 	/*
 	 * Check for heavy recursions and/or nested calls.
 	 */
-	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+	if( vm_scope_size(engine->vm) >= MAX_RECURSION_THRESHOLD ){
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
 	}
 	/*
 	 * Set the stack owner
 	 */
 	stack.owner = owner;
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( engine->vm, &stack );
 
 	argc = argv->children();
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->at(i) );
+
 		if( root->state.is(Exception) ){
-		   return;
+			engine_dismiss_stack( engine );
+		    return;
 		}
-		if( root->state.is(Exception) ){
-		   return;
-		}
+
 		if( i >= n_ids ){
 			stack.push( value );
 		}
@@ -168,11 +173,6 @@ INLINE void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &st
 			stack.insert( (char *)ids[i].c_str(), value );
 		}
 	}
-
-	/*
-	 * Add this frame as the active stack
-	 */
-	vm_add_frame( engine->vm, &stack );
 }
 
 INLINE void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, Extern *fn_pointer, Node *argv ){
@@ -182,28 +182,27 @@ INLINE void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &st
 	/*
 	 * Check for heavy recursions and/or nested calss.
 	 */
-	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+	if( vm_scope_size(engine->vm) >= MAX_RECURSION_THRESHOLD ){
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
 	}
 	/*
 	 * Set the stack owner
 	 */
 	stack.owner = owner;
-
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( engine->vm, &stack );
 	stack.push( (Object *)fn_pointer );
 	argc = argv->children();
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->child(i) );
 		if( root->state.is(Exception) ){
-		   return;
+			engine_dismiss_stack( engine );
+			return;
 		}
 		stack.push( value );
 	}
-
-	/*
-	 * Add this frame as the active stack
-	 */
-	vm_add_frame( engine->vm, &stack );
 }
 
 INLINE void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &stack, string owner, Node *argv ){
@@ -213,26 +212,26 @@ INLINE void engine_prepare_stack( engine_t *engine, vframe_t *root, vframe_t &st
 	/*
 	 * Check for heavy recursions and/or nested calls.
 	 */
-	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+	if( vm_scope_size(engine->vm) >= MAX_RECURSION_THRESHOLD ){
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
 	}
 	/*
 	 * Set the stack owner
 	 */
 	stack.owner = owner;
-	argc = argv->children();
-	for( i = 0; i < argc; ++i ){
-		value = engine_exec( engine, root, argv->child(i) );
-		if( root->state.is(Exception) ){
-		   return;
-		}
-		stack.push( value );
-	}
-
 	/*
 	 * Add this frame as the active stack
 	 */
 	vm_add_frame( engine->vm, &stack );
+	argc = argv->children();
+	for( i = 0; i < argc; ++i ){
+		value = engine_exec( engine, root, argv->child(i) );
+		if( root->state.is(Exception) ){
+			engine_dismiss_stack( engine );
+			return;
+		}
+		stack.push( value );
+	}
 }
 
 void engine_prepare_stack( engine_t *engine, vframe_t *root, named_function_t *function, vframe_t &stack, string owner, Node *argv ){
@@ -243,7 +242,7 @@ void engine_prepare_stack( engine_t *engine, vframe_t *root, named_function_t *f
 	/*
 	 * Check for heavy recursions and/or nested calls.
 	 */
-	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+	if( vm_scope_size(engine->vm) >= MAX_RECURSION_THRESHOLD ){
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
 	}
 
@@ -274,15 +273,22 @@ void engine_prepare_stack( engine_t *engine, vframe_t *root, named_function_t *f
 							    function->argc[0] > 1  ? "s" : "",
 							    argc );
 	}
+
+	stack.owner = owner;
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( engine->vm, &stack );
 	/*
 	 * Ok, argc is the right one (or one of the right ones), now evaluate each
 	 * object and check the type.
 	 */
-	stack.owner = owner;
 	for( i = 0; i < argc; ++i ){
 		value = engine_exec( engine, root, argv->child(i) );
+
 		if( root->state.is(Exception) ){
-		   return;
+			engine_dismiss_stack( engine );
+			return;
 	    }
 		if( f_argc != -1 && i < f_argc ){
 			for( t = 0 ;; ++t ){
@@ -323,14 +329,9 @@ void engine_prepare_stack( engine_t *engine, vframe_t *root, named_function_t *f
 
 		stack.push( value );
 	}
-
-	/*
-	 * Add this frame as the active stack
-	 */
-	vm_add_frame( engine->vm, &stack );
 }
 
-INLINE void engine_dismiss_stack( engine_t *engine, vframe_t &stack ){
+INLINE void engine_dismiss_stack( engine_t *engine ){
 	vm_pop_frame( engine->vm );
 }
 
@@ -942,7 +943,7 @@ INLINE Object *engine_on_builtin_function_call( engine_t *engine, vframe_t *fram
 		frame->state.set( Exception, stack.state.value );
 	}
 
-    engine_dismiss_stack( engine, stack );
+    engine_dismiss_stack( engine );
 
     /* return function evaluation value */
     return result;
@@ -1005,7 +1006,7 @@ Object *engine_on_threaded_call( engine_t *engine, string function_name, vframe_
 		frame->state.set( Exception, stack.state.value );
 	}
 
-	engine_dismiss_stack( engine, stack );
+	engine_dismiss_stack( engine );
 
 	/* return function evaluation value */
 	return result;
@@ -1052,7 +1053,7 @@ Object *engine_on_threaded_call( engine_t *engine, Node *function, vframe_t *fra
 		frame->state.set( Exception, stack.state.value );
 	}
 
-	engine_dismiss_stack( engine, stack );
+	engine_dismiss_stack( engine );
 
 	/* return function evaluation value */
 	return result;
@@ -1106,7 +1107,7 @@ INLINE Object *engine_on_user_function_call( engine_t *engine, vframe_t *frame, 
     /* call the function */
     result = engine_exec( engine, &stack, body );
 
-    engine_dismiss_stack( engine, stack );
+    engine_dismiss_stack( engine );
 
 	/*
 	 * Check for unhandled exceptions and put them on the root
@@ -1201,7 +1202,7 @@ INLINE Object *engine_on_new_operator( engine_t *engine, vframe_t *frame, Node *
 			/* call the ctor */
 			engine_exec( engine, &stack, ctor->callBody() );
 
-			engine_dismiss_stack( engine, stack );
+			engine_dismiss_stack( engine );
 
 			/*
 			 * Check for unhandled exceptions and put them on the root
@@ -1255,7 +1256,7 @@ INLINE Object *engine_on_dll_function_call( engine_t *engine, vframe_t *frame, N
     /* call the function */
     result = dllcall->function( engine->vm, &stack );
 
-    engine_dismiss_stack( engine, stack );
+    engine_dismiss_stack( engine );
 
     /* return function evaluation value */
     return result;

@@ -94,7 +94,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	/*
 	 * Check for heavy recursions and/or nested calls.
 	 */
-	if( __hyb_vm->engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+	if( vm_scope_size(__hyb_vm) >= MAX_RECURSION_THRESHOLD ){
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
 	}
 
@@ -167,7 +167,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	/*
 	 * Check for heavy recursions and/or nested calls.
 	 */
-	if( __hyb_vm->engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+	if( vm_scope_size(__hyb_vm) >= MAX_RECURSION_THRESHOLD ){
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
 	}
 
@@ -749,7 +749,7 @@ Object *class_call_method( engine_t *engine, vframe_t *frame, Object *me, char *
 	/*
 	 * Check for heavy recursions and/or nested calls.
 	 */
-	if( engine->vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+	if( vm_scope_size(engine->vm) >= MAX_RECURSION_THRESHOLD ){
 		return vm_raise_exception( "Reached max number of nested calls" );
 	}
 	/*

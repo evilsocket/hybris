@@ -385,11 +385,18 @@ INLINE vm_scope_t *vm_find_scope( vm_t *vm ){
 /*
  * Push a frame to the trace stack.
  */
-#define vm_add_frame( vm, frame ) vm_find_scope(vm)->push_back(frame)
+#define vm_add_frame( vm, frame ) vm_mm_lock( vm ); \
+								  vm_find_scope(vm)->push_back(frame); \
+								  vm_mm_unlock( vm )
 /*
  * Remove the last frame from the trace stack.
  */
-#define vm_pop_frame( vm ) vm_find_scope(vm)->pop_back();
+#define vm_pop_frame( vm ) vm_mm_lock( vm ); \
+						   vm_find_scope(vm)->pop_back(); \
+						   vm_mm_unlock( vm )
+
+#define vm_scope_size( vm ) vm_find_scope(vm)->size()
+
 /*
  * Return the active frame pointer (last in the list).
  */

@@ -194,7 +194,7 @@ HYBRIS_DEFINE_FUNCTION(hfile){
     return (Object *)( gc_new_string(buffer.c_str()) );
 }
 
-void readdir_recurse( char *root, char *dir, Vector *vector ){
+void readdir_recurse( char *root, char *dir, Object *vector ){
     char 		   path[0xFF] = {0};
     DIR           *dirh;
     struct dirent *ent;
@@ -212,7 +212,7 @@ void readdir_recurse( char *root, char *dir, Vector *vector ){
     }
 
     while( (ent = readdir(dirh)) != NULL ){
-        Map *file = gc_new_map();
+        Object *file = (Object *)gc_new_map();
         string name  = "";
         if( path[strlen(path) - 1] != '/' && ent->d_name[0] != '/' ){
 			name = string(path) + "/" + string(ent->d_name);
@@ -220,10 +220,10 @@ void readdir_recurse( char *root, char *dir, Vector *vector ){
 		else{
 			name = string(path) + string(ent->d_name);
 		}
-        ob_cl_set_reference( (Object *)(file), (Object *)( gc_new_string("name") ), (Object *)( gc_new_string(name.c_str()) ) );
-        ob_cl_set_reference( (Object *)(file), (Object *)( gc_new_string("type") ), (Object *)( gc_new_integer(ent->d_type) ) );
+        ob_cl_set_reference( file, (Object *)gc_new_string("name"), (Object *)gc_new_string(name.c_str()) );
+        ob_cl_set_reference( file, (Object *)gc_new_string("type"), (Object *)gc_new_integer(ent->d_type) );
 
-		ob_cl_push_reference( (Object *)(vector), (Object *)(file) );
+		ob_cl_push_reference( vector, file );
 
         if( ent->d_type == DT_DIR &&
         	strcmp( ent->d_name, ".." ) != 0 &&
@@ -245,15 +245,15 @@ HYBRIS_DEFINE_FUNCTION(hreaddir){
     	return vm_raise_exception( "could not open directory '%s' for reading", string_argv(0).c_str() );
     }
 
-    Vector *files 	= gc_new_vector();
+    Object *files = (Object *)gc_new_vector();
 	bool          recursive = ( ob_argc() > 1 && ob_lvalue(ob_argv(1)) );
     while( (ent = readdir(dir)) != NULL ){
-    	Map *file = gc_new_map();
+    	Object *file = (Object *)gc_new_map();
 
-    	ob_cl_set_reference( (Object *)(file), (Object *)( gc_new_string("name") ), (Object *)( gc_new_string(ent->d_name) ) );
-    	ob_cl_set_reference( (Object *)(file), (Object *)( gc_new_string("type") ), (Object *)( gc_new_integer(ent->d_type) ) );
+    	ob_cl_set_reference( file, (Object *)gc_new_string("name"), (Object *)gc_new_string(ent->d_name) );
+    	ob_cl_set_reference( file, (Object *)gc_new_string("type"), (Object *)gc_new_integer(ent->d_type) );
 
-    	ob_cl_push_reference( (Object *)(files), (Object *)(file) );
+    	ob_cl_push_reference( files, (Object *)file );
 
         if( recursive ){
             if( ent->d_type == DT_DIR && strcmp( ent->d_name, ".." ) != 0 && strcmp( ent->d_name, "." ) != 0 ){
@@ -264,6 +264,6 @@ HYBRIS_DEFINE_FUNCTION(hreaddir){
 
     closedir(dir);
 
-    return (Object *)(files);
+    return files;
 }
 
