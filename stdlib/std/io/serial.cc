@@ -345,27 +345,29 @@ extern "C" void hybris_module_init( vm_t * vm ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_open){
-	const char *dev  = string_argv(0).c_str();
-	size_t		mode = int_argv(1);
+	char   *dev;
+	size_t  mode;
+
+	vm_parse_argv( "pi", &dev, &mode );
 
 	return (Object *)gc_new_integer( open( dev, mode ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_fcntl){
-	int fd   = int_argv(0),
-		cmd  = int_argv(1),
+	int fd,
+		cmd,
 		cmd2 = 0;
 
-	if( ob_argc() >= 3 ){
-		ob_argv_type_assert( 2, otInteger, "serial_fcntl" );
-		cmd2 = int_argv(2);
-	}
+	vm_parse_argv( "iii", &fd, &cmd, &cmd2 );
 
 	return (Object *)gc_new_integer( fcntl( fd, cmd, cmd2 ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_get_attr){
-	int fd = int_argv(0);
+	int fd;
+
+	vm_parse_argv( "i", &fd );
+
 	struct termios attributes;
 
 	if( tcgetattr( fd, &attributes ) == 0 ){
@@ -381,7 +383,10 @@ HYBRIS_DEFINE_FUNCTION(hserial_get_attr){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_get_ispeed){
-	int fd = int_argv(0);
+	int fd;
+
+	vm_parse_argv( "i", &fd );
+
 	struct termios attributes;
 
 	if( tcgetattr( fd, &attributes ) == 0 ){
@@ -393,7 +398,10 @@ HYBRIS_DEFINE_FUNCTION(hserial_get_ispeed){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_get_ospeed){
-	int fd = int_argv(0);
+	int fd;
+
+	vm_parse_argv( "i", &fd );
+
 	struct termios attributes;
 
 	if( tcgetattr( fd, &attributes ) == 0 ){
@@ -405,9 +413,12 @@ HYBRIS_DEFINE_FUNCTION(hserial_get_ospeed){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_set_attr){
-	int fd 			  = int_argv(0),
-		how			  = int_argv(1);
-	Object *h_termios = ob_argv(2);
+	int 	fd,
+			how;
+	Object *h_termios;
+
+	vm_parse_argv( "iiO", &fd, &how, &h_termios );
+
 	struct termios attributes;
 
 	termios_h2c( h_termios, &attributes );
@@ -416,8 +427,12 @@ HYBRIS_DEFINE_FUNCTION(hserial_set_attr){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_set_ispeed){
-	int 	speed 	  = int_argv(1);
-	Object *h_termios = ob_ref_ucast( ob_argv(0) )->value;
+	Reference *ref_termios;
+	int		   speed;
+
+	vm_parse_argv( "Ri", &ref_termios, &speed );
+
+	Object *h_termios = ref_termios->value;
 
 	struct termios attributes;
 
@@ -434,8 +449,12 @@ HYBRIS_DEFINE_FUNCTION(hserial_set_ispeed){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_set_ospeed){
-	int 	speed 	  = int_argv(1);
-	Object *h_termios = ob_ref_ucast( ob_argv(0) )->value;
+	Reference *ref_termios;
+	int		   speed;
+
+	vm_parse_argv( "Ri", &ref_termios, &speed );
+
+	Object *h_termios = ref_termios->value;
 
 	struct termios attributes;
 
@@ -452,16 +471,20 @@ HYBRIS_DEFINE_FUNCTION(hserial_set_ospeed){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_write){
-	int 		fd 	   = int_argv(0);
-	const char *buffer = string_argv(1).c_str();
+	int   fd;
+	char *buffer;
+
+	vm_parse_argv( "ip", &fd, &buffer );
 
 	return (Object *)gc_new_integer( write( fd, buffer, strlen(buffer) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_read){
-	int fd 	 = int_argv(0),
-		size = int_argv(1),
+	int fd,
+		size,
 		status;
+
+	vm_parse_argv( "ii", &fd, &size );
 
 	unsigned char *buffer = (unsigned char *)alloca(size);
 
@@ -474,7 +497,9 @@ HYBRIS_DEFINE_FUNCTION(hserial_read){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserial_close){
-	int fd = int_argv(0);
+	int fd;
+
+	vm_parse_argv( "i", &fd );
 
 	return (Object *)gc_new_integer( close(fd) );
 }

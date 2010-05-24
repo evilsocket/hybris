@@ -63,23 +63,38 @@ extern "C" void hybris_module_init( vm_t * vm ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hfopen){
-    return (Object *)( gc_new_handle( fopen( string_argv(0).c_str(), string_argv(1).c_str() ) ) );;
+	char *filename,
+		 *mode;
+
+	vm_parse_argv( "pp", &filename, &mode );
+
+    return (Object *)gc_new_handle( fopen( filename, mode ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfseek){
-	if( handle_argv(0) == NULL ){
+	Handle *handle;
+	long	offset,
+			origin;
+
+	vm_parse_argv( "Hll", &handle, &offset, &origin );
+
+	if( handle->value == NULL ){
 		return H_DEFAULT_ERROR;
 	}
 
-	return (Object *)( gc_new_integer( fseek( (FILE *)handle_argv(0), int_argv(1), int_argv(2) ) ) );
+	return (Object *)gc_new_integer( fseek( (FILE *)handle->value, offset, origin ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hftell){
-	if( handle_argv(0) == NULL ){
+	Handle *handle;
+
+	vm_parse_argv( "H", &handle );
+
+	if( handle->value == NULL ){
 		return H_DEFAULT_ERROR;
 	}
 
-    return (Object *)( gc_new_integer( ftell( (FILE *)handle_argv(0) ) ) );
+    return (Object *)gc_new_integer( ftell( (FILE *)handle->value ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfsize){
@@ -108,53 +123,55 @@ HYBRIS_DEFINE_FUNCTION(hfsize){
 		fclose(fp);
 	}
 
-	return (Object *)( gc_new_integer(size) );
+	return (Object *)gc_new_integer(size);
 }
 
 HYBRIS_DEFINE_FUNCTION(hfread){
-	if( handle_argv(0) == NULL ){
+	Handle *handle;
+	Object *o;
+	int		size = 0;
+
+	vm_parse_argv( "HOi", &handle, &o, &size );
+
+	if( handle->value == NULL ){
 		return H_DEFAULT_ERROR;
 	}
 
-	FILE *fp = (FILE *)handle_argv(0);
-	int fd = fileno(fp);
-	size_t size = 0;
-	Object *object = ob_argv(1);
+	FILE *fp = (FILE *)handle->value;
+	int fd   = fileno(fp);
 
-	/* explicit size declaration */
-	if( ob_argc() == 3 ){
-		size = int_argv(2);
-	}
-
-	return ob_from_fd( object, fd, size );
+	return ob_from_fd( o, fd, size );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfwrite){
-	if( handle_argv(0) == NULL ){
+	Handle *handle;
+	Object *o;
+	int		size = 0;
+
+	vm_parse_argv( "HOi", &handle, &o, &size );
+
+	if( handle->value == NULL ){
 		return H_DEFAULT_ERROR;
 	}
 
-	FILE *fp = (FILE *)handle_argv(0);
-	int fd = fileno(fp);
-	size_t size = 0;
-	Object *object = ob_argv(1);
+	FILE *fp = (FILE *)handle->value;
+	int fd   = fileno(fp);
 
-	/* explicit size declaration */
-	if( ob_argc() == 3 ){
-		size = int_argv(2);
-	}
-
-	return ob_to_fd( object, fd, size );
+	return ob_to_fd( o, fd, size );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfgets){
-	if( handle_argv(0) == NULL ){
+	Handle *handle;
+
+	vm_parse_argv( "H", &handle );
+
+	if( handle->value == NULL ){
 		return H_DEFAULT_ERROR;
 	}
 
 	char line[0xFFFF] = {0};
 
-	if( fgets( line, 0xFFFF, (FILE *)handle_argv(0) ) ){
+	if( fgets( line, 0xFFFF, (FILE *)handle->value ) ){
 		return (Object *)( gc_new_string(line) );
 	}
 	else{
@@ -163,24 +180,32 @@ HYBRIS_DEFINE_FUNCTION(hfgets){
 }
 
 HYBRIS_DEFINE_FUNCTION(hfclose){
-	if( handle_argv(0) == NULL ){
+	Handle *handle;
+
+	vm_parse_argv( "H", &handle );
+
+	if( handle->value == NULL ){
 		return H_DEFAULT_ERROR;
 	}
 
-	fclose( (FILE *)handle_argv(0) );
+	fclose( (FILE *)handle->value );
 	/*
 	 * Make sure the handle is set to NULL to prevent SIGSEGV
 	 * when file functions try to use this file handle.
 	 */
-	ob_ref_ucast( ob_argv(0) )->value = NULL;
+	handle->value = NULL;
 
 	return H_DEFAULT_RETURN;
 }
 
 HYBRIS_DEFINE_FUNCTION(hfile){
-	FILE *fp = fopen( string_argv(0).c_str(), "rt" );
+	char *filename;
+
+	vm_parse_argv( "p", &filename );
+
+	FILE *fp = fopen( filename, "rt" );
 	if( !fp ){
-		return vm_raise_exception( "could not open '%s' for reading", string_argv(0).c_str() );
+		return vm_raise_exception( "could not open '%s' for reading", filename );
 	}
 
 	string buffer;
@@ -191,7 +216,7 @@ HYBRIS_DEFINE_FUNCTION(hfile){
 
 	buffer[ buffer.size() - 2 ] = 0x00;
 
-    return (Object *)( gc_new_string(buffer.c_str()) );
+    return (Object *)gc_new_string(buffer.c_str());
 }
 
 void readdir_recurse( char *root, char *dir, Object *vector ){
@@ -238,15 +263,20 @@ void readdir_recurse( char *root, char *dir, Object *vector ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hreaddir){
+	char *dirname;
+	bool  recursive = false;
+
+	vm_parse_argv( "pb", &dirname, &recursive );
+
     DIR           *dir;
     struct dirent *ent;
 
-    if( (dir = opendir( string_argv(0).c_str() )) == NULL ) {
-    	return vm_raise_exception( "could not open directory '%s' for reading", string_argv(0).c_str() );
+    if( (dir = opendir( dirname )) == NULL ) {
+    	return vm_raise_exception( "could not open directory '%s' for reading", dirname );
     }
 
     Object *files = (Object *)gc_new_vector();
-	bool          recursive = ( ob_argc() > 1 && ob_lvalue(ob_argv(1)) );
+
     while( (ent = readdir(dir)) != NULL ){
     	Object *file = (Object *)gc_new_map();
 

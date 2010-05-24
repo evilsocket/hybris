@@ -41,11 +41,14 @@ typedef struct {
 thread_args_t;
 
 void * hyb_pthread_worker( void *arg ){
+	string		   thread_name;
     thread_args_t *args = (thread_args_t *)arg;
     vm_t      	  *vm  = args->vm;
     vmem_t        *data = args->data,
 				   stack;
     size_t		   i;
+
+    vm_parse_argv( "s", &thread_name );
 
     vm_pool( vm );
 
@@ -55,7 +58,7 @@ void * hyb_pthread_worker( void *arg ){
 		}
 	}
 
-    engine_on_threaded_call( vm->engine, string_argv(0), data, &stack );
+    engine_on_threaded_call( vm->engine, thread_name, data, &stack );
 
     delete args;
 
@@ -109,22 +112,28 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_create_argv){
+	String    *thread_name;
+	Vector    *thread_argv;
 	pthread_t tid;
-    int       i, code, argc( ob_get_size( ob_argv(1) ) );
+    int       i, code, argc;
     thread_args_t *args = new thread_args_t;
+
+    vm_parse_argv( "SV", &thread_name, &thread_argv );
+
+    argc = ob_get_size( (Object *)thread_argv );
 
     args->data = new vmem_t;
     args->vm   = vm;
 
-	args->data->push( ob_argv(0) );
+	args->data->push( (Object *)thread_name );
 	/*
 	 * Make sure that the new stack is not garbage collected
 	 * before the engine_on_threaded_call is executed.
 	 */
-	gc_set_alive( ob_argv(0) );
+	gc_set_alive( (Object *)thread_name );
 
 	for( i = 0; i < argc; ++i ){
-    	Object *item = ((Vector *)ob_argv(1))->value[i];
+    	Object *item = thread_argv->value[i];
 		/*
 		 * Make sure that the new stack is not garbage collected
 		 * before the engine_on_threaded_call is executed.
@@ -168,8 +177,10 @@ HYBRIS_DEFINE_FUNCTION(hpthread_exit){
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_join){
-    pthread_t tid = static_cast<pthread_t>( int_argv(0) );
+    long  tid;
     void *status;
+
+    vm_parse_argv( "l", &tid );
 
     if( tid > 0 ){
     	pthread_join( tid, &status );
@@ -181,8 +192,13 @@ HYBRIS_DEFINE_FUNCTION(hpthread_join){
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_kill){
+	long  tid,
+		  sig;
+
+	vm_parse_argv( "ll", &tid, &sig );
+
 	if( int_argv(0) > 0 ){
-		return (Object *)gc_new_integer( pthread_kill( int_argv(0), int_argv(1) ) );
+		return (Object *)gc_new_integer( pthread_kill( tid, sig ) );
 	}
 	else{
 		return H_DEFAULT_ERROR;

@@ -95,13 +95,22 @@ static void ctype_convert( Object *o, dll_arg_t *pa ) {
 }
 
 HYBRIS_DEFINE_FUNCTION(hdllopen){
-    return ob_dcast( PTR_TO_INT_OBJ( dlopen( string_argv(0).c_str(), RTLD_LAZY ) ) );
+	char *dllname;
+
+	vm_parse_argv( "p", &dllname );
+
+	return ob_dcast( PTR_TO_INT_OBJ( dlopen( dllname, RTLD_LAZY ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hdlllink){
-    void *hdll = reinterpret_cast<void *>( int_argv(0) );
+	long  addr;
+	char *sym;
 
-    return ob_dcast( gc_new_extern( H_ADDRESS_OF( dlsym( hdll, string_argv(1).c_str() ) ) ) );
+	vm_parse_argv( "lp", &addr, &sym );
+
+    void *hdll = reinterpret_cast<void *>(addr);
+
+    return ob_dcast( gc_new_extern( H_ADDRESS_OF( dlsym( hdll, sym ) ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hdllcall){
@@ -109,8 +118,12 @@ HYBRIS_DEFINE_FUNCTION(hdllcall){
         hyb_error( H_ET_SYNTAX, "function 'dllcall' supports at max %d parameters (called with %d)", CALL_MAX_ARGS, ob_argc() );
     }
 
+	long addr;
+
+	vm_parse_argv( "l", &addr );
+
     typedef int (* function_t)(void);
-    function_t function = (function_t)extern_argv(0);
+    function_t function = (function_t)addr;
 
     ffi_cif    cif;
     ffi_arg    ul_ret;
@@ -159,21 +172,31 @@ HYBRIS_DEFINE_FUNCTION(hdllcall){
 }
 
 HYBRIS_DEFINE_FUNCTION(hdllcall_argv){
+	Extern *e;
+	Vector *v;
     vframe_t stack;
-    int size( ob_get_size( ob_argv(1) ) );
+    int size;
     Integer index(0);
 
-    stack.push( ob_argv(0) );
+	vm_parse_argv( "EV", &e, &v );
+
+	size = ob_get_size((Object *)v);
+
+    stack.push( (Object *)e );
     for( ; index.value < size; ++index.value ){
-    	stack.push( ob_cl_at( ob_argv(1), (Object *)&index ) );
+    	stack.push( ob_cl_at( (Object *)v, (Object *)&index ) );
     }
 
     return hdllcall( vm, &stack );
 }
 
 HYBRIS_DEFINE_FUNCTION(hdllclose){
-	if( int_argv(0) ){
-		dlclose( (void *)int_argv(0) );
+	long addr;
+
+	vm_parse_argv( "l", &addr );
+
+	if( addr ){
+		dlclose( (void *)addr );
 	}
 
     return H_DEFAULT_RETURN;

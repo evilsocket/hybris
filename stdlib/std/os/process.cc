@@ -110,7 +110,11 @@ HYBRIS_DEFINE_FUNCTION(henv){
 }
 
 HYBRIS_DEFINE_FUNCTION(hexec){
-    return ob_dcast( gc_new_integer( system( string_argv(0).c_str() ) ) );
+	char *cmd;
+
+	vm_parse_argv( "p", &cmd );
+
+    return ob_dcast( gc_new_integer( system( cmd ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfork){
@@ -122,36 +126,54 @@ HYBRIS_DEFINE_FUNCTION(hgetpid){
 }
 
 HYBRIS_DEFINE_FUNCTION(hwait){
-	return ob_dcast( gc_new_integer( wait( &(int_argv(0)) ) ) );
+	int pid;
+
+	vm_parse_argv( "i", &pid );
+
+	return ob_dcast( gc_new_integer( wait( &pid ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hpopen){
-	return ob_dcast( gc_new_handle( popen( string_argv(0).c_str(), string_argv(1).c_str() ) ) );
+	char *process,
+		 *mode;
+
+	vm_parse_argv( "pp", &process, &mode );
+
+	return ob_dcast( gc_new_handle( popen( process, mode ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hpclose){
-   	if( handle_argv(0) == NULL ){
+	Handle *handle;
+
+	vm_parse_argv( "H", &handle );
+
+   	if( handle->value == NULL ){
 		return H_DEFAULT_ERROR;
 	}
 
-	pclose( (FILE *)handle_argv(0) );
+	pclose( (FILE *)handle->value );
 	/*
 	 * Make sure the handle is set to NULL to prevent SIGSEGV
 	 * when p* functions try to use this file handle.
 	 */
-	ob_ref_ucast( ob_argv(0) )->value = NULL;
+	handle->value = NULL;
 }
 
 HYBRIS_DEFINE_FUNCTION(hexit){
     int code = 0;
-    if( ob_argc() > 0 ){
-		code = (long)int_argv(0);
-	}
+
+    vm_parse_argv( "i", &code );
+
 	exit(code);
 
     return H_DEFAULT_RETURN;
 }
 
 HYBRIS_DEFINE_FUNCTION(hkill){
-	return (Object *)gc_new_integer( kill( int_argv(0), int_argv(1) ) );
+	int pid,
+		sig;
+
+	vm_parse_argv( "ii", &pid, &sig );
+
+	return (Object *)gc_new_integer( kill( pid, sig ) );
 }

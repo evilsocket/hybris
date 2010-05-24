@@ -138,21 +138,21 @@ string base64( unsigned char *data, unsigned int size ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hsmtp_send){
-	Map *login_map = NULL;
-	if( ob_argc() == 3 ) {
-		login_map = map_argv(2);
-	}
+	string server_name;
+	Map   *headers,
+		  *login_map = NULL;
+
+	vm_parse_argv( "sMM", &server_name, &headers, &login_map );
 
 	int i, j, sd, port = 25;
-	string server_name = string_argv(0),
-           from(""),
+	string from(""),
            subject(""),
            message(""),
            login_name(""),
            login_pass(""),
            buffer("");
     vector<string> receivers;
-	Map *headers = map_argv(1);
+
 
 	for( i = 0; i < headers->items ; ++i ){
 		string  name  = ob_string_val(headers->keys[i]);

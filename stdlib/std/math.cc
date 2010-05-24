@@ -104,201 +104,155 @@ extern "C" void hybris_module_init( vm_t * vm ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hacos){
-	if( ob_is_int( ob_argv(0) ) ){
-        return (Object *)gc_new_float( acos(int_argv(0) ));
-    }
-    else{
-        return (Object *)gc_new_float( acos(float_argv(0) ));
-    }
+	double v;
+
+	vm_parse_argv( "d", &v );
+
+	return (Object *)gc_new_float( acos(v) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hasin){
-    if( ob_is_int( ob_argv(0) ) ){
-        return (Object *)gc_new_float( asin(int_argv(0) ));
-    }
-    else{
-        return (Object *)gc_new_float( asin(float_argv(0) ));
-    }
+	double v;
+
+	vm_parse_argv( "d", &v );
+
+	return (Object *)gc_new_float( asin(v) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hatan){
-    if( ob_is_int( ob_argv(0) ) ){
-        return (Object *)gc_new_float( atan(int_argv(0) ));
-    }
-    else{
-        return (Object *)gc_new_float( atan(float_argv(0) ));
-    }
+	double v;
+
+	vm_parse_argv( "d", &v );
+
+	return (Object *)gc_new_float( atan(v) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hatan2){
     double a, b;
 
-    if( ob_is_int( ob_argv(0) ) ){
-        a = (double)ob_int_val( ob_argv(0) );
-    }
-    else{
-        a = ob_float_val( ob_argv(0) );
-    }
-    if( ob_is_int( ob_argv(1) ) ){
-        b = (double)ob_int_val( ob_argv(0) );
-    }
-    else{
-        b = ob_float_val( ob_argv(1) );
-    }
+	vm_parse_argv( "dd", &a, &b );
+
     return (Object *)gc_new_float( atan2(a,b));
 }
 
 HYBRIS_DEFINE_FUNCTION(hceil){
-    if( ob_is_int( ob_argv(0) ) ){
-        return (Object *)gc_new_integer( ceil(int_argv(0) ) );
-    }
-    else{
-        return (Object *)gc_new_integer( ceil(float_argv(0) ) );
-    }
+	double v;
+
+	vm_parse_argv( "d", &v );
+
+	return (Object *)gc_new_integer( ceil(v) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hcos){
-    if( ob_is_int( ob_argv(0) ) ){
-        return (Object *)gc_new_float( cos(int_argv(0) ));
-    }
-    else{
-        return (Object *)gc_new_float( cos(float_argv(0) ));
-    }
+	double v;
+
+	vm_parse_argv( "d", &v );
+
+	return (Object *)gc_new_float( cos(v) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hcosh){
-    if( ob_is_int( ob_argv(0) ) ){
-        return (Object *)gc_new_float( cosh(int_argv(0) ));
-    }
-    else{
-        return (Object *)gc_new_float( cosh(float_argv(0) ));
-    }
+	double v;
+
+	vm_parse_argv( "d", &v );
+
+	return (Object *)gc_new_float( cosh(v) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hexp){
-    if( ob_is_int( ob_argv(0) ) ){
-        return (Object *)gc_new_float( exp(int_argv(0) ));
-    }
-    else{
-        return (Object *)gc_new_float( exp(float_argv(0) ));
-    }
+	double v;
+
+	vm_parse_argv( "d", &v );
+
+	return (Object *)gc_new_float( exp(v) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfabs){
-    if( ob_is_int( ob_argv(0) ) ){
-        return (Object *)gc_new_float( fabs(int_argv(0) ));
-    }
-    else{
-        return (Object *)gc_new_float( fabs(float_argv(0) ));
-    }
+	double v;
+
+	vm_parse_argv( "d", &v );
+
+	return (Object *)gc_new_float( fabs(v) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfloor){
-    if( ob_is_int( ob_argv(0) ) ){
-        return (Object *)gc_new_integer( floor(int_argv(0) ) );
-    }
-    else{
-        return (Object *)gc_new_integer( floor(float_argv(0) ) );
-    }
+	double v;
+
+	vm_parse_argv( "d", &v );
+
+	return (Object *)gc_new_integer( floor(v) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hfmod){
     double a, b;
 
-    if( ob_is_int( ob_argv(0) ) ){
-        a = (double)ob_int_val( ob_argv(0) );
-    }
-    else{
-        a = ob_float_val( ob_argv(0) );
-    }
-    if( ob_is_int( ob_argv(1) ) ){
-        b = (double)ob_int_val( ob_argv(0) );
-    }
-    else{
-        b = ob_float_val( ob_argv(1) );
-    }
-    return (Object *)gc_new_float( fmod(a,b));
+	vm_parse_argv( "dd", &a, &b );
+
+	return (Object *)gc_new_float( fmod(a,b) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hlog){
-    if( ob_is_int( ob_argv(0) ) ){
-        return (Object *)gc_new_float( log(int_argv(0) ));
-    }
-    else{
-        return (Object *)gc_new_float( log(float_argv(0) ));
-    }
+	double v;
+
+	vm_parse_argv( "d", &v );
+
+	return (Object *)gc_new_float( log(v) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hlog10){
-    if( ob_is_int( ob_argv(0) ) ){
-        return (Object *)gc_new_float( log10(int_argv(0) ));
-    }
-    else{
-        return (Object *)gc_new_float( log10(float_argv(0) ));
-    }
+	double v;
+
+	vm_parse_argv( "d", &v );
+
+	return (Object *)gc_new_float( log10(v) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hpow){
     double a, b;
 
-    if( ob_is_int( ob_argv(0) ) ){
-        a = (double)ob_int_val( ob_argv(0) );
-    }
-    else{
-        a = ob_float_val( ob_argv(0) );
-    }
-    if( ob_is_int( ob_argv(1) ) ){
-        b = (double)ob_int_val( ob_argv(0) );
-    }
-    else{
-        b = ob_float_val( ob_argv(1) );
-    }
-    return (Object *)gc_new_float( pow(a,b));
+	vm_parse_argv( "dd", &a, &b );
+
+	return (Object *)gc_new_float( pow(a,b) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsin){
-    if( ob_is_int( ob_argv(0) ) ){
-        return (Object *)gc_new_float( sin(int_argv(0) ));
-    }
-    else{
-        return (Object *)gc_new_float( sin(float_argv(0) ));
-    }
+	double v;
+
+	vm_parse_argv( "d", &v );
+
+	return (Object *)gc_new_float( sin(v) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsinh){
-    if( ob_is_int( ob_argv(0) ) ){
-        return (Object *)gc_new_float( sinh(int_argv(0) ));
-    }
-    else{
-        return (Object *)gc_new_float( sinh(float_argv(0) ));
-    }
+	double v;
+
+	vm_parse_argv( "d", &v );
+
+	return (Object *)gc_new_float( sinh(v) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsqrt){
-    if( ob_is_int( ob_argv(0) ) ){
-        return (Object *)gc_new_float( sqrt(int_argv(0) ));
-    }
-    else{
-        return (Object *)gc_new_float( sqrt(float_argv(0) ));
-    }
+	double v;
+
+	vm_parse_argv( "d", &v );
+
+	return (Object *)gc_new_float( sqrt(v) );
 }
 
 HYBRIS_DEFINE_FUNCTION(htan){
-    if( ob_is_int( ob_argv(0) ) ){
-        return (Object *)gc_new_float( tan(int_argv(0) ));
-    }
-    else{
-        return (Object *)gc_new_float( tan(float_argv(0) ));
-    }
+	double v;
+
+	vm_parse_argv( "d", &v );
+
+	return (Object *)gc_new_float( tan(v) );
 }
 
 HYBRIS_DEFINE_FUNCTION(htanh){
-    if( ob_is_int( ob_argv(0) ) ){
-        return (Object *)gc_new_float( tanh(ob_int_val( ob_argv(0) )));
-    }
-    else{
-        return (Object *)gc_new_float( tanh(float_argv(0) ));
-    }
+	double v;
+
+	vm_parse_argv( "d", &v );
+
+	return (Object *)gc_new_float( tanh(v) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hrand){
@@ -310,12 +264,14 @@ HYBRIS_DEFINE_FUNCTION(hrand){
 
     srand( ts.tv_sec * 1000 + (ts.tv_usec / 1000) );
 
-    int n = rand();
+    int n = rand(),
+    	a = -1,
+    	b = -1;
 
-    if( ob_argc() == 2 ){
-    	int a   = int_argv(0),
-			b   = int_argv(1),
-			min = (a < b ? a : b),
+    vm_parse_argv( "ii", &a, &b );
+
+    if( a != -1 && b != -1 ){
+    	int min = (a < b ? a : b),
 			max = (a > b ? a : b) + 1;
 
     	n =  (max ? (int)(n % max) : 0);

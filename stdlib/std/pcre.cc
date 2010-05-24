@@ -27,9 +27,9 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 };
 
 HYBRIS_DEFINE_FUNCTION(hpcre_replace){
-	string rawreg  = string_argv(0).c_str(),
-		   subject = string_argv(1).c_str(),
-		   replace = ob_svalue( ob_argv(2) ),
+	string rawreg,
+		   subject,
+		   replace,
 		   pattern;
 	int    		 opts, i, ccount, rc,
 				*offsets,
@@ -37,6 +37,8 @@ HYBRIS_DEFINE_FUNCTION(hpcre_replace){
 				 offset(0);
 	const char  *error;
 	pcre 		*compiled;
+
+	vm_parse_argv( "sss", &rawreg, &subject, &replace );
 
 	string_parse_pcre( rawreg, pattern, opts );
 

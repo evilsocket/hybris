@@ -55,47 +55,91 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 };
 
 HYBRIS_DEFINE_FUNCTION(hisint){
-	return ob_dcast( gc_new_integer( ob_argv(0)->type->code == otInteger ) );
+	Object *o;
+
+	vm_parse_argv( "O", &o );
+
+	return ob_dcast( gc_new_integer( o->type->code == otInteger ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisfloat){
-	return ob_dcast( gc_new_integer( ob_argv(0)->type->code == otFloat ) );
+	Object *o;
+
+	vm_parse_argv( "O", &o );
+
+	return ob_dcast( gc_new_integer( o->type->code == otFloat ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hischar){
-	return ob_dcast( gc_new_integer( ob_argv(0)->type->code == otChar ) );
+	Object *o;
+
+	vm_parse_argv( "O", &o );
+
+	return ob_dcast( gc_new_integer( o->type->code == otChar ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisstring){
-	return ob_dcast( gc_new_integer( ob_argv(0)->type->code == otString ) );
+	Object *o;
+
+	vm_parse_argv( "O", &o );
+
+	return ob_dcast( gc_new_integer( o->type->code == otString ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisarray){
-	return ob_dcast( gc_new_integer( ob_argv(0)->type->code == otVector ) );
+	Object *o;
+
+	vm_parse_argv( "O", &o );
+
+	return ob_dcast( gc_new_integer( o->type->code == otVector ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hismap){
-	return ob_dcast( gc_new_integer( ob_argv(0)->type->code == otMap ) );
+	Object *o;
+
+	vm_parse_argv( "O", &o );
+
+	return ob_dcast( gc_new_integer( o->type->code == otMap ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hisalias){
-	return ob_dcast( gc_new_integer( ob_argv(0)->type->code == otAlias ) );
+	Object *o;
+
+	vm_parse_argv( "O", &o );
+
+	return ob_dcast( gc_new_integer( o->type->code == otAlias ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(htypeof){
+	Object *o;
+
+	vm_parse_argv( "O", &o );
+
 	return ob_dcast( gc_new_string( ob_typename( ob_argv(0) ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsizeof){
+	Object *o;
+
+	vm_parse_argv( "O", &o );
+
 	return ob_dcast( gc_new_integer( ob_get_size(ob_argv(0)) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(htoint){
-	return ob_to_int( ob_argv(0) );
+	Object *o;
+
+	vm_parse_argv( "O", &o );
+
+	return ob_to_int(o);
 }
 
 HYBRIS_DEFINE_FUNCTION(htostring){
-	return ob_to_string( ob_argv(0) );
+	Object *o;
+
+	vm_parse_argv( "O", &o );
+
+	return ob_to_string(o);
 }
 
 /* xml conversion routines */
@@ -257,11 +301,12 @@ string Object2Xml( Object *o, unsigned int tabs = 0 ){
 
 
 HYBRIS_DEFINE_FUNCTION(hfromxml){
-	xmlDoc  *doc  = NULL;
+	string normalized;
+	xmlDoc  *doc = NULL;
+
+	vm_parse_argv( "s", &normalized );
 
 	LIBXML_TEST_VERSION
-
-	string normalized = string_argv(0);
 
 	string_replace( normalized, "\n", "" );
 	string_replace( normalized, "\t", "" );
@@ -282,7 +327,11 @@ HYBRIS_DEFINE_FUNCTION(hfromxml){
 
 
 HYBRIS_DEFINE_FUNCTION(htoxml){
-	string xml = Object2Xml( ob_argv(0) );
+	Object *o;
+
+	vm_parse_argv( "O", &o );
+
+	string xml = Object2Xml(o);
 
 	return ob_dcast( gc_new_string( xml.c_str() ) );
 }

@@ -296,8 +296,11 @@ void sha1_finish( sha1_context *vm, unsigned char output[20] )
 }
 
 HYBRIS_DEFINE_FUNCTION(hsha1){
-	string        str 	   = string_argv(0),
+	string        str,
 				  str_hash("");
+
+	vm_parse_argv( "s", &str );
+
 	unsigned char hash[20] = {0};
 	char		  hex[3]   = {0};
 	unsigned int  i, size( str.size() );

@@ -54,21 +54,26 @@ extern "C" void hybris_module_init( vm_t * vm ){
 }
 
 HYBRIS_DEFINE_FUNCTION(heval){
+	char *code;
 
-	hyb_parse_string( string_argv(0).c_str() );
+	vm_parse_argv( "p", &code );
+
+	hyb_parse_string( code );
 
 	return H_DEFAULT_RETURN;
 }
 
 HYBRIS_DEFINE_FUNCTION(hload){
-	string filename = ob_svalue( ob_argv(0) ),
-		   buffer;
+	char  *filename;
+	string buffer;
 
-	if( hyb_file_exists( (char *)filename.c_str() ) == 0 ){
+	vm_parse_argv( "p", &filename);
+
+	if( hyb_file_exists( filename ) == 0 ){
 		return H_DEFAULT_ERROR;
 	}
 
-	FILE  *fp = fopen( filename.c_str(), "rt" );
+	FILE  *fp = fopen( filename, "rt" );
 	char   line[1024] = {0};
 
     while( fgets( line, 1024, fp ) != NULL ){
@@ -127,9 +132,11 @@ HYBRIS_DEFINE_FUNCTION(hdyn_functions){
 }
 
 HYBRIS_DEFINE_FUNCTION(hmethods){
-	Class  *co = (Class *)ob_argv(0);
-	Object 		 *vo = (Object *)gc_new_vector();
+	Class  *co;
+	Object *vo = (Object *)gc_new_vector();
 	ClassMethodIterator i;
+
+	vm_parse_argv( "C", &co);
 
 	for( i = co->c_methods.begin(); i != co->c_methods.end(); i++ ){
 		ob_cl_push_reference( vo, (Object *)gc_new_string( (*i)->label.c_str() ) );
@@ -139,7 +146,10 @@ HYBRIS_DEFINE_FUNCTION(hmethods){
 }
 
 HYBRIS_DEFINE_FUNCTION(hcall){
+	string function;
 	vmem_t stack;
+
+	vm_parse_argv( "s", &function );
 
 	if( ob_argc() > 1 ){
 		unsigned int i;
@@ -148,32 +158,34 @@ HYBRIS_DEFINE_FUNCTION(hcall){
 		}
 	}
 
-	Object *state = engine_on_threaded_call( vm->engine, string_argv(0), data, &stack );
+	Object *state = engine_on_threaded_call( vm->engine, function, data, &stack );
 
 	return state;
 }
 
 HYBRIS_DEFINE_FUNCTION(hcall_method){
-	Object *classref   = ob_argv(0);
-	char   *classname  = (char *)ob_typename(classref),
-		   *methodname = (char *)((String *)ob_argv(1))->value.c_str();
-	Object *argv 	   = ob_argv(2);
+	Class  *classref;
+	char   *methodname;
+	Vector *argv;
 
+	vm_parse_argv( "CpV", &classref, &methodname, &argv );
+
+	char    *classname  = (char *)ob_typename( (Object *)classref );
 	Node    *method = H_UNDEFINED;
 	vframe_t stack;
 	Object  *value  = H_UNDEFINED,
 			*result = H_UNDEFINED;
 	Integer index(0);
-	size_t j, argc( ob_get_size(argv) );
+	size_t j, argc( ob_get_size( (Object *)argv ) );
 
-	method = ob_get_method( classref, methodname, 2 );
+	method = ob_get_method( (Object *)classref, methodname, 2 );
 	if( method == H_UNDEFINED ){
 		hyb_error( H_ET_SYNTAX, "'%s' does not name a method neither an attribute of '%s'", methodname, classname );
 	}
 	stack.owner = string(classname) + "::" + methodname;
-	stack.insert( "me", classref );
+	stack.insert( "me", (Object *)classref );
 	for( ; (unsigned)index.value < argc; ++index.value ){
-		value = ob_cl_at( argv, (Object *)&index );
+		value = ob_cl_at( (Object *)argv, (Object *)&index );
 		stack.insert( (char *)method->child(j)->value.m_identifier.c_str(), value  );
 	}
 

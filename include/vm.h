@@ -517,5 +517,15 @@ INLINE pcre *vm_pcre_compile( vm_t *vm, string& pattern, int opts, const char **
 	 */
 	return compiled;
 }
+/*
+ * Parse the frame to extract C-Type or Hybris-Type arguments accordingly to
+ * given format.
+ * See the implementation for more details about type formats.
+ */
+void vm_parse_frame_argv( vframe_t *argv, char *format, ... );
+/*
+ * Same as vm_parse_frame_argv, just easier to use with dynamic modules.
+ */
+#define vm_parse_argv( format, ... ) vm_parse_frame_argv( data, format, __VA_ARGS__ )
 
 #endif

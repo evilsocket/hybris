@@ -55,20 +55,28 @@ HYBRIS_DEFINE_FUNCTION(hticks){
 }
 
 HYBRIS_DEFINE_FUNCTION(husleep){
+	int us;
 	struct timespec ts;
 
-    ts.tv_sec  = int_argv(0) / 1000000;
+	vm_parse_argv( "i", &us );
+
+    ts.tv_sec  = us / 1000000;
     ts.tv_nsec = ts.tv_sec * 1000;
+
     nanosleep(&ts,&ts);
 
 	return H_DEFAULT_RETURN;
 }
 
 HYBRIS_DEFINE_FUNCTION(hsleep){
+	int ms;
 	struct timespec ts;
 
-    ts.tv_sec  = int_argv(0) / 1000;
+	vm_parse_argv( "i", &ms );
+
+    ts.tv_sec  = ms / 1000;
     ts.tv_nsec = ts.tv_sec * 1000;
+
     nanosleep(&ts,&ts);
 
 	return H_DEFAULT_RETURN;

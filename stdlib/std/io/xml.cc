@@ -112,14 +112,16 @@ Object *xml_traverse( xmlNode *node ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hxml_load){
-	string   filename = string_argv(0);
-	xmlDoc  *doc  = NULL;
+	char   *filename;
+	xmlDoc *doc  = NULL;
+
+	vm_parse_argv( "p", &filename );
 
 	LIBXML_TEST_VERSION
 
-	doc = xmlReadFile( filename.c_str(), NULL, 0);
+	doc = xmlReadFile( filename, NULL, 0);
 	if( doc == NULL ){
-		hyb_error( H_ET_GENERIC, "error loading or parsing '%s'", filename.c_str() );
+		hyb_error( H_ET_GENERIC, "error loading or parsing '%s'", filename );
 	}
 
 	Object *node = xml_traverse( xmlDocGetRootElement(doc) );
@@ -131,8 +133,10 @@ HYBRIS_DEFINE_FUNCTION(hxml_load){
 }
 
 HYBRIS_DEFINE_FUNCTION(hxml_parse){
-	string   xml  = string_argv(0);
-	xmlDoc  *doc  = NULL;
+	string   xml;
+	xmlDoc  *doc = NULL;
+
+	vm_parse_argv( "s", &xml );
 
 	LIBXML_TEST_VERSION
 

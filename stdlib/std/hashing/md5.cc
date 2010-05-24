@@ -263,8 +263,11 @@ void md5_finish( md5_context *vm, unsigned char output[16] )
 }
 
 HYBRIS_DEFINE_FUNCTION(hmd5){
-	string        str 	   = string_argv(0),
+	string        str,
 				  str_hash("");
+
+	vm_parse_argv( "s", &str );
+
 	unsigned char hash[16] = {0};
 	char          hex[3]   = {0};
 	unsigned int  i, size( str.size() );
@@ -283,8 +286,11 @@ HYBRIS_DEFINE_FUNCTION(hmd5){
 }
 
 HYBRIS_DEFINE_FUNCTION(hmd5_file){
-	string        fname	   = string_argv(0),
+	string        fname,
 				  str_hash("");
+
+	vm_parse_argv( "s", &fname );
+
 	FILE		 *fp = NULL;
 	unsigned char hash[16] = {0},
 				  buffer[1024];

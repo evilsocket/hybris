@@ -144,4 +144,3 @@ void hyb_timediff( ulong uticks, char *buffer ){
         sprintf( buffer, "%lf h", ticks / HH_DELTA );
     }
 }
-

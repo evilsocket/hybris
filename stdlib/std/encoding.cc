@@ -48,9 +48,13 @@ INLINE bool is_base64(unsigned char c) {
 HYBRIS_DEFINE_FUNCTION(hurlencode){
     Object *_return;
 
-    char *pstr = (char *)string_argv(0).c_str(),
-         *buf  = (char *)malloc( strlen(pstr) * 3 + 1 ),
-         *pbuf = buf;
+    char *pstr,
+         *buf,
+         *pbuf;
+
+    vm_parse_argv( "p", &pstr );
+
+    pbuf = buf = (char *)malloc( strlen(pstr) * 3 + 1 );
 
     while(*pstr){
         if( isalnum(*pstr) || *pstr == '-' || *pstr == '_' || *pstr == '.' || *pstr == '~' ){
@@ -78,9 +82,13 @@ HYBRIS_DEFINE_FUNCTION(hurlencode){
 HYBRIS_DEFINE_FUNCTION(hurldecode){
     Object *_return;
 
-    char *pstr = (char *)string_argv(0).c_str(),
-         *buf  = (char *)malloc(strlen(pstr) + 1),
-         *pbuf = buf;
+    char *pstr,
+         *buf,
+         *pbuf;
+
+    vm_parse_argv( "p", &pstr );
+
+    pbuf = buf  = (char *)malloc( strlen(pstr) + 1 );
 
     while(*pstr){
         if(*pstr == '%'){
@@ -113,10 +121,14 @@ HYBRIS_DEFINE_FUNCTION(hbase64encode) {
     std::string ret;
     unsigned char block_3[3];
     unsigned char block_4[4];
-    char * str = (char *)string_argv(0).c_str();
+    char *str;
     int i = 0,
         j = 0,
-        size = strlen(str);;
+        size;
+
+    vm_parse_argv( "p", &str );
+
+    size = strlen(str);
 
     while( size-- ){
         block_3[i++] = *(str++);
@@ -156,13 +168,16 @@ HYBRIS_DEFINE_FUNCTION(hbase64encode) {
 HYBRIS_DEFINE_FUNCTION(hbase64decode) {
     static const std::string b64_charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     std::string ret;
-    char * str = (char *)string_argv(0).c_str();
-    int in_len = strlen(str),
+    char * str;
+    int in_len,
         i = 0,
         j = 0,
         in_ = 0;
     unsigned char block_4[4], block_3[3];
 
+    vm_parse_argv( "p", &str );
+
+    in_len = strlen(str);
 
     while( in_len-- && ( str[in_] != '=') && is_base64(str[in_]) ){
         block_4[i++] = str[in_];

@@ -450,3 +450,143 @@ void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){
 		fprintf( stderr, "\n" );
 	}
 }
+
+void vm_parse_frame_argv( vframe_t *argv, char *format, ... ){
+	size_t argc( argv->size() ),
+		   fmt_size( strlen(format) ),
+		   /*
+		    * Take the minimun value between the number of arguments and
+		    * the length of the format string.
+		    * Therefore if we have less arguments than we expected (optional args
+		    * for instance), they will not be considered and will be left to
+		    * default values.
+		    * Viceversa, if we have less format characters than arguments (user
+		    * passed too many args to a function), only the right amount of values
+		    * will be fetched from the frame and formatted.
+		    */
+		   end( argc < fmt_size ? argc : fmt_size ),
+		   i;
+	char   c;
+	va_list va;
+
+	va_start( va, format );
+	for( i = 0, c = &format; i < end && *c; ++i, ++c ){
+		Object *o = argv->at(i);
+
+		switch( c ){
+			/*
+			 * C-Types.
+			 */
+			case 'i' : {
+				int *p = va_arg( va, int * );
+				*p = ob_ivalue( o );
+			}
+			break;
+
+			case 'l' : {
+				long *p = va_arg( va, long * );
+				*p = (long)ob_ivalue( o );
+			}
+			break;
+
+			case 'd' : {
+				double *p = va_arg( va, double * );
+				*p = ob_fvalue( o );
+			}
+			break;
+
+			case 'p' : {
+				char **p = va_arg( va, char ** );
+				*p = (char *)ob_svalue( o ).c_str();
+			}
+			break;
+
+			case 's' : {
+				string *p = va_arg( va, string * );
+				*p = ob_svalue( o );
+			}
+			break;
+
+			case 'c' : {
+				char *p = va_arg( va, char * );
+				*p = (char)ob_ivalue( o );
+			}
+			break;
+
+			case 'b' : {
+				bool *p = va_arg( va, bool * );
+				*p = ob_lvalue( o );
+			}
+			break;
+			/*
+			 * Hybris types.
+			 */
+			case 'O' : {
+				Object **p = va_arg( va, Object ** );
+				*p = o;
+			}
+			break;
+
+			case 'E' : {
+				Extern **p = va_arg( va, Extern ** );
+				*p = ob_extern_ucast( o );
+			}
+			break;
+
+			case 'A' : {
+				Alias **p = va_arg( va, Alias ** );
+				*p = ob_alias_ucast( o );
+			}
+			break;
+
+			case 'H' : {
+				Handle **p = va_arg( va, Handle ** );
+				*p = ob_handle_ucast( o );
+			}
+			break;
+
+			case 'V' : {
+				Vector **p = va_arg( va, Vector ** );
+				*p = ob_vector_ucast( o );
+			}
+			break;
+
+			case 'B' : {
+				Binary **p = va_arg( va, Binary ** );
+				*p = ob_binary_ucast( o );
+			}
+			break;
+
+			case 'M' : {
+				Map **p = va_arg( va, Map ** );
+				*p = ob_map_ucast( o );
+			}
+			break;
+
+			case 'R' : {
+				Reference **p = va_arg( va, Reference ** );
+				*p = ob_ref_ucast( o );
+			}
+			break;
+
+			case 'S' : {
+				Structure **p = va_arg( va, Structure ** );
+				*p = ob_struct_ucast( o );
+			}
+			break;
+
+			case 'C' : {
+				Class **p = va_arg( va, Class ** );
+				*p = ob_class_ucast( o );
+			}
+			break;
+
+			default :
+				/*
+				 * THIS SHOULD NEVER HAPPEN!
+				 */
+				assert(!!!"Invalid format given!");
+		}
+	}
+	va_end(va);
+}

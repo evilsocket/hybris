@@ -131,31 +131,35 @@ extern "C" void hybris_module_init( vm_t * vm ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hsocket){
-	int domain = int_argv(0),
-		type   = int_argv(1),
-		/*
-		 * Protocol is choosen automatically.
-		 */
-		proto  = 0,
+	int domain,
+		type;
+
+	vm_parse_argv( "ii", &domain, &type );
+
+	/*
+	 * Protocol is choosen automatically.
+	 */
+	int	proto  = 0,
 		sd     = socket ( domain, type, proto );
 
 	return (sd > 0 ? ob_dcast( MK_SOCK( sd, domain, type, proto ) ) : H_DEFAULT_ERROR);
 }
 
 HYBRIS_DEFINE_FUNCTION(hbind){
-	SocketObject *sobj = (SocketObject *)handle_argv(0);
+	Handle *handle;
+	string address;
+	int    port = 0;
 
-	int    port    = 0,
-		   res     = -1;
-	string address = string_argv(1);
+	vm_parse_argv( "Hsi", &handle, &address, &port );
+
+	SocketObject *sobj = (SocketObject *)handle->value;
+
+	int res     = -1;
 
 	struct sockaddr_in saddr;
 
-	if( ob_argc() > 2 ){
-		port = int_argv(2);
-		if( port < 0 || port > 0xffff ){
-			hyb_error( H_ET_GENERIC, "allowed port interval is 0-65535, given %d", port );
-		}
+	if( port < 0 || port > 0xffff ){
+		hyb_error( H_ET_GENERIC, "allowed port interval is 0-65535, given %d", port );
 	}
 
 	hostent * host = gethostbyname( address.c_str() );
@@ -174,21 +178,25 @@ HYBRIS_DEFINE_FUNCTION(hbind){
 }
 
 HYBRIS_DEFINE_FUNCTION(hlisten){
-	int sd 		= ((SocketObject *)handle_argv(0))->sd,
-		backlog = 10,
-		res     = -1;
+	Handle *handle;
+	int     backlog = 10;
 
-	if( ob_argc() >= 2 ){
-		backlog = int_argv(1);
-	}
+	vm_parse_argv( "Hi", &handle, &backlog );
+
+	int sd  = ((SocketObject *)handle->value)->sd,
+		res = -1;
 
 	res = listen( sd, backlog );
 
-	return ob_dcast( gc_new_integer(res) );
+	return (Object *)gc_new_integer(res);
 }
 
 HYBRIS_DEFINE_FUNCTION(haccept){
-	SocketObject *sobj = (SocketObject *)handle_argv(0);
+	Handle *handle;
+
+	vm_parse_argv( "H", &handle );
+
+	SocketObject *sobj = (SocketObject *)handle->value;
 	int			  csd  = -1;
 
 	csd = accept( sobj->sd, NULL, NULL );
@@ -202,7 +210,13 @@ HYBRIS_DEFINE_FUNCTION(haccept){
 }
 
 HYBRIS_DEFINE_FUNCTION(hgetsockname){
-	SocketObject *sobj = (SocketObject *)handle_argv(0);
+	Handle    *handle;
+	Reference *raddress,
+	  		  *rport;
+
+	vm_parse_argv( "HRR", &handle, &raddress, &rport );
+
+	SocketObject *sobj = (SocketObject *)handle->value;
 	char		  ipstr[INET6_ADDRSTRLEN];
 	int 		  port;
 	socklen_t 	  len  = sizeof(struct sockaddr_storage);
@@ -229,9 +243,6 @@ HYBRIS_DEFINE_FUNCTION(hgetsockname){
 		inet_ntop( AF_INET6, &s->sin6_addr, ipstr, INET6_ADDRSTRLEN );
 	}
 
-	Reference *raddress = (Reference *)ob_argv(1),
-					*rport	  = (Reference *)ob_argv(2);
-
 	ob_assign( (Object *)raddress, (Object *)gc_new_string(ipstr) );
 	ob_assign( (Object *)rport,    (Object *)gc_new_integer(port) );
 
@@ -239,7 +250,13 @@ HYBRIS_DEFINE_FUNCTION(hgetsockname){
 }
 
 HYBRIS_DEFINE_FUNCTION(hgetpeername){
-	SocketObject *sobj = (SocketObject *)handle_argv(0);
+	Handle    *handle;
+	Reference *raddress,
+	  		  *rport;
+
+	vm_parse_argv( "HRR", &handle, &raddress, &rport );
+
+	SocketObject *sobj = (SocketObject *)handle->value;
 	char		  ipstr[INET6_ADDRSTRLEN];
 	int 		  port;
 	socklen_t 	  len  = sizeof(struct sockaddr_storage);
@@ -266,9 +283,6 @@ HYBRIS_DEFINE_FUNCTION(hgetpeername){
 	    inet_ntop( AF_INET6, &s->sin6_addr, ipstr, INET6_ADDRSTRLEN );
 	}
 
-	Reference *raddress = (Reference *)ob_argv(1),
-					*rport	  = (Reference *)ob_argv(2);
-
 	ob_assign( (Object *)raddress, (Object *)gc_new_string(ipstr) );
 	ob_assign( (Object *)rport,    (Object *)gc_new_integer(port) );
 
@@ -276,8 +290,14 @@ HYBRIS_DEFINE_FUNCTION(hgetpeername){
 }
 
 HYBRIS_DEFINE_FUNCTION(hsettimeout){
-	SocketObject  *sobj = (SocketObject *)handle_argv(0);
-	struct timeval tout = { 0 , int_argv(1) };
+	Handle *handle;
+	int		timeout;
+
+	vm_parse_argv( "Hi", &handle, &timeout );
+
+	SocketObject *sobj = (SocketObject *)handle->value;
+
+	struct timeval tout = { 0 , timeout };
 
 	setsockopt( sobj->sd, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
 	setsockopt( sobj->sd, SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
@@ -286,26 +306,32 @@ HYBRIS_DEFINE_FUNCTION(hsettimeout){
 }
 
 HYBRIS_DEFINE_FUNCTION(hconnect){
+	char *servername;
+	int	  port,
+		  timeout = -1;
+
+	vm_parse_argv( "pii", &servername, &port, &timeout );
+
 	int sd = socket( AF_INET, SOCK_STREAM, 0 );
 	if( sd <= 0 ){
 		return (Object *)gc_new_boolean(false);
 	}
-	if( ob_argc() >= 3 ){
-		struct timeval tout = { 0 , int_argv(2) };
+	if( timeout != -1 ){
+		struct timeval tout = { 0 , timeout };
 
 		setsockopt( sd, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
 		setsockopt( sd, SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
 	}
 
 	struct sockaddr_in server;
-	hostent * host = gethostbyname( string_argv(0).c_str() );
+	hostent * host = gethostbyname( servername );
 	if(!host){
-		hyb_error( H_ET_GENERIC, "invalid address given '%s'", string_argv(0).c_str() );
+		hyb_error( H_ET_GENERIC, "invalid address given '%s'", servername );
 	}
 
 	bzero( &server, sizeof(server) );
 	server.sin_family = AF_INET;
-	server.sin_port   = htons( int_argv(1) );
+	server.sin_port   = htons(port);
 	bcopy( host->h_addr, &(server.sin_addr.s_addr), host->h_length );
 
 	if( connect( sd, (struct sockaddr*)&server, sizeof(server) ) != 0 ){
@@ -316,18 +342,22 @@ HYBRIS_DEFINE_FUNCTION(hconnect){
 }
 
 HYBRIS_DEFINE_FUNCTION(hserver){
+	int port,
+		timeout = -1;
+
+	vm_parse_argv( "ii", &port, &timeout );
+
 	int sd = socket( AF_INET, SOCK_STREAM, 0 );
 	if( sd <= 0 ){
 		return (Object *)gc_new_boolean(false);
 	}
-	if( ob_argc() >= 2 ){
-		struct timeval tout = { 0 , int_argv(1) };
+	if( timeout ){
+		struct timeval tout = { 0 , timeout };
 
 		setsockopt( sd, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout) );
 		setsockopt( sd, SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout) );
 	}
 
-	short int port = int_argv(0);
 	struct    sockaddr_in servaddr;
 
 	bzero( &servaddr, sizeof(servaddr));
@@ -346,33 +376,39 @@ HYBRIS_DEFINE_FUNCTION(hserver){
 }
 
 HYBRIS_DEFINE_FUNCTION(hrecv){
-	int sd			 = ((SocketObject *)handle_argv(0))->sd;
-	size_t size 	 = 0;
-	Object *object   = ob_argv(1);
+	Handle *handle;
+	Object *object;
+	size_t  size   = 0;
 
-	/* explicit size declaration */
-	if( ob_argc() >= 3 ){
-		size = int_argv(2);
-	}
+	vm_parse_argv( "HOi", &handle, &object, &size );
+
+	int sd  = ((SocketObject *)handle->value)->sd;
 
 	return ob_from_fd( object, sd, size );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsend){
-	int sd 			 = ((SocketObject *)handle_argv(0))->sd;
-	size_t size 	 = 0;
-	Object *object   = ob_argv(1);
+	Handle *handle;
+	Object *object;
+	size_t  size   = 0;
 
-	/* explicit size declaration */
-	if( ob_argc() >= 3 ){
-		size = int_argv(2);
-	}
+	vm_parse_argv( "HOi", &handle, &object, &size );
+
+	int sd  = ((SocketObject *)handle->value)->sd;
 
 	return ob_to_fd( object, sd, size );
 }
 
 HYBRIS_DEFINE_FUNCTION(hclose){
-	close( ((SocketObject *)handle_argv(0))->sd );
+	Handle *handle;
+
+	vm_parse_argv( "H", &handle );
+
+	if( handle->value ){
+		close( ((SocketObject *)handle->value)->sd );
+
+		handle->value = NULL;
+	}
 
     return H_DEFAULT_RETURN;
 }

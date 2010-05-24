@@ -93,7 +93,9 @@ static unsigned long crc_table[] = {
 };
 
 HYBRIS_DEFINE_FUNCTION(hcrc32){
-	string str = string_argv(0);
+	string str;
+
+	vm_parse_argv( "s", &str );
 
     unsigned long crc( 0xFFFFFFFF ), i, size(str.size());
 

@@ -306,9 +306,12 @@ void sha2_finish( sha2_context *vm, unsigned char output[32] )
 }
 
 HYBRIS_DEFINE_FUNCTION(hsha2){
-    int 		  is224    = SHA256;
-	string        str 	   = string_argv(0),
+	string        str,
 				  str_hash("");
+
+	vm_parse_argv( "s", &str );
+
+	 int 		  is224    = SHA256;
 	unsigned char hash[32] = {0};
 	char		  hex[3]   = {0};
 	unsigned int  i, size( str.size() );

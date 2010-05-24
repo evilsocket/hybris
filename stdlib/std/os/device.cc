@@ -78,38 +78,48 @@ extern "C" void hybris_module_init( vm_t * vm ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hmknod){
-    const char *path = string_argv(0).c_str();
-    mode_t		mode = int_argv(1);
-    dev_t		dev  = int_argv(2);
+    char  *path;
+    mode_t mode;
+    dev_t  dev;
+
+    vm_parse_argv( "pii", &path, &mode, &dev );
 
     return (Object *)gc_new_integer( mknod( path, mode, dev ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hmkfifo){
-	const char *path = string_argv(0).c_str();
-	mode_t		mode = int_argv(1);
+	char  *path;
+	mode_t mode;
+
+	vm_parse_argv( "pi", &path, &mode );
 
 	return (Object *)gc_new_integer( mkfifo( path, mode ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hmount){
-	const char *special_file  = string_argv(0).c_str(),
-			   *dir           = string_argv(1).c_str(),
-			   *fstype        = string_argv(2).c_str();
-	unsigned long int options = int_argv(3);
+	char 		 *special_file,
+				 *dir,
+				 *fstype;
+	unsigned long options;
+
+	vm_parse_argv( "pppl", &special_file, &dir, &fstype, &options );
 
 	return (Object *)gc_new_integer( mount( special_file, dir, fstype, options, NULL ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(humount2){
-	const char *file  = string_argv(0).c_str();
-	int			flags = int_argv(1);
+	char *file;
+	int	  flags;
+
+	vm_parse_argv( "pi", &file, &flags );
 
 	return (Object *)gc_new_integer( umount2( file, flags ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(humount){
-	const char *file = string_argv(0).c_str();
+	char *file;
+
+	vm_parse_argv( "p", &file );
 
 	return (Object *)gc_new_integer( umount( file ) );
 }

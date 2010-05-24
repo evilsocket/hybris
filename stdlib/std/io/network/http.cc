@@ -78,11 +78,14 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 	struct curl_slist *headerlist = NULL;
 	string hbuffer,
 		   buffer,
-		   host = string_argv(0),
-		   page = string_argv(1),
+		   host,
+		   page,
 		   url;
-	unsigned int dohead = (ob_argc() >= 3 ? ob_lvalue( ob_argv(2) ) : 0),
-				 https  = !strncmp( "https://", host.c_str(), 8 );
+	bool   dohead = false,
+		   https  = !strncmp( "https://", host.c_str(), 8 );
+	Map   *headers = NULL;
+
+	vm_parse_argv( "ssbM", &host, &page, &dohead, &headers );
 
 	cd = curl_easy_init();
 
@@ -112,10 +115,9 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 		curl_easy_setopt( cd, CURLOPT_SSL_VERIFYHOST, 0L );
 	}
 
-	if( ob_argc() >= 4 ){
+	if( headers ){
 		unsigned int i;
 		string header;
-		Map *headers = map_argv(3);
 
 		for( i = 0; i < headers->items; ++i ){
 			string name  = ob_svalue( headers->keys[i] ),
@@ -135,7 +137,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_get){
 	}
 
 	if( !dohead ){
-		return ob_dcast( gc_new_string(buffer.c_str()) );
+		return (Object *)gc_new_string(buffer.c_str());
 	}
 	else{
 		Vector *array = gc_new_vector();
@@ -153,15 +155,18 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 	struct curl_httppost *formpost=NULL;
 	struct curl_httppost *lastptr=NULL;
 	struct curl_slist    *headerlist = NULL;
-	Map *post = map_argv(2);
 	string hbuffer,
 		   buffer,
-		   host = string_argv(0),
-		   page = string_argv(1),
+		   host,
+		   page,
 		   url;
-	unsigned int i,
-				 dohead = (ob_argc() >= 4 ? ob_lvalue( ob_argv(3) ) : 0),
-				 https  = !strncmp( "https://", host.c_str(), 8 );
+	Map   *post,
+		  *headers = NULL;
+	size_t i;
+	bool   dohead = false,
+		   https  = !strncmp( "https://", host.c_str(), 8 );
+
+	vm_parse_argv( "ssMbM", &host, &page, &post, &dohead, &headers );
 
 	cd = curl_easy_init();
 
@@ -191,10 +196,8 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 		curl_easy_setopt( cd, CURLOPT_SSL_VERIFYHOST, 0L );
 	}
 
-	if( ob_argc() >= 5 ){
+	if( headers ){
 		string header;
-		Map *headers = map_argv(4);
-
 		for( i = 0; i < headers->items; i++ ){
 			string name  = ob_svalue(headers->keys[i]),
                    value = ob_svalue(headers->values[i]);
@@ -240,9 +243,14 @@ HYBRIS_DEFINE_FUNCTION(hhttp_post){
 }
 
 HYBRIS_DEFINE_FUNCTION(hhttp_download){
+	string  file;
+	Handle *handle;
+	Alias  *alias = NULL;
+
+	vm_parse_argv( "sHA", &file, &handle, &alias );
+
 	http_progress_callback_data_t *http_data = NULL;
-	string  file = string_argv(0);
-	FILE    *fp  = (FILE *)handle_argv(1);
+	FILE    *fp  = (FILE *)handle->value;
 	CURL    *curl;
 	CURLcode res;
 
@@ -256,10 +264,10 @@ HYBRIS_DEFINE_FUNCTION(hhttp_download){
 	curl_easy_setopt( curl, CURLOPT_WRITEDATA, fp );
 	curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, http_download_callback );
 
-	if( ob_argc() > 2 ){
+	if( alias ){
 		http_data = new http_progress_callback_data_t;
 
-		http_data->handler = (Node *)alias_argv(2);
+		http_data->handler = (Node *)alias->value;
 		http_data->data    = data;
 
 		curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 0L );
