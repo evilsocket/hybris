@@ -45,10 +45,15 @@ INLINE ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_
 }
 
 size_t string_replace( string &source, const string find, string replace ) {
-    size_t j, count(0);
-    for( ; (j = source.find( find )) != string::npos; count++ ){
-        source.replace( j, find.length(), replace );
+    int i,
+		count,
+		f_len( find.length() ),
+		r_len( replace.length() );
+
+    for( i = 0, count = 0; (i = source.find( find, i )) != string::npos; i += r_len, ++count ){
+        source.replace( i, f_len, replace );
     }
+
     return count;
 }
 
@@ -100,12 +105,12 @@ Object *__string_replace( engine_t *engine, Object *me, vframe_t *data ){
 		   find = string_argv(0),
 		   repl = string_argv(1);
 
-	int    i(0),
+	int    i,
 		   f_len( find.length() ),
 		   r_len( repl.length() + 1 );
-	for( ; (i = str.find( find, i )) != string::npos ; ){
+
+	for( i = 0; (i = str.find( find, i )) != string::npos ; i += r_len ){
 		str.replace( i, f_len, repl );
-		i += r_len;
 	}
 
 	return (Object *)gc_new_string( str.c_str() );
