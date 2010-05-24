@@ -158,7 +158,7 @@ HYBRIS_DEFINE_FUNCTION(hcall){
 		}
 	}
 
-	Object *state = engine_on_threaded_call( vm->engine, function, data, &stack );
+	Object *state = vm_exec_threaded_call( vm, function, data, &stack );
 
 	return state;
 }
@@ -192,7 +192,7 @@ HYBRIS_DEFINE_FUNCTION(hcall_method){
 	vm_add_frame( vm, &stack );
 
 	/* call the method */
-	result = engine_exec( vm->engine, &stack, method->callBody() );
+	result = vm_exec( vm, &stack, method->callBody() );
 
 	vm_pop_frame( vm );
 

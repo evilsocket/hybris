@@ -16,9 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "common.h"
-#include "types.h"
-#include "vm.h"
+#include "hybris.h"
 
 /** builtin methods **/
 INLINE ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_id ){
@@ -38,15 +36,15 @@ INLINE ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_
 	return NULL;
 }
 
-Object *__vector_size( engine_t *engine, Object *me, vframe_t *data ){
+Object *__vector_size( vm_t *vm, Object *me, vframe_t *data ){
 	return (Object *)gc_new_integer( ob_vector_ucast(me)->items );
 }
 
-Object *__vector_pop( engine_t *engine, Object *me, vframe_t *data ){
+Object *__vector_pop( vm_t *vm, Object *me, vframe_t *data ){
 	return (Object *)ob_cl_pop( me );
 }
 
-Object *__vector_remove( engine_t *engine, Object *me, vframe_t *data ){
+Object *__vector_remove( vm_t *vm, Object *me, vframe_t *data ){
 	if( ob_argc() != 1 ){
 		hyb_error( H_ET_SYNTAX, "method 'remove' requires 1 parameter (called with %d)", ob_argc() );
 	}
@@ -54,7 +52,7 @@ Object *__vector_remove( engine_t *engine, Object *me, vframe_t *data ){
 	return (Object *)ob_cl_remove( me, ob_argv(0) );
 }
 
-Object *__vector_contains( engine_t *engine, Object *me, vframe_t *data ){
+Object *__vector_contains( vm_t *vm, Object *me, vframe_t *data ){
 	if( ob_argc() != 1 ){
 		hyb_error( H_ET_SYNTAX, "method 'contains' requires 1 parameter (called with %d)", ob_argc() );
 	}
@@ -73,7 +71,7 @@ Object *__vector_contains( engine_t *engine, Object *me, vframe_t *data ){
 	return (Object *)gc_new_boolean(false);
 }
 
-Object *__vector_join( engine_t *engine, Object *me, vframe_t *data ){
+Object *__vector_join( vm_t *vm, Object *me, vframe_t *data ){
 	if( ob_argc() != 1 ){
 		hyb_error( H_ET_SYNTAX, "method 'join' requires 1 parameter (called with %d)", ob_argc() );
 	}
@@ -407,7 +405,7 @@ Object *vector_cl_set_reference( Object *me, Object *i, Object *v ){
     return me;
 }
 
-Object *vector_call_method( engine_t *engine, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
+Object *vector_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
 	ob_type_builtin_method_t *method = NULL;
 
 	if( (method = ob_get_builtin_method( me, method_id )) == NULL ){
@@ -422,17 +420,17 @@ Object *vector_call_method( engine_t *engine, vframe_t *frame, Object *me, char 
 	/*
 	 * Add this frame as the active stack
 	 */
-	vm_add_frame( engine->vm, &stack );
+	vm_add_frame( vm, &stack );
 
 	stack.owner = ob_typename(me) + string("::") + method_id;
 	/*
 	 * Evaluate each object and insert it into the stack
 	 */
 	for( i = 0; i < argc; ++i ){
-		value = engine_exec( engine, frame, argv->child(i) );
+		value = vm_exec( vm, frame, argv->child(i) );
 
 		if( frame->state.is(Exception) || frame->state.is(Return) ){
-			vm_pop_frame( engine->vm );
+			vm_pop_frame( vm );
 			return frame->state.value;
 		}
 
@@ -440,12 +438,12 @@ Object *vector_call_method( engine_t *engine, vframe_t *frame, Object *me, char 
 	}
 
 	/* execute the method */
-	result = ((ob_type_builtin_method_t)method)( engine, me, &stack );
+	result = ((ob_type_builtin_method_t)method)( vm, me, &stack );
 
 	/*
 	 * Dismiss the stack.
 	 */
-	vm_pop_frame( engine->vm );
+	vm_pop_frame( vm );
 
 	/* return method evaluation value */
 	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);

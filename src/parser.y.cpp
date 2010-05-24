@@ -19,7 +19,6 @@
 */
 
 #include "hybris.h"
-#include "engine.h"
 
 #define YY_(s) (char *)s
 /*
@@ -266,7 +265,7 @@ main : statements {
 
 	__hyb_vm->state = vmExecuting;
 
-	engine_exec( __hyb_vm->engine, &__hyb_vm->vmem, $1 );
+	vm_exec( __hyb_vm, &__hyb_vm->vmem, $1 );
 
 	vm_timer( __hyb_vm, HYB_TIMER_STOP );
 

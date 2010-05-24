@@ -18,7 +18,6 @@
 */
 #include "node.h"
 #include "memory.h"
-#include "engine.h"
 
 NodeValue::NodeValue() :
     m_constant(NULL),

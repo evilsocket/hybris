@@ -17,6 +17,8 @@
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "vm.h"
+#include "parser.h"
+#include "hybris.h"
 
 #ifndef MAX_STRING_SIZE
 #	define MAX_STRING_SIZE 1024
@@ -114,10 +116,6 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
      */
     vm->main_tid = pthread_self();
     /*
-     * Create code engine
-     */
-    vm->engine = engine_init( vm );
-    /*
      * Save interpreter directory
      */
     getcwd( vm->args.rootpath, 0xFF );
@@ -205,8 +203,6 @@ void vm_release( vm_t *vm ){
      * need vmem, vconst, vtypes and so on to call classes destructors.
      */
     gc_release();
-
-    engine_free( vm->engine );
 
     unsigned int i, j,
                  ndyns( vm->modules.size() ),
@@ -416,7 +412,7 @@ void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){
 		string name;
 		vframe_t *frame = NULL;
 
-		stop = (vm->frames.size() >= MAX_RECURSION_THRESHOLD ? 10 : vm->frames.size());
+		stop = (vm->frames.size() >= VM_MAX_RECURSION ? 10 : vm->frames.size());
 
 		fprintf( stderr, "\nCall Stack [memory usage %d bytes] :\n\n", gc_mm_usage() );
 
@@ -438,7 +434,7 @@ void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){
 			}
 		}
 
-		if( vm->frames.size() >= MAX_RECURSION_THRESHOLD ){
+		if( vm->frames.size() >= VM_MAX_RECURSION ){
 			pad = j;
 			while(pad--){
 				fprintf( stderr, "  " );
@@ -523,3 +519,2351 @@ void vm_parse_frame_argv( vframe_t *argv, char *format, ... ){
 #undef HANDLE_C_TYPE
 #undef HANDLE_H_TYPE
 }
+
+/*
+ * Here starts the vm execution functions definition.
+ */
+INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner,  Object *cobj, int argc, Node *prototype, Node *argv ){
+	int 	i, n_ids(prototype->children());
+	Object *value;
+
+	/*
+	 * Check for heavy recursions and/or nested calls.
+	 */
+	if( vm_scope_size(vm) >= VM_MAX_RECURSION ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+	}
+	/*
+	 * Set the stack owner
+	 */
+	stack.owner = owner;
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( vm, &stack );
+	/*
+	 * Static methods can not use 'me' instance.
+	 */
+	if( prototype->value.m_static == false ){
+		stack.insert( "me", cobj );
+	}
+	/*
+	 * Evaluate each object and insert it into the stack
+	 */
+	for( i = 0; i < argc; ++i ){
+		value = vm_exec( vm, root, argv->child(i) );
+		if( root->state.is(Exception) ){
+			vm_dismiss_stack( vm );
+			return;
+		}
+		if( i >= n_ids ){
+			stack.push( value );
+		}
+		else{
+			stack.insert( (char *)prototype->child(i)->value.m_identifier.c_str(), value );
+		}
+	}
+}
+
+INLINE void vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, Object *cobj, Node *ids, int argc, ... ){
+	va_list ap;
+	int i, n_ids(ids->children());
+	Object *value;
+
+	/*
+	 * Check for heavy recursions and/or nested calls.
+	 */
+	if( vm_scope_size(vm) >= VM_MAX_RECURSION ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+	}
+	stack.owner = owner;
+
+	stack.insert( "me", cobj );
+	/*
+	 * Evaluate each object and insert it into the stack
+	 */
+	va_start( ap, argc );
+	for( i = 0; i < argc; ++i ){
+		value = va_arg( ap, Object * );
+		if( i >= n_ids ){
+			stack.push( value );
+		}
+		else{
+			stack.insert( (char *)ids->child(i)->value.m_identifier.c_str(), value );
+		}
+	}
+	va_end(ap);
+
+	vm_add_frame( vm, &stack );
+}
+
+INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, vmem_t *argv ){
+	int 	i, n_ids( ids.size() ), argc;
+	Object *value;
+
+	/*
+	 * Check for heavy recursions and/or nested calls.
+	 */
+	if( vm_scope_size(vm) >= VM_MAX_RECURSION ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+	}
+	/*
+	 * Set the stack owner
+	 */
+	stack.owner = owner;
+
+	argc = argv->size();
+	for( i = 0; i < argc; ++i ){
+		value = argv->at(i);
+		if( i >= n_ids ){
+			stack.push( value );
+		}
+		else{
+			stack.insert( (char *)ids[i].c_str(), value );
+		}
+	}
+
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( vm, &stack );
+}
+
+INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, Node *argv ){
+	int 	i, n_ids( ids.size() ), argc;
+	Object *value;
+
+	/*
+	 * Check for heavy recursions and/or nested calls.
+	 */
+	if( vm_scope_size(vm) >= VM_MAX_RECURSION ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+	}
+	/*
+	 * Set the stack owner
+	 */
+	stack.owner = owner;
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( vm, &stack );
+
+	argc = argv->children();
+	for( i = 0; i < argc; ++i ){
+		value = vm_exec( vm, root, argv->at(i) );
+
+		if( root->state.is(Exception) ){
+			vm_dismiss_stack( vm );
+		    return;
+		}
+
+		if( i >= n_ids ){
+			stack.push( value );
+		}
+		else{
+			stack.insert( (char *)ids[i].c_str(), value );
+		}
+	}
+}
+
+INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Extern *fn_pointer, Node *argv ){
+	int 	i, argc;
+	Object *value;
+
+	/*
+	 * Check for heavy recursions and/or nested calss.
+	 */
+	if( vm_scope_size(vm) >= VM_MAX_RECURSION ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+	}
+	/*
+	 * Set the stack owner
+	 */
+	stack.owner = owner;
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( vm, &stack );
+	stack.push( (Object *)fn_pointer );
+	argc = argv->children();
+	for( i = 0; i < argc; ++i ){
+		value = vm_exec( vm, root, argv->child(i) );
+		if( root->state.is(Exception) ){
+			vm_dismiss_stack( vm );
+			return;
+		}
+		stack.push( value );
+	}
+}
+
+INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Node *argv ){
+	int 	i, argc;
+	Object *value;
+
+	/*
+	 * Check for heavy recursions and/or nested calls.
+	 */
+	if( vm_scope_size(vm) >= VM_MAX_RECURSION ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+	}
+	/*
+	 * Set the stack owner
+	 */
+	stack.owner = owner;
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( vm, &stack );
+	argc = argv->children();
+	for( i = 0; i < argc; ++i ){
+		value = vm_exec( vm, root, argv->child(i) );
+		if( root->state.is(Exception) ){
+			vm_dismiss_stack( vm );
+			return;
+		}
+		stack.push( value );
+	}
+}
+
+INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, named_function_t *function, vframe_t &stack, string owner, Node *argv ){
+	int 	i, argc, f_argc, t;
+	Object *value;
+	H_OBJECT_TYPE type;
+
+	/*
+	 * Check for heavy recursions and/or nested calls.
+	 */
+	if( vm_scope_size(vm) >= VM_MAX_RECURSION ){
+		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
+	}
+
+	/*
+	 * First of all, check that the arguments number is the right one.
+	 */
+	argc = argv->children();
+	for( i = 0 ;; ++i ){
+		f_argc = function->argc[i];
+		if( f_argc < 0 ){
+			break;
+		}
+		else if( f_argc <= argc ){
+			break;
+		}
+	}
+	/*
+	 * If f_argc is -1 and i is 0, the first argc descriptor is H_ANY_ARGC so
+	 * the function pointer accept any number of arguments, otherwise, if i != 0
+	 * and f_argc is -1, we reached the end marker without a match, so the argc
+	 * is wrong.
+	 */
+	if( f_argc == -1 && i != 0 ){
+		hyb_error( H_ET_SYNTAX, "Function '%s' requires %s%d argument%s, %d given",
+							    function->identifier.c_str(),
+							    function->argc[1] >= 0 ? "at least " : "",
+							    function->argc[0],
+							    function->argc[0] > 1  ? "s" : "",
+							    argc );
+	}
+
+	stack.owner = owner;
+	/*
+	 * Add this frame as the active stack
+	 */
+	vm_add_frame( vm, &stack );
+	/*
+	 * Ok, argc is the right one (or one of the right ones), now evaluate each
+	 * object and check the type.
+	 */
+	for( i = 0; i < argc; ++i ){
+		value = vm_exec( vm, root, argv->child(i) );
+
+		if( root->state.is(Exception) ){
+			vm_dismiss_stack( vm );
+			return;
+	    }
+		if( f_argc != -1 && i < f_argc ){
+			for( t = 0 ;; ++t ){
+				type = function->types[i][t];
+				if( type <= otVoid ){
+					break;
+				}
+				else if( value->type->code == type ){
+					break;
+				}
+			}
+			/*
+			 * Same as before, check if H_ANY_TYPE given or report error.
+			 */
+			if( type <= otVoid && t != 0 ){
+				std::stringstream error;
+
+				error << "Invalid " << ob_typename(value)
+					  << " type for argument " << i + 1
+					  << " of '"
+					  << function->identifier.c_str()
+					  << "' function, required type"
+					  << (function->types[i][1] > 0 ? "s are " : " is ");
+
+				for( t = 0 ;; ++t ){
+					type = function->types[i][t];
+					if( type <= otVoid ){
+						break;
+					}
+					bool prev_last = ( function->types[i][t + 2] <= otVoid );
+					bool last      = ( function->types[i][t + 1] <= otVoid );
+					error << ob_type_to_string(type) << ( last ? "" : (prev_last ? " or " : ", ") );
+				}
+
+				hyb_error( H_ET_SYNTAX, error.str().c_str() );
+			}
+		}
+
+		stack.push( value );
+	}
+}
+
+INLINE void vm_dismiss_stack( vm_t *vm ){
+	vm_pop_frame( vm );
+}
+
+INLINE Node * vm_find_function( vm_t *vm, vframe_t *frame, Node *call ){
+    char *callname = (char *)call->value.m_call.c_str();
+
+    /* search first in the code segment */
+	Node *function = H_UNDEFINED;
+	if( (function = vm->vcode.get(callname)) != H_UNDEFINED ){
+		return function;
+	}
+	/* then search for a function alias */
+	Alias *alias = (Alias *)frame->get( callname );
+	if( alias != H_UNDEFINED && ob_is_alias(alias) ){
+		return (Node *)alias->value;
+	}
+	/* try to evaluate the call as an alias itself */
+	if( call->value.m_alias_call != NULL ){
+		alias = (Alias *)vm_exec( vm, frame, call->value.m_alias_call );
+		if( ob_is_alias(alias) ){
+			return (Node *)alias->value;
+		}
+	}
+	/* function is not defined */
+	return H_UNDEFINED;
+}
+
+Object *vm_exec( vm_t *vm, vframe_t *frame, Node *node ){
+    /*
+	 * An exception has been thrown, wait for a try-catch statement or,
+	 * when the frame will be deleted (vframe_t class destructor), exit
+	 * with a non handled exception.
+	 */
+	if( frame->state.is(Exception) ){
+		return frame->state.value;
+	}
+    /*
+	 * A return statement was succesfully executed, skip everything
+	 * now on until the frame will be destroyed and return appropriate
+	 * value.
+	 */
+	else if( frame->state.is(Return) ){
+		return frame->state.value;
+	}
+    /*
+     * A next statement was found, so skip nodes execution
+     * until one of the loop handlers will reset the flag.
+     */
+    else if( frame->state.is(Next) ){
+    	return H_DEFAULT_RETURN;
+    }
+	/*
+	 * Null node, probably a function or method without statements.
+	 */
+    else if( node == H_UNDEFINED ){
+    	return H_DEFAULT_RETURN;
+    }
+
+	/*
+	 * Set current line number.
+	 */
+	vm_set_lineno( vm, node->lineno() );
+
+    switch( node->type() ){
+        /* identifier */
+        case H_NT_IDENTIFIER :
+            return vm_exec_identifier( vm, frame, node );
+        /* attribute */
+        case H_NT_ATTRIBUTE  :
+            return vm_exec_attribute_request( vm, frame, node );
+		/* attribute */
+		case H_NT_METHOD_CALL :
+			return vm_exec_method_call( vm, frame, node );
+        /* constant value */
+        case H_NT_CONSTANT   :
+            return vm_exec_constant( vm, frame, node );
+        /* function definition */
+        case H_NT_FUNCTION   :
+            return vm_exec_function_declaration( vm, frame, node );
+        /* structure or class creation */
+        case H_NT_NEW :
+            return vm_exec_new_operator( vm, frame, node );
+        /* function call */
+        case H_NT_CALL       :
+            return vm_exec_function_call( vm, frame, node );
+        /* struct type declaration */
+        case H_NT_STRUCT :
+            return vm_exec_structure_declaration( vm, frame, node );
+        /* class type declaration */
+        case H_NT_CLASS :
+			return vm_exec_class_declaration( vm, frame, node );
+
+		/* statements */
+        case H_NT_STATEMENT :
+        	/*
+        	 * Call the garbage collection routine every new statement.
+        	 * If the routine would be called on expressions too, there would be a high
+        	 * risk of loosing tmp values such as evaluations, ecc.
+        	 */
+        	gc_collect( vm );
+
+            switch( node->value.m_statement ){
+				/* statement unless expression */
+				case T_UNLESS :
+					return vm_exec_unless( vm, frame, node );
+                /* if( condition ) */
+                case T_IF     :
+                    return vm_exec_if( vm, frame, node );
+                /* while( condition ){ body } */
+                case T_WHILE  :
+                    return vm_exec_while( vm, frame, node );
+                /* do{ body }while( condition ); */
+                case T_DO  :
+                    return vm_exec_do( vm, frame, node );
+                /* for( initialization; condition; variance ){ body } */
+                case T_FOR    :
+                    return vm_exec_for( vm, frame, node );
+                /* foreach( item of array ) */
+                case T_FOREACH :
+                    return vm_exec_foreach( vm, frame, node );
+                /* foreach( label -> item of map ) */
+                case T_FOREACHM :
+                    return vm_exec_foreach_mapping( vm, frame, node );
+				/* break; */
+				case T_BREAK :
+					vm_exec_break_state( frame );
+				break;
+				/* next; */
+				case T_NEXT :
+					vm_exec_next_state( frame );
+				break;
+				/* return */
+				case T_RETURN :
+					return vm_exec_return( vm, frame, node );
+                /* (condition ? expression : expression) */
+                case T_QUESTION :
+                    return vm_exec_question( vm, frame, node );
+				/* switch statement */
+                case T_SWITCH :
+                    return vm_exec_switch( vm, frame, node );
+                case T_EXPLODE :
+                	return vm_exec_explode( vm, frame, node );
+                /* throw expression; */
+                case T_THROW :
+					return vm_exec_throw( vm, frame, node );
+				/* try-catch statement */
+                case T_TRY :
+                	return vm_exec_try_catch( vm, frame, node );
+            }
+        break;
+
+        /* expressions */
+        case H_NT_EXPRESSION   :
+            switch( node->value.m_expression ){
+                /* identifier = expression */
+                case T_ASSIGN    :
+                    return vm_exec_assign( vm, frame, node );
+                /* expression ; */
+                case T_EOSTMT  :
+                    return vm_exec_eostmt( vm, frame, node );
+                /* [ a, b, c, d ] */
+                case T_ARRAY :
+					return vm_exec_array( vm, frame, node );
+				/* [ a : b, c : d ] */
+                case T_MAP :
+					return vm_exec_map( vm, frame, node );
+                /* & expression */
+                case T_REF :
+                	return vm_exec_reference( vm, frame, node );
+                break;
+                /* `string` */
+                case T_BACKTICK :
+					return vm_exec_backtick( vm, frame, node );
+                break;
+                /* $ */
+                case T_DOLLAR :
+                    return vm_exec_dollar( vm, frame, node );
+                /* @ */
+                case T_VARGS :
+                	return vm_exec_vargs( vm, frame, node );
+                /* expression .. expression */
+                case T_RANGE :
+                    return vm_exec_range( vm, frame, node );
+                /* array[] = object; */
+                case T_SUBSCRIPTADD :
+                    return vm_exec_subscript_push( vm, frame, node );
+                /* (identifier)? = object[ expression ]; */
+                case T_SUBSCRIPTGET :
+                    return vm_exec_subscript_get( vm, frame, node );
+                /* object[ expression ] = expression */
+                case T_SUBSCRIPTSET :
+                    return vm_exec_subscript_set( vm, frame, node );
+                /* -expression */
+                case T_UMINUS :
+                    return vm_exec_uminus( vm, frame, node );
+                /* expression ~= expression */
+                case T_REGEX_OP :
+                    return vm_exec_regex( vm, frame, node );
+                /* expression + expression */
+                case T_PLUS    :
+                    return vm_exec_add( vm, frame, node );
+                /* expression += expression */
+                case T_PLUSE   :
+                    return vm_exec_inplace_add( vm, frame, node );
+                /* expression - expression */
+                case T_MINUS    :
+                    return vm_exec_sub( vm, frame, node );
+                /* expression -= expression */
+                case T_MINUSE   :
+                    return vm_exec_inplace_sub( vm, frame, node );
+                /* expression * expression */
+                case T_MUL	:
+                    return vm_exec_mul( vm, frame, node );
+                /* expression *= expression */
+                case T_MULE	:
+                    return vm_exec_inplace_mul( vm, frame, node );
+                /* expression / expression */
+                case T_DIV    :
+                    return vm_exec_div( vm, frame, node );
+                /* expression /= expression */
+                case T_DIVE   :
+                    return vm_exec_inplace_div( vm, frame, node );
+                /* expression % expression */
+                case T_MOD    :
+                    return vm_exec_mod( vm, frame, node );
+                /* expression %= expression */
+                case T_MODE   :
+                    return vm_exec_inplace_mod( vm, frame, node );
+                /* expression++ */
+                case T_INC    :
+                    return vm_exec_inc( vm, frame, node );
+                /* expression-- */
+                case T_DEC    :
+                    return vm_exec_dec( vm, frame, node );
+                /* expression ^ expression */
+                case T_XOR    :
+                    return vm_exec_xor( vm, frame, node );
+                /* expression ^= expression */
+                case T_XORE   :
+                    return vm_exec_inplace_xor( vm, frame, node );
+                /* expression & expression */
+                case T_AND    :
+                    return vm_exec_and( vm, frame, node );
+                /* expression &= expression */
+                case T_ANDE   :
+                    return vm_exec_inplace_and( vm, frame, node );
+                /* expression | expression */
+                case T_OR     :
+                    return vm_exec_or( vm, frame, node );
+                /* expression |= expression */
+                case T_ORE    :
+                    return vm_exec_inplace_or( vm, frame, node );
+                /* expression << expression */
+                case T_SHIFTL  :
+                    return vm_exec_shiftl( vm, frame, node );
+                /* expression <<= expression */
+                case T_SHIFTLE :
+                    return vm_exec_inplace_shiftl( vm, frame, node );
+                /* expression >> expression */
+                case T_SHIFTR  :
+                    return vm_exec_shiftr( vm, frame, node );
+                /* expression >>= expression */
+                case T_SHIFTRE :
+                    return vm_exec_inplace_shiftr( vm, frame, node );
+                /* expression! */
+                case T_FACT :
+                    return vm_exec_fact( vm, frame, node );
+                /* ~expression */
+                case T_NOT    :
+                    return vm_exec_not( vm, frame, node );
+                /* !expression */
+                case T_L_NOT   :
+                    return vm_exec_lnot( vm, frame, node );
+                /* expression < expression */
+                case T_LESS    :
+                    return vm_exec_less( vm, frame, node );
+                /* expression > expression */
+                case T_GREATER    :
+                    return vm_exec_greater( vm, frame, node );
+                /* expression >= expression */
+                case T_GREATER_EQ     :
+                    return vm_exec_ge( vm, frame, node );
+                /* expression <= expression */
+                case T_LESS_EQ     :
+                    return vm_exec_le( vm, frame, node );
+                /* expression != expression */
+                case T_NOT_SAME     :
+                    return vm_exec_ne( vm, frame, node );
+                /* expression == expression */
+                case T_SAME     :
+                    return vm_exec_eq( vm, frame, node );
+                /* expression && expression */
+                case T_L_AND   :
+                    return vm_exec_land( vm, frame, node );
+                /* expression || expression */
+                case T_L_OR    :
+                    return vm_exec_lor( vm, frame, node );
+            }
+    }
+
+    return H_DEFAULT_RETURN;
+}
+
+INLINE Object *vm_exec_identifier( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *o = H_UNDEFINED;
+    Node   *function   = H_UNDEFINED;
+    char   *identifier = (char *)node->value.m_identifier.c_str();
+
+    /*
+   	 * First thing first, check for a constant object name.
+   	 */
+   	if( (o = vm->vconst.get(identifier)) != H_UNDEFINED ){
+   		return o;
+   	}
+   	/*
+	 * Search for the identifier definition on
+	 * the function local stack frame.
+	 */
+   	else if( (o = frame->get(identifier)) != H_UNDEFINED ){
+		return o;
+	}
+	/*
+	 * Let's check if the address of this frame si different from
+	 * global frame one, in that case try to search the definition
+	 * on the global frame too.
+	 */
+	else if( H_ADDRESS_OF(frame) != H_ADDRESS_OF(&vm->vmem) && (o = vm->vmem.get( identifier )) != H_UNDEFINED ){
+		return o;
+	}
+	/*
+	 * Check for an user defined object (structure or class) name.
+	 */
+	else if( (o = vm->vtypes.get(identifier)) != H_UNDEFINED ){
+		return o;
+	}
+	/*
+	 * So, it's neither defined on local frame nor in the global one,
+	 * let's search for it in the vm->vcode frame.
+	 */
+	else if( (function = vm->vcode.find( identifier )) != H_UNDEFINED ){
+		/*
+		 * Create an alias to that vm->vcode region (basically its index).
+		 */
+		return ob_dcast( gc_new_alias( H_ADDRESS_OF(function) ) );
+	}
+	/*
+	 * Ok ok, got it! It's undefined, raise an error.
+	 */
+	else{
+		/*
+		 * Check for the special 'me' keyword.
+		 * If 'me' instance is not defined anywhere, we are in the
+		 * main program body or inside a static method.
+		 */
+		if( strcmp( identifier, "me" ) != 0 ){
+			hyb_error( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
+		}
+		else{
+			hyb_error( H_ET_SYNTAX, "couldn't use 'me' instance inside a global or static scope" );
+		}
+	}
+}
+
+INLINE Object *vm_exec_attribute_request( vm_t *vm, vframe_t *frame, Node *node ){
+	Object  *cobj      = H_UNDEFINED,
+		    *attribute = H_UNDEFINED;
+	char    *name,
+			*owner_id;
+	access_t access;
+	Node    *member = node->value.m_member;
+
+	cobj      = vm_exec( vm, frame, node->value.m_owner );
+	owner_id  = (char *)node->value.m_owner->value.m_identifier.c_str();
+	name      = (char *)member->value.m_identifier.c_str();
+	attribute = ob_get_attribute( cobj, name, true );
+
+	if( attribute == H_UNDEFINED ){
+		hyb_error( H_ET_SYNTAX, "'%s' is not an attribute of object '%s'", name, ob_typename(cobj) );
+	}
+	/*
+	 * Check attribute access.
+	 */
+	access = ob_attribute_access( cobj, name );
+	/*
+	 * If the attribute has public access, skip the access checking
+	 * because everyone can access it.
+	 */
+	if( access != asPublic ){
+		/*
+		 * Protected attributes can be accessed only by the class itself
+		 * or derived classes.
+		 */
+		if( access == asProtected && strcmp( owner_id, "me" ) != 0 ){
+			hyb_error( H_ET_SYNTAX, "Protected attribute '%s' can be accessed only by derived classes of '%s'", name, ob_typename(cobj) );
+		}
+		/*
+		 * The attribute is private, so only the owner can use it.
+		 * Let's check if the class pointed by 'me' it's the owner of
+		 * the private attribute.
+		 */
+		else if( access == asPrivate && strcmp( owner_id, "me" ) != 0 ){
+			hyb_error( H_ET_SYNTAX, "Private attribute '%s' can be accessed only within '%s' class", name, ob_typename(cobj) );
+		}
+	}
+
+	return attribute;
+}
+
+INLINE Object *vm_exec_method_call( vm_t *vm, vframe_t *frame, Node *node ){
+	Object  *cobj   = H_UNDEFINED;
+	char    *name,
+			*owner_id;
+	Node    *member = node->value.m_member;
+
+	cobj 	 = vm_exec( vm, frame, node->value.m_owner );
+	owner_id = (char *)node->value.m_owner->value.m_identifier.c_str();
+	name 	 = (char *)member->value.m_call.c_str();
+
+	return ob_call_method( vm, frame, cobj, owner_id, name, member );
+}
+
+INLINE Object *vm_exec_constant( vm_t *vm, vframe_t *frame, Node *node ){
+	/*
+	 * Constants are obviously not evaluated every time, just
+	 * the first time when the parser is traveling around the
+	 * syntax tree and finds out a constant.
+	 * For this reason, constants do NOT go out of scope, out
+	 * of references, out of fuel, out-what-u-like-most.
+	 * If the garbage collector detects an object to be a constant,
+	 * (the object->attributes bitmask is set to H_OT_CONSTANT), it
+	 * simply skips it in the loop.
+	 */
+    return node->value.m_constant;
+}
+
+INLINE Object *vm_exec_function_declaration( vm_t *vm, vframe_t *frame, Node *node ){
+    char *function_name = (char *)node->value.m_function.c_str();
+
+    /* check for double definition */
+    if( vm->vcode.get(function_name) != H_UNDEFINED ){
+        hyb_error( H_ET_SYNTAX, "function '%s' already defined", function_name );
+    }
+    else if( vm_get_function( vm, function_name ) != H_UNDEFINED ){
+        hyb_error( H_ET_SYNTAX, "function '%s' already defined as a language function", function_name );
+    }
+    /* add the function to the vm->vcode segment */
+    vm->vcode.add( function_name, node );
+
+    return H_UNDEFINED;
+}
+
+INLINE Object *vm_exec_structure_declaration( vm_t *vm, vframe_t *frame, Node * node ){
+    int        i, attributes( node->children() );
+    char      *structname = (char *)node->value.m_identifier.c_str();
+
+	if( vm->vtypes.find(structname) != H_UNDEFINED ){
+		hyb_error( H_ET_SYNTAX, "Structure '%s' already defined", structname );
+	}
+
+	/* structure prototypes are not garbage collected */
+    Object *s = (Object *)(new Structure());
+
+    for( i = 0; i < attributes; ++i ){
+        ob_add_attribute( s, (char *)node->child(i)->value.m_identifier.c_str() );
+    }
+    /*
+     * ::defineType will take care of the structure attributes
+	 * to prevent it to be garbage collected (see ::onConstant).
+     */
+    vm_define_type( vm, structname, s );
+
+    return H_UNDEFINED;
+}
+
+INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node ){
+	int        i, members( node->children() );
+	char      *classname = (char *)node->value.m_identifier.c_str(),
+			  *attrname;
+	Node      *attribute;
+	Object    *static_attr_value;
+
+	if( vm->vtypes.find(classname) != H_UNDEFINED ){
+		hyb_error( H_ET_SYNTAX, "Class '%s' already defined", classname );
+	}
+
+	/* class prototypes are not garbage collected */
+	Object *c = (Object *)(new Class());
+	/*
+	 * Set specific class name.
+	 */
+	((Class *)c)->name = classname;
+
+	for( i = 0; i < members; ++i ){
+		/*
+		 * Define an attribute
+		 */
+		if( node->child(i)->type() == H_NT_IDENTIFIER ){
+			attribute = node->child(i);
+			/*
+			 * Initialize static attributes.
+			 */
+			if( attribute->value.m_static ){
+				static_attr_value = vm_exec( vm, frame, attribute->child(0) );
+				/*
+				 * Static attributes are not garbage collectable until the end of
+				 * the program is reached because they reside in a global scope.
+				 */
+				gc_set_alive(static_attr_value);
+				/*
+				 * Initialize the attribute definition in the prototype.
+				 */
+				ob_class_ucast(c)->c_attributes.insert( attribute->id(),
+														new class_attribute_t( attribute->id(),
+																			   attribute->value.m_access,
+																			   static_attr_value,
+																			   attribute->value.m_static ) );
+			}
+			else{
+				/*
+				 * Non static attribute, just define it with a void value.
+				 */
+				ob_define_attribute( c, attribute->id(), attribute->value.m_access, attribute->value.m_static );
+			}
+		}
+		/*
+		 * Define a method
+		 */
+		else if( node->child(i)->type() == H_NT_METHOD_DECL ){
+			ob_define_method( c, (char *)node->child(i)->value.m_method.c_str(), node->child(i) );
+		}
+		/*
+		 * WTF this should not happen!
+		 * The parser should not accept anything that's not an attribute
+		 * or a method declaration.
+		 */
+		else{
+			hyb_error( H_ET_GENERIC, "unexpected node type for class declaration" );
+		}
+	}
+	/*
+	 * Check if the class extends some other class.
+	 */
+	ClassNode *cnode = (ClassNode *)node;
+	if( cnode->m_extends.size() > 0 ){
+		for( NodeList::iterator ni = cnode->m_extends.begin(); ni != cnode->m_extends.end(); ni++ ){
+			Object *type = vm_get_type( vm, (char *)(*ni)->value.m_identifier.c_str() );
+			if( type == H_UNDEFINED ){
+				hyb_error( H_ET_SYNTAX, "'%s' undeclared class type", (*ni)->value.m_identifier.c_str() );
+			}
+			else if( ob_is_class(type) == false ){
+				hyb_error( H_ET_SYNTAX, "couldn't extend from '%s' type", type->type->name );
+			}
+
+			Class 			     *cobj = ob_class_ucast(type);
+			ClassAttributeIterator  ai;
+			ClassMethodIterator 	  mi;
+			ClassPrototypesIterator pi;
+
+			for( ai = cobj->c_attributes.begin(); ai != cobj->c_attributes.end(); ai++ ){
+				attrname  = (char *)(*ai)->label.c_str();
+
+				ob_define_attribute( c, attrname, (*ai)->value->access, (*ai)->value->is_static );
+
+				/*
+				 * Initialize static attributes.
+				 */
+				if( (*ai)->value->is_static){
+					ob_set_attribute_reference( c, attrname, (*ai)->value->value );
+				}
+			}
+
+			for( mi = cobj->c_methods.begin(); mi != cobj->c_methods.end(); mi++ ){
+				for( pi = (*mi)->value->prototypes.begin(); pi != (*mi)->value->prototypes.end(); pi++ ){
+					ob_define_method( c, (char *)(*mi)->label.c_str(), *pi );
+				}
+			}
+		}
+	}
+
+	/*
+	 * ::defineType will take care of the class attributes
+	 * to prevent it to be garbage collected (see ::onConstant).
+	 */
+	vm_define_type( vm, classname, c );
+}
+
+INLINE Object *vm_exec_builtin_function_call( vm_t *vm, vframe_t *frame, Node * call ){
+    char        *callname = (char *)call->value.m_call.c_str();
+    named_function_t* function;
+    vframe_t     stack;
+    Object      *result = H_UNDEFINED;
+
+    if( (function = vm_get_function( vm, callname )) == H_UNDEFINED ){
+        return H_UNDEFINED;
+    }
+
+    vm_prepare_stack( vm, frame, function, stack, string(callname), call );
+
+    vm_check_frame_exit(frame);
+
+    /* call the function */
+    result = function->function( vm, &stack );
+
+	/*
+	 * Check for unhandled exceptions and put them on the root
+	 * memory frame.
+	 */
+	if( stack.state.is(Exception) ){
+		frame->state.set( Exception, stack.state.value );
+	}
+
+    vm_dismiss_stack( vm );
+
+    /* return function evaluation value */
+    return result;
+}
+
+Object *vm_exec_threaded_call( vm_t *vm, string function_name, vframe_t *frame, vmem_t *argv ){
+	Node    *function             = H_UNDEFINED;
+	vframe_t stack;
+	Object  *result               = H_UNDEFINED;
+	Node    *body                 = H_UNDEFINED;
+
+	vector<string> identifiers;
+	unsigned int i(0), children;
+
+	/* search first in the vm->vcode segment */
+	if( (function = vm->vcode.get((char *)function_name.c_str())) == H_UNDEFINED ){
+		hyb_error( H_ET_SYNTAX, "'%s' undeclared user function identifier", function_name.c_str() );
+	}
+
+    children = function->children();
+    for( i = 0, body = function->child(0); i < children; ++i ){
+    	body = function->child(i);
+    	if( body->type() == H_NT_IDENTIFIER ){
+    		identifiers.push_back( body->value.m_identifier );
+    	}
+    	else{
+    		break;
+    	}
+    }
+
+    if( function->value.m_vargs ){
+    	if( argv->size() < identifiers.size() ){
+			hyb_error( H_ET_SYNTAX, "function '%s' requires at least %d parameters (called with %d)",
+									function_name.c_str(),
+									identifiers.size(),
+									argv->size() );
+    	}
+    }
+    else{
+    	if( identifiers.size() != argv->size() ){
+			hyb_error( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
+								   function_name.c_str(),
+								   identifiers.size(),
+								   argv->size() );
+    	}
+	}
+
+	vm_prepare_stack( vm, frame, stack, function_name, identifiers, argv );
+
+	vm_check_frame_exit(frame);
+
+	/* call the function */
+	result = vm_exec( vm, &stack, body );
+
+	/*
+	 * Check for unhandled exceptions and put them on the root
+	 * memory frame.
+	 */
+	if( stack.state.is(Exception) ){
+		frame->state.set( Exception, stack.state.value );
+	}
+
+	vm_dismiss_stack( vm );
+
+	/* return function evaluation value */
+	return result;
+}
+
+Object *vm_exec_threaded_call( vm_t *vm, Node *function, vframe_t *frame, vmem_t *argv ){
+	vframe_t stack;
+	Object  *result = H_UNDEFINED;
+	Node    *body   = H_UNDEFINED;
+
+	vector<string> identifiers;
+	unsigned int i(0), children;
+
+    children = function->children();
+    for( i = 0, body = function->child(0); i < children; ++i ){
+    	body = function->child(i);
+    	if( body->type() == H_NT_IDENTIFIER ){
+    		identifiers.push_back( body->value.m_identifier );
+    	}
+    	else{
+    		break;
+    	}
+    }
+
+	if( identifiers.size() != argv->size() ){
+		hyb_error( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
+							    function->value.m_function.c_str(),
+							    identifiers.size(),
+							    argv->size() );
+	}
+
+	vm_prepare_stack( vm, frame, stack, function->value.m_function, identifiers, argv );
+
+	vm_check_frame_exit(frame);
+
+	/* call the function */
+	result = vm_exec( vm, &stack, body );
+
+	/*
+	 * Check for unhandled exceptions and put them on the root
+	 * memory frame.
+	 */
+	if( stack.state.is(Exception) ){
+		frame->state.set( Exception, stack.state.value );
+	}
+
+	vm_dismiss_stack( vm );
+
+	/* return function evaluation value */
+	return result;
+}
+
+INLINE Object *vm_exec_user_function_call( vm_t *vm, vframe_t *frame, Node *call ){
+    Node    *function = H_UNDEFINED;
+    vframe_t stack;
+    Object  *result   = H_UNDEFINED;
+    Node    *body     = H_UNDEFINED;
+
+    vector<string> identifiers;
+    unsigned int i(0), children;
+
+    if( (function = vm_find_function( vm, frame, call )) == H_UNDEFINED ){
+        return H_UNDEFINED;
+    }
+
+    children = function->children();
+    for( i = 0, body = function->child(0); i < children; ++i ){
+    	body = function->child(i);
+    	if( body->type() == H_NT_IDENTIFIER ){
+    		identifiers.push_back( body->value.m_identifier );
+    	}
+    	else{
+    		break;
+    	}
+    }
+
+    if( function->value.m_vargs ){
+    	if( call->children() < identifiers.size() ){
+   			hyb_error( H_ET_SYNTAX, "function '%s' requires at least %d parameters (called with %d)",
+									function->value.m_function.c_str(),
+   									identifiers.size(),
+   									call->children() );
+       }
+   	}
+    else{
+		if( identifiers.size() != call->children() ){
+			hyb_error( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
+									function->value.m_function.c_str(),
+									identifiers.size(),
+									call->children() );
+		}
+    }
+
+    vm_prepare_stack( vm, frame, stack, function->value.m_function, identifiers, call );
+
+    vm_check_frame_exit(frame);
+
+    /* call the function */
+    result = vm_exec( vm, &stack, body );
+
+    vm_dismiss_stack( vm );
+	/*
+	 * Check for unhandled exceptions and put them on the root
+	 * memory frame.
+	 */
+	if( stack.state.is(Exception) ){
+		frame->state.set( Exception, stack.state.value );
+	}
+
+    /* return function evaluation value */
+    return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
+}
+
+INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
+    char      *type_name = (char *)type->value.m_identifier.c_str();
+    Object    *user_type = H_UNDEFINED,
+              *newtype   = H_UNDEFINED,
+              *object    = H_UNDEFINED;
+    size_t     i, children( type->children() );
+
+	/*
+	 * Search for the used defined type calls, most like C++
+	 * class constructors but without strict prototypes.
+	 */
+    if( (user_type = vm_get_type( vm,type_name)) == H_UNDEFINED ){
+    	hyb_error( H_ET_SYNTAX, "'%s' undeclared type", type_name );
+    }
+    newtype = ob_clone(user_type);
+
+	/*
+	 * It's ok to initialize less attributes that the structure/class
+	 * has (non ini'ed attributes are set to 0 by default), but
+	 * you can not set more attributes than the structure/class have.
+	 */
+	if( ob_is_struct(newtype) ){
+		Structure *stype = (Structure *)newtype;
+
+		if( children > stype->items ){
+			hyb_error( H_ET_SYNTAX, "structure '%s' has %d attributes, initialized with %d",
+								 type_name,
+								 stype->items,
+								 children );
+		}
+
+		for( i = 0; i < children; ++i ){
+			object = vm_exec( vm, frame, type->child(i) );
+			ob_set_attribute( newtype, (char *)stype->s_attributes.label(i), object );
+		}
+	}
+	else if( ob_is_class(newtype) ){
+		/*
+		 * Set specific class type name.
+		 */
+		((Class *)newtype)->name = type_name;
+		/*
+		 * First of all, check if the user has declared an explicit
+		 * class constructor, in that case consider it instead of the
+		 * default "by arg" constructor.
+		 */
+		Node *ctor = ob_get_method( newtype, type_name, children );
+		if( ctor != H_UNDEFINED ){
+			if( ctor->value.m_vargs ){
+				if( children < ctor->callDefinedArgc() ){
+					hyb_error( H_ET_SYNTAX, "class '%s' constructor requires at least %d arguments, called with %d",
+											 type_name,
+											 ctor->callDefinedArgc(),
+											 children );
+			   }
+			}
+			else{
+				if( children > ctor->callDefinedArgc() ){
+					hyb_error( H_ET_SYNTAX, "class '%s' constructor requires %d arguments, called with %d",
+											 type_name,
+											 ctor->callDefinedArgc(),
+											 children );
+				}
+			}
+
+			vframe_t stack;
+
+			vm_prepare_stack( vm,
+								  frame,
+								  stack,
+								  string(type_name) + "::" + string(type_name),
+								  newtype,
+								  children,
+								  ctor,
+								  type );
+
+			vm_check_frame_exit(frame);
+
+			/* call the ctor */
+			vm_exec( vm, &stack, ctor->callBody() );
+
+			vm_dismiss_stack( vm );
+
+			/*
+			 * Check for unhandled exceptions and put them on the root
+			 * memory frame.
+			 */
+			if( stack.state.is(Exception) ){
+				frame->state.set( Exception, stack.state.value );
+			}
+		}
+	}
+
+    return newtype;
+}
+
+INLINE Object *vm_exec_dll_function_call( vm_t *vm, vframe_t *frame, Node *call ){
+    char    *callname   = (char *)call->value.m_call.c_str();
+    vframe_t stack;
+    Object  *result     = H_UNDEFINED,
+            *fn_pointer = H_UNDEFINED;
+
+    /*
+     * We assume that dll module is already loaded, otherwise there shouldn't be
+     * any vm_exec_dll_function_call call .
+     */
+    named_function_t *dllcall = vm_get_function( vm, (char *)"dllcall" );
+
+    if( (fn_pointer = frame->get( callname )) == H_UNDEFINED ){
+        return H_UNDEFINED;
+    }
+    else if( ob_is_extern(fn_pointer) == false ){
+        return H_UNDEFINED;
+    }
+
+    vm_prepare_stack( vm, frame, stack, string(callname), (Extern *)fn_pointer, call );
+
+    vm_check_frame_exit(frame);
+
+    /* call the function */
+    result = dllcall->function( vm, &stack );
+
+    vm_dismiss_stack( vm );
+
+    /* return function evaluation value */
+    return result;
+}
+
+Object *vm_exec_function_call( vm_t *vm, vframe_t *frame, Node *call ){
+    Object *result = H_UNDEFINED;
+
+    /* check if function is a builtin function */
+    if( (result = vm_exec_builtin_function_call( vm, frame, call )) != H_UNDEFINED ){
+    	return result;
+    }
+    /* check for an user defined function */
+    else if( (result = vm_exec_user_function_call( vm, frame, call )) != H_UNDEFINED ){
+    	return result;
+    }
+    /* check if the function is an extern identifier loaded by dll importing routines */
+    else if( (result = vm_exec_dll_function_call( vm, frame, call )) != H_UNDEFINED ){
+    	return result;
+    }
+    else{
+    	hyb_error( H_ET_SYNTAX, "'%s' undeclared function identifier", call->value.m_call.c_str() );
+    }
+
+    return result;
+}
+
+INLINE Object *vm_exec_reference( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *o = H_UNDEFINED;
+
+    o = vm_exec( vm, frame, node->child(0) );
+
+    return (Object *)gc_new_reference(o);
+}
+
+INLINE Object *vm_exec_dollar( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *o = H_UNDEFINED;
+    Node *function = H_UNDEFINED;
+    string svalue;
+    char *identifier;
+
+    o 	   	   = vm_exec( vm, frame, node->child(0) );
+    svalue 	   = ob_svalue(o);
+    identifier = (char *)svalue.c_str();
+
+    /*
+   	 * Same as vm_exec_identifier.
+   	 */
+   	if( (o = vm->vconst.get(identifier)) != H_UNDEFINED ){
+   		return o;
+   	}
+   	/*
+	 * Search for the identifier definition on
+	 * the function local stack frame.
+	 */
+   	else if( (o = frame->get(identifier)) != H_UNDEFINED ){
+		return o;
+	}
+	/*
+	 * Let's check if the address of this frame si different from
+	 * global frame one, in that case try to search the definition
+	 * on the global frame too.
+	 */
+	else if( H_ADDRESS_OF(frame) != H_ADDRESS_OF(&vm->vmem) && (o = vm->vmem.get(identifier)) != H_UNDEFINED ){
+		return o;
+	}
+	/*
+	 * Check for an user defined object (structure or class) name.
+	 */
+	else if( (o = vm->vtypes.get(identifier)) != H_UNDEFINED ){
+		return o;
+	}
+	/*
+	 * So, it's neither defined on local frame nor in the global one,
+	 * let's search for it in the vm->vcode frame.
+	 */
+	else if( (function = vm->vcode.find(identifier)) != H_UNDEFINED ){
+		/*
+		 * Create an alias to that vm->vcode region (basically its index).
+		 */
+		return ob_dcast( gc_new_alias( H_ADDRESS_OF(function) ) );
+	}
+	else{
+		hyb_error( H_ET_SYNTAX, "'%s' undeclared identifier", identifier );
+	}
+}
+
+INLINE Object *vm_exec_return( vm_t *vm, vframe_t *frame, Node *node ){
+	/*
+	 * Set break and return state to make every loop and/or condition
+	 * statement to exit with this return value.
+	 */
+    frame->state.value = vm_exec( vm, frame, node->child(0) );
+    frame->state.set( Break );
+    frame->state.set( Return );
+
+    return frame->state.value;
+}
+
+INLINE Object *vm_exec_backtick( vm_t *vm, vframe_t *frame, Node *node ){
+	Object *cmd  = vm_exec( vm, frame, node->child(0) );
+	FILE   *pipe = popen( ob_svalue(cmd).c_str(), "r" );
+
+	if( !pipe ){
+		return H_DEFAULT_ERROR;
+	}
+
+	char buffer[128];
+	std::string result = "";
+
+	while( !feof(pipe) ){
+		if( fgets( buffer, 128, pipe ) != NULL ){
+			result += buffer;
+		}
+	}
+	pclose(pipe);
+
+	return (Object *)gc_new_string( result.c_str() );
+}
+
+INLINE Object *vm_exec_vargs( vm_t *vm, vframe_t *frame, Node *node ){
+	Object *vargs = (Object *)gc_new_vector();
+	int i, argc( frame->size() );
+
+	for( i = 0; i < argc; ++i ){
+		if( strcmp( frame->label(i), "me" ) != 0 ){
+			ob_cl_push( vargs, frame->at(i) );
+		}
+	}
+
+	return vargs;
+}
+
+INLINE Object *vm_exec_range( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *range = H_UNDEFINED,
+           *from  = H_UNDEFINED,
+           *to    = H_UNDEFINED;
+
+    from  = vm_exec( vm, frame, node->child(0) );
+   	to    = vm_exec( vm, frame, node->child(1) );
+
+   	vm_check_frame_exit(frame)
+
+	range = ob_range( from, to );
+
+	return range;
+}
+
+INLINE Object *vm_exec_subscript_push( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *array  = H_UNDEFINED,
+           *object = H_UNDEFINED,
+           *res    = H_UNDEFINED;
+
+    array  = vm_exec( vm, frame, node->child(0) );
+	object = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	res    = ob_cl_push( array, object );
+
+	return res;
+}
+
+INLINE Object *vm_exec_subscript_get( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *identifier = H_UNDEFINED,
+           *array      = H_UNDEFINED,
+           *index      = H_UNDEFINED,
+           *result     = H_UNDEFINED;
+
+    if( node->children() == 3 ){
+		array 	   = vm_exec( vm, frame, node->child(1) );
+		identifier = vm_exec( vm, frame, node->child(0) );
+		index      = vm_exec( vm, frame, node->child(2) );
+
+		vm_check_frame_exit(frame)
+
+		ob_assign( identifier,
+					ob_cl_at( array, index )
+				  );
+
+		result = identifier;
+	}
+	else{
+		array  = vm_exec( vm, frame, node->child(0) );
+		index  = vm_exec( vm, frame, node->child(1) );
+
+		vm_check_frame_exit(frame)
+
+		result = ob_cl_at( array, index );
+	}
+
+		return result;
+}
+
+INLINE Object *vm_exec_subscript_set( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *array  = H_UNDEFINED,
+           *index  = H_UNDEFINED,
+           *object = H_UNDEFINED;
+
+    array  = vm_exec( vm, frame, node->child(0) );
+   	index  = vm_exec( vm, frame, node->child(1) );
+   	object = vm_exec( vm, frame, node->child(2) );
+
+   	vm_check_frame_exit(frame)
+
+   	ob_cl_set( array, index, object );
+
+   	return array;
+}
+
+INLINE Object *vm_exec_while( vm_t *vm, vframe_t *frame, Node *node ){
+    Node   *condition,
+		   *body;
+    Object *result  = H_UNDEFINED;
+
+    condition = node->child(0);
+    body      = node->child(1);
+
+    while( ob_lvalue( vm_exec( vm, frame, condition ) ) ){
+   		result = vm_exec( vm, frame, body );
+
+   		vm_check_frame_exit(frame)
+
+   		frame->state.unset(Next);
+        if( frame->state.is(Break) ){
+        	frame->state.unset(Break);
+			break;
+        }
+    }
+
+    return result;
+}
+
+INLINE Object *vm_exec_do( vm_t *vm, vframe_t *frame, Node *node ){
+    Node *condition,
+         *body;
+
+    Object *result  = H_UNDEFINED;
+
+    body      = node->child(0);
+    condition = node->child(1);
+    do{
+		result = vm_exec( vm, frame, body );
+
+		vm_check_frame_exit(frame)
+
+		frame->state.unset(Next);
+		if( frame->state.is(Break) ){
+			frame->state.unset(Break);
+			break;
+		}
+    }
+    while( ob_lvalue( vm_exec( vm, frame, condition ) ) );
+
+    return result;
+}
+
+INLINE Object *vm_exec_for( vm_t *vm, vframe_t *frame, Node *node ){
+    Node   *condition,
+           *increment,
+		   *body;
+    Object *result  = H_UNDEFINED;
+
+    condition = node->child(1);
+    increment = node->child(2);
+    body      = node->child(3);
+
+    vm_exec( vm, frame, node->child(0) );
+
+    vm_check_frame_exit(frame)
+
+    for( ; ob_lvalue( vm_exec( vm, frame, condition ) ); vm_exec( vm, frame, increment ) ){
+
+    	vm_check_frame_exit(frame)
+
+    	result = vm_exec( vm, frame, body );
+
+		vm_check_frame_exit(frame)
+
+		frame->state.unset(Next);
+		if( frame->state.is(Break) ){
+			frame->state.unset(Break);
+			break;
+		}
+    }
+
+    return result;
+}
+
+INLINE Object *vm_exec_foreach( vm_t *vm, vframe_t *frame, Node *node ){
+    int     size;
+    Node   *body;
+    Object *v      = H_UNDEFINED,
+           *result = H_UNDEFINED;
+    char   *identifier;
+    Integer index(0);
+
+    identifier = (char *)node->child(0)->value.m_identifier.c_str();
+    v          = vm_exec( vm, frame, node->child(1) );
+    body       = node->child(2);
+    size       = ob_get_size(v);
+
+    /*
+     * Prevent the vector from being garbage collected, because may cause
+     * seg faults in situations like :
+     *
+     * 		foreach( i of 1..10 )
+     */
+    frame->push_tmp(v);
+
+    for( ; index.value < size; ++index.value ){
+        frame->add( identifier, ob_cl_at( v, (Object *)&index ) );
+
+        result = vm_exec( vm, frame, body );
+
+        if( frame->state.is(Exception) || frame->state.is(Return) ){
+        	result = frame->state.value;
+        	break;
+	    }
+
+        frame->state.unset(Next);
+		if( frame->state.is(Break) ){
+			frame->state.unset(Break);
+			break;
+		}
+    }
+
+    frame->remove_tmp(v);
+
+    return result;
+}
+
+INLINE Object *vm_exec_foreach_mapping( vm_t *vm, vframe_t *frame, Node *node ){
+    int     i, size;
+    Node   *body;
+    Object *map    = H_UNDEFINED,
+           *result = H_UNDEFINED;
+    char   *key_identifier,
+           *value_identifier;
+
+    key_identifier   = (char *)node->child(0)->value.m_identifier.c_str();
+    value_identifier = (char *)node->child(1)->value.m_identifier.c_str();
+    map              = vm_exec( vm, frame, node->child(2) );
+    body             = node->child(3);
+    size             = ob_get_size(map);
+
+    /*
+     * Prevent the map from being garbage collected, because may cause
+     * seg faults in situations like :
+     *
+     * 		foreach( i of map( ... ) )
+     */
+    frame->push_tmp(map);
+
+    for( i = 0; i < size; ++i ){
+        frame->add( key_identifier,   ob_map_ucast(map)->keys[i] );
+        frame->add( value_identifier, ob_map_ucast(map)->values[i] );
+
+        result = vm_exec( vm, frame, body );
+
+        if( frame->state.is(Exception) || frame->state.is(Return) ){
+			result = frame->state.value;
+			break;
+		}
+
+        frame->state.unset(Next);
+		if( frame->state.is(Break) ){
+			frame->state.unset(Break);
+			break;
+		}
+    }
+
+    frame->remove_tmp(map);
+
+    return result;
+}
+
+INLINE Object *vm_exec_unless( vm_t *vm, vframe_t *frame, Node *node ){
+	Object *boolean = H_UNDEFINED,
+		   *result  = H_UNDEFINED;
+
+	boolean = vm_exec( vm, frame, node->child(1) );
+
+	if( !ob_lvalue(boolean) ){
+		result = vm_exec( vm, frame, node->child(0) );
+	}
+
+	vm_check_frame_exit(frame)
+
+	return H_UNDEFINED;
+}
+
+INLINE Object *vm_exec_if( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *boolean = H_UNDEFINED,
+           *result  = H_UNDEFINED;
+
+    boolean = vm_exec( vm, frame, node->child(0) );
+
+    if( ob_lvalue(boolean) ){
+        result = vm_exec( vm, frame, node->child(1) );
+    }
+    /* handle else case */
+    else if( node->children() > 2 ){
+        result = vm_exec( vm, frame, node->child(2) );
+    }
+
+    vm_check_frame_exit(frame)
+
+    return H_UNDEFINED;
+}
+
+INLINE Object *vm_exec_question( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *boolean = H_UNDEFINED,
+           *result  = H_UNDEFINED;
+
+    boolean = vm_exec( vm, frame, node->child(0) );
+
+    if( ob_lvalue(boolean) ){
+        result = vm_exec( vm, frame, node->child(1) );
+    }
+    else{
+        result = vm_exec( vm, frame, node->child(2) );
+    }
+
+    vm_check_frame_exit(frame)
+
+    return result;
+}
+
+INLINE Object *vm_exec_switch( vm_t *vm, vframe_t *frame, Node *node){
+    Node   *case_node = H_UNDEFINED,
+           *stmt_node = H_UNDEFINED;
+    Object *target    = H_UNDEFINED,
+           *compare   = H_UNDEFINED,
+           *result    = H_UNDEFINED;
+    int     size( node->children() ),
+            i;
+
+    target = vm_exec( vm, frame, node->value.m_switch );
+
+    // exec case labels
+    for( i = 0; i < size; i += 2 ){
+        stmt_node = node->child(i + 1);
+        case_node = node->child(i);
+
+        if( case_node != H_UNDEFINED && stmt_node != H_UNDEFINED ){
+            compare = vm_exec( vm, frame, case_node );
+
+            vm_check_frame_exit(frame)
+
+            if( ob_cmp( target, compare ) == 0 ){
+                return vm_exec( vm, frame, stmt_node );
+            }
+        }
+    }
+
+    // exec default case
+    if( node->value.m_default != H_UNDEFINED ){
+        result = vm_exec( vm, frame, node->value.m_default );
+
+        vm_check_frame_exit(frame)
+    }
+
+    return result;
+}
+
+INLINE Object *vm_exec_explode( vm_t *vm, vframe_t *frame, Node *node ){
+	Node   *expr  = H_UNDEFINED;
+	Object *value = H_UNDEFINED;
+
+	expr  = node->child(0);
+	value = vm_exec( vm, frame, expr );
+
+	size_t n_ids   = node->children() - 1,
+		   n_items = ob_get_size(value),
+		   n_end   = (n_ids > n_items ? n_items : n_ids),
+		   i;
+
+	/*
+	 * Initialize all the identifiers with a <false>.
+	 */
+	for( i = 0; i < n_ids; ++i ){
+		frame->add( (char *)node->child(i + 1)->value.m_identifier.c_str(), (Object *)gc_new_boolean(false) );
+	}
+	/*
+	 * Fill initializers until the iterable object ends, leave
+	 * the rest of them to <null>.
+	 */
+	Integer index(0);
+	for( ; (unsigned)index.value < n_end; ++index.value ){
+		frame->add( (char *)node->child(index.value + 1)->value.m_identifier.c_str(), ob_cl_at( value, (Object *)&index ) );
+	}
+
+	return value;
+}
+
+INLINE Object *vm_exec_throw( vm_t *vm, vframe_t *frame, Node *node ){
+	Object *exception = H_UNDEFINED;
+
+	exception = vm_exec( vm, frame, node->child(0) );
+
+	/*
+	 * Make sure the exception object will not be freed until someone
+	 * catches it or the program ends.
+	 */
+	gc_set_alive(exception);
+
+	frame->state.set( Exception, exception );
+
+	return exception;
+}
+
+INLINE Object *vm_exec_try_catch( vm_t *vm, vframe_t *frame, Node *node ){
+	Node   *main_body    = node->value.m_try_block,
+		   *ex_ident     = node->value.m_exp_id,
+		   *catch_body   = node->value.m_catch_block,
+		   *finally_body = node->value.m_finally_block;
+	Object *exception    = H_UNDEFINED;
+
+	vm_exec( vm, frame, main_body );
+
+	if( frame->state.is(Exception) ){
+		exception = frame->state.value;
+
+		assert( exception != H_UNDEFINED );
+
+		frame->add( (char *)ex_ident->value.m_identifier.c_str(), exception );
+
+		frame->state.unset(Exception);
+
+		vm_exec( vm, frame, catch_body );
+	}
+
+	if( finally_body != NULL ){
+		vm_exec( vm, frame, finally_body );
+	}
+
+	return H_DEFAULT_RETURN;
+}
+
+INLINE Object *vm_exec_eostmt( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *res_1 = H_UNDEFINED,
+           *res_2 = H_UNDEFINED;
+
+    res_1 = vm_exec( vm, frame, node->child(0) );
+    res_2 = vm_exec( vm, frame, node->child(1) );
+
+    vm_check_frame_exit(frame)
+
+    return res_2;
+}
+
+INLINE Object *vm_exec_array( vm_t *vm, vframe_t *frame, Node *node ){
+	Vector *v = gc_new_vector();
+	size_t i, items( node->children() );
+
+	for( i = 0; i < items; ++i ){
+		ob_cl_push_reference( (Object *)v, vm_exec( vm, frame, node->child(i) ) );
+	}
+
+	return (Object *)v;
+}
+
+INLINE Object *vm_exec_map( vm_t *vm, vframe_t *frame, Node *node ){
+	Map *m = gc_new_map();
+	size_t i, items( node->children() );
+
+	for( i = 0; i < items; i += 2 ){
+		ob_cl_set_reference( (Object *)m,
+							 vm_exec( vm, frame, node->child(i) ),
+							 vm_exec( vm, frame, node->child(i + 1) ) );
+	}
+
+	return (Object *)m;
+}
+
+INLINE Object *vm_exec_assign( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *object = H_UNDEFINED,
+           *value  = H_UNDEFINED;
+    Node   *lexpr  = node->child(0);
+
+    /*
+     * If the first child is an identifier, we are just defining
+     * a new variable or assigning it a new value, nothing
+     * complicated about it.
+     */
+    if( lexpr->type() == H_NT_IDENTIFIER ){
+    	if( lexpr->value.m_identifier == "me" ){
+    		hyb_error( H_ET_SYNTAX, "'me' is a reserved word" );
+    	}
+
+    	value  = vm_exec( vm, frame, node->child(1) );
+
+    	vm_check_frame_exit(frame)
+
+		object = frame->add( (char *)lexpr->value.m_identifier.c_str(), value );
+
+		return object;
+    }
+    /*
+     * If not, we evaluate the first node as a "owner->child->..." sequence,
+     * just like the vm_exec_attribute_request handler.
+     */
+    else if( lexpr->type() == H_NT_ATTRIBUTE ){
+    	Node *member    = lexpr,
+			 *owner     = member->value.m_owner,
+			 *attribute = member->value.m_member;
+
+    	Object *obj = vm_exec( vm, frame, owner ),
+    		   *value;
+
+    	vm_check_frame_exit(frame)
+    	/*
+    	 * Prevent obj from being garbage collected.
+    	 */
+    	frame->push_tmp(obj);
+
+		value = vm_exec( vm, frame, node->child(1) );
+
+		frame->remove_tmp(obj);
+
+    	vm_check_frame_exit(frame)
+
+    	ob_set_attribute( obj, (char *)attribute->value.m_identifier.c_str(), value );
+
+    	return obj;
+    }
+    else{
+    	hyb_error( H_ET_SYNTAX, "Unexpected constant expression for = operator" );
+    }
+}
+
+INLINE Object *vm_exec_uminus( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *o      = H_UNDEFINED,
+           *result = H_UNDEFINED;
+
+    o = vm_exec( vm, frame, node->child(0) );
+
+    vm_check_frame_exit(frame)
+
+    result = ob_uminus(o);
+
+    return result;
+}
+
+INLINE Object *vm_exec_regex( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *o      = H_UNDEFINED,
+           *regexp = H_UNDEFINED,
+           *result = H_UNDEFINED;
+
+    o 	   = vm_exec( vm, frame, node->child(0) );
+	regexp = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	result = ob_apply_regexp( o, regexp );
+
+	return result;
+}
+
+INLINE Object *vm_exec_add( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_add( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_inplace_add( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	ob_inplace_add( a, b );
+
+	return a;
+}
+
+INLINE Object *vm_exec_sub( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_sub( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_inplace_sub( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	ob_inplace_sub( a, b );
+
+	return a;
+}
+
+INLINE Object *vm_exec_mul( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_mul( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_inplace_mul( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	ob_inplace_mul( a, b );
+
+	return a;
+}
+
+INLINE Object *vm_exec_div( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_div( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_inplace_div( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	ob_inplace_div( a, b );
+
+	return a;
+}
+
+INLINE Object *vm_exec_mod( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_mod( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_inplace_mod( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	ob_inplace_mod( a, b );
+
+	return a;
+}
+
+INLINE Object *vm_exec_inc( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *o = H_UNDEFINED;
+
+    o = vm_exec( vm, frame, node->child(0) );
+
+	vm_check_frame_exit(frame)
+
+	return ob_increment(o);
+}
+
+INLINE Object *vm_exec_dec( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *o = H_UNDEFINED;
+
+    o = vm_exec( vm, frame, node->child(0) );
+
+	vm_check_frame_exit(frame)
+
+	return ob_decrement(o);
+}
+
+INLINE Object *vm_exec_xor( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_bw_xor( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_inplace_xor( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	ob_bw_inplace_xor( a, b );
+
+	return a;
+}
+
+INLINE Object *vm_exec_and( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_bw_and( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_inplace_and( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	ob_bw_inplace_and( a, b );
+
+	return a;
+}
+
+INLINE Object *vm_exec_or( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_bw_or( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_inplace_or( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	ob_bw_inplace_or( a, b );
+
+	return a;
+}
+
+INLINE Object *vm_exec_shiftl( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	if( frame->state.is(Exception) ){
+		return frame->state.value;
+	}
+
+	vm_check_frame_exit(frame)
+
+	c = ob_bw_lshift( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_inplace_shiftl( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	ob_bw_inplace_lshift( a, b );
+
+	return a;
+}
+
+INLINE Object *vm_exec_shiftr( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_bw_rshift( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_inplace_shiftr( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	ob_bw_inplace_rshift( a, b );
+
+	return a;
+}
+
+INLINE Object *vm_exec_fact( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *o = H_UNDEFINED,
+           *r = H_UNDEFINED;
+
+    o = vm_exec( vm, frame, node->child(0) );
+
+	vm_check_frame_exit(frame)
+
+    r = ob_factorial(o);
+
+    return r;
+}
+
+INLINE Object *vm_exec_not( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *o = H_UNDEFINED,
+           *r = H_UNDEFINED;
+
+    o = vm_exec( vm, frame, node->child(0) );
+
+	vm_check_frame_exit(frame)
+
+   	r = ob_bw_not(o);
+
+   	return r;
+}
+
+INLINE Object *vm_exec_lnot( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *o = H_UNDEFINED,
+           *r = H_UNDEFINED;
+
+    o = vm_exec( vm, frame, node->child(0) );
+
+	vm_check_frame_exit(frame)
+
+	r = ob_l_not(o);
+
+	return r;
+}
+
+INLINE Object *vm_exec_less( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_l_less( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_greater( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_l_greater( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_ge( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_l_greater_or_same( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_le( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_l_less_or_same( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_ne( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_l_diff( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_eq( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_l_same( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_land( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_l_and( a, b );
+
+	return c;
+}
+
+INLINE Object *vm_exec_lor( vm_t *vm, vframe_t *frame, Node *node ){
+    Object *a = H_UNDEFINED,
+           *b = H_UNDEFINED,
+           *c = H_UNDEFINED;
+
+    a = vm_exec( vm, frame, node->child(0) );
+	b = vm_exec( vm, frame, node->child(1) );
+
+	vm_check_frame_exit(frame)
+
+	c = ob_l_or( a, b );
+
+	return c;
+}
+

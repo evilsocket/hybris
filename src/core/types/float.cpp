@@ -16,8 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * adouble with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "types.h"
-#include <math.h>
+#include "hybris.h"
 
 /** generic function pointers **/
 Object *float_clone( Object *me ){

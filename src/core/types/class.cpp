@@ -16,12 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "common.h"
-#include "types.h"
-#include "node.h"
-#include "memory.h"
-#include "vm.h"
-
+#include "hybris.h"
 /*
  * Special function to execute a __method class descriptor.
  */
@@ -53,7 +48,7 @@ Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *me
 	stack.insert( "me", c );
 	stack.add( "name", (Object *)gc_new_string(method_name) );
 	for( i = 0; i < argc; ++i ){
-		value = engine_exec( vm->engine, frame, argv->child(i) );
+		value = vm_exec( vm, frame, argv->child(i) );
 
 		if( frame->state.is(Exception) || frame->state.is(Return) ){
 			vm_pop_frame( vm );
@@ -65,7 +60,7 @@ Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *me
 	stack.add( "argv", (Object *)args );
 
 	/* call the method */
-	result = engine_exec( vm->engine, &stack, method->callBody() );
+	result = vm_exec( vm, &stack, method->callBody() );
 
 	vm_pop_frame( vm );
 
@@ -101,7 +96,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	/*
 	 * Check for heavy recursions and/or nested calls.
 	 */
-	if( vm_scope_size(__hyb_vm) >= MAX_RECURSION_THRESHOLD ){
+	if( vm_scope_size(__hyb_vm) >= VM_MAX_RECURSION ){
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
 	}
 
@@ -132,7 +127,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	va_end(ap);
 
 	/* call the operator */
-	result = engine_exec( __hyb_vm->engine, &stack, op->callBody() );
+	result = vm_exec( __hyb_vm, &stack, op->callBody() );
 
 	vm_pop_frame( __hyb_vm );
 
@@ -174,7 +169,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	/*
 	 * Check for heavy recursions and/or nested calls.
 	 */
-	if( vm_scope_size(__hyb_vm) >= MAX_RECURSION_THRESHOLD ){
+	if( vm_scope_size(__hyb_vm) >= VM_MAX_RECURSION ){
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
 	}
 
@@ -208,7 +203,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	va_end(ap);
 
 	/* call the descriptor */
-	result = engine_exec( __hyb_vm->engine, &stack, ds->callBody() );
+	result = vm_exec( __hyb_vm, &stack, ds->callBody() );
 
 	vm_pop_frame( __hyb_vm );
 
@@ -310,7 +305,7 @@ void class_free( Object *me ){
 
 			vm_add_frame( __hyb_vm, &stack );
 
-			engine_exec( __hyb_vm->engine, &stack, dtor->callBody() );
+			vm_exec( __hyb_vm, &stack, dtor->callBody() );
 
 			vm_pop_frame( __hyb_vm );
 		}
@@ -685,7 +680,7 @@ Node *class_get_method( Object *me, char *name, int argc ){
 	}
 }
 
-Object *class_call_method( engine_t *engine, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
+Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
 	size_t 	 method_argc,
 			 i,
 		 	 argc   = argv->children();
@@ -701,7 +696,7 @@ Object *class_call_method( engine_t *engine, vframe_t *frame, Object *me, char *
 		/*
 		 * Try to call the __method descriptor if it's overloaded.
 		 */
-		result = class_call_undefined_method( engine->vm, me, me_id, method_id, argv );
+		result = class_call_undefined_method( vm, me, me_id, method_id, argv );
 		if( result == H_UNDEFINED ){
 			hyb_error( H_ET_SYNTAX, "'%s' is not a method of object '%s'", method_id, ob_typename(me) );
 		}
@@ -756,13 +751,13 @@ Object *class_call_method( engine_t *engine, vframe_t *frame, Object *me, char *
 	/*
 	 * Check for heavy recursions and/or nested calls.
 	 */
-	if( vm_scope_size(engine->vm) >= MAX_RECURSION_THRESHOLD ){
+	if( vm_scope_size(vm) >= VM_MAX_RECURSION ){
 		return vm_raise_exception( "Reached max number of nested calls" );
 	}
 	/*
 	 * Add this frame as the active stack
 	 */
-	vm_add_frame( engine->vm, &stack );
+	vm_add_frame( vm, &stack );
 	/*
 	 * Set the stack owner
 	 */
@@ -777,12 +772,12 @@ Object *class_call_method( engine_t *engine, vframe_t *frame, Object *me, char *
 	 * Evaluate each object and insert it into the stack
 	 */
 	for( i = 0; i < argc; ++i ){
-		value = engine_exec( engine, frame, argv->child(i) );
+		value = vm_exec( vm, frame, argv->child(i) );
 		/*
-		 * Check if engine_exec raised an exception.
+		 * Check if vm_exec raised an exception.
 		 */
 		if( frame->state.is(Exception) || frame->state.is(Return) ){
-			vm_pop_frame( engine->vm );
+			vm_pop_frame( vm );
 			return frame->state.value;
 	    }
 		/*
@@ -798,12 +793,12 @@ Object *class_call_method( engine_t *engine, vframe_t *frame, Object *me, char *
 		}
 	}
 	/* execute the method */
-	result = engine_exec( engine, &stack, method->callBody() );
+	result = vm_exec( vm, &stack, method->callBody() );
 
 	/*
 	 * Dismiss the stack.
 	 */
-	vm_pop_frame( engine->vm );
+	vm_pop_frame( vm );
 
 	/*
 	 * Check for unhandled exceptions and put them on the root

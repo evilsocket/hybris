@@ -16,8 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "types.h"
-#include <math.h>
+#include "hybris.h"
 
 Integer __default_return_value(0);
 Integer __default_error_value(-1);

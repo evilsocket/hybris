@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sstream>
+#include <math.h>
 
 #define MAX_STRING_SIZE 1024
 #define MAX_IDENT_SIZE  100

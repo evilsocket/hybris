@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "types.h"
+#include "hybris.h"
 
 #define REF_IS_NULL_PTR(r) if( ob_ref_ucast(r)->value == NULL ){ \
 							   return (Object *)r; \
@@ -446,10 +446,10 @@ Node *ref_get_method( Object *me, char *name, int argc ){
 	return ob_get_method( ob_ref_ucast(me)->value, name, argc );
 }
 
-Object *ref_call_method( engine_t *engine, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
+Object *ref_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
 	REF_IS_NULL_PTR_RET(me,NULL);
 
-	return ob_call_method( engine, frame, me, me_id, method_id, argv );
+	return ob_call_method( vm, frame, me, me_id, method_id, argv );
 }
 
 IMPLEMENT_TYPE(Reference) {

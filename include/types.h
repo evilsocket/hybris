@@ -41,7 +41,6 @@ typedef unsigned char byte;
 class Node;
 class MemorySegment;
 typedef struct _vm_t 	 vm_t;
-typedef struct _engine_t engine_t;
 typedef MemorySegment vmem_t;
 typedef MemorySegment vframe_t;
 
@@ -174,7 +173,7 @@ Object;
 /*
  * Function pointer prototype for objects builtin methods (if any).
  */
-typedef Object * (*ob_type_builtin_method_t)( engine_t *, Object *, vframe_t * );
+typedef Object * (*ob_type_builtin_method_t)( vm_t *, Object *, vframe_t * );
 /*
  * Type builtin methods map.
  */
@@ -251,7 +250,7 @@ typedef void     (*ob_set_attribute_function_t) ( Object *, char *, Object * );
 // functions to manage class methods
 typedef void     (*ob_define_method_function_t) ( Object *, char *, Node * );
 typedef Node   * (*ob_get_method_function_t)	( Object *, char *, int );
-typedef Object * (*ob_call_method_function_t)	( engine_t *, vframe_t *, Object *, char *, char *, Node * );
+typedef Object * (*ob_call_method_function_t)	( vm_t *, vframe_t *, Object *, char *, char *, Node * );
 /*
  * Object type codes enumeration.
  * otEndMarker is used to mark the last allowed type in
@@ -740,7 +739,7 @@ Node   *ob_get_method( Object *c, char *name, int argc = -1 );
 /*
  * Execute a class method.
  */
-Object *ob_call_method( engine_t *engine, vframe_t *frame, Object *owner, char *owner_id, char *method_id, Node *argv );
+Object *ob_call_method( vm_t *vm, vframe_t *frame, Object *owner, char *owner_id, char *method_id, Node *argv );
 /**
  * Types definition.
  */
@@ -1656,9 +1655,9 @@ INLINE Node *ob_get_method( Object *c, char *name, int argc /*= -1*/ ){
 	}
 }
 
-INLINE Object *ob_call_method( engine_t *engine, vframe_t *frame, Object *owner, char *owner_id, char *method_id, Node *argv ){
+INLINE Object *ob_call_method( vm_t *vm, vframe_t *frame, Object *owner, char *owner_id, char *method_id, Node *argv ){
 	if( owner->type->call_method != NULL ){
-		return owner->type->call_method( engine, frame, owner, owner_id, method_id, argv );
+		return owner->type->call_method( vm, frame, owner, owner_id, method_id, argv );
 	}
 	else{
 		hyb_error( H_ET_SYNTAX, "object type '%s' does not name a class neither has builtin methods", ob_typename(owner) );

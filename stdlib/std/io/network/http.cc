@@ -67,7 +67,7 @@ static size_t http_progress_callback( http_progress_callback_data_t *http_data, 
 	stack.push( h_dltotal );
 	stack.push( h_dlnow );
 
-	engine_on_threaded_call( __vm->engine, http_data->handler, http_data->data, &stack );
+	vm_exec_threaded_call( __vm, http_data->handler, http_data->data, &stack );
 
 	return 0;
 }

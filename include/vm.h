@@ -28,7 +28,6 @@
 #include "types.h"
 #include "memory.h"
 #include "code.h"
-#include "engine.h"
 
 using std::string;
 using std::vector;
@@ -38,8 +37,6 @@ typedef vector<string> vstr_t;
 
 /* pre declaration of structure vm_t */
 typedef struct _vm_t vm_t;
-/* pre declaration of structure engine_t */
-typedef struct _engine_t engine_t;
 
 /* initializer function pointer prototype */
 typedef void     (*initializer_t)( vm_t * );
@@ -224,10 +221,6 @@ typedef struct _vm_t {
 	 * Regexp cache mutex.
 	 */
 	pthread_mutex_t pcre_mutex;
-	/*
-	 * Code execution engine.
-	 */
-	engine_t      *engine;
 	/*
 	 * Flag set to true when vm_release is called, used to prevent
 	 * recursive calls when an error is triggered inside a class destructor.
@@ -527,5 +520,30 @@ void vm_parse_frame_argv( vframe_t *argv, char *format, ... );
  * Same as vm_parse_frame_argv, just easier to use with dynamic modules.
  */
 #define vm_parse_argv( format, ... ) vm_parse_frame_argv( data, format, __VA_ARGS__ )
+
+/*
+ * Here starts the vm execution functions definition.
+ */
+/*
+ * Max recursions or nested functions calls.
+ */
+#define VM_MAX_RECURSION 10000
+
+#define vm_exec_break_state( frame ) frame->state.set(Break)
+#define vm_exec_next_state( frame )  frame->state.set(Next)
+
+#define vm_check_frame_exit(frame) if( frame->state.is(Exception) || frame->state.is(Return) ){ \
+									   return frame->state.value; \
+								   }
+/*
+ * Special case to handle threaded function calls by name and by alias.
+ */
+Object   *vm_exec_threaded_call( vm_t *vm, string function_name, vframe_t *frame, vmem_t *argv );
+Object   *vm_exec_threaded_call( vm_t *vm, Node *function, vframe_t *frame, vmem_t *argv );
+/*
+ * Node handler dispatcher.
+ */
+Object 	 *vm_exec( vm_t *vm, vframe_t *frame, Node *node );
+
 
 #endif

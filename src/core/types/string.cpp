@@ -16,15 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "common.h"
-#include "types.h"
-#include "vm.h"
-#include <math.h>
-#include <stdio.h>
+#include "hybris.h"
 #include <pcre.h>
 #include <algorithm>
-
-extern void hyb_error( H_ERROR_TYPE type, const char *format, ... );
 
 /** helpers **/
 INLINE ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_id ){
@@ -58,11 +52,11 @@ size_t string_replace( string &source, const string find, string replace ) {
 }
 
 /** builtin methods **/
-Object *__string_length( engine_t *engine, Object *me, vframe_t *data ){
+Object *__string_length( vm_t *vm, Object *me, vframe_t *data ){
 	return (Object *)gc_new_integer( ob_string_ucast(me)->value.size() );
 }
 
-Object *__string_find( engine_t *engine, Object *me, vframe_t *data ){
+Object *__string_find( vm_t *vm, Object *me, vframe_t *data ){
 	if(  ob_argc() < 1 ){
 		hyb_error( H_ET_SYNTAX, "method 'find' requires 1 parameter (called with %d)",  ob_argc() );
 	}
@@ -75,7 +69,7 @@ Object *__string_find( engine_t *engine, Object *me, vframe_t *data ){
 	return (Object *)gc_new_integer( found );
 }
 
-Object *__string_substr( engine_t *engine, Object *me, vframe_t *data ){
+Object *__string_substr( vm_t *vm, Object *me, vframe_t *data ){
 	if( ob_argc() < 1 ){
 		hyb_error( H_ET_SYNTAX, "method 'substr' requires at least 1 parameter (called with %d)", ob_argc() );
 	}
@@ -93,7 +87,7 @@ Object *__string_substr( engine_t *engine, Object *me, vframe_t *data ){
 	return (Object *)gc_new_string( sub.c_str() );
 }
 
-Object *__string_replace( engine_t *engine, Object *me, vframe_t *data ){
+Object *__string_replace( vm_t *vm, Object *me, vframe_t *data ){
 	if( ob_argc() < 2 ){
 		hyb_error( H_ET_SYNTAX, "method 'replace' requires 2 parameters (called with %d)", ob_argc() );
 	}
@@ -116,7 +110,7 @@ Object *__string_replace( engine_t *engine, Object *me, vframe_t *data ){
 	return (Object *)gc_new_string( str.c_str() );
 }
 
-Object *__string_split( engine_t *engine, Object *me, vframe_t *data ){
+Object *__string_split( vm_t *vm, Object *me, vframe_t *data ){
 	if( ob_argc() < 1 ){
 		hyb_error( H_ET_SYNTAX, "method 'split' requires 1 parameter (called with %d)", ob_argc() );
 	}
@@ -141,7 +135,7 @@ Object *__string_split( engine_t *engine, Object *me, vframe_t *data ){
 	return array;
 }
 
-Object *__string_trim( engine_t *engine, Object *me, vframe_t *data ){
+Object *__string_trim( vm_t *vm, Object *me, vframe_t *data ){
 	string s = ob_string_ucast(me)->value;
 
 	// trim from start
@@ -447,7 +441,7 @@ Object *string_cl_set( Object *me, Object *i, Object *v ){
     return me;
 }
 
-Object *string_call_method( engine_t *engine, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
+Object *string_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
 	ob_type_builtin_method_t *method = NULL;
 
 	if( (method = ob_get_builtin_method( me, method_id )) == NULL ){
@@ -462,17 +456,17 @@ Object *string_call_method( engine_t *engine, vframe_t *frame, Object *me, char 
 	/*
 	 * Add this frame as the active stack
 	 */
-	vm_add_frame( engine->vm, &stack );
+	vm_add_frame( vm, &stack );
 
 	stack.owner = ob_typename(me) + string("::") + method_id;
 	/*
 	 * Evaluate each object and insert it into the stack
 	 */
 	for( i = 0; i < argc; ++i ){
-		value = engine_exec( engine, frame, argv->child(i) );
+		value = vm_exec( vm, frame, argv->child(i) );
 
 		if( frame->state.is(Exception) || frame->state.is(Return) ){
-			vm_pop_frame( engine->vm );
+			vm_pop_frame( vm );
 			return frame->state.value;
 		}
 
@@ -480,12 +474,12 @@ Object *string_call_method( engine_t *engine, vframe_t *frame, Object *me, char 
 	}
 
 	/* execute the method */
-	result = ((ob_type_builtin_method_t)method)( engine, me, &stack );
+	result = ((ob_type_builtin_method_t)method)( vm, me, &stack );
 
 	/*
 	 * Dismiss the stack.
 	 */
-	vm_pop_frame( engine->vm );
+	vm_pop_frame( vm );
 
 	/* return method evaluation value */
 	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);

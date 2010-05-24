@@ -16,9 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "common.h"
-#include "types.h"
-#include "vm.h"
+#include "hybris.h"
 
 /** helpers **/
 INLINE ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_id ){
@@ -51,15 +49,15 @@ int map_find( Object *m, Object *key ){
 }
 
 /** builtin methods **/
-Object *__map_size( engine_t *engine, Object *me, vframe_t *data ){
+Object *__map_size( vm_t *vm, Object *me, vframe_t *data ){
 	return (Object *)gc_new_integer( ob_map_ucast(me)->items );
 }
 
-Object *__map_pop( engine_t *engine, Object *me, vframe_t *data ){
+Object *__map_pop( vm_t *vm, Object *me, vframe_t *data ){
 	return ob_cl_pop( me );
 }
 
-Object *__map_unmap( engine_t *engine, Object *me, vframe_t *data ){
+Object *__map_unmap( vm_t *vm, Object *me, vframe_t *data ){
 	if( ob_argc() < 1 ){
 		hyb_error( H_ET_SYNTAX, "method 'unmap' requires 1 parameter (called with %d)", ob_argc() );
 	}
@@ -67,7 +65,7 @@ Object *__map_unmap( engine_t *engine, Object *me, vframe_t *data ){
 	return ob_cl_remove( me, ob_argv(0) );
 }
 
-Object *__map_has( engine_t *engine, Object *me, vframe_t *data ){
+Object *__map_has( vm_t *vm, Object *me, vframe_t *data ){
 	if( ob_argc() < 1 ){
 		hyb_error( H_ET_SYNTAX, "method 'has' requires 1 parameter (called with %d)", ob_argc() );
 	}
@@ -75,7 +73,7 @@ Object *__map_has( engine_t *engine, Object *me, vframe_t *data ){
 	return (Object *)gc_new_boolean( map_find( me, ob_argv(0) ) == -1 ? false : true );
 }
 
-Object *__map_keys( engine_t *engine, Object *me, vframe_t *data ){
+Object *__map_keys( vm_t *vm, Object *me, vframe_t *data ){
 	Map *mme  = ob_map_ucast(me);
 	Object    *keys = (Object *)gc_new_vector();
 	int		   i, sz( mme->keys.size() );
@@ -87,7 +85,7 @@ Object *__map_keys( engine_t *engine, Object *me, vframe_t *data ){
 	return keys;
 }
 
-Object *__map_values( engine_t *engine, Object *me, vframe_t *data ){
+Object *__map_values( vm_t *vm, Object *me, vframe_t *data ){
 	Map *mme    = ob_map_ucast(me);
 	Object    *values = (Object *)gc_new_vector();
 	int		   i, sz( mme->values.size() );
@@ -306,7 +304,7 @@ Object *map_cl_set( Object *me, Object *k, Object *v ){
     return map_cl_set_reference( me, ob_clone(k), ob_clone(v) );
 }
 
-Object *map_call_method( engine_t *engine, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
+Object *map_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
 	ob_type_builtin_method_t *method = NULL;
 
 	if( (method = ob_get_builtin_method( me, method_id )) == NULL ){
@@ -321,17 +319,17 @@ Object *map_call_method( engine_t *engine, vframe_t *frame, Object *me, char *me
 	/*
 	 * Add this frame as the active stack
 	 */
-	vm_add_frame( engine->vm, &stack );
+	vm_add_frame( vm, &stack );
 
 	stack.owner = ob_typename(me) + string("::") + method_id;
 	/*
 	 * Evaluate each object and insert it into the stack
 	 */
 	for( i = 0; i < argc; ++i ){
-		value = engine_exec( engine, frame, argv->child(i) );
+		value = vm_exec( vm, frame, argv->child(i) );
 
 		if( frame->state.is(Exception) || frame->state.is(Return) ){
-			vm_pop_frame( engine->vm );
+			vm_pop_frame( vm );
 			return frame->state.value;
 		}
 
@@ -339,12 +337,12 @@ Object *map_call_method( engine_t *engine, vframe_t *frame, Object *me, char *me
 	}
 
 	/* execute the method */
-	result = ((ob_type_builtin_method_t)method)( engine, me, &stack );
+	result = ((ob_type_builtin_method_t)method)( vm, me, &stack );
 
 	/*
 	 * Dismiss the stack.
 	 */
-	vm_pop_frame( engine->vm );
+	vm_pop_frame( vm );
 
 	/* return method evaluation value */
 	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);

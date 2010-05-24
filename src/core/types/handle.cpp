@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "types.h"
+#include "hybris.h"
 
 /** generic function pointers **/
 Object *handle_traverse( Object *me, int index ){

@@ -58,7 +58,7 @@ void * hyb_pthread_worker( void *arg ){
 		}
 	}
 
-    engine_on_threaded_call( vm->engine, thread_name, data, &stack );
+    vm_exec_threaded_call( vm, thread_name, data, &stack );
 
     delete args;
 
@@ -79,7 +79,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
 
     /*
      * Make sure that the new stack is not garbage collected
-     * before the engine_on_threaded_call is executed.
+     * before the vm_exec_threaded_call is executed.
      */
     for( i = 1; i < sz; ++i ){
     	gc_set_alive( args->data->at(i) );
@@ -128,7 +128,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create_argv){
 	args->data->push( (Object *)thread_name );
 	/*
 	 * Make sure that the new stack is not garbage collected
-	 * before the engine_on_threaded_call is executed.
+	 * before the vm_exec_threaded_call is executed.
 	 */
 	gc_set_alive( (Object *)thread_name );
 
@@ -136,7 +136,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create_argv){
     	Object *item = thread_argv->value[i];
 		/*
 		 * Make sure that the new stack is not garbage collected
-		 * before the engine_on_threaded_call is executed.
+		 * before the vm_exec_threaded_call is executed.
 		 */
 		gc_set_alive( item );
 
