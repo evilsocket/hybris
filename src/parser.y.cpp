@@ -261,13 +261,13 @@ vm_t *__hyb_vm;
 
 main : statements {
 
-	vm_timer( __hyb_vm, HYB_TIMER_START );
+	vm_timer( __hyb_vm, VM_TIMER_START );
 
 	__hyb_vm->state = vmExecuting;
 
 	vm_exec( __hyb_vm, &__hyb_vm->vmem, $1 );
 
-	vm_timer( __hyb_vm, HYB_TIMER_STOP );
+	vm_timer( __hyb_vm, VM_TIMER_STOP );
 
 	RM_NODE($1);
 }

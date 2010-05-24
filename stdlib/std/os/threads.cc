@@ -52,9 +52,9 @@ void * hyb_pthread_worker( void *arg ){
 
     vm_pool( vm );
 
-    if( ob_argc() > 1 ){
-		for( i = 1; i < ob_argc(); ++i ){
-			stack.push( ob_argv(i) );
+    if( vm_argc() > 1 ){
+		for( i = 1; i < vm_argc(); ++i ){
+			stack.push( vm_argv(i) );
 		}
 	}
 
@@ -70,7 +70,7 @@ void * hyb_pthread_worker( void *arg ){
 HYBRIS_DEFINE_FUNCTION(hpthread_create){
 	pthread_t tid;
     int       code;
-    size_t	  i, sz( ob_argc() );
+    size_t	  i, sz( vm_argc() );
 
     thread_args_t *args = new thread_args_t;
 
@@ -197,7 +197,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_kill){
 
 	vm_parse_argv( "ll", &tid, &sig );
 
-	if( int_argv(0) > 0 ){
+	if( tid > 0 ){
 		return (Object *)gc_new_integer( pthread_kill( tid, sig ) );
 	}
 	else{

@@ -50,7 +50,7 @@ void vm_str_split( string& str, string delimiters, vector<string>& tokens ){
 vm_t *vm_create(){
 	vm_t *vm = new vm_t;
 
-    memset( &vm->args, 0x00, sizeof(h_args_t) );
+    memset( &vm->args, 0x00, sizeof(vm_args_t) );
     /*
      * Input file handle.
      */
@@ -281,14 +281,14 @@ void vm_load_module( vm_t *vm, string path, string name ){
     }
 
     /* exported functions vector */
-    named_function_t *functions = (named_function_t *)dlsym( hmodule, "hybris_module_functions" );
+    vm_function_t *functions = (vm_function_t *)dlsym( hmodule, "hybris_module_functions" );
     if(!functions){
         dlclose(hmodule);
         hyb_error( H_ET_WARNING, "could not find module '%s' functions pointer", path.c_str() );
         return;
     }
 
-    module_t *hmod    = new module_t;
+    vm_module_t *hmod    = new vm_module_t;
     vm_str_split( path, "/", hmod->tree );
     hmod->handle	  = hmodule;
     hmod->name        = name;
@@ -296,7 +296,7 @@ void vm_load_module( vm_t *vm, string path, string name ){
     i = 0;
 
     while( functions[i].function != NULL ){
-        named_function_t *function = new named_function_t();
+        vm_function_t *function = new vm_function_t();
 
         function->identifier = functions[i].identifier;
         function->function   = functions[i].function;
@@ -725,7 +725,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	}
 }
 
-INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, named_function_t *function, vframe_t &stack, string owner, Node *argv ){
+INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vm_function_t *function, vframe_t &stack, string owner, Node *argv ){
 	int 	i, argc, f_argc, t;
 	Object *value;
 	H_OBJECT_TYPE type;
@@ -1411,7 +1411,7 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 
 INLINE Object *vm_exec_builtin_function_call( vm_t *vm, vframe_t *frame, Node * call ){
     char        *callname = (char *)call->value.m_call.c_str();
-    named_function_t* function;
+    vm_function_t* function;
     vframe_t     stack;
     Object      *result = H_UNDEFINED;
 
@@ -1717,7 +1717,7 @@ INLINE Object *vm_exec_dll_function_call( vm_t *vm, vframe_t *frame, Node *call 
      * We assume that dll module is already loaded, otherwise there shouldn't be
      * any vm_exec_dll_function_call call .
      */
-    named_function_t *dllcall = vm_get_function( vm, (char *)"dllcall" );
+    vm_function_t *dllcall = vm_get_function( vm, (char *)"dllcall" );
 
     if( (fn_pointer = frame->get( callname )) == H_UNDEFINED ){
         return H_UNDEFINED;

@@ -101,12 +101,16 @@ HYBRIS_DEFINE_FUNCTION(hfsize){
 	int size = 0, pos;
 	FILE *fp;
 
-	if( ob_argv(0)->type->code == otHandle ){
-		if( handle_argv(0) == NULL ){
+	if( vm_argv(0)->type->code == otHandle ){
+		Handle *handle;
+
+		vm_parse_argv( "H", &handle );
+
+		if( handle->value == NULL ){
 			return H_DEFAULT_ERROR;
 		}
 
-	    fp  = (FILE *)handle_argv(0);
+	    fp  = (FILE *)handle->value;
 		pos = ftell(fp);
 
 		fseek( fp, 0, SEEK_END );
@@ -114,9 +118,13 @@ HYBRIS_DEFINE_FUNCTION(hfsize){
 		fseek( fp, pos, SEEK_SET );
 	}
 	else{
-		fp = fopen( string_argv(0).c_str(), "r" );
+		char *filename;
+
+		vm_parse_argv( "p", &filename );
+
+		fp = fopen( filename, "r" );
 		if( fp == NULL ){
-			return vm_raise_exception( "'%s' no such file or directory", string_argv(0).c_str() );
+			return vm_raise_exception( "'%s' no such file or directory", filename );
 		}
 		fseek( fp, 0, SEEK_END );
 		size = ftell( fp );
@@ -287,7 +295,7 @@ HYBRIS_DEFINE_FUNCTION(hreaddir){
 
         if( recursive ){
             if( ent->d_type == DT_DIR && strcmp( ent->d_name, ".." ) != 0 && strcmp( ent->d_name, "." ) != 0 ){
-                readdir_recurse( (char *)string_argv(0).c_str(), ent->d_name, files );
+                readdir_recurse( dirname, ent->d_name, files );
             }
         }
     }

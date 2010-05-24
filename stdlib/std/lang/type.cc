@@ -115,7 +115,7 @@ HYBRIS_DEFINE_FUNCTION(htypeof){
 
 	vm_parse_argv( "O", &o );
 
-	return ob_dcast( gc_new_string( ob_typename( ob_argv(0) ) ) );
+	return ob_dcast( gc_new_string( ob_typename( vm_argv(0) ) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(hsizeof){
@@ -123,7 +123,7 @@ HYBRIS_DEFINE_FUNCTION(hsizeof){
 
 	vm_parse_argv( "O", &o );
 
-	return ob_dcast( gc_new_integer( ob_get_size(ob_argv(0)) ) );
+	return ob_dcast( gc_new_integer( ob_get_size(vm_argv(0)) ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(htoint){

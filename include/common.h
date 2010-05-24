@@ -73,7 +73,7 @@ typedef struct {
     ulong gc_threshold;
     ulong mm_threshold;
 }
-h_args_t;
+vm_args_t;
 /*
  * Describes what type a given error is.
  */

@@ -57,12 +57,12 @@ Object *__string_length( vm_t *vm, Object *me, vframe_t *data ){
 }
 
 Object *__string_find( vm_t *vm, Object *me, vframe_t *data ){
-	if(  ob_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'find' requires 1 parameter (called with %d)",  ob_argc() );
+	if(  vm_argc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'find' requires 1 parameter (called with %d)",  vm_argc() );
 	}
 	ob_argv_types_assert( 0, otString, otChar, "find" );
 
-	string needle = ob_is_char( ob_argv(0) ) ? string("") + ob_char_ucast(ob_argv(0))->value : ob_string_ucast(ob_argv(0))->value;
+	string needle = ob_is_char( vm_argv(0) ) ? string("") + ob_char_ucast(vm_argv(0))->value : ob_string_ucast(vm_argv(0))->value;
 
 	int found = ob_string_ucast(me)->value.find(needle);
 
@@ -70,34 +70,34 @@ Object *__string_find( vm_t *vm, Object *me, vframe_t *data ){
 }
 
 Object *__string_substr( vm_t *vm, Object *me, vframe_t *data ){
-	if( ob_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'substr' requires at least 1 parameter (called with %d)", ob_argc() );
+	if( vm_argc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'substr' requires at least 1 parameter (called with %d)", vm_argc() );
 	}
-	ob_type_assert( ob_argv(0), otInteger, "substr" );
+	ob_type_assert( vm_argv(0), otInteger, "substr" );
 
 	string sub;
-	if( ob_argc() == 2 ){
-		ob_type_assert( ob_argv(1), otInteger, "substr" );
-		sub = ob_string_ucast(me)->value.substr( ob_ivalue( ob_argv(0) ), ob_ivalue( ob_argv(1) ) );
+	if( vm_argc() == 2 ){
+		ob_type_assert( vm_argv(1), otInteger, "substr" );
+		sub = ob_string_ucast(me)->value.substr( ob_ivalue( vm_argv(0) ), ob_ivalue( vm_argv(1) ) );
 	}
 	else{
-		sub = ob_string_ucast(me)->value.substr( ob_ivalue( ob_argv(0) ) );
+		sub = ob_string_ucast(me)->value.substr( ob_ivalue( vm_argv(0) ) );
 	}
 
 	return (Object *)gc_new_string( sub.c_str() );
 }
 
 Object *__string_replace( vm_t *vm, Object *me, vframe_t *data ){
-	if( ob_argc() < 2 ){
-		hyb_error( H_ET_SYNTAX, "method 'replace' requires 2 parameters (called with %d)", ob_argc() );
+	if( vm_argc() < 2 ){
+		hyb_error( H_ET_SYNTAX, "method 'replace' requires 2 parameters (called with %d)", vm_argc() );
 	}
-	ob_type_assert( ob_argv(0), otString, "replace" );
-	ob_type_assert( ob_argv(1), otString, "replace" );
+	ob_type_assert( vm_argv(0), otString, "replace" );
+	ob_type_assert( vm_argv(1), otString, "replace" );
 
 	string str  = ob_string_ucast(me)->value,
 		   tmp  = str,
-		   find = string_argv(0),
-		   repl = string_argv(1);
+		   find = ob_svalue( data->at(0) ),
+		   repl = ob_svalue( data->at(1) );
 
 	int    i,
 		   f_len( find.length() ),
@@ -111,13 +111,13 @@ Object *__string_replace( vm_t *vm, Object *me, vframe_t *data ){
 }
 
 Object *__string_split( vm_t *vm, Object *me, vframe_t *data ){
-	if( ob_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'split' requires 1 parameter (called with %d)", ob_argc() );
+	if( vm_argc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'split' requires 1 parameter (called with %d)", vm_argc() );
 	}
-	ob_types_assert( ob_argv(0), otString, otChar, "split" );
+	ob_types_assert( vm_argv(0), otString, otChar, "split" );
 
 	string str = ob_string_ucast(me)->value,
-		   tok = ob_svalue( ob_argv(0) );
+		   tok = ob_svalue( vm_argv(0) );
 	vector<string> parts;
     int start = 0, end = 0, i;
 

@@ -101,17 +101,17 @@ static void ctype_convert( Object *o, dll_arg_t *pa ) {
 
 HYBRIS_DEFINE_FUNCTION(hprint){
     unsigned int i;
-    for( i = 0; i < ob_argc(); ++i ){
-        ob_print( ob_argv(i) );
+    for( i = 0; i < vm_argc(); ++i ){
+        ob_print( vm_argv(i) );
     }
     return H_DEFAULT_RETURN;
 }
 
 HYBRIS_DEFINE_FUNCTION(hprintln){
-    if( ob_argc() ){
+    if( vm_argc() ){
         unsigned int i;
-        for( i = 0; i < ob_argc(); ++i ){
-            ob_print( ob_argv(i) );
+        for( i = 0; i < vm_argc(); ++i ){
+            ob_print( vm_argv(i) );
             fprintf( stdout, "\n" );
         }
     }
@@ -122,8 +122,8 @@ HYBRIS_DEFINE_FUNCTION(hprintln){
 }
 
 HYBRIS_DEFINE_FUNCTION(hprintf){
-	if( ob_argc() > PRINTF_MAX_ARGS ){
-		hyb_error( H_ET_SYNTAX, "function 'printf' supports at max %d parameters (called with %d)", PRINTF_MAX_ARGS, ob_argc() );
+	if( vm_argc() > PRINTF_MAX_ARGS ){
+		hyb_error( H_ET_SYNTAX, "function 'printf' supports at max %d parameters (called with %d)", PRINTF_MAX_ARGS, vm_argc() );
 	}
 
 	typedef int (* function_t)(void);
@@ -131,7 +131,7 @@ HYBRIS_DEFINE_FUNCTION(hprintf){
 
 	ffi_cif    cif;
 	ffi_arg    ul_ret;
-	int        dsize( ob_argc() ),
+	int        dsize( vm_argc() ),
 			   argc( dsize ),
 			   i;
 	ffi_type **args_t;
@@ -145,9 +145,9 @@ HYBRIS_DEFINE_FUNCTION(hprintf){
 	memset( args, 0, sizeof(dll_arg_t) * argc );
 
 	/* convert objects to c-type equivalents */
-	ctype_convert( ob_argv(0), &args[0] );
+	ctype_convert( vm_argv(0), &args[0] );
 	for( i = 1, parg = &args[1]; i < dsize; ++i, ++parg ){
-		ctype_convert( ob_argv(i), parg );
+		ctype_convert( vm_argv(i), parg );
 	}
 	/* assign types and values */
 	for( i = 0; i < dsize; ++i ){
@@ -178,14 +178,14 @@ HYBRIS_DEFINE_FUNCTION(hprintf){
 
 HYBRIS_DEFINE_FUNCTION(hinput){
     Object *_return;
-    if( ob_argc() == 2 ){
-        ob_print( ob_argv(0) );
-        ob_input( ob_argv(1) );
-        _return = ob_argv(1);
+    if( vm_argc() == 2 ){
+        ob_print( vm_argv(0) );
+        ob_input( vm_argv(1) );
+        _return = vm_argv(1);
     }
-    else if( ob_argc() == 1 ){
-        ob_input( ob_argv(0) );
-        _return = ob_argv(0);
+    else if( vm_argc() == 1 ){
+        ob_input( vm_argv(0) );
+        _return = vm_argv(0);
     }
 
     return _return;

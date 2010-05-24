@@ -33,12 +33,7 @@ HYBRIS_DEFINE_FUNCTION(hbinary){
 
 	for( i = 0; i < data->size(); ++i ){
 		ob_argv_types_assert( i, otInteger, otChar, "binary" );
-        if( ob_is_int( ob_argv(i) ) ){
-            stream.push_back( (unsigned char)int_argv(i) );
-        }
-        else{
-            stream.push_back( (unsigned char)char_argv(i) );
-        }
+		stream.push_back( (unsigned char)ob_ivalue( vm_argv(i) ) );
 	}
 
     return ob_dcast( gc_new_binary(stream) );
@@ -60,9 +55,11 @@ void do_simple_packing( vector<byte>& stream, Object *o, size_t size ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hpack){
+	Object      *o;
+	size_t 		 i, j, size;
 	vector<byte> stream;
-	size_t 		 i, j, size( int_argv(1) );
-	Object      *o = ob_argv(0);
+
+	vm_parse_argv( "Oi", &o, &size );
 
 	switch( o->type->code ){
 		case otInteger :
@@ -73,21 +70,21 @@ HYBRIS_DEFINE_FUNCTION(hpack){
 			do_simple_packing( stream, o, size );
 		break;
 		case otVector  :
-			if( (ob_argc() - 1) != ob_get_size(o) ){
-				hyb_error( H_ET_SYNTAX, "not enough parameters to pack an array of %d elements (given %d)", ob_get_size(o), ob_argc() );
+			if( (vm_argc() - 1) != ob_get_size(o) ){
+				hyb_error( H_ET_SYNTAX, "not enough parameters to pack an array of %d elements (given %d)", ob_get_size(o), vm_argc() );
 			}
-			for( i = 1, j = 0; i < ob_argc(); ++i, ++j ){
+			for( i = 1, j = 0; i < vm_argc(); ++i, ++j ){
 				ob_argv_type_assert( i, otInteger, "pack" );
-				do_simple_packing( stream, ob_vector_ucast(o)->value[j], int_argv(i) );
+				do_simple_packing( stream, ob_vector_ucast(o)->value[j], ob_ivalue( vm_argv(i) ) );
 			}
 		break;
 		case otStructure :
-			if( (ob_argc() - 1) != ob_get_size(o) ){
-				hyb_error( H_ET_SYNTAX, "not enough parameters to pack a structure with %d attributes (given %d)", ob_get_size(o), ob_argc() );
+			if( (vm_argc() - 1) != ob_get_size(o) ){
+				hyb_error( H_ET_SYNTAX, "not enough parameters to pack a structure with %d attributes (given %d)", ob_get_size(o), vm_argc() );
 			}
-			for( i = 1, j = 0; i < ob_argc(); ++i, ++j ){
+			for( i = 1, j = 0; i < vm_argc(); ++i, ++j ){
 				ob_argv_type_assert( i, otInteger, "pack" );
-				do_simple_packing( stream, ob_struct_ucast(o)->s_attributes.at(j), int_argv(i) );
+				do_simple_packing( stream, ob_struct_ucast(o)->s_attributes.at(j), ob_ivalue( vm_argv(i) ) );
 			}
 		break;
 

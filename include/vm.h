@@ -33,67 +33,69 @@ using std::string;
 using std::vector;
 using std::map;
 
-typedef vector<string> vstr_t;
-
-/* pre declaration of structure vm_t */
+/*
+ * VM timer flags.
+ */
+#define VM_TIMER_START 1
+#define VM_TIMER_STOP  0
+/*
+ * Macro to declare a Hybris dynamic function.
+ */
+#define HYBRIS_DEFINE_FUNCTION(name) Object *name( vm_t *vm, vmem_t *data )
+/*
+ * Macro to define a constant value.
+ */
+#define HYBRIS_DEFINE_CONSTANT( vm, name, value ) vm_define_constant( vm, (char *)name, (Object *)value )
+/*
+ * Macro to define a new structure type given its name and its attribute names
+ */
+#define HYBRIS_DEFINE_STRUCTURE( vm, name, n, attrs ) vm_define_structure( vm, name, n, attrs )
+/*
+ * Macro to easily define allowed argument number.
+ */
+#define H_REQ_ARGC(...) { __VA_ARGS__, -1 }
+/*
+ * Only -1, any argument number is allowed.
+ */
+#define H_ANY_ARGC       H_REQ_ARGC(-1)
+/*
+ * No argument needed.
+ */
+#define H_NO_ARGS		 H_REQ_ARGC(0)
+/*
+ * Macro to easily define single argument allowed types.
+ */
+#define H_REQ_TYPES(...) { __VA_ARGS__, otEndMarker }
+/*
+ * Only otEndMarker, any type is allowed.
+ */
+#define H_ANY_TYPE  	 H_REQ_TYPES(otEndMarker)
+/*
+ * Macro to define module exported functions structure.
+ */
+#define HYBRIS_EXPORTED_FUNCTIONS() extern "C" vm_function_t hybris_module_functions[] =
+/*
+ * Macro to easily access hybris functions parameters.
+ */
+#define vm_argv(i)    ((*data)[i])
+/*
+ * Macro to easily access hybris functions parameters number.
+ */
+#define vm_argc()     (data->size())
+/*
+ * Pre declaration of structure vm_t.
+ */
 typedef struct _vm_t vm_t;
-
-/* initializer function pointer prototype */
+/*
+ * Module initializer function pointer prototype.
+ */
 typedef void     (*initializer_t)( vm_t * );
-/* function pointer prototype */
+/*
+ * Generic function pointer prototype.
+ */
 typedef Object * (*function_t)( vm_t *, vmem_t * );
 
-/* macro to declare a hybris function */
-#define HYBRIS_DEFINE_FUNCTION(name) Object *name( vm_t *vm, vmem_t *data )
-/* macro to define a constant value */
-#define HYBRIS_DEFINE_CONSTANT( vm, name, value ) vm->vconst.addConstant( (char *)name, (Object *)value )
-/* macro to define a new structure type given its name and its attribute names */
-#define HYBRIS_DEFINE_STRUCTURE( vm, name, n, attrs ) vm_define_structure( vm, name, n, attrs )
-/* macro to easily define allowed argument number */
-#define H_REQ_ARGC(...) { __VA_ARGS__, -1 }
-/* only -1, any argument number is allowed */
-#define H_ANY_ARGC       H_REQ_ARGC(-1)
-/* no argument needed */
-#define H_NO_ARGS		 H_REQ_ARGC(0)
-/* macro to easily define single argument allowed types */
-#define H_REQ_TYPES(...) { __VA_ARGS__, otEndMarker }
-/* only otEndMarker, any type is allowed */
-#define H_ANY_TYPE  	 H_REQ_TYPES(otEndMarker)
-/* macro to define module exported functions structure */
-#define HYBRIS_EXPORTED_FUNCTIONS() extern "C" named_function_t hybris_module_functions[] =
-/* macro to easily access hybris functions parameters */
-#define ob_argv(i)    ((*data)[i])
-/* macro to easily access hybris functions parameters number */
-#define ob_argc()     (data->size())
-/* typed versions of ob_argv macro */
-#define int_argv(i)    ob_int_val( ob_argv(i) )
-#define alias_argv(i)  ob_alias_val( ob_argv(i) )
-#define extern_argv(i) ob_extern_val( ob_argv(i) )
-#define float_argv(i)  ob_float_val( ob_argv(i) )
-#define char_argv(i)   ob_char_val( ob_argv(i) )
-#define string_argv(i) ob_string_val( ob_argv(i) )
-#define binary_argv(i) ob_binary_val( ob_argv(i) )
-#define vector_argv(i) ob_vector_val( ob_argv(i) )
-#define map_argv(i)    ob_map_val( ob_argv(i) )
-#define struct_argv(i) ob_struct_val( ob_argv(i) )
-#define class_argv(i)  ob_class_val( ob_argv(i) )
-#define handle_argv(i) ob_handle_val( ob_argv(i) )
-
-/* macros to assert an object type */
-#define ob_type_assert(o,t,f)      if( o->type->code != t ){ \
-                                    hyb_error( H_ET_SYNTAX, "Unexpected '%s' variable for function " f ", expected '%s'", o->type->name, ob_type_to_string(t) ); \
-                                 }
-#define ob_types_assert(o,t1,t2,f) if( o->type->code != t1 && o->type->code != t2 ){ \
-									   hyb_error( H_ET_SYNTAX, "Unexpected '%s' variable for function " f ", expected '%s' or '%s'", o->type->name, ob_type_to_string(t1), ob_type_to_string(t2) ); \
-                                   }
-
-#define ob_argv_type_assert( i, t, f ) 		 ob_type_assert( ob_argv(i), t, f )
-#define ob_argv_types_assert( i, t1, t2, f ) ob_types_assert( ob_argv(i), t1, t2, f )
-
-#define HYB_TIMER_START 1
-#define HYB_TIMER_STOP  0
-
-typedef struct _named_function_t {
+typedef struct _vm_function_t {
 	/*
 	 * Function identifier.
 	 */
@@ -111,34 +113,34 @@ typedef struct _named_function_t {
      */
     H_OBJECT_TYPE types[HMAXARGS][20];
 }
-named_function_t;
+vm_function_t;
 
-typedef vector<named_function_t *> named_functions_t;
+typedef vector<vm_function_t *> vm_named_functions_t;
+typedef vector<string> 			   vstr_t;
 
-/* module structure definition */
-typedef struct _module_t {
-	void			 *handle;
-    vstr_t            tree;
-    string            name;
-    initializer_t     initializer;
-    named_functions_t functions;
+/*
+ * Module structure definition.
+ */
+typedef struct _vm_module_t {
+	void			 	*handle;
+    vstr_t           	 tree;
+    string           	 name;
+    initializer_t     	 initializer;
+    vm_named_functions_t functions;
 }
-module_t;
+vm_module_t;
 
-/* module initializer function pointer prototype */
-typedef void (*initializer_t)( vm_t * );
-
-typedef vector<module_t *>        h_modules_t;
-typedef ITree<named_function_t> h_mcache_t;
+typedef vector<vm_module_t *>      	  vm_modules_t;
+typedef ITree<vm_function_t> 	  	  vm_mcache_t;
+typedef ITree<pcre>					  vm_pcache_t;
+typedef list< vframe_t * > 			  vm_scope_t;
+typedef map< pthread_t, vm_scope_t *> vm_thread_scope_t;
 
 enum vm_state_t {
 	vmNone    = 0,
 	vmParsing,
 	vmExecuting
 };
-
-typedef list< vframe_t * > 			   vm_scope_t;
-typedef map< pthread_t, vm_scope_t *> vm_thread_scope_t;
 
 typedef struct _vm_t {
 	/*
@@ -200,11 +202,11 @@ typedef struct _vm_t {
 	/*
 	 * VM command line arguments.
 	 */
-	h_args_t       args;
+	vm_args_t       args;
 	/*
 	 * Functions lookup hashtable cache.
 	 */
-	h_mcache_t	   mcache;
+	vm_mcache_t	   mcache;
 	/*
 	 * Lookup cache mutex.
 	 */
@@ -212,11 +214,11 @@ typedef struct _vm_t {
 	/*
 	 * Dynamically loaded modules instances.
 	 */
-	h_modules_t    modules;
+	vm_modules_t    modules;
 	/*
 	 * Compiled regular expressions cache.
 	 */
-	ITree<pcre>  pcre_cache;
+	vm_pcache_t  pcre_cache;
 	/*
 	 * Regexp cache mutex.
 	 */
@@ -228,8 +230,6 @@ typedef struct _vm_t {
 	bool 		   releasing;
 }
 vm_t;
-
-
 /*
  * Macros to lock and unlock the vm mutexes.
  */
@@ -418,13 +418,13 @@ INLINE void vm_timer( vm_t *vm, int start = 0 ){
  * loaded module and return its pointer.
  * Handle function pointer caching.
  */
-INLINE named_function_t *vm_get_function( vm_t *vm, char *identifier ){
+INLINE vm_function_t *vm_get_function( vm_t *vm, char *identifier ){
 	unsigned int i, j,
 				 ndyns( vm->modules.size() ),
 				 nfuncs;
 
 	/* first check if it's already in cache */
-	named_function_t * cache = vm->mcache.find(identifier);
+	vm_function_t * cache = vm->mcache.find(identifier);
 	if( cache != H_UNDEFINED ){
 		return cache;
 	}
@@ -471,12 +471,15 @@ INLINE Object * vm_define_structure( vm_t *vm, char *name, size_t nattrs, char *
  * Same as before, but the structure or the class will be defined from an alreay
  * created object.
  */
-INLINE void vm_define_type( vm_t *vm, char *name, Object *type ){
+INLINE void vm_define_constant( vm_t *vm, char *name, Object *value ){
   /*
    * Prevent the structure or class definition from being deleted by the gc.
    */
-   vm->vtypes.addConstant( name, type );
+   vm->vtypes.addConstant( name, value );
 }
+
+#define vm_define_type vm_define_constant
+
 /*
  * Find the object pointer of a user defined type (i.e. structures or classes).
  */
@@ -549,7 +552,7 @@ void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owne
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, Node *argv );
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Extern *fn_pointer, Node *argv );
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Node *argv );
-void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, named_function_t *function, vframe_t &stack, string owner, Node *argv );
+void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vm_function_t *function, vframe_t &stack, string owner, Node *argv );
 void 	  vm_dismiss_stack( vm_t *vm );
 /*
  * Handle hybris builtin function call.

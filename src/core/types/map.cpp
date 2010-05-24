@@ -58,19 +58,19 @@ Object *__map_pop( vm_t *vm, Object *me, vframe_t *data ){
 }
 
 Object *__map_unmap( vm_t *vm, Object *me, vframe_t *data ){
-	if( ob_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'unmap' requires 1 parameter (called with %d)", ob_argc() );
+	if( vm_argc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'unmap' requires 1 parameter (called with %d)", vm_argc() );
 	}
 
-	return ob_cl_remove( me, ob_argv(0) );
+	return ob_cl_remove( me, vm_argv(0) );
 }
 
 Object *__map_has( vm_t *vm, Object *me, vframe_t *data ){
-	if( ob_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'has' requires 1 parameter (called with %d)", ob_argc() );
+	if( vm_argc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'has' requires 1 parameter (called with %d)", vm_argc() );
 	}
 
-	return (Object *)gc_new_boolean( map_find( me, ob_argv(0) ) == -1 ? false : true );
+	return (Object *)gc_new_boolean( map_find( me, vm_argv(0) ) == -1 ? false : true );
 }
 
 Object *__map_keys( vm_t *vm, Object *me, vframe_t *data ){

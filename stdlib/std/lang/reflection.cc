@@ -119,7 +119,7 @@ HYBRIS_DEFINE_FUNCTION(hdyn_functions){
 
     Object *map = ob_dcast( gc_new_map() );
     for( i = 0; i < mods; ++i ){
-        module_t *mod = vm->modules[i];
+        vm_module_t *mod = vm->modules[i];
         Object   *dyn = ob_dcast( gc_new_vector() );
         dyns          = mod->functions.size();
         for( j = 0; j < dyns; ++j ){
@@ -151,10 +151,10 @@ HYBRIS_DEFINE_FUNCTION(hcall){
 
 	vm_parse_argv( "s", &function );
 
-	if( ob_argc() > 1 ){
+	if( vm_argc() > 1 ){
 		unsigned int i;
-		for( i = 1; i < ob_argc(); ++i ){
-			stack.push( ob_argv(i) );
+		for( i = 1; i < vm_argc(); ++i ){
+			stack.push( vm_argv(i) );
 		}
 	}
 

@@ -93,6 +93,19 @@ typedef MemorySegment vframe_t;
  */
 #define ob_same_type( a, b ) ((a)->type->code == (b)->type->code)
 /*
+ * Macros to assert an object type.
+ */
+#define ob_type_assert(o,t,f)      if( o->type->code != t ){ \
+                                    hyb_error( H_ET_SYNTAX, "Unexpected '%s' variable for function " f ", expected '%s'", o->type->name, ob_type_to_string(t) ); \
+                                 }
+#define ob_types_assert(o,t1,t2,f) if( o->type->code != t1 && o->type->code != t2 ){ \
+									   hyb_error( H_ET_SYNTAX, "Unexpected '%s' variable for function " f ", expected '%s' or '%s'", o->type->name, ob_type_to_string(t1), ob_type_to_string(t2) ); \
+                                   }
+
+#define ob_argv_type_assert( i, t, f ) 		 ob_type_assert( vm_argv(i), t, f )
+#define ob_argv_types_assert( i, t1, t2, f ) ob_types_assert( vm_argv(i), t1, t2, f )
+
+/*
  * Macros to declare a type and then to implement its type structure.
  *
  * NOTE: The DECLARE_TYPE macro can be used inside type modules too
@@ -254,7 +267,7 @@ typedef Object * (*ob_call_method_function_t)	( vm_t *, vframe_t *, Object *, ch
 /*
  * Object type codes enumeration.
  * otEndMarker is used to mark the last allowed type in
- * named_function_t::types.
+ * vm_function_t::types.
  */
 enum H_OBJECT_TYPE {
 	otEndMarker = -1,
