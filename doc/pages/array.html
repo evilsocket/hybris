@@ -1,11 +1,4 @@
 
-
-
-
-
-
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="it"
@@ -38,6 +31,32 @@ Può essere inizializzato con dei valori tramite operatore [ ] :
 
 
 
+<h1><a name="operatori" id="operatori">Operatori</a></h1>
+<div class="level1">
+
+<p>
+
+Gli array supportano gli <a href="aritmetici.html" class="wikilink1" title="aritmetici">operatori</a> di addizione ( + e += ) e quelli di sottrazione (- e -= ), i quali rispettivamente servono ad aggiungere o rimuovere elementi qual&#039;ora siano presenti nel vettore.
+</p>
+
+<p>
+Ad esempio :
+</p>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> 1<span class="sy0">,</span> 2<span class="sy0">,</span> 3 <span class="br0">&#93;</span> <span class="sy0">-</span> 2 <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code">array {
+      1
+      3
+}</pre>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="br0">&#91;</span> 1<span class="sy0">,</span> 2<span class="sy0">,</span> 3 <span class="br0">&#93;</span> <span class="sy0">+</span> 4 <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code">array {
+      1
+      2
+      3
+      4
+}</pre>
+
+</div>
+<!-- SECTION "Operatori" [414-858] -->
 <h1><a name="metodi" id="metodi">Metodi</a></h1>
 <div class="level1">
 
@@ -47,7 +66,7 @@ Questa tipologia ha dei <a href="classe.html" class="wikilink1" title="classe">m
 </p>
 
 </div>
-<!-- SECTION "Metodi" [414-535] -->
+<!-- SECTION "Metodi" [859-980] -->
 <h2><a name="size" id="size">size()</a></h2>
 <div class="level2">
 
@@ -59,7 +78,7 @@ Restituisce il numero di elementi che contiene l&#039;array.
 <pre class="code">3</pre>
 
 </div>
-<!-- SECTION "size()" [536-682] -->
+<!-- SECTION "size()" [981-1127] -->
 <h2><a name="pop" id="pop">pop()</a></h2>
 <div class="level2">
 
@@ -71,7 +90,7 @@ Rimuove l&#039;ultimo elemento dell&#039;array e ne restituisce un istanza .
 <pre class="code">meh</pre>
 
 </div>
-<!-- SECTION "pop()" [683-840] -->
+<!-- SECTION "pop()" [1128-1285] -->
 <h2><a name="remove_index" id="remove_index">remove( index )</a></h2>
 <div class="level2">
 
@@ -83,7 +102,7 @@ Rimuove un elemento dall&#039;array ad un indice specifico e ne restituisce un i
 <pre class="code">bar</pre>
 
 </div>
-<!-- SECTION "remove( index )" [841-1030] -->
+<!-- SECTION "remove( index )" [1286-1475] -->
 <h2><a name="contains_object" id="contains_object">contains( object )</a></h2>
 <div class="level2">
 
@@ -98,7 +117,7 @@ Restituisce <strong>true</strong> se l&#039;array contiene l&#039;elemento speci
 false </pre>
 
 </div>
-<!-- SECTION "contains( object )" [1031-1301] -->
+<!-- SECTION "contains( object )" [1476-1746] -->
 <h2><a name="join_glue" id="join_glue">join( glue )</a></h2>
 <div class="level2">
 
@@ -110,7 +129,7 @@ Restituisce una stringa con tutti gli elementi dell&#039;array concatenati trami
 <pre class="code">foo, bar, meh</pre>
 
 </div>
-<!-- SECTION "join( glue )" [1302-1530] -->
+<!-- SECTION "join( glue )" [1747-1975] -->
 <h1><a name="esempio" id="esempio">Esempio</a></h1>
 <div class="level1">
 <pre class="code hybris"><span class="kw2">import</span> std<span class="sy0">.*;</span>
@@ -211,4 +230,4 @@ array {
 }</pre>
 
 </div>
-<!-- SECTION "Esempio" [1531-] --></div><!-- closes <div class="dokuwiki export">-->
+<!-- SECTION "Esempio" [1976-] --></div><!-- closes <div class="dokuwiki export">-->

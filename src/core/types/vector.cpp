@@ -210,6 +210,134 @@ Object *vector_assign( Object *me, Object *op ){
     return me = clone;
 }
 
+Object *vector_add( Object *me, Object *op ){
+	Object *clone = ob_clone(me);
+
+	if( ob_is_vector(op) ){
+		size_t i, sz( ob_vector_ucast(op)->items );
+		for( i = 0; i < sz; ++i ){
+			ob_cl_push( clone, ob_vector_ucast(op)->value[i] );
+		}
+	}
+	else{
+		ob_cl_push( clone, op );
+	}
+
+	return clone;
+}
+
+Object *vector_sub( Object *me, Object *op ){
+	Object *clone = ob_clone(me);
+
+	if( ob_is_vector(op) ){
+		Vector *vclone = ob_vector_ucast(clone),
+			   *vop    = ob_vector_ucast(op);
+		size_t i, sz_op( vop->items );
+		VectorIterator vi( vclone->value.begin() );
+
+		for( i = 0; i < sz_op; ++i ){
+			while( vi != vclone->value.end() ){
+				if( ob_cmp( *vi, vop->value[i] ) == 0 ){
+					vclone->value.erase( vi );
+					vclone->items--;
+					/*
+					 * We've just erased an item, so we have to reset begin and end
+					 * pointers.
+					 */
+					vi = vclone->value.begin();
+				}
+				else{
+					vi++;
+				}
+			}
+		}
+	}
+	else{
+		Vector *vclone = ob_vector_ucast(clone);
+		VectorIterator vi( vclone->value.begin() );
+
+		vi = vclone->value.begin();
+		while( vi != vclone->value.end() ){
+			if( ob_cmp( *vi, op ) == 0 ){
+				vclone->value.erase( vi );
+				vclone->items--;
+				/*
+				 * We've just erased an item, so we have to reset begin and end
+				 * pointers.
+				 */
+				vi = vclone->value.begin();
+			}
+			else{
+				vi++;
+			}
+		}
+	}
+
+	return clone;
+}
+
+Object *vector_inplace_add( Object *me, Object *op ){
+	if( ob_is_vector(op) ){
+		size_t i, sz( ob_vector_ucast(op)->items );
+		for( i = 0; i < sz; ++i ){
+			ob_cl_push( me, ob_vector_ucast(op)->value[i] );
+		}
+	}
+	else{
+		ob_cl_push( me, op );
+	}
+
+	return me;
+}
+
+Object *vector_inplace_sub( Object *me, Object *op ){
+	if( ob_is_vector(op) ){
+		Vector *vme = ob_vector_ucast(vme),
+			   *vop = ob_vector_ucast(op);
+		size_t i, sz_op( vop->items );
+		VectorIterator vi( vme->value.begin() );
+
+		for( i = 0; i < sz_op; ++i ){
+			while( vi != vme->value.end() ){
+				if( ob_cmp( *vi, vop->value[i] ) == 0 ){
+					vme->value.erase( vi );
+					/*
+					 * We've just erased an item, so we have to reset begin and end
+					 * pointers.
+					 */
+					vi = vme->value.begin();
+					vme->items--;
+				}
+				else{
+					vi++;
+				}
+			}
+		}
+	}
+	else{
+		Vector *vme = ob_vector_ucast(me);
+		VectorIterator vi( vme->value.begin() );
+
+		vi = vme->value.begin();
+		while( vi != vme->value.end() ){
+			if( ob_cmp( *vi, op ) == 0 ){
+				vme->value.erase( vi );
+				/*
+				 * We've just erased an item, so we have to reset begin and end
+				 * pointers.
+				 */
+				vi = vme->value.begin();
+				vme->items--;
+			}
+			else{
+				vi++;
+			}
+		}
+	}
+
+	return me;
+}
+
 /** collection operators **/
 Object *vector_cl_push( Object *me, Object *o ){
     return ob_cl_push_reference( me, ob_clone(o) );
@@ -370,13 +498,13 @@ IMPLEMENT_TYPE(Vector) {
     0, // increment
     0, // decrement
     0, // minus
-    0, // add
-    0, // sub
+    vector_add, // add
+    vector_sub, // sub
     0, // mul
     0, // div
     0, // mod
-    0, // inplace_add
-    0, // inplace_sub
+    vector_inplace_add, // inplace_add
+    vector_inplace_sub, // inplace_sub
     0, // inplace_mul
     0, // inplace_div
     0, // inplace_mod
