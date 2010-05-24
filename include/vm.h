@@ -536,6 +536,34 @@ void vm_parse_frame_argv( vframe_t *argv, char *format, ... );
 									   return frame->state.value; \
 								   }
 /*
+ * Methods to initialize a stack given its owner, arguments, identifiers
+ * and so on.
+ *
+ * Each prepare_stack method will increment by one the reference counter
+ * of each value pushed/inserted into it, then the dismiss_stack method
+ * will decrement them again.
+ */
+void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Object *cobj, int argc, Node *prototype, Node *argv );
+void 	  vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, Object *cobj, Node *ids, int argc, ... );
+void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, vmem_t *argv );
+void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, Node *argv );
+void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Extern *fn_pointer, Node *argv );
+void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Node *argv );
+void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, named_function_t *function, vframe_t &stack, string owner, Node *argv );
+void 	  vm_dismiss_stack( vm_t *vm );
+/*
+ * Handle hybris builtin function call.
+ */
+Object   *vm_exec_builtin_function_call( vm_t *vm, vframe_t *, Node * );
+/*
+ * Handle user defined function call.
+ */
+Object   *vm_exec_user_function_call( vm_t *vm, vframe_t *, Node * );
+/*
+ * Handle dynamic loaded function call.
+ */
+Object   *vm_exec_dll_function_call( vm_t *vm, vframe_t *, Node * );
+/*
  * Special case to handle threaded function calls by name and by alias.
  */
 Object   *vm_exec_threaded_call( vm_t *vm, string function_name, vframe_t *frame, vmem_t *argv );
@@ -544,6 +572,123 @@ Object   *vm_exec_threaded_call( vm_t *vm, Node *function, vframe_t *frame, vmem
  * Node handler dispatcher.
  */
 Object 	 *vm_exec( vm_t *vm, vframe_t *frame, Node *node );
-
+/*
+ * Identifier found, do a memory lookup for it.
+ */
+Object 	 *vm_exec_identifier( vm_t *vm, vframe_t *, Node * );
+/*
+ * expression->expression, evaluate first expression to find out if
+ * it's a class or a structure, and then lookup inside it the second one.
+ */
+Object   *vm_exec_attribute_request( vm_t *vm, vframe_t *, Node * );
+/*
+ * expression->expression(...), evaluate first expression to find out if
+ * it's a class or a structure, and then lookup inside it the second one.
+ */
+Object   *vm_exec_method_call( vm_t *vm, vframe_t *, Node * );
+/*
+ * Constant found, just return it from the evaluation tree.
+ */
+Object   *vm_exec_constant( vm_t *vm, vframe_t *, Node * );
+/*
+ * Create an array.
+ */
+Object   *vm_exec_array( vm_t *vm, vframe_t *, Node * );
+/*
+ * Create a map.
+ */
+Object   *vm_exec_map( vm_t *vm, vframe_t *, Node * );
+/*
+ * Function declaration, add it to the code segment.
+ */
+Object   *vm_exec_function_declaration( vm_t *vm, vframe_t *, Node * );
+/*
+ * Structure declaration, create the prototype instance and add it
+ * to the types segment.
+ */
+Object   *vm_exec_structure_declaration( vm_t *vm, vframe_t *, Node * );
+/*
+ * Class declaration, create the prototype instance, and add it
+ * to the types segment.
+ */
+Object   *vm_exec_class_declaration( vm_t *vm, vframe_t *, Node * );
+/*
+ * expression( ... ), evaluate each argument and the run the function.
+ */
+Object   *vm_exec_function_call( vm_t *vm, vframe_t *, Node * );
+/*
+ * new type( ... ), execute type lookup, clone the instance and if it's
+ * a class and has a constructor, execute it, otherwise do default attributes
+ * initialization.
+ */
+Object   *vm_exec_new_operator( vm_t *vm, vframe_t *, Node * );
+/*
+ * Statements.
+ */
+Object   *vm_exec_explode( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_return( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_throw( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_try_catch( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_while( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_do( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_for( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_foreach( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_foreach_mapping( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_unless( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_if( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_question( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_switch( vm_t *vm, vframe_t *, Node * );
+/*
+ * Expressions and operators.
+ */
+/* misc */
+Object 	 *vm_exec_backtick( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_vargs( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_dollar( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_reference( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_range( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_subscript_push( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_subscript_get( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_subscript_set( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_eostmt( vm_t *vm, vframe_t *, Node * );
+/* arithmetic */
+Object   *vm_exec_assign( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_uminus( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_regex( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_add( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_inplace_add( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_sub( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_inplace_sub( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_mul( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_inplace_mul( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_div( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_inplace_div( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_mod( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_inplace_mod( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_inc( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_dec( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_fact( vm_t *vm, vframe_t *, Node * );
+/* bitwise */
+Object   *vm_exec_xor( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_inplace_xor( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_and( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_inplace_and( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_or( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_inplace_or( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_shiftl( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_inplace_shiftl( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_shiftr( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_inplace_shiftr( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_not( vm_t *vm, vframe_t *, Node * );
+/* logic */
+Object   *vm_exec_lnot( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_less( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_greater( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_ge( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_le( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_ne( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_eq( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_land( vm_t *vm, vframe_t *, Node * );
+Object   *vm_exec_lor( vm_t *vm, vframe_t *, Node * );
 
 #endif
