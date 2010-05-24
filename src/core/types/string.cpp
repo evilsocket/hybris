@@ -100,13 +100,12 @@ Object *__string_replace( engine_t *engine, Object *me, vframe_t *data ){
 		   find = string_argv(0),
 		   repl = string_argv(1);
 
-	size_t i,
+	int    i(0),
 		   f_len( find.length() ),
 		   r_len( repl.length() + 1 );
-	for( ; (i = tmp.find( find )) != string::npos ; ){
+	for( ; (i = str.find( find, i )) != string::npos ; ){
 		str.replace( i, f_len, repl );
-
-		tmp = tmp.substr( i + r_len );
+		i += r_len;
 	}
 
 	return (Object *)gc_new_string( str.c_str() );
