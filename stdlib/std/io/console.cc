@@ -20,6 +20,8 @@
 #include <iostream>
 #include <dlfcn.h>
 #include <ffi.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 using std::cin;
 
@@ -34,7 +36,7 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "println",  hprintln,  H_ANY_ARGC },
 	{ "printf",   hprintf,   H_REQ_ARGC(1),   { H_REQ_TYPES(otString) } },
 	{ "input",    hinput,    H_REQ_ARGC(1,2), { H_REQ_TYPES(otString), H_ANY_TYPE } },
-	{ "readline", hreadline, H_REQ_ARGC(0) },
+	{ "readline", hreadline, H_REQ_ARGC(0,1), { H_REQ_TYPES(otString) } },
 	{ "", NULL }
 };
 
@@ -192,16 +194,23 @@ HYBRIS_DEFINE_FUNCTION(hinput){
 }
 
 HYBRIS_DEFINE_FUNCTION(hreadline){
-	string line;
+	char   *prompt = NULL,
+		   *line   = NULL;
+	Object *retn;
 
-	getline( cin, line );
-	/*
-	 * Handle CTRL+D for input stream EOF.
-	 */
-	if( cin.eof() ){
-		cin.clear();
-		cin.ignore();
+	vm_parse_argv( "p", &prompt );
+
+	line = readline(prompt);
+	if( !line ){
+		retn = (Object *)gc_new_string("");
+	}
+	else{
+		add_history(line);
+
+		retn = (Object *)gc_new_string(line);
+
+		free(line);
 	}
 
-	return (Object *)gc_new_string( line.c_str() );
+	return retn;
 }

@@ -19,7 +19,7 @@ LIBXML_CFLAGS = "`xml2-config --cflags`"
 LIBXML_LFLAGS = "`xml2-config --libs`"
 LIBFFI_CFLAGS = "`pkg-config libffi --cflags`"
 LIBFFI_LFLAGS = "`pkg-config libffi --libs`"
-STDLIB_LFLAGS = "-ldl -lpcre -lcurl -lpthread #{LIBXML_LFLAGS} #{LIBFFI_LFLAGS}" 
+STDLIB_LFLAGS = "-ldl -lpcre -lcurl -lpthread -lreadline #{LIBXML_LFLAGS} #{LIBFFI_LFLAGS}" 
 STDLIB_CFLAGS = "#{WFLAGS} -L. -L./build#{PREFIX}/lib/ -I./include/ #{OPTIMIZATION} -fPIC #{LIBXML_CFLAGS} #{LIBFFI_CFLAGS} -lhybris -lc -shared"
 
 
@@ -75,6 +75,8 @@ task :checkdeps do
 	raise "[ERROR] libxml2 not found !\n" unless have_library( "xml2", "xmlReadFile" )
 	raise "[ERROR] libcurl not found !\n" unless have_library( "curl", "curl_easy_init" )
 	raise "[ERROR] curl.h not found !\n" unless have_header( "curl/curl.h" )
+	raise "[ERROR] libreadline not found !\n" unless have_library( "readline", "readline" )
+	raise "[ERROR] readline.h not found !\n" unless have_header( "readline/readline.h" )
 end
 
 task :config_h do
