@@ -377,16 +377,30 @@ INLINE vm_scope_t *vm_find_scope( vm_t *vm ){
 }
 /*
  * Push a frame to the trace stack.
+ *
+ * THREAD SAFE VERSION :
+ *
+ * vm_mm_lock( vm ); \
+ * 		vm_find_scope(vm)->push_back(frame); \
+ * vm_mm_unlock( vm )
+ *
+ * Each thread has its own scope, the gc will lock the flow
+ * anyway so, is this really necessary?
  */
-#define vm_add_frame( vm, frame ) vm_mm_lock( vm ); \
-								  vm_find_scope(vm)->push_back(frame); \
-								  vm_mm_unlock( vm )
+#define vm_add_frame( vm, frame ) vm_find_scope(vm)->push_back(frame)
 /*
  * Remove the last frame from the trace stack.
+ *
+ * THREAD SAFE VERSION :
+ *
+ * vm_mm_lock( vm ); \
+ * 		vm_find_scope(vm)->pop_back(); \
+ * vm_mm_unlock( vm )
+ *
+ * Each thread has its own scope, the gc will lock the flow
+ * anyway so, is this really necessary?
  */
-#define vm_pop_frame( vm ) vm_mm_lock( vm ); \
-						   vm_find_scope(vm)->pop_back(); \
-						   vm_mm_unlock( vm )
+#define vm_pop_frame( vm ) vm_find_scope(vm)->pop_back()
 
 #define vm_scope_size( vm ) vm_find_scope(vm)->size()
 
@@ -553,6 +567,7 @@ void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owne
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Extern *fn_pointer, Node *argv );
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Node *argv );
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vm_function_t *function, vframe_t &stack, string owner, Node *argv );
+void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, Node *function, vframe_t &stack, string owner, Node *argv );
 void 	  vm_dismiss_stack( vm_t *vm );
 /*
  * Handle hybris builtin function call.

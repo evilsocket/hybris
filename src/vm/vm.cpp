@@ -729,7 +729,6 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vm_function_t *function,
 	int 	i, argc, f_argc, t;
 	Object *value;
 	H_OBJECT_TYPE type;
-
 	/*
 	 * Check for heavy recursions and/or nested calls.
 	 */
@@ -781,6 +780,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vm_function_t *function,
 			vm_dismiss_stack( vm );
 			return;
 	    }
+
 		if( f_argc != -1 && i < f_argc ){
 			for( t = 0 ;; ++t ){
 				type = function->types[i][t];
@@ -1557,21 +1557,16 @@ INLINE Object *vm_exec_user_function_call( vm_t *vm, vframe_t *frame, Node *call
     Node    *body     = H_UNDEFINED;
 
     vector<string> identifiers;
-    unsigned int i(0), children;
 
     if( (function = vm_find_function( vm, frame, call )) == H_UNDEFINED ){
         return H_UNDEFINED;
     }
 
-    children = function->children();
-    for( i = 0, body = function->child(0); i < children; ++i ){
-    	body = function->child(i);
-    	if( body->type() == H_NT_IDENTIFIER ){
-    		identifiers.push_back( body->value.m_identifier );
-    	}
-    	else{
-    		break;
-    	}
+    size_t i(0),
+    	   argc( function->value.m_argc );
+
+    for( i = 0; i < argc; ++i ){
+    	identifiers.push_back( function->child(i)->value.m_identifier );
     }
 
     if( function->value.m_vargs ){
@@ -1596,7 +1591,7 @@ INLINE Object *vm_exec_user_function_call( vm_t *vm, vframe_t *frame, Node *call
     vm_check_frame_exit(frame);
 
     /* call the function */
-    result = vm_exec( vm, &stack, body );
+    result = vm_exec( vm, &stack, function->body() );
 
     vm_dismiss_stack( vm );
 	/*
@@ -1660,18 +1655,18 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
 		Node *ctor = ob_get_method( newtype, type_name, children );
 		if( ctor != H_UNDEFINED ){
 			if( ctor->value.m_vargs ){
-				if( children < ctor->callDefinedArgc() ){
+				if( children < ctor->value.m_argc ){
 					hyb_error( H_ET_SYNTAX, "class '%s' constructor requires at least %d arguments, called with %d",
 											 type_name,
-											 ctor->callDefinedArgc(),
+											 ctor->value.m_argc,
 											 children );
 			   }
 			}
 			else{
-				if( children > ctor->callDefinedArgc() ){
+				if( children > ctor->value.m_argc ){
 					hyb_error( H_ET_SYNTAX, "class '%s' constructor requires %d arguments, called with %d",
 											 type_name,
-											 ctor->callDefinedArgc(),
+											 ctor->value.m_argc,
 											 children );
 				}
 			}
@@ -1679,18 +1674,18 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
 			vframe_t stack;
 
 			vm_prepare_stack( vm,
-								  frame,
-								  stack,
-								  string(type_name) + "::" + string(type_name),
-								  newtype,
-								  children,
-								  ctor,
-								  type );
+							  frame,
+							  stack,
+							  string(type_name) + "::" + string(type_name),
+							  newtype,
+							  children,
+							  ctor,
+							  type );
 
 			vm_check_frame_exit(frame);
 
 			/* call the ctor */
-			vm_exec( vm, &stack, ctor->callBody() );
+			vm_exec( vm, &stack, ctor->body() );
 
 			vm_dismiss_stack( vm );
 

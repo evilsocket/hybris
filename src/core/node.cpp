@@ -29,6 +29,7 @@ NodeValue::NodeValue() :
     m_access(asPublic),
     m_static(false),
     m_call(""),
+    m_argc(0),
     m_alias_call(NULL),
     m_switch(NULL),
     m_default(NULL),
@@ -301,11 +302,12 @@ Node *MethodCallNode::clone(){
 FunctionNode::FunctionNode( size_t lineno, function_decl_t *declaration ) : Node(H_NT_FUNCTION,lineno) {
     value.m_function = declaration->function;
     value.m_vargs 	 = declaration->vargs;
+    value.m_argc	 = declaration->argc;
 
-    reserve(declaration->argc);
+    reserve(value.m_argc);
 
 	/* add function prototype args children */
-	for( int i = 0; i < declaration->argc; ++i ){
+	for( int i = 0; i < value.m_argc; ++i ){
 		push_back( new IdentifierNode( m_lineno, declaration->argv[i] ) );
 	}
 }
@@ -313,14 +315,15 @@ FunctionNode::FunctionNode( size_t lineno, function_decl_t *declaration ) : Node
 FunctionNode::FunctionNode( size_t lineno, function_decl_t *declaration, int argc, ... ) : Node(H_NT_FUNCTION,lineno) {
     value.m_function = declaration->function;
     value.m_vargs 	 = declaration->vargs;
+    value.m_argc	 = declaration->argc;
 
     va_list ap;
 	int i;
 
-    reserve( declaration->argc + argc );
+    reserve( value.m_argc + argc );
 
 	/* add function prototype args children */
-	for( i = 0; i < declaration->argc; ++i ){
+	for( i = 0; i < value.m_argc; ++i ){
 		push_back( new IdentifierNode( m_lineno, declaration->argv[i] ) );
 	}
 	/* add function body statements node */
@@ -339,6 +342,7 @@ Node *FunctionNode::clone(){
 	Node *clone = new FunctionNode( m_lineno, value.m_function.c_str() );
 	int   i, sz(size());
 
+	clone->value.m_argc  = value.m_argc;
 	clone->value.m_vargs = value.m_vargs;
 	for( i = 0; i < sz; ++i ){
 		if( child(i) ){
@@ -450,14 +454,15 @@ StructureNode::StructureNode( size_t lineno, char *s_name, NodeList *attributes 
 MethodDeclarationNode::MethodDeclarationNode( size_t lineno, access_t access, method_decl_t *declaration, int argc, ... ) : Node(H_NT_METHOD_DECL,lineno) {
     value.m_method = declaration->method;
     value.m_vargs  = declaration->vargs;
+    value.m_argc   = declaration->argc;
     value.m_access = access;
 
     va_list ap;
 	int i;
 
-    reserve( declaration->argc + argc );
+    reserve( value.m_argc + argc );
 	/* add method prototype args children */
-	for( i = 0; i < declaration->argc; ++i ){
+	for( i = 0; i < value.m_argc; ++i ){
 		push_back( new IdentifierNode( m_lineno, declaration->argv[i] ) );
 	}
 	/* add method body statements node */
@@ -471,15 +476,16 @@ MethodDeclarationNode::MethodDeclarationNode( size_t lineno, access_t access, me
 MethodDeclarationNode::MethodDeclarationNode( size_t lineno, access_t access, method_decl_t *declaration, bool is_static, int argc, ... ) : Node(H_NT_METHOD_DECL,lineno) {
     value.m_method = declaration->method;
     value.m_vargs  = declaration->vargs;
+    value.m_argc   = declaration->argc;
     value.m_access = access;
     value.m_static = is_static;
 
     va_list ap;
 	int i;
 
-    reserve( declaration->argc + argc );
+    reserve( value.m_argc + argc );
 	/* add method prototype args children */
-	for( i = 0; i < declaration->argc; ++i ){
+	for( i = 0; i < value.m_argc; ++i ){
 		push_back( new IdentifierNode( m_lineno, declaration->argv[i] ) );
 	}
 	/* add method body statements node */
@@ -501,6 +507,7 @@ Node *MethodDeclarationNode::clone(){
 
 	clone->value.m_static = value.m_static;
 	clone->value.m_vargs  = value.m_vargs;
+	clone->value.m_argc	  = value.m_argc;
 	for( i = 0; i < sz; ++i ){
 		if( child(i) ){
 			clone->push_back( child(i)->clone() );

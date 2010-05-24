@@ -100,6 +100,7 @@ class NodeValue {
         bool	 m_static;
         string   m_method;
         string   m_call;
+        size_t	 m_argc;
         Node    *m_alias_call;
         Node    *m_owner;
         Node    *m_member;
@@ -149,24 +150,8 @@ public  :
     	return (char *)value.m_identifier.c_str();
     }
 
-    INLINE Node *callBody(){
-    	int i, sz( size() );
-    	for( i = 0; i < sz; ++i ){
-    		if( at(i)->type() != H_NT_IDENTIFIER ){
-    			return at(i);
-    		}
-    	}
-    	return NULL;
-    }
-
-    INLINE size_t callDefinedArgc(){
-    	size_t argc(0), i, sz( size() );
-		for( i = 0; i < sz; ++i ){
-			if( at(i)->type() == H_NT_IDENTIFIER ){
-				++argc;
-			}
-		}
-		return argc;
+    INLINE Node *body(){
+    	return value.m_argc >= size() ? NULL : at( value.m_argc );
     }
 
     void addChild( Node *child );

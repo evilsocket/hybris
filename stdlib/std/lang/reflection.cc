@@ -192,7 +192,7 @@ HYBRIS_DEFINE_FUNCTION(hcall_method){
 	vm_add_frame( vm, &stack );
 
 	/* call the method */
-	result = vm_exec( vm, &stack, method->callBody() );
+	result = vm_exec( vm, &stack, method->body() );
 
 	vm_pop_frame( vm );
 

@@ -60,7 +60,7 @@ Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *me
 	stack.add( "argv", (Object *)args );
 
 	/* call the method */
-	result = vm_exec( vm, &stack, method->callBody() );
+	result = vm_exec( vm, &stack, method->body() );
 
 	vm_pop_frame( vm );
 
@@ -127,7 +127,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	va_end(ap);
 
 	/* call the operator */
-	result = vm_exec( __hyb_vm, &stack, op->callBody() );
+	result = vm_exec( __hyb_vm, &stack, op->body() );
 
 	vm_pop_frame( __hyb_vm );
 
@@ -203,7 +203,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	va_end(ap);
 
 	/* call the descriptor */
-	result = vm_exec( __hyb_vm, &stack, ds->callBody() );
+	result = vm_exec( __hyb_vm, &stack, ds->body() );
 
 	vm_pop_frame( __hyb_vm );
 
@@ -305,7 +305,7 @@ void class_free( Object *me ){
 
 			vm_add_frame( __hyb_vm, &stack );
 
-			vm_exec( __hyb_vm, &stack, dtor->callBody() );
+			vm_exec( __hyb_vm, &stack, dtor->body() );
 
 			vm_pop_frame( __hyb_vm );
 		}
@@ -793,7 +793,7 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 		}
 	}
 	/* execute the method */
-	result = vm_exec( vm, &stack, method->callBody() );
+	result = vm_exec( vm, &stack, method->body() );
 
 	/*
 	 * Dismiss the stack.
