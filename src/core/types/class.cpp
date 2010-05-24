@@ -759,7 +759,6 @@ Object *class_call_method( engine_t *engine, vframe_t *frame, Object *me, char *
 	if( vm_scope_size(engine->vm) >= MAX_RECURSION_THRESHOLD ){
 		return vm_raise_exception( "Reached max number of nested calls" );
 	}
-
 	/*
 	 * Add this frame as the active stack
 	 */

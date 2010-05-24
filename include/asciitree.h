@@ -82,6 +82,10 @@ void  at_insert( ascii_tree_t *at, char *key, int len, void *value );
  */
 void *at_find( ascii_tree_t *at, char *key, int len );
 /*
+ * Remove the object from the tree and return its pointer.
+ */
+void *at_remove( ascii_tree_t *at, char *key, int len );
+/*
  * Free the tree nodes.
  */
 void  at_free( ascii_tree_t *at );

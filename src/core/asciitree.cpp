@@ -86,6 +86,33 @@ void *at_find( ascii_tree_t *at, char *key, int len ){
 	return ( link ? link->e_marker : NULL );
 }
 
+void *at_remove( ascii_tree_t *at, char *key, int len ){
+	ascii_item_t *link = at;
+	int i = 0;
+
+	do{
+		/*
+		 * Find next link ad continue.
+		 */
+		link = at_find_next_link( link, key[i++] );
+	}
+	while( --len && link );
+	/*
+	 * End of the chain, if e_marker is NULL this chain is not complete,
+	 * therefore 'key' does not map any alive object.
+	 */
+	if( link && link->e_marker ){
+		void *retn = link->e_marker;
+
+		link->e_marker = NULL;
+
+		return retn;
+	}
+	else{
+		return NULL;
+	}
+}
+
 void at_free( ascii_tree_t *at ){
 	int i, n_links(at->n_links);
 	/*

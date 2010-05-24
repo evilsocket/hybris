@@ -161,6 +161,27 @@ class MemorySegment : public ITree<Object> {
         	return insert( label, value );
         }
         /*
+         * Special method to push temporary values onto the stack.
+         */
+        INLINE Object *push_tmp( Object *value ){
+        	char label[0xFF] = {0};
+
+			sprintf( label, "HTMPOBJ%p", value );
+
+			return insert( label, value );
+        }
+        /*
+		 * Special method to remove temporary values from the stack.
+		 */
+		INLINE void remove_tmp( Object *value ){
+			char label[0xFF] = {0};
+
+			sprintf( label, "HTMPOBJ%p", value );
+
+			remove( label );
+		}
+
+        /*
          * Create a clone of this memory segment.
          */
         MemorySegment *clone();

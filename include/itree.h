@@ -130,6 +130,8 @@ public  :
 	}
 	/* Insert the value if it's not already mapped, otherwise change the old reference to this. */
     value_t *insert( char *label, value_t *value );
+    /* Remove an object from the tree */
+    void	 remove( char *label );
     /* Find the item mappeb with 'label', or return NULL if it's not here */
     value_t *find( char *label );
     /* Replace the value if it already exists */
@@ -156,6 +158,21 @@ H_TEMPLATE_T value_t * ITree<value_t>::insert( char *label, value_t *value ){
     m_elements++;
 
     return value;
+}
+
+H_TEMPLATE_T void ITree<value_t>::remove( char *label ){
+	pair_t *item = (pair_t *)at_remove( &m_tree, label, strlen(label) );
+	if( item ){
+		size_t i, size(m_elements);
+		for( i = 0; i < size; ++i ){
+			if( m_map[i] == item ){
+				delete m_map[i];
+				m_map.erase( m_map.begin() + i );
+				m_elements--;
+				break;
+			}
+		}
+	}
 }
 
 H_TEMPLATE_T value_t * ITree<value_t>::find( char *label ){

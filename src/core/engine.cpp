@@ -1551,7 +1551,7 @@ INLINE Object *engine_on_foreach( engine_t *engine, vframe_t *frame, Node *node 
      *
      * 		foreach( i of 1..10 )
      */
-    frame->push(v);
+    frame->push_tmp(v);
 
     for( ; index.value < size; ++index.value ){
         frame->add( identifier, ob_cl_at( v, (Object *)&index ) );
@@ -1559,7 +1559,8 @@ INLINE Object *engine_on_foreach( engine_t *engine, vframe_t *frame, Node *node 
         result = engine_exec( engine, frame, body );
 
         if( frame->state.is(Exception) || frame->state.is(Return) ){
-        	return frame->state.value;
+        	result = frame->state.value;
+        	break;
 	    }
 
         frame->state.unset(Next);
@@ -1568,6 +1569,8 @@ INLINE Object *engine_on_foreach( engine_t *engine, vframe_t *frame, Node *node 
 			break;
 		}
     }
+
+    frame->remove_tmp(v);
 
     return result;
 }
@@ -1592,7 +1595,7 @@ INLINE Object *engine_on_foreach_mapping( engine_t *engine, vframe_t *frame, Nod
      *
      * 		foreach( i of map( ... ) )
      */
-    frame->push(map);
+    frame->push_tmp(map);
 
     for( i = 0; i < size; ++i ){
         frame->add( key_identifier,   ob_map_ucast(map)->keys[i] );
@@ -1601,7 +1604,8 @@ INLINE Object *engine_on_foreach_mapping( engine_t *engine, vframe_t *frame, Nod
         result = engine_exec( engine, frame, body );
 
         if( frame->state.is(Exception) || frame->state.is(Return) ){
-			return frame->state.value;
+			result = frame->state.value;
+			break;
 		}
 
         frame->state.unset(Next);
@@ -1610,6 +1614,8 @@ INLINE Object *engine_on_foreach_mapping( engine_t *engine, vframe_t *frame, Nod
 			break;
 		}
     }
+
+    frame->remove_tmp(map);
 
     return result;
 }
@@ -1852,9 +1858,11 @@ INLINE Object *engine_on_assign( engine_t *engine, vframe_t *frame, Node *node )
     	/*
     	 * Prevent obj from being garbage collected.
     	 */
-    	frame->push(obj);
+    	frame->push_tmp(obj);
 
 		value = engine_exec( engine, frame, node->child(1) );
+
+		frame->remove_tmp(obj);
 
     	engine_check_frame_exit(frame)
 
