@@ -2187,7 +2187,7 @@ INLINE Object *vm_exec_switch( vm_t *vm, vframe_t *frame, Node *node){
     target = vm_exec( vm, frame, node->value.m_switch );
 
     // exec case labels
-    for( case_item = node->m_children.head; case_item; case_item = case_item->next ){
+    for( case_item = node->m_children.head; case_item; case_item = case_item->next->next ){
     	stmt_item = case_item->next;
 
         stmt_node = ll_node( stmt_item );
@@ -2202,10 +2202,6 @@ INLINE Object *vm_exec_switch( vm_t *vm, vframe_t *frame, Node *node){
                 return vm_exec( vm, frame, stmt_node );
             }
         }
-        /*
-         * case_item += 2
-         */
-        case_item = case_item->next;
     }
 
     // exec default case

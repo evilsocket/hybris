@@ -284,7 +284,7 @@ argumentList : expression ':' argumentList { $$ = REDUCE_NODE($3); ll_prepend( $
 			 | /* empty */                 { $$ = ll_create(); };
 
 caseCascade  : T_CASE expression ':' statements T_BREAK T_EOSTMT caseCascade { $$ = REDUCE_NODE($7); ll_prepend_pair( $$, $2, $4 ); }
-             | T_CASE expression ':' statements T_BREAK T_EOSTMT             { $$ = ll_create();     ll_append_pair( $$, $2, $4 ); }
+             | T_CASE expression ':' statements T_BREAK T_EOSTMT             { $$ = ll_create();     ll_append_pair( $$, $4, $2 ); }
              | /* empty */                                                   { $$ = ll_create(); };
 
 classExtensions : T_EXTENDS identList { $$ = REDUCE_NODE($2); }
