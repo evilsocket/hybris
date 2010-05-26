@@ -33,8 +33,8 @@ class Thread  {
 		return (me.id > 0);
 	}
 
-	public method start( ... ){
-		me.id = pthread_create_argv( me.function_name, @ );
+	public method start( args ){
+		me.id = pthread_create( me.function_name, args );
 	
 		return (me.id > 0);
 	}

@@ -26,11 +26,11 @@ HYBRIS_DEFINE_FUNCTION(hpthread_join);
 HYBRIS_DEFINE_FUNCTION(hpthread_kill);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "pthread_create",      hpthread_create,      H_REQ_ARGC(1), { H_REQ_TYPES(otString) } },
-	{ "pthread_create_argv", hpthread_create_argv, H_REQ_ARGC(2), { H_REQ_TYPES(otString), H_REQ_TYPES(otVector) } },
+	{ "pthread_create",      hpthread_create,      H_REQ_ARGC(1,2), { H_REQ_TYPES(otString), H_REQ_TYPES(otVector) } },
+	{ "pthread_create_argv", hpthread_create_argv, H_REQ_ARGC(2),   { H_REQ_TYPES(otString), H_REQ_TYPES(otVector) } },
 	{ "pthread_exit", 		 hpthread_exit,        H_NO_ARGS },
-	{ "pthread_join", 		 hpthread_join,        H_REQ_ARGC(1), { H_REQ_TYPES(otInteger) } },
-	{ "pthread_kill", 		 hpthread_kill,        H_REQ_ARGC(2), { H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
+	{ "pthread_join", 		 hpthread_join,        H_REQ_ARGC(1),   { H_REQ_TYPES(otInteger) } },
+	{ "pthread_kill", 		 hpthread_kill,        H_REQ_ARGC(2),   { H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
 	{ "", NULL }
 };
 
@@ -39,6 +39,10 @@ typedef struct {
     vm_t   *vm;
 }
 thread_args_t;
+
+void hyb_pthread_cleaner( vm_t *vm ){
+
+}
 
 void * hyb_pthread_worker( void *arg ){
 	string		   thread_name;
@@ -52,13 +56,11 @@ void * hyb_pthread_worker( void *arg ){
 
     vm_pool( vm );
 
-    if( vm_argc() > 1 ){
-		for( i = 1; i < vm_argc(); ++i ){
-			stack.push( vm_argv(i) );
-		}
+	for( i = 1; i < data->size(); ++i ){
+		stack.push( vm_argv(i) );
 	}
 
-    vm_exec_threaded_call( vm, thread_name, data, &stack );
+	vm_exec_threaded_call( vm, thread_name, data, &stack );
 
     delete args;
 
@@ -68,22 +70,26 @@ void * hyb_pthread_worker( void *arg ){
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_create){
+	String    *thread_name = NULL;
+	Vector    *thread_argv = NULL;
 	pthread_t tid;
-    int       code;
-    size_t	  i, sz( vm_argc() );
+	int       i, code, argc;
+	vframe_t *thframe;
+	thread_args_t *args = new thread_args_t;
+	Integer index(0);
 
-    thread_args_t *args = new thread_args_t;
+	vm_parse_argv( "SV", &thread_name, &thread_argv );
 
-    args->data = data->clone();
-    args->vm   = vm;
+	argc 	= (thread_argv ? ob_get_size( (Object *)thread_argv ) : 0);
+	thframe = new vmem_t;
 
-    /*
-     * Make sure that the new stack is not garbage collected
-     * before the vm_exec_threaded_call is executed.
-     */
-    for( i = 1; i < sz; ++i ){
-    	gc_set_alive( args->data->at(i) );
-    }
+	thframe->push( (Object *)thread_name );
+	for( ; index.value < argc; ++index.value ){
+		thframe->push( ob_cl_at( (Object *)thread_argv, (Object *)&index ) );
+	}
+
+	args->vm   = vm;
+	args->data = thframe;
 
     if( (code = pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args )) == 0 ){
     	return ob_dcast( gc_new_integer(tid) );
@@ -116,32 +122,22 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create_argv){
 	Vector    *thread_argv;
 	pthread_t tid;
     int       i, code, argc;
+    vframe_t *thframe;
     thread_args_t *args = new thread_args_t;
+    Integer index(0);
 
     vm_parse_argv( "SV", &thread_name, &thread_argv );
 
-    argc = ob_get_size( (Object *)thread_argv );
+    argc 	= ob_get_size( (Object *)thread_argv );
+    thframe = new vmem_t;
 
-    args->data = new vmem_t;
-    args->vm   = vm;
-
-	args->data->push( (Object *)thread_name );
-	/*
-	 * Make sure that the new stack is not garbage collected
-	 * before the vm_exec_threaded_call is executed.
-	 */
-	gc_set_alive( (Object *)thread_name );
-
-	for( i = 0; i < argc; ++i ){
-    	Object *item = thread_argv->value[i];
-		/*
-		 * Make sure that the new stack is not garbage collected
-		 * before the vm_exec_threaded_call is executed.
-		 */
-		gc_set_alive( item );
-
-    	args->data->push( item );
+	thframe->push( (Object *)thread_name );
+	for( ; index.value < argc; ++index.value ){
+    	thframe->push( ob_cl_at( (Object *)thread_argv, (Object *)&index ) );
     }
+
+	args->vm   = vm;
+	args->data = thframe;
 
     if( (code = pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args )) == 0 ){
     	return ob_dcast( gc_new_integer(tid) );
