@@ -24,6 +24,12 @@
  */
 static gc_t __gc;
 
+#ifdef GC_DEBUG
+#	define DEBUG( fmt, ... ) fprintf( stdout, fmt, __VA_ARGS__ )
+#else
+#	define DEBUG //
+#endif
+
 /*
  * Lock the gc mutex.
  */
@@ -37,105 +43,26 @@ INLINE void gc_unlock(){
 	pthread_mutex_unlock( &__gc.mutex );
 }
 /*
- * Append 'item' to 'list'.
- */
-INLINE void gc_pool_append( gc_list_t *list, gc_item_t *item ){
-	if( list->head == NULL ){
-		list->head = item;
-		item->prev = NULL;
-	}
-	else{
-		list->tail->next = item;
-		item->prev 	     = list->tail;
-	}
-
-	list->tail = item;
-	item->next = NULL;
-
-	list->items++;
-	list->usage += item->size;
-}
-/*
- * Remove 'item' from 'list' and free the structure that holds it.
- */
-INLINE void gc_pool_remove( gc_list_t *list, gc_item_t *item ) {
-	if( item->prev == NULL ){
-		list->head = item->next;
-	}
-	else{
-		item->prev->next = item->next;
-	}
-	if( item->next == NULL ){
-		list->tail = item->prev;
-	}
-	else{
-		item->next->prev = item->prev;
-	}
-
-	list->items--;
-	list->usage -= item->size;
-
-	#ifdef GC_DEBUG
-		fprintf( stdout, "[GC DEBUG] Removed object %p from the %s pool.\n", item->pobj, (list == &__gc.heap ? "heap" : "lag") );
-	#endif
-
-	free(item);
-}
-/*
- * Move 'item' from 'src' list to 'dst' list.
- */
-INLINE void gc_pool_migrate( gc_list_t *src, gc_list_t *dst, gc_item_t *item ) {
-	if( item->prev == NULL ){
-		src->head = item->next;
-	}
-	else{
-		item->prev->next = item->next;
-	}
-	if( item->next == NULL ){
-		src->tail = item->prev;
-	}
-	else{
-		item->next->prev = item->prev;
-	}
-
-	if( dst->head == NULL ){
-		dst->head = item;
-		item->prev = NULL;
-	}
-	else{
-		dst->tail->next = item;
-		item->prev 	    = dst->tail;
-	}
-
-	dst->tail  = item;
-	item->next = NULL;
-
-	src->items--;
-	src->usage -= item->size;
-	dst->items++;
-	dst->usage += item->size;
-}
-
-/*
  * Free 'item' and remove it from 'list'.
  */
-void gc_free( gc_list_t *list, gc_item_t *item ){
-    __gc.items--;
-    __gc.usage -= item->size;
+void gc_free( llist_t *list, ll_item_t *item ){
+	Object *obj = (Object *)item->data;
+
+    __gc.usage -= obj->gc_size;
     /*
      * If the object is a collection, ob_free is needed to free its elements,
      * because gc_free isn't applied recursively on each object as gc_mark, so
      * basically each root object has to deallocate its elements if any.
      */
-	ob_free( item->pobj );
+	ob_free( obj );
 	/*
 	 * Finally delete the object pointer itself.
 	 */
-	delete item->pobj;
+	delete obj;
     /*
-     * And remove the item from the gc pool.
+     * Remove the item from the gc pool.
      */
-	gc_pool_remove( list, item );
+	ll_remove( list, item );
 }
 
 /*
@@ -168,7 +95,7 @@ size_t gc_set_mm_threshold( size_t threshold ){
  * Size must be passed explicitly due to the downcasting
  * possibility.
  */
-struct _Object *gc_track( Object *o, size_t size ){
+Object *gc_track( Object *o, size_t size ){
 	/*
 	 * We assume that 'o' was previously allocated with one of the gc_new_*
 	 * macros, therefore, if its pointer is null, most of it there was a memory
@@ -186,24 +113,18 @@ struct _Object *gc_track( Object *o, size_t size ){
 
     gc_lock();
 
-	#ifdef GC_DEBUG
-		fprintf( stdout, "[GC DEBUG] Tracking new object at %p [%d bytes].\n", o, size );
-	#endif
+    DEBUG( "[GC DEBUG] Tracking new object at %p [%d bytes].\n", o, size );
+
     /*
-     * Increment item number and memory usage counters.
+     * Increment memory usage counter.
      */
-    __gc.items++;
     __gc.usage += size;
-
     /*
-     * Append the item to the gc pool.
+     * Update the gc_size inner descriptor.
      */
-    gc_item_t *item = (gc_item_t *)calloc( 1, sizeof(gc_item_t) );
+    o->gc_size = size;
 
-    item->pobj = o;
-	item->size = size;
-
-    gc_pool_append( &__gc.heap, item );
+	ll_append( &__gc.heap, o );
 
     gc_unlock();
 
@@ -211,7 +132,7 @@ struct _Object *gc_track( Object *o, size_t size ){
 }
 
 size_t gc_mm_items(){
-	return __gc.items;
+	return __gc.heap.items + __gc.lag.items + __gc.constants.items;
 }
 
 size_t gc_mm_usage(){
@@ -230,9 +151,8 @@ size_t gc_mm_threshold(){
  */
 void gc_mark( Object *o, bool mark /*= true*/ ){
 	if( o ){
-		#ifdef GC_DEBUG
-			fprintf( stdout, "[GC DEBUG] Marking object at %p as %s.\n", o, (mark ? "alive" : "dead") );
-		#endif
+		DEBUG( "[GC DEBUG] Marking object at %p as %s.\n", o, (mark ? "alive" : "dead") );
+
 		/*
 		 * Mark the object.
 		 */
@@ -247,35 +167,36 @@ void gc_mark( Object *o, bool mark /*= true*/ ){
 			gc_mark( child, mark );
 		}
 	}
-	#ifdef GC_DEBUG
-	else {
-		fprintf( stdout, "[GC DEBUG] Object at %p already marked as %s or null.\n", o, (mark ? "alive" : "dead") );
-	}
-	#endif
 }
 /*
  * Sweep dead objects from a given generation list.
  */
-void gc_sweep_generation( gc_list_t *generation ){
-	gc_item_t *item;
+void gc_sweep_generation( llist_t *generation ){
+	ll_item_t *ll_item = generation->head,
+			  *ll_next;
 	Object    *o;
 
 	/*
 	 * Loop each object on the generation list.
 	 */
-	for( item = generation->head; item; item = item->next ){
-		o = item->pobj;
+	while(ll_item) {
+		/*
+		 * Probably one or more objects are going to be removed from the list,
+		 * so we need to save the 'next' instance of the item now to be used
+		 * at the end of the loop to switch the pointers.
+		 */
+		ll_next = ll_item->next;
+		o 		= (Object *)ll_item->data;
+
 		/*
 		 * Constant object, move it from the heap structure to the
 		 * appropriate one to be freed at the end.
 		 * This will make heap list less fragmented and smaller.
 		 */
 		if( (o->attributes & H_OA_CONSTANT) == H_OA_CONSTANT ){
-			#ifdef GC_DEBUG
-				fprintf( stdout, "[GC DEBUG] Migrating %p [%s] to constants list.\n", item->pobj, item->pobj->type->name );
-			#endif
+			DEBUG( "[GC DEBUG] Migrating %p [%s] to constants list.\n", o, ob_typename(o) );
 
-			gc_pool_migrate( generation, &__gc.constants, item );
+			ll_move( generation, &__gc.constants, ll_item );
 		}
 		else{
 			/*
@@ -288,14 +209,12 @@ void gc_sweep_generation( gc_list_t *generation ){
 				 * If this generation is not the lag space, check if the object
 				 * has to be moved to the lag space.
 				 */
-				if( generation != &__gc.lag && GC_IS_LAGGING(++item->gc_count) ){
-					#ifdef GC_DEBUG
-						fprintf( stdout, "[GC DEBUG] Migrating %p (collected %d times) to the lag space.\n", item->pobj, item->gc_count );
-					#endif
+				if( generation != &__gc.lag && GC_IS_LAGGING(++o->gc_count) ){
+					DEBUG( "[GC DEBUG] Migrating %p (collected %d times) to the lag space.\n", o, o->gc_count );
 					/*
 					 * Migrate the object.
 					 */
-					gc_pool_migrate( generation, &__gc.lag, item );
+					ll_move( generation, &__gc.lag, ll_item );
 				}
 			}
 			/*
@@ -304,13 +223,13 @@ void gc_sweep_generation( gc_list_t *generation ){
 			 * therefore is garbage and will be freed.
 			 */
 			else{
-				#ifdef GC_DEBUG
-					fprintf( stdout, "[GC DEBUG] Releasing %p [%s] .\n", item->pobj, item->pobj->type->name );
-				#endif
+				DEBUG( "[GC DEBUG] Releasing %p [%s] .\n", o, ob_typename(o) );
 
-				gc_free( generation, item );
+				gc_free( generation, ll_item );
 			}
 		}
+
+		ll_item = ll_next;
 	}
 }
 
@@ -336,9 +255,7 @@ void gc_collect( vm_t *vm ){
     	 */
     	vm_scope_t *scope = vm_find_scope(vm);
 
-		#ifdef GC_DEBUG
-			printf( "[GC DEBUG] GC quota (%d bytes) reached with %d bytes, collecting thread %p scope ...\n", __gc.gc_threshold, __gc.usage, pthread_self() );
-		#endif
+    	DEBUG( "[GC DEBUG] GC quota (%d bytes) reached with %d bytes, collecting thread %p scope ...\n", __gc.gc_threshold, __gc.usage, pthread_self() );
 
 		/*
 		 * Loop each active main memory frame and mark alive objects.
@@ -364,11 +281,7 @@ void gc_collect( vm_t *vm ){
 		 * The lag space is bigger than the heap, let's sweep it first.
 		 */
 		if( __gc.lag.items > __gc.heap.items ){
-			#ifdef GC_DEBUG
-				fprintf( stdout, "[GC DEBUG] Lag space (%d items) is bigger than heap space (%d items), collecting it.\n",
-								 __gc.lag.items,
-								 __gc.heap.items );
-			#endif
+			DEBUG( "[GC DEBUG] Lag space (%d items) is bigger than heap space (%d items), collecting it.\n", __gc.lag.items, __gc.heap.items );
 
 			gc_sweep_generation( &__gc.lag );
 		}
@@ -377,9 +290,7 @@ void gc_collect( vm_t *vm ){
 		 */
 		gc_sweep_generation( &__gc.heap );
 
-		#ifdef GC_DEBUG
-			printf( "[GC DEBUG] Garbage collection cycle done.\n" );
-		#endif
+		DEBUG( "[GC DEBUG] Garbage collection cycle done, %d collections done.\n", __gc.collections );
 
 		/*
 		 * Unlock the virtual machine frames vector.
@@ -387,31 +298,33 @@ void gc_collect( vm_t *vm ){
 		vm_mm_unlock( vm );
     }
 }
+
+INLINE void gc_free_generation( llist_t *generation ){
+	ll_item_t *ll_item = generation->head,
+			  *ll_next;
+
+	while(ll_item) {
+		/*
+		 * Objects are going to be removed from the list,
+		 * so we need to save the 'next' instance of the item now to be used
+		 * at the end of the loop to switch the pointers.
+		 */
+		ll_next = ll_item->next;
+
+		gc_free( generation, ll_item );
+
+		ll_item = ll_next;
+	}
+}
+
 /*
  * Release every object (heap objects and constants), called
  * when program ends.
  */
 void gc_release(){
-	gc_item_t *item;
+	ll_item_t *item;
 
-	gc_lock();
-	/*
-	 * Free every object in the heap.
-	 */
-	for( item = __gc.heap.head; item; item = item->next ){
-		gc_free( &__gc.heap, item );
-	}
-	/*
-	 * Free every object in the lag space.
-	 */
-	for( item = __gc.lag.head; item; item = item->next ){
-		gc_free( &__gc.lag, item );
-	}
-	/*
-	 * Free every constant object if any.
-	 */
-	for( item = __gc.constants.head; item; item = item->next ){
-		gc_free( &__gc.constants, item );
-	}
-	gc_unlock();
+	gc_free_generation( &__gc.heap );
+	gc_free_generation( &__gc.lag );
+	gc_free_generation( &__gc.constants );
 }

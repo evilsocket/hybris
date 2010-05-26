@@ -62,22 +62,30 @@ typedef MemorySegment vframe_t;
  * of the object structure itself to be down-casted to a base object.
  *
  * type       : type descriptor as pointer (for type checking)
+ * gc_size	  : size in bytes of the entire object
  * gc_mark    : mark-&-sweep gc flag
+ * gc_count	  : number of times the object passed the garbage collection
  * attributes : object memory attributes mask
  */
-#define BASE_OBJECT_HEADER struct _object_type_t *type;       \
+#define BASE_OBJECT_HEADER struct _object_type_t *type;     \
+						   size_t				  gc_size;  \
                            bool                   gc_mark;  \
+						   size_t				  gc_count; \
                            size_t                 attributes
 /*
  * Default object header initialization macro .
  */
 #define BASE_OBJECT_HEADER_INIT(t) gc_mark(false), \
+								   gc_size(0), \
+								   gc_count(0), \
                                    attributes(H_OA_NONE), \
                                    type(&t ## _Type)
 /*
  * Macro to initialize default fields of an Object pointer.
  */
 #define OB_BASE_INIT(o,t) o->gc_mark = false; \
+						  o->gc_count = 0; \
+						  o->gc_size = 0; \
 						  o->attributes = H_OA_NONE; \
 						  o->type = &t ## _Type
 

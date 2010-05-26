@@ -19,10 +19,12 @@
 #ifndef _HGC_H_
 #	define _HGC_H_
 
-#include "config.h"
 #include <stdio.h>
 #include <assert.h>
 #include <pthread.h>
+#include "llist.h"
+#include "config.h"
+
 
 /*
  * Force specified functions to be inlined by the compiler.
@@ -58,41 +60,8 @@ typedef unsigned long ulong;
  */
 #define GC_ALLOWED_MEMORY_THRESHOLD	134217728
 
-struct _Object;
-struct _vm_t;
-
-/*
- * This structure represent an item in the gc 
- * pool.
- *
- * pobj 	: Is a pointer to the object to track.
- * size     : The size of the object itself.
- * gc_count : Incremented when an object is not freed after a
- * 		      gc_collect cycle (for future multi generation gc).
- * next 	: Pointer to the next item in the pool.
- * prev 	: Pointer to the previous item in the pool.
- */
-typedef struct _gc_item {
-    struct _Object *pobj;
-    size_t          size;
-    size_t			gc_count;
-
-    _gc_item       *next;
-    _gc_item       *prev;
-}
-gc_item_t;
-
-typedef struct _gc_list {
-	gc_item_t *head;
-	gc_item_t *tail;
-
-	size_t	   items;
-	size_t	   usage;
-
-	_gc_list() : head(NULL), tail(NULL), items(0), usage(0){ }
-}
-gc_list_t;
-
+typedef struct _Object Object;
+typedef struct _vm_t   vm_t;
 /*
  * Threshold upon which an object is moved from the heap
  * space to the lag space, where 0.7 is 70% object collections
@@ -113,30 +82,31 @@ gc_list_t;
  * 				  lag space.
  * heap         : Heap objects list.
  * collections  : Collection cycles counter.
- * items	    : Number of items in the pool.
  * usage	    : Global memory usage, in bytes.
  * gc_threshold : If usage >= this, the gc is triggered.
  * mm_threshold : If usage >= this, a memory exhausted error is triggered.
  * mutex        : Mutex to lock the pool while collecting.
  */
 typedef struct _gc {
-	gc_list_t		constants;
-	gc_list_t		lag;
-	gc_list_t		heap;
-	size_t			collections;
-    size_t     		items;
-    size_t     		usage;
-    size_t     	 	gc_threshold;
-    size_t			mm_threshold;
+	llist_t		constants;
+	llist_t		lag;
+	llist_t		heap;
+	size_t		collections;
+    size_t     	usage;
+    size_t     	gc_threshold;
+    size_t		mm_threshold;
 	pthread_mutex_t mutex;
 
 	_gc(){
 		collections  = 0;
-		items 		 = 0;
 		usage        = 0;
 		gc_threshold = GC_DEFAULT_MEMORY_THRESHOLD;
 		mm_threshold = GC_ALLOWED_MEMORY_THRESHOLD;
 		mutex        = PTHREAD_MUTEX_INITIALIZER;
+
+		ll_init( &constants );
+		ll_init( &lag );
+		ll_init( &heap );
 	}
 }
 gc_t;
@@ -157,7 +127,7 @@ size_t			gc_set_mm_threshold( size_t threshold );
  * Size must be passed explicitly due to the downcasting
  * possibility.
  */
-struct _Object *gc_track( struct _Object *o, size_t size );
+Object 		   *gc_track( Object *o, size_t size );
 /*
  * Return the number of objects tracked by the gc.
  */
@@ -178,7 +148,7 @@ size_t			gc_mm_threshold();
 /*
  * Recursively mark an object (and its inner items).
  */
-void 			gc_mark( struct _Object *o, bool mark = true );
+void 			gc_mark( Object *o, bool mark = true );
 /*
  * Set the object and all the objects referenced by him
  * as non collectable.
@@ -193,7 +163,7 @@ void 			gc_mark( struct _Object *o, bool mark = true );
  * Fire the collection routines if the memory usage is
  * above the threshold.
  */
-void            gc_collect( struct _vm_t *vm );
+void            gc_collect( vm_t *vm );
 /*
  * Release all the pool and its contents, should be
  * used when the program is exiting, not before.
