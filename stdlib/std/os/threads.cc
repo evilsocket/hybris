@@ -40,11 +40,16 @@ typedef struct {
 }
 thread_args_t;
 
-void hyb_pthread_cleaner( vm_t *vm ){
-
-}
+static pthread_mutex_t __vm_sync_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void * hyb_pthread_worker( void *arg ){
+	/*
+	 * This will cause the thread to wait until the main process
+	 * finishes its job and releases the mutex.
+	 */
+	pthread_mutex_lock(&__vm_sync_mutex);
+	pthread_mutex_unlock(&__vm_sync_mutex);
+
 	string		   thread_name;
     thread_args_t *args = (thread_args_t *)arg;
     vm_t      	  *vm  = args->vm;
@@ -54,14 +59,13 @@ void * hyb_pthread_worker( void *arg ){
 
     vm_parse_argv( "s", &thread_name );
 
-    vm_pool( vm );
-
-	for( i = 1; i < data->size(); ++i ){
+    for( i = 1; i < data->size(); ++i ){
 		stack.push( vm_argv(i) );
 	}
 
 	vm_exec_threaded_call( vm, thread_name, data, &stack );
 
+	delete args->data;
     delete args;
 
     vm_depool( vm );
@@ -91,10 +95,31 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
 	args->vm   = vm;
 	args->data = thframe;
 
+	/*
+	 * Make sure the thread is not goin to start until we want
+	 * it to start.
+	 */
+	pthread_mutex_lock(&__vm_sync_mutex);
+
     if( (code = pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args )) == 0 ){
+        /*
+         * Create the memory scope for the thread.
+         */
+    	vm_scope_t *scope = vm_pool( vm, tid );
+    	/*
+    	 * Append the newly created frame.
+    	 */
+    	ll_append( scope, thframe );
+    	/*
+    	 * Ok, it's safe to start the thread now.
+    	 */
+    	pthread_mutex_unlock(&__vm_sync_mutex);
+
     	return ob_dcast( gc_new_integer(tid) );
     }
     else{
+    	pthread_mutex_unlock(&__vm_sync_mutex);
+
     	switch( code ){
 			case EAGAIN :
 				hyb_error( H_ET_WARNING, "The system lacked the necessary resources to create another thread, or the system-imposed "
@@ -139,10 +164,31 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create_argv){
 	args->vm   = vm;
 	args->data = thframe;
 
+	/*
+	 * Make sure the thread is not goin to start until we want
+	 * it to start.
+	 */
+	pthread_mutex_lock(&__vm_sync_mutex);
+
     if( (code = pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args )) == 0 ){
+        /*
+         * Create the memory scope for the thread.
+         */
+    	vm_scope_t *scope = vm_pool( vm, tid );
+    	/*
+    	 * Append the newly created frame.
+    	 */
+    	ll_append( scope, thframe );
+    	/*
+    	 * Ok, it's safe to start the thread now.
+    	 */
+    	pthread_mutex_unlock(&__vm_sync_mutex);
+
     	return ob_dcast( gc_new_integer(tid) );
     }
     else{
+    	pthread_mutex_unlock(&__vm_sync_mutex);
+
     	switch( code ){
 			case EAGAIN :
 				hyb_error( H_ET_WARNING, "The system lacked the necessary resources to create another thread, or the system-imposed "

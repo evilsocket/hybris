@@ -122,6 +122,7 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
     /*
      * Initialize vm mutexes
      */
+    vm->line_mutex	  = PTHREAD_MUTEX_INITIALIZER;
     vm->mm_pool_mutex = PTHREAD_MUTEX_INITIALIZER;
     vm->mcache_mutex  = PTHREAD_MUTEX_INITIALIZER;
     vm->pcre_mutex	  = PTHREAD_MUTEX_INITIALIZER;

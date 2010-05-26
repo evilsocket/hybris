@@ -358,11 +358,14 @@ INLINE size_t vm_get_lineno( vm_t *vm ){
 /*
  * Add a thread to the threads pool.
  */
-INLINE void vm_pool( vm_t *vm, pthread_t tid = 0 ){
+INLINE vm_scope_t *vm_pool( vm_t *vm, pthread_t tid = 0 ){
 	tid = (tid == 0 ? pthread_self() : tid);
 	vm_mm_lock(vm);
-		vm->th_frames[tid] = (vm_scope_t *)calloc( 1, sizeof(vm_scope_t) );
+		vm_scope_t *scope = (vm_scope_t *)calloc( 1, sizeof(vm_scope_t) );
+		vm->th_frames[tid] = scope;
 	vm_mm_unlock(vm);
+
+	return scope;
 }
 /*
  * Remove a thread from the threads pool.
@@ -395,31 +398,17 @@ INLINE vm_scope_t *vm_find_scope( vm_t *vm ){
 }
 /*
  * Push a frame to the trace stack.
- *
- * THREAD SAFE VERSION :
- *
- * vm_mm_lock( vm ); \
- * 		vm_find_scope(vm)->push_back(frame); \
- * vm_mm_unlock( vm )
- *
- * Each thread has its own scope, the gc will lock the flow
- * anyway so, is this really necessary?
  */
-#define vm_add_frame( vm, frame ) ll_append( vm_find_scope(vm), frame )
+#define vm_add_frame( vm, frame ) vm_mm_lock( vm ); \
+								  ll_append( vm_find_scope(vm), frame ); \
+								  vm_mm_unlock( vm )
 /*
  * Remove the last frame from the trace stack.
- *
- * THREAD SAFE VERSION :
- *
- * vm_mm_lock( vm ); \
- * 		vm_find_scope(vm)->pop_back(); \
- * vm_mm_unlock( vm )
- *
- * Each thread has its own scope, the gc will lock the flow
- * anyway so, is this really necessary?
  */
 #define vm_pop_frame( vm ) vm_scope_t *scope = vm_find_scope(vm); \
-						   ll_pop(scope)
+						   vm_mm_lock( vm ); \
+						   ll_pop(scope); \
+						   vm_mm_unlock( vm )
 
 #define vm_scope_size( vm ) vm_find_scope(vm)->items
 
