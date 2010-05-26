@@ -115,20 +115,26 @@ HYBRIS_DEFINE_FUNCTION(huser_functions){
 }
 
 HYBRIS_DEFINE_FUNCTION(hdyn_functions){
-    unsigned int i, j, mods = vm->modules.size(), dyns;
+	ll_item_t	  *m_item,
+				  *f_item;
+	vm_module_t   *module;
+	vm_function_t *function;
 
-    Object *map = ob_dcast( gc_new_map() );
-    for( i = 0; i < mods; ++i ){
-        vm_module_t *mod = vm->modules[i];
-        Object   *dyn = ob_dcast( gc_new_vector() );
-        dyns          = mod->functions.size();
-        for( j = 0; j < dyns; ++j ){
-        	ob_cl_push_reference( dyn, ob_dcast( gc_new_string(mod->functions[j]->identifier.c_str()) ) );
-        }
+	Object *map = (Object *)gc_new_map(),
+		   *vec;
 
-        ob_cl_set_reference( map, ob_dcast( gc_new_string( mod->name.c_str() ) ), dyn );
-    }
-    return map;
+	for( m_item = vm->modules.head; m_item; m_item = m_item->next ){
+		module = (vm_module_t *)m_item->data;
+		vec    = (Object *)gc_new_vector();
+
+		for( f_item = module->functions.head; f_item; f_item = f_item->next ){
+			ob_cl_push_reference( vec, (Object *)gc_new_string( ((vm_function_t *)f_item->data)->identifier.c_str()  ) );
+		}
+
+		ob_cl_set_reference( map, (Object *)gc_new_string( module->name.c_str() ), vec );
+	}
+
+	return map;
 }
 
 HYBRIS_DEFINE_FUNCTION(hmethods){

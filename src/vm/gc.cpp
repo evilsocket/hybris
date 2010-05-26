@@ -242,8 +242,8 @@ void gc_collect( vm_t *vm ){
      * threshold.
      */
     if( __gc.usage >= __gc.gc_threshold ){
-		vm_scope_t::iterator i;
-    	vframe_t *frame;
+		ll_item_t *item;
+    	vframe_t  *frame;
     	size_t j, size;
 
     	/*
@@ -260,8 +260,8 @@ void gc_collect( vm_t *vm ){
 		/*
 		 * Loop each active main memory frame and mark alive objects.
 		 */
-		for( i = scope->begin(); i != scope->end(); i++ ){
-			frame = *i;
+		for( item = scope->head; item; item = item->next ){
+			frame = (vframe_t *)item->data;
 			size  = frame->size();
 			/*
 			 * Loop each object defined into this frame.

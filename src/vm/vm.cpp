@@ -144,7 +144,8 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
     /*
      * The first frame is always the main one.
      */
-    vm->frames.push_back(&vm->vmem);
+    ll_init( &vm->frames );
+    ll_append( &vm->frames, &vm->vmem );
 
     int h_argc = argc - 1;
 
@@ -204,20 +205,20 @@ void vm_release( vm_t *vm ){
      */
     gc_release();
 
-    unsigned int i, j,
-                 ndyns( vm->modules.size() ),
-                 nfuncs;
+	ll_item_t	  *m_item,
+				  *f_item;
+	vm_module_t   *module;
 
-    for( i = 0; i < ndyns; ++i ){
-        nfuncs = vm->modules[i]->functions.size();
-        for( j = 0; j < nfuncs; ++j ){
-			delete vm->modules[i]->functions[j];
-        }
-        dlclose( vm->modules[i]->handle );
-        delete vm->modules[i];
-    }
+	for( m_item = vm->modules.head; m_item; m_item = m_item->next ){
+		module = (vm_module_t *)m_item->data;
+		for( f_item = module->functions.head; f_item; f_item = f_item->next ){
+			delete (vm_function_t *)f_item->data;
+		}
+		ll_free( &module->functions );
+	}
 
-    vm->modules.clear();
+	ll_free(&vm->modules);
+
     vm->mcache.clear();
     vm->vconst.release();
     vm->vmem.release();
@@ -253,10 +254,14 @@ void vm_load_namespace( vm_t *vm, string path ){
 }
 
 void vm_load_module( vm_t *vm, string path, string name ){
-    int i, a, j, k, max_argc = 0, sz(vm->modules.size());
+    int i(0), a, j, k, max_argc = 0;
+    ll_item_t 	*item;
+    vm_module_t *module;
+
     /* check that the module isn't already loaded */
-    for( i = 0; i < sz; ++i ){
-        if( vm->modules[i]->name == name ){
+    for( item = vm->modules.head; item; item = item->next ){
+    	module = (vm_module_t *)item->data;
+        if( module->name == name ){
             return;
         }
     }
@@ -288,12 +293,7 @@ void vm_load_module( vm_t *vm, string path, string name ){
         return;
     }
 
-    vm_module_t *hmod    = new vm_module_t;
-    vm_str_split( path, "/", hmod->tree );
-    hmod->handle	  = hmodule;
-    hmod->name        = name;
-    hmod->initializer = initializer;
-    i = 0;
+    module = new vm_module_t( name, path, hmodule, initializer );
 
     while( functions[i].function != NULL ){
         vm_function_t *function = new vm_function_t();
@@ -335,11 +335,12 @@ void vm_load_module( vm_t *vm, string path, string name ){
 			}
 		}
 
-        hmod->functions.push_back(function);
+        ll_append( &module->functions, function );
+
         ++i;
     }
 
-    vm->modules.push_back(hmod);
+    ll_append( &vm->modules, module );
 }
 
 void vm_load_module( vm_t *vm, char *module ){
@@ -407,17 +408,18 @@ Object *vm_raise_exception( const char *fmt, ... ){
 
 void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){
 	if( vm->args.stacktrace || force ){
-		vm_scope_t::iterator i;
+		ll_item_t *item;
 		unsigned int j, stop, pad, args, last;
 		string name;
 		vframe_t *frame = NULL;
+		size_t scopesize = vm_scope_size(vm);
 
-		stop = (vm->frames.size() >= VM_MAX_RECURSION ? 10 : vm->frames.size());
+		stop = (scopesize >= VM_MAX_RECURSION ? 10 : scopesize);
 
 		fprintf( stderr, "\nCall Stack [memory usage %d bytes] :\n\n", gc_mm_usage() );
 
-		for( i = vm->frames.begin(), j = 1; i != vm->frames.end() && j < stop; i++, ++j ){
-			frame = (*i);
+		for( item = vm->frames.head, j = 1; item && j < stop; item = item->next, ++j ){
+			frame = (vframe_t *)item->data;
 			args  = frame->size();
 			last  = args - 1;
 			pad   = j;
@@ -434,7 +436,7 @@ void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){
 			}
 		}
 
-		if( vm->frames.size() >= VM_MAX_RECURSION ){
+		if( scopesize >= VM_MAX_RECURSION ){
 			pad = j;
 			while(pad--){
 				fprintf( stderr, "  " );

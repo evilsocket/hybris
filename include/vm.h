@@ -115,25 +115,44 @@ typedef struct _vm_function_t {
 }
 vm_function_t;
 
-typedef vector<vm_function_t *> vm_named_functions_t;
-typedef vector<string> 			   vstr_t;
+/*
+ * Split 'str' into 'tokens' vector using 'delimiters'.
+ */
+void vm_str_split( string& str, string delimiters, vector<string>& tokens );
 
 /*
  * Module structure definition.
  */
-typedef struct _vm_module_t {
-	void			 	*handle;
-    vstr_t           	 tree;
-    string           	 name;
-    initializer_t     	 initializer;
-    vm_named_functions_t functions;
+typedef struct vm_module {
+	void	      *handle;
+    vector<string> domains;
+    string         name;
+    initializer_t  initializer;
+    llist_t		   functions;
+
+    vm_module( string& module_name, string& module_path, void *ptr, initializer_t init ) :
+    	name(module_name),
+    	handle(ptr),
+    	initializer(init){
+
+    	/*
+    	 * Initialize functions linked list.
+    	 */
+    	ll_init(&functions);
+
+    	/*
+    	 * Split the path with '/' token and append each item
+    	 * to the domains vector.
+    	 */
+    	vm_str_split( module_path, "/", domains );
+    }
 }
 vm_module_t;
 
-typedef vector<vm_module_t *>      	  vm_modules_t;
+typedef llist_t				      	  vm_modules_t;
 typedef ITree<vm_function_t> 	  	  vm_mcache_t;
 typedef ITree<pcre>					  vm_pcache_t;
-typedef list< vframe_t * > 			  vm_scope_t;
+typedef llist_t		 			  	  vm_scope_t;
 typedef map< pthread_t, vm_scope_t *> vm_thread_scope_t;
 
 enum vm_state_t {
@@ -276,10 +295,6 @@ int 		vm_chdir( vm_t *vm );
  */
 static void vm_signal_handler( int signo );
 /*
- * Split 'str' into 'tokens' vector using 'delimiters'.
- */
-void 		vm_str_split( string& str, string delimiters, vector<string>& tokens );
-/*
  * Load a .so module given its full path and name.
  */
 void    	vm_load_module( vm_t *vm, string path, string name );
@@ -346,7 +361,7 @@ INLINE size_t vm_get_lineno( vm_t *vm ){
 INLINE void vm_pool( vm_t *vm, pthread_t tid = 0 ){
 	tid = (tid == 0 ? pthread_self() : tid);
 	vm_mm_lock(vm);
-		vm->th_frames[tid] = new vm_scope_t;
+		vm->th_frames[tid] = (vm_scope_t *)calloc( 1, sizeof(vm_scope_t) );
 	vm_mm_unlock(vm);
 }
 /*
@@ -357,7 +372,10 @@ INLINE void vm_depool( vm_t *vm, pthread_t tid = 0 ){
 	vm_mm_lock( vm );
 	vm_thread_scope_t::iterator i_scope = vm->th_frames.find(tid);
 	if( i_scope != vm->th_frames.end() ){
-		delete i_scope->second;
+
+		ll_free( i_scope->second );
+		free( i_scope->second );
+
 		vm->th_frames.erase( i_scope );
 	}
 	vm_mm_unlock( vm );
@@ -387,7 +405,7 @@ INLINE vm_scope_t *vm_find_scope( vm_t *vm ){
  * Each thread has its own scope, the gc will lock the flow
  * anyway so, is this really necessary?
  */
-#define vm_add_frame( vm, frame ) vm_find_scope(vm)->push_back(frame)
+#define vm_add_frame( vm, frame ) ll_append( vm_find_scope(vm), frame )
 /*
  * Remove the last frame from the trace stack.
  *
@@ -400,14 +418,15 @@ INLINE vm_scope_t *vm_find_scope( vm_t *vm ){
  * Each thread has its own scope, the gc will lock the flow
  * anyway so, is this really necessary?
  */
-#define vm_pop_frame( vm ) vm_find_scope(vm)->pop_back()
+#define vm_pop_frame( vm ) vm_scope_t *scope = vm_find_scope(vm); \
+						   ll_pop(scope)
 
-#define vm_scope_size( vm ) vm_find_scope(vm)->size()
+#define vm_scope_size( vm ) vm_find_scope(vm)->items
 
 /*
  * Return the active frame pointer (last in the list).
  */
-#define vm_frame( vm ) vm_find_scope(vm)->back()
+#define vm_frame( vm ) ( (vframe_t *)ll_back( vm_find_scope(vm) ) )
 
 /*
  * Compute execution time and print it.
@@ -433,36 +452,42 @@ INLINE void vm_timer( vm_t *vm, int start = 0 ){
  * Handle function pointer caching.
  */
 INLINE vm_function_t *vm_get_function( vm_t *vm, char *identifier ){
-	unsigned int i, j,
-				 ndyns( vm->modules.size() ),
-				 nfuncs;
+	ll_item_t	  *m_item,
+				  *f_item;
+	vm_module_t   *module;
+	vm_function_t *function;
 
-	/* first check if it's already in cache */
-	vm_function_t * cache = vm->mcache.find(identifier);
-	if( cache != H_UNDEFINED ){
-		return cache;
+	/*
+	 * First check if it's already cached.
+	 */
+	if( (function = vm->mcache.find(identifier)) != H_UNDEFINED ){
+		return function;
 	}
-
-	/* search it in dynamic loaded modules */
-	for( i = 0; i < ndyns; ++i ){
-		/* for each function of the module */
-		nfuncs = vm->modules[i]->functions.size();
-		for( j = 0; j < nfuncs; ++j ){
-			if( vm->modules[i]->functions[j]->identifier == identifier ){
-
+	/*
+	 * Search it in dynamic loaded modules.
+	 */
+	for( m_item = vm->modules.head; m_item; m_item = m_item->next ){
+		module = (vm_module_t *)m_item->data;
+		/*
+		 * For each function of the module.
+		 */
+		for( f_item = module->functions.head; f_item; f_item = f_item->next ){
+			function = (vm_function_t *)f_item->data;
+			/*
+			 * Found it, add to the cache and return.
+			 */
+			if( function->identifier == identifier ){
 				vm_mcache_lock( vm );
-
-				/* found it, add to the cache and return */
-				cache = vm->modules[i]->functions[j];
-				vm->mcache.insert( identifier, cache );
-
+					vm->mcache.insert( identifier, function );
 				vm_mcache_unlock( vm );
 
-				return cache;
+				return function;
 			}
 		}
 	}
-
+	/*
+	 * Nothing found, function not defined, nor cached.
+	 */
 	return H_UNDEFINED;
 }
 

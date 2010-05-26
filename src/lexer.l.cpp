@@ -717,7 +717,7 @@ void hyb_parse_string( const char *str ){
 	 */
 	BEGIN(INITIAL);
 
-	yylineno  = 1;
+	yylineno = 1;
 	/*
 	 * Parse the str, yyparse will call yylex.
 	 */
