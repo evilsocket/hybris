@@ -43,11 +43,23 @@ typedef struct {
 llist_t;
 
 /*
+ * Macro to easily loop the list.
+ * NOTE: This macro has to be used only for read only loops,
+ * if during a loop the list is modified (i.e. an element is removed),
+ * you have to MANUALLY fix the pointers.
+ */
+#define ll_foreach( ll, item ) for( ll_item_t *item = (ll)->head; item; item = item->next )
+
+/*
  * Initialize a linked list.
  */
 #define ll_init( ll ) (ll)->head = NULL; \
 					  (ll)->tail = NULL; \
 					  (ll)->items = 0
+/*
+ * Get the number of items in the list.
+ */
+#define ll_size( ll ) (ll)->items
 /*
  * Remove the last element from the list.
  */
@@ -64,6 +76,10 @@ llist_t;
  * Add an element to the end of the list.
  */
 void 	ll_append( llist_t *ll, void *data );
+/*
+ * Add an element on top of the list.
+ */
+void 	ll_prepend( llist_t *ll, void *data );
 /*
  * Move the item from one list to the end of another.
  */

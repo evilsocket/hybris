@@ -32,7 +32,24 @@ void ll_append( llist_t *ll, void *data ){
 	}
 
 	ll->tail = item;
-	ll->items++;
+	++ll->items;
+}
+
+void ll_prepend( llist_t *ll, void *data ){
+	ll_item_t *item = (ll_item_t *)calloc( 1, sizeof(ll_item_t) );
+
+	item->data = data;
+	item->next = ll->head;
+
+	if( ll->head ){
+		ll->head->prev = item;
+	}
+	else{
+		ll->tail = item;
+	}
+
+	ll->head = item;
+	++ll->items;
 }
 
 void ll_move( llist_t *from, llist_t *to, ll_item_t *item ){
@@ -61,8 +78,8 @@ void ll_move( llist_t *from, llist_t *to, ll_item_t *item ){
 	to->tail   = item;
 	item->next = NULL;
 
-	from->items--;
-	to->items++;
+	--from->items;
+	++to->items;
 }
 
 void ll_remove( llist_t *ll, ll_item_t *item ){
@@ -79,7 +96,7 @@ void ll_remove( llist_t *ll, ll_item_t *item ){
 		item->next->prev = item->prev;
 	}
 
-	ll->items--;
+	--ll->items;
 
 	free(item);
 }

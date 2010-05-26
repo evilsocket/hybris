@@ -306,15 +306,15 @@ identList : T_IDENT ',' identList { $$ = REDUCE_NODE($3); $$->head( MK_IDENT_NOD
 
 attrList  : accessSpecifier identList T_EOSTMT attrList {
 			  $$ = REDUCE_NODE($4);
-			  for( NodeIterator i = $2->begin(); i != $2->end(); i++ ){
-				  $$->head( MK_ATTR_NODE( @1.first_line, $1, *i ) );
+			  ll_foreach( &$2->llist, node ){
+				  $$->head( MK_ATTR_NODE( @1.first_line, $1, (Node *)node->data ) );
 			  }
 			  delete $2;
 		  }
 		  | accessSpecifier identList T_EOSTMT {
 			  $$ = MK_NODE_LIST();
-			  for( NodeIterator i = $2->begin(); i != $2->end(); i++ ){
-				  $$->head( MK_ATTR_NODE( @1.first_line, $1, *i ) );
+			  ll_foreach( &$2->llist, node ){
+				  $$->head( MK_ATTR_NODE( @1.first_line, $1, (Node *)node->data ) );
 			  }
 			  delete $2;
 		  }
@@ -349,22 +349,22 @@ methodList : accessSpecifier T_METHOD_PROTOTYPE '{' statements '}' methodList {
 
 classMembers : attrList methodList classMembers {
 				$$ = REDUCE_NODE($3);
-				for( NodeIterator i = $1->begin(); i != $1->end(); i++ ){
-					$$->tail( *i );
+				ll_foreach( &$1->llist, node ){
+					$$->tail( (Node *)node->data );
 				}
-				for( NodeIterator j = $2->begin(); j != $2->end(); j++ ){
-					$$->tail( *j );
+				ll_foreach( &$2->llist, node ){
+					$$->tail( (Node *)node->data );
 				}
 				delete $1;
 				delete $2;
 			 }
 			 | methodList attrList {
 				$$ = MK_NODE_LIST();
-				for( NodeIterator i = $1->begin(); i != $1->end(); i++ ){
-					$$->tail( *i );
+				ll_foreach( &$1->llist, node ){
+					$$->tail( (Node *)node->data );
 				}
-				for( NodeIterator j = $2->begin(); j != $2->end(); j++ ){
-					$$->tail( *j );
+				ll_foreach( &$2->llist, node ){
+					$$->tail( (Node *)node->data );
 				}
 				delete $1;
 				delete $2;

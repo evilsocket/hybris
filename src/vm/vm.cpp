@@ -1368,19 +1368,23 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 	 * Check if the class extends some other class.
 	 */
 	ClassNode *cnode = (ClassNode *)node;
-	if( cnode->m_extends.size() > 0 ){
-		for( NodeList::iterator ni = cnode->m_extends.begin(); ni != cnode->m_extends.end(); ni++ ){
-			Object *type = vm_get_type( vm, (char *)(*ni)->value.m_identifier.c_str() );
-			if( type == H_UNDEFINED ){
-				hyb_error( H_ET_SYNTAX, "'%s' undeclared class type", (*ni)->value.m_identifier.c_str() );
+	Node	  *baseclass;
+	Object    *baseproto;
+
+	if( ll_size(&cnode->m_extends.llist) > 0 ){
+		ll_foreach( &cnode->m_extends.llist, node ){
+			baseclass = (Node *)node->data;
+			baseproto = vm_get_type( vm, (char *)baseclass->value.m_identifier.c_str() );
+			if( baseproto == H_UNDEFINED ){
+				hyb_error( H_ET_SYNTAX, "'%s' undeclared class type", baseclass->value.m_identifier.c_str() );
 			}
-			else if( ob_is_class(type) == false ){
-				hyb_error( H_ET_SYNTAX, "couldn't extend from '%s' type", type->type->name );
+			else if( ob_is_class(baseproto) == false ){
+				hyb_error( H_ET_SYNTAX, "couldn't extend from '%s' type", ob_typename(baseproto) );
 			}
 
-			Class 			     *cobj = ob_class_ucast(type);
+			Class 			       *cobj = (Class *)baseproto;
 			ClassAttributeIterator  ai;
-			ClassMethodIterator 	  mi;
+			ClassMethodIterator 	mi;
 			ClassPrototypesIterator pi;
 
 			for( ai = cobj->c_attributes.begin(); ai != cobj->c_attributes.end(); ai++ ){

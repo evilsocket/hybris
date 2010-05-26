@@ -57,32 +57,36 @@ enum H_NODE_TYPE {
 /* pre declaration of class Node */
 class  Node;
 
-class NodeList : public list<Node *> {
-    public :
-        INLINE void head( Node *a, Node *b ){
-            NodeList::iterator i;
+class NodeList {
+    public  :
+		llist_t llist;
 
-            push_front(a);
-            i = begin();
-            i++;
-            insert( i, b );
+		NodeList(){
+			ll_init(&llist);
+		}
+
+		~NodeList(){
+			ll_free(&llist);
+		}
+
+		INLINE void head( Node *a, Node *b ){
+			ll_prepend( &llist, b );
+			ll_prepend( &llist, a );
         }
 
         INLINE void head( Node *a ){
-            push_front(a);
+        	ll_prepend( &llist, a );
         }
 
         INLINE void tail( Node *a, Node *b ){
-            push_back(a);
-            push_back(b);
+        	ll_append( &llist, a );
+        	ll_append( &llist, b );
         }
 
         INLINE void tail( Node *a ){
-            push_back(a);
+        	ll_append( &llist, a );
         }
 };
-
-typedef NodeList::iterator NodeIterator;
 
 /* possible values for a generic node */
 class NodeValue {

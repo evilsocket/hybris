@@ -135,9 +135,9 @@ ExpressionNode::ExpressionNode( size_t lineno, int expression, NodeList *list ) 
     value.m_expression = expression;
 
     if( list != NULL ){
-		reserve( list->size() );
-		for( NodeList::iterator ni = list->begin(); ni != list->end(); ni++ ){
-			push_back( *ni );
+		reserve( ll_size(&list->llist) );
+		ll_foreach( &list->llist, node ){
+			push_back( (Node *)node->data );
 		}
 		delete list;
 	}
@@ -190,12 +190,12 @@ StatementNode::StatementNode( size_t lineno, int statement, int argc, ... ) : No
 StatementNode::StatementNode( size_t lineno, int statement, NodeList *identList, Node *expr ) : Node(H_NT_STATEMENT,lineno) {
     value.m_statement = statement;
 
-    reserve( identList->size() + 1 );
+    reserve( ll_size(&identList->llist) + 1 );
 
 	push_back(expr);
 
-	for( NodeList::iterator ni = identList->begin(); ni != identList->end(); ni++ ){
-		push_back( *ni );
+	ll_foreach( &identList->llist, node ){
+		push_back( (Node *)node->data );
 	}
 
 	delete identList;
@@ -206,9 +206,9 @@ StatementNode::StatementNode( size_t lineno, int statement, Node *sw, NodeList *
     value.m_switch    = sw;
 
     if( caselist != NULL ){
-        reserve( caselist->size() );
-		for( NodeList::iterator ni = caselist->begin(); ni != caselist->end(); ni++ ){
-			push_back( *ni );
+        reserve( ll_size(&caselist->llist) );
+        ll_foreach( &caselist->llist, node ){
+			push_back( (Node *)node->data );
 		}
 		delete caselist;
 	}
@@ -220,9 +220,9 @@ StatementNode::StatementNode( size_t lineno, int statement, Node *sw, NodeList *
     value.m_default   = deflt;
 
     if( caselist != NULL ){
-        reserve( caselist->size() );
-		for( NodeList::iterator ni = caselist->begin(); ni != caselist->end(); ni++ ){
-			push_back( *ni );
+        reserve( ll_size(&caselist->llist) );
+        ll_foreach( &caselist->llist, node ){
+			push_back( (Node *)node->data );
 		}
 		delete caselist;
 	}
@@ -357,9 +357,9 @@ Node *FunctionNode::clone(){
 CallNode::CallNode( size_t lineno, char *name, NodeList *argv ) : Node(H_NT_CALL,lineno) {
     value.m_call = name;
     if( argv != NULL ){
-        reserve( argv->size() );
-		for( NodeList::iterator ni = argv->begin(); ni != argv->end(); ni++ ){
-			push_back( *ni );
+        reserve( ll_size(&argv->llist) );
+        ll_foreach( &argv->llist, node ){
+			push_back( (Node *)node->data );
 		}
 		delete argv;
 	}
@@ -368,9 +368,9 @@ CallNode::CallNode( size_t lineno, char *name, NodeList *argv ) : Node(H_NT_CALL
 CallNode::CallNode( size_t lineno, Node *alias, NodeList *argv ) :  Node(H_NT_CALL,lineno) {
     value.m_alias_call = alias;
     if( argv != NULL ){
-        reserve( argv->size() );
-		for( NodeList::iterator ni = argv->begin(); ni != argv->end(); ni++ ){
-			push_back( *ni );
+        reserve( ll_size(&argv->llist) );
+        ll_foreach( &argv->llist, node ){
+			push_back( (Node *)node->data );
 		}
 		delete argv;
 	}
@@ -417,9 +417,9 @@ Node *TryCatchNode::clone(){
 NewNode::NewNode( size_t lineno, char *type, NodeList *argv ) : Node(H_NT_NEW,lineno){
 	value.m_identifier = type;
 	if( argv != NULL ){
-		reserve( argv->size() );
-		for( NodeList::iterator ni = argv->begin(); ni != argv->end(); ni++ ){
-			push_back( *ni );
+        reserve( ll_size(&argv->llist) );
+        ll_foreach( &argv->llist, node ){
+			push_back( (Node *)node->data );
 		}
 		delete argv;
 	}
@@ -442,9 +442,9 @@ Node *NewNode::clone(){
 StructureNode::StructureNode( size_t lineno, char *s_name, NodeList *attributes ) : Node(H_NT_STRUCT,lineno) {
     value.m_identifier = s_name;
     if( attributes != NULL ){
-        reserve( attributes->size() );
-		for( NodeList::iterator ni = attributes->begin(); ni != attributes->end(); ni++ ){
-			push_back( *ni );
+        reserve( ll_size(&attributes->llist) );
+        ll_foreach( &attributes->llist, node ){
+			push_back( (Node *)node->data );
 		}
 		delete attributes;
 	}
@@ -520,14 +520,15 @@ Node *MethodDeclarationNode::clone(){
 ClassNode::ClassNode( size_t lineno, char *classname, NodeList *extends, NodeList *members ) : Node(H_NT_CLASS,lineno) {
 	value.m_identifier = classname;
 	if( extends != NULL ){
-		for( NodeList::iterator ni = extends->begin(); ni != extends->end(); ni++ ){
-			m_extends.push_back( *ni );
+        ll_foreach( &extends->llist, node ){
+			m_extends.tail( (Node *)node->data );
 		}
+        delete extends;
 	}
 	if( members != NULL ){
-		reserve( members->size() );
-		for( NodeList::iterator ni = members->begin(); ni != members->end(); ni++ ){
-			push_back( *ni );
+        reserve( ll_size(&members->llist) );
+        ll_foreach( &members->llist, node ){
+			push_back( (Node *)node->data );
 		}
 		delete members;
 	}
