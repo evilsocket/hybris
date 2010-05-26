@@ -271,7 +271,7 @@ main : statements {
 }
 
 mapList : expression ':' expression ',' mapList { $$ = REDUCE_NODE($5); ll_prepend_pair( $$, $1, $3 ); }
-	    | expression ':' expression 			{ $$ = ll_create();  	ll_append_pair( $$, $1, $3 ); }
+	    | expression ':' expression 			{ $$ = ll_create();  	ll_append_pair( $$, $3, $1 ); }
 	    | ':'			   						{ $$ = NULL; }
 
 itemList : expression ',' itemList { $$ = REDUCE_NODE($3); ll_prepend( $$, $1 ); }

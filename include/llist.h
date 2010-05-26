@@ -93,8 +93,8 @@ void 	ll_append( llist_t *ll, void *data );
 /*
  * Add two elements to the end of the list.
  */
-#define ll_append_pair( ll, a, b ) ll_append( (ll), a ); \
-								   ll_append( (ll), b )
+#define ll_append_pair( ll, a, b ) ll_append( (ll), b ); \
+								   ll_append( (ll), a )
 /*
  * Add an element on top of the list.
  */
@@ -108,6 +108,10 @@ void 	ll_prepend( llist_t *ll, void *data );
  * Move the item from one list to the end of another.
  */
 void 	ll_move( llist_t *from, llist_t *to, ll_item_t *item );
+/*
+ * Copy the 'from' linked list to the 'to' linked list.
+ */
+void	ll_copy( llist_t *from, llist_t *to );
 /*
  * Merge 'source' list inside 'dest' list, the elements of
  * 'dest' will be removed.

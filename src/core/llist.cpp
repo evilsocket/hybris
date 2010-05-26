@@ -82,6 +82,13 @@ void ll_move( llist_t *from, llist_t *to, ll_item_t *item ){
 	++to->items;
 }
 
+void ll_copy( llist_t *from, llist_t *to ){
+	ll_item_t *item;
+	for( item = from->head; item; item = item->next ){
+		ll_append( to, item->data );
+	}
+}
+
 void ll_merge( llist_t *dest, llist_t *source ){
 	ll_item_t *item = source->head,
 			  *next;

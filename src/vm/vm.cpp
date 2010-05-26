@@ -2229,21 +2229,19 @@ INLINE Object *vm_exec_explode( vm_t *vm, vframe_t *frame, Node *node ){
 		   n_items = ob_get_size(value),
 		   n_end   = (n_ids > n_items ? n_items : n_ids),
 		   i;
-
 	/*
 	 * Initialize all the identifiers with a <false>.
 	 */
-	for( i = 0, llitem = node->m_children.head; i < n_ids; ++i, llitem = llitem->next ){
+	for( llitem = node->m_children.head->next; llitem; llitem = llitem->next ){
 		frame->add( (char *)ll_node(llitem)->value.m_identifier.c_str(),
-					(Object *)gc_new_boolean(false) );
+							(Object *)gc_new_boolean(false) );
 	}
-
 	/*
 	 * Fill initializers until the iterable object ends, leave
 	 * the rest of them to <null>.
 	 */
 	Integer index(0);
-	for( llitem = node->m_children.head; (unsigned)index.value < n_end; ++index.value, llitem = llitem->next ){
+	for( llitem = node->m_children.head->next; (unsigned)index.value < n_end; ++index.value, llitem = llitem->next ){
 		frame->add( (char *)ll_node(llitem)->value.m_identifier.c_str(),
 					 ob_cl_at( value, (Object *)&index ) );
 	}
