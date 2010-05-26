@@ -138,10 +138,6 @@ public  :
         }
     }
 
-    INLINE Node *at( size_t i ){
-    	return child(i);
-    }
-
     INLINE char *id(){
     	return (char *)value.m_identifier.c_str();
     }

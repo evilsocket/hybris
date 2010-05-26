@@ -493,6 +493,8 @@ Node *MethodDeclarationNode::clone(){
 
 /* class type definition */
 ClassNode::ClassNode( size_t lineno, char *classname, llist_t *extends, llist_t *members ) : Node(H_NT_CLASS,lineno) {
+	ll_init(&m_extends);
+
 	value.m_identifier = classname;
 	if( extends != NULL ){
         ll_foreach( extends, node ){
