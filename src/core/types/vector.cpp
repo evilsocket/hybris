@@ -98,7 +98,7 @@ Object *vector_clone( Object *me ){
     Vector *vclone = gc_new_vector(),
            *vme    = ob_vector_ucast(me);
 
-    vv_foreach( i, vme->value ){
+    vv_foreach( vector<Object *>, i, vme->value ){
         ob_cl_push_reference( (Object *)vclone, ob_clone( *i ) );
     }
 
@@ -187,7 +187,7 @@ void vector_print( Object *me, int tabs ){
         fprintf( stdout, "\t" );
     }
     fprintf( stdout, "array {\n" );
-    vv_foreach( i, vme->value ){
+    vv_foreach( vector<Object *>, i, vme->value ){
         item = *i;
         ob_print( item, tabs + 1 );
         fprintf( stdout, "\n" );

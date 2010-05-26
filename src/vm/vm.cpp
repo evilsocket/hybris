@@ -177,7 +177,7 @@ void vm_release( vm_t *vm ){
         if( vm->th_frames.size() ){
             fprintf( stdout, "[WARNING] Hard killing remaining running threads ... " );
             vm_thread_scope_t::iterator ti;
-            vv_foreach( ti, vm->th_frames ){
+            vv_foreach( vm_thread_scope_t, ti, vm->th_frames ){
             	 pthread_kill( (pthread_t)ti->first, SIGTERM );
             	 delete ti->second;
             }
@@ -1397,7 +1397,7 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 			ClassMethodIterator 	mi;
 			ClassPrototypesIterator pi;
 
-			vv_foreach( ai, cobj->c_attributes ){
+			vv_foreach( ITree<class_attribute_t>, ai, cobj->c_attributes ){
 				attrname  = (char *)(*ai)->label.c_str();
 
 				ob_define_attribute( c, attrname, (*ai)->value->access, (*ai)->value->is_static );
@@ -1410,8 +1410,8 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 				}
 			}
 
-			vv_foreach( mi, cobj->c_methods ){
-				vv_foreach( pi, (*mi)->value->prototypes ){
+			vv_foreach( ITree<class_method_t>, mi, cobj->c_methods ){
+				vv_foreach( vector<Node *>, pi, (*mi)->value->prototypes ){
 					ob_define_method( c, (char *)(*mi)->label.c_str(), *pi );
 				}
 			}

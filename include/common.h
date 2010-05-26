@@ -37,8 +37,10 @@
 #define HMAXARGS 200
 /*
  * Macro to easily loop std::* collections.
+ * Cache the .end() iterator at the beginning and use preincrement.
  */
-#define vv_foreach( iterator, vv ) for( iterator = (vv).begin(); iterator != (vv).end(); iterator++ )
+#define vv_foreach( VTYPE, iterator, vv ) VTYPE::const_iterator iterator ## cached_end( (vv).end() ); \
+										  for( iterator = (vv).begin(); iterator != iterator ## cached_end; ++iterator )
 
 /*
  * Function declaration descriptor.

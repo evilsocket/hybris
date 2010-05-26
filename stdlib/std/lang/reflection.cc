@@ -142,9 +142,9 @@ HYBRIS_DEFINE_FUNCTION(hmethods){
 	Object *vo = (Object *)gc_new_vector();
 	ClassMethodIterator i;
 
-	vm_parse_argv( "C", &co);
+	vm_parse_argv( "C", &co );
 
-	vv_foreach( i, co->c_methods ){
+	vv_foreach( ITree<class_method_t>, i, co->c_methods ){
 		ob_cl_push_reference( vo, (Object *)gc_new_string( (*i)->label.c_str() ) );
 	}
 

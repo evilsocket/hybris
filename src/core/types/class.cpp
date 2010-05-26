@@ -241,7 +241,7 @@ Object *class_clone( Object *me ){
     ClassPrototypesIterator pi;
     prototypes_t 				  prototypes;
 
-    vv_foreach( ai, cme->c_attributes ){
+    vv_foreach( ITree<class_attribute_t>, ai, cme->c_attributes ){
     	/*
     	 * If the attribute is not static, clone the entire structure.
     	 */
@@ -262,9 +262,9 @@ Object *class_clone( Object *me ){
     	}
     }
 
-    vv_foreach( mi, cme->c_methods ){
+    vv_foreach( ITree<class_method_t>, mi, cme->c_methods ){
     	prototypes.clear();
-    	vv_foreach( pi, (*mi)->value->prototypes ){
+    	vv_foreach( vector<Node *>, pi, (*mi)->value->prototypes ){
     		prototypes.push_back( (*pi)->clone() );
     	}
 
@@ -298,7 +298,7 @@ void class_free( Object *me ){
      * Check if the class has a destructors and call it.
      */
     if( (method = cme->c_methods.find( "__expire" )) ){
-		vv_foreach( pi, method->prototypes ){
+		vv_foreach( vector<Node *>, pi, method->prototypes ){
 			Node *dtor = (*pi);
 			vframe_t stack;
 			extern vm_t *__hyb_vm;
@@ -316,7 +316,7 @@ void class_free( Object *me ){
 	/*
 	 * Delete c_methods structure pointers.
 	 */
-	vv_foreach( mi, cme->c_methods ){
+	vv_foreach( ITree<class_method_t>, mi, cme->c_methods ){
 		method = (*mi)->value;
 		delete method;
 	}
@@ -324,7 +324,7 @@ void class_free( Object *me ){
 	/*
 	 * Delete c_attributes structure pointers and decrement values references.
 	 */
-	vv_foreach( ai, cme->c_attributes ){
+	vv_foreach( ITree<class_attribute_t>, ai, cme->c_attributes ){
 		attribute = (*ai)->value;
 		/*
 		 * Static attributes are just references to the main prototype that is
@@ -659,7 +659,7 @@ Node *class_get_method( Object *me, char *name, int argc ){
 		Node *best_match = NULL;
 		int   best_match_argc, match_argc;
 
-		vv_foreach( pi, method->prototypes ){
+		vv_foreach( vector<Node *>, pi, method->prototypes ){
 			/*
 			 * The last child of a method is its body itself, so we compare
 			 * call children with method->children() - 1 to ignore the body.

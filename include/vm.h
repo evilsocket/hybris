@@ -452,8 +452,6 @@ INLINE void vm_timer( vm_t *vm, int start = 0 ){
  * Handle function pointer caching.
  */
 INLINE vm_function_t *vm_get_function( vm_t *vm, char *identifier ){
-	ll_item_t	  *m_item,
-				  *f_item;
 	vm_module_t   *module;
 	vm_function_t *function;
 
@@ -466,12 +464,12 @@ INLINE vm_function_t *vm_get_function( vm_t *vm, char *identifier ){
 	/*
 	 * Search it in dynamic loaded modules.
 	 */
-	for( m_item = vm->modules.head; m_item; m_item = m_item->next ){
+	ll_foreach( &vm->modules, m_item ){
 		module = (vm_module_t *)m_item->data;
 		/*
 		 * For each function of the module.
 		 */
-		for( f_item = module->functions.head; f_item; f_item = f_item->next ){
+		ll_foreach( &module->functions, f_item ){
 			function = (vm_function_t *)f_item->data;
 			/*
 			 * Found it, add to the cache and return.

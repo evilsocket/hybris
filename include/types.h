@@ -876,7 +876,7 @@ typedef struct _Binary {
             value.reserve( RESERVE_VECTORS_SPACE );
         #endif
         vector<unsigned char>::iterator i;
-        vv_foreach( i, data ){
+        vv_foreach( vector<unsigned char>, i, data ){
             ob_cl_push_reference( (Object *)this, (Object *)gc_new_char(*i) );
         }
     }
