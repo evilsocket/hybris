@@ -41,13 +41,13 @@ union hyb_token_value {
 	char    byte;
 	char    string[MAX_STRING_SIZE];
 	/* variable identifier */
-	char   *identifier;
+	char    identifier[MAX_STRING_SIZE];
 	/* function prototype declaration */
 	function_decl_t *function;
 	/* method prototype declaration */
 	method_decl_t *method;
 	/* node list for multiple nodes on one statement */
-	NodeList *list;
+	llist_t *list;
 	/* not reduced node */
 	Node *node;
 	/* access specifiers */
@@ -77,8 +77,6 @@ extern int yylex( hyb_token_value* yylval, YYLTYPE *yyloc );
 #define REDUCE_NODE(a)                			 a
 /* delete the node */
 #define RM_NODE(a)                      		 delete (a)
-/* node list */
-#define MK_NODE_LIST()                           new NodeList()
 /* identifiers, attributes and constants */
 #define MK_IDENT_NODE( lineno, a)                new IdentifierNode( lineno, a)
 #define MK_ATTR_NODE( lineno, a,b)		         new IdentifierNode( lineno, a,b)
@@ -272,22 +270,22 @@ main : statements {
 	RM_NODE($1);
 }
 
-mapList : expression ':' expression ',' mapList { $$ = REDUCE_NODE($5); $$->head($1,$3); }
-	    | expression ':' expression 			{ $$ = MK_NODE_LIST();  $$->tail($1,$3); }
+mapList : expression ':' expression ',' mapList { $$ = REDUCE_NODE($5); ll_prepend_pair( $$, $1, $3 ); }
+	    | expression ':' expression 			{ $$ = ll_create();  	ll_append_pair( $$, $1, $3 ); }
 	    | ':'			   						{ $$ = NULL; }
 
-itemList : expression ',' itemList { $$ = REDUCE_NODE($3); $$->head($1); }
- 		 | expression              { $$ = MK_NODE_LIST();  $$->tail($1); }
+itemList : expression ',' itemList { $$ = REDUCE_NODE($3); ll_prepend( $$, $1 ); }
+ 		 | expression              { $$ = ll_create();     ll_append( $$, $1 ); }
  		 | /* empty */			   { $$ = NULL; }
 
-argumentList : expression ':' argumentList { $$ = REDUCE_NODE($3); $$->head($1); }
-			 | expression ',' argumentList { $$ = REDUCE_NODE($3); $$->head($1); }
-			 | expression                  { $$ = MK_NODE_LIST();  $$->tail($1); }
-			 | /* empty */                 { $$ = MK_NODE_LIST(); };
+argumentList : expression ':' argumentList { $$ = REDUCE_NODE($3); ll_prepend( $$, $1 ); }
+			 | expression ',' argumentList { $$ = REDUCE_NODE($3); ll_prepend( $$, $1 ); }
+			 | expression                  { $$ = ll_create();     ll_append( $$, $1 ); }
+			 | /* empty */                 { $$ = ll_create(); };
 
-caseCascade  : T_CASE expression ':' statements T_BREAK T_EOSTMT caseCascade { $$ = REDUCE_NODE($7); $$->head( $2, $4 ); }
-             | T_CASE expression ':' statements T_BREAK T_EOSTMT             { $$ = MK_NODE_LIST();  $$->tail( $2, $4 ); }
-             | /* empty */                                                   { $$ = MK_NODE_LIST(); };
+caseCascade  : T_CASE expression ':' statements T_BREAK T_EOSTMT caseCascade { $$ = REDUCE_NODE($7); ll_prepend_pair( $$, $2, $4 ); }
+             | T_CASE expression ':' statements T_BREAK T_EOSTMT             { $$ = ll_create();     ll_append_pair( $$, $2, $4 ); }
+             | /* empty */                                                   { $$ = ll_create(); };
 
 classExtensions : T_EXTENDS identList { $$ = REDUCE_NODE($2); }
 			    | /* empty */	      { $$ = NULL; };
@@ -300,80 +298,77 @@ accessSpecifier : T_PUBLIC    { $$ = asPublic;    }
 		        | T_PROTECTED { $$ = asProtected; }
 		        | /* empty */ { $$ = asPublic;    };
 
-identList : T_IDENT ',' identList { $$ = REDUCE_NODE($3); $$->head( MK_IDENT_NODE(@1.first_line,$1) ); free($1); }
-		  | T_IDENT ',' T_IDENT   { $$ = MK_NODE_LIST();  $$->tail( MK_IDENT_NODE(@3.first_line,$3), MK_IDENT_NODE(@1.first_line,$1) ); }
-		  | T_IDENT 			  { $$ = MK_NODE_LIST();  $$->head( MK_IDENT_NODE(@1.first_line,$1) ); free($1); }
+identList : T_IDENT ',' identList {
+			  $$ = REDUCE_NODE($3);
+			  ll_prepend( $$, MK_IDENT_NODE(@1.first_line,$1) );
+		  }
+		  | T_IDENT ',' T_IDENT {
+			  $$ = ll_create();
+			  ll_append_pair( $$, MK_IDENT_NODE(@3.first_line,$3), MK_IDENT_NODE(@1.first_line,$1) );
+		  }
+		  | T_IDENT {
+			  $$ = ll_create();
+			  ll_prepend( $$, MK_IDENT_NODE(@1.first_line,$1) );
+		  }
 
 attrList  : accessSpecifier identList T_EOSTMT attrList {
 			  $$ = REDUCE_NODE($4);
-			  ll_foreach( &$2->llist, node ){
-				  $$->head( MK_ATTR_NODE( @1.first_line, $1, (Node *)node->data ) );
+			  ll_foreach( $2, node ){
+				  ll_prepend( $$, MK_ATTR_NODE( @1.first_line, $1, (Node *)node->data ) );
 			  }
-			  delete $2;
+			  ll_destroy($2);
 		  }
 		  | accessSpecifier identList T_EOSTMT {
-			  $$ = MK_NODE_LIST();
-			  ll_foreach( &$2->llist, node ){
-				  $$->head( MK_ATTR_NODE( @1.first_line, $1, (Node *)node->data ) );
+			  $$ = ll_create();
+			  ll_foreach( $2, node ){
+				  ll_prepend( $$, MK_ATTR_NODE( @1.first_line, $1, (Node *)node->data ) );
 			  }
-			  delete $2;
+			  ll_destroy($2);
 		  }
 		  | T_STATIC T_IDENT T_ASSIGN expression T_EOSTMT attrList {
 			  $$ = REDUCE_NODE($6);
-			  $$->head( MK_STATIC_ATTR_NODE( @2.first_line, $2, REDUCE_NODE($4) ) );
-			  free($2);
+			  ll_prepend( $$, MK_STATIC_ATTR_NODE( @2.first_line, $2, REDUCE_NODE($4) ) );
 		  }
 		  | T_STATIC T_IDENT T_ASSIGN expression T_EOSTMT {
-			  $$ = MK_NODE_LIST();
-			  $$->head( MK_STATIC_ATTR_NODE( @2.first_line, $2, REDUCE_NODE($4) ) );
-			  free($2);
+			  $$ = ll_create();
+			  ll_prepend( $$, MK_STATIC_ATTR_NODE( @2.first_line, $2, REDUCE_NODE($4) ) );
 		  }
-		  | methodList { $$ = REDUCE_NODE($1); }
+		  | methodList {
+			  $$ = REDUCE_NODE($1);
+		  }
 
 methodList : accessSpecifier T_METHOD_PROTOTYPE '{' statements '}' methodList {
 				 $$ = REDUCE_NODE($6);
-				 $$->head( MK_METHOD_DECL_NODE( @1.first_line, $1, $2, $4 ) );
+				 ll_prepend( $$, MK_METHOD_DECL_NODE( @1.first_line, $1, $2, $4 ) );
 		   }
 		   | accessSpecifier T_METHOD_PROTOTYPE '{' statements '}' {
-				 $$ = MK_NODE_LIST();
-				 $$->head( MK_METHOD_DECL_NODE( @1.first_line, $1, $2, $4 ) );
+				 $$ = ll_create();
+				 ll_prepend( $$, MK_METHOD_DECL_NODE( @1.first_line, $1, $2, $4 ) );
 		   }
 		   | T_STATIC T_METHOD_PROTOTYPE '{' statements '}' methodList {
 				 $$ = REDUCE_NODE($6);
-				 $$->head( MK_STATIC_METHOD_DECL_NODE( @2.first_line, $2, $4 ) );
+				 ll_prepend( $$, MK_STATIC_METHOD_DECL_NODE( @2.first_line, $2, $4 ) );
 		   }
 		   | T_STATIC T_METHOD_PROTOTYPE '{' statements '}' {
-				 $$ = MK_NODE_LIST();
-				 $$->head( MK_STATIC_METHOD_DECL_NODE( @2.first_line, $2, $4 ) );
+				 $$ = ll_create();
+				 ll_prepend( $$, MK_STATIC_METHOD_DECL_NODE( @2.first_line, $2, $4 ) );
 		   };
 
 classMembers : attrList methodList classMembers {
 				$$ = REDUCE_NODE($3);
-				ll_foreach( &$1->llist, node ){
-					$$->tail( (Node *)node->data );
-				}
-				ll_foreach( &$2->llist, node ){
-					$$->tail( (Node *)node->data );
-				}
-				delete $1;
-				delete $2;
+				ll_merge_destroy( $$, $1 );
+				ll_merge_destroy( $$, $2 );
 			 }
 			 | methodList attrList {
-				$$ = MK_NODE_LIST();
-				ll_foreach( &$1->llist, node ){
-					$$->tail( (Node *)node->data );
-				}
-				ll_foreach( &$2->llist, node ){
-					$$->tail( (Node *)node->data );
-				}
-				delete $1;
-				delete $2;
+				$$ = ll_create();
+				ll_merge_destroy( $$, $1 );
+				ll_merge_destroy( $$, $2 );
 			 }
 			 | attrList {
 				 $$ = REDUCE_NODE($1);
 			 }
 			 | /* empty */
-			 {  $$ = MK_NODE_LIST(); };
+			 {  $$ = ll_create(); };
 
 statement  : T_EOSTMT                                                   { $$ = MK_EOSTMT_NODE( @1.first_line, NULL, NULL ); }
 	   	   | expression                                                 { $$ = REDUCE_NODE($1); }
@@ -391,11 +386,9 @@ statement  : T_EOSTMT                                                   { $$ = M
            | T_WHILE '(' expression ')' statement                       { $$ = MK_WHILE_NODE( @3.first_line, $3, $5 ); }
            | T_DO statement T_WHILE '(' expression ')' T_EOSTMT         { $$ = MK_DO_NODE( @2.first_line, $2, $5 ); }
 		   | T_FOR '(' statement statement expression ')' statement     { $$ = MK_FOR_NODE( @3.first_line, $3, $4, $5, $7 ); }
-		   | T_FOREACH '(' T_IDENT T_OF expression ')' statement        { $$ = MK_FOREACH_NODE( @3.first_line, $3, $5, $7 ); free($3); }
+		   | T_FOREACH '(' T_IDENT T_OF expression ')' statement        { $$ = MK_FOREACH_NODE( @3.first_line, $3, $5, $7 ); }
 		   | T_FOREACH '(' T_IDENT T_MAPS T_IDENT T_OF expression ')' statement {
 		   		$$ = MK_FOREACHM_NODE( @3.first_line, $3, $5, $7, $9 );
-		   		free($3);
-		   		free($5);
 		   }
 		   | statement T_UNLESS expression								{ $$ = MK_UNLESS_NODE( @1.first_line, $1, $3 ); }
            | T_IF '(' expression ')' statement %prec T_IF_END           { $$ = MK_IF_NODE( @3.first_line, $3, $5 ); }
@@ -434,7 +427,6 @@ statement  : T_EOSTMT                                                   { $$ = M
 			   statement
 			 finallyBlock {
         	   $$ = MK_TRYCATCH_NODE( @2.first_line, $2, MK_IDENT_NODE( @5.first_line, $5 ), $7, $8 );
-        	   free($5);
            };
 
 statements : /* empty */ 		  { $$ = REDUCE_NODE(NULL); }
@@ -496,7 +488,7 @@ expression : T_BOOLEAN										  { $$ = MK_CONST_NODE(@1.first_line, $1); }
            | '[' itemList ']'                                 { $$ = MK_ARRAY_NODE(@2.first_line, $2); }
            | '[' mapList ']'								  { $$ = MK_MAP_NODE(@2.first_line, $2); }
            /* expression . <identifier> */
-           | expression T_GET_MEMBER T_IDENT 				  { $$ = MK_ATTRIBUTE_REQUEST_NODE( @1.first_line, $1, MK_IDENT_NODE(@3.first_line, $3) ); free($3); }
+           | expression T_GET_MEMBER T_IDENT 				  { $$ = MK_ATTRIBUTE_REQUEST_NODE( @1.first_line, $1, MK_IDENT_NODE(@3.first_line, $3) ); }
            /* identifier */
            | T_IDENT                                          { $$ = MK_IDENT_NODE(@1.first_line, $1); }
            /* @ arguments vector */
@@ -508,7 +500,7 @@ expression : T_BOOLEAN										  { $$ = MK_CONST_NODE(@1.first_line, $1); }
            /* attribute declaration/assignation */
            | expression T_ASSIGN expression                   { $$ = MK_ASSIGN_NODE( @1.first_line, $1, $3 ); }
 		   /* identifier declaration/assignation */
-		   | T_IDENT T_ASSIGN expression       				  { $$ = MK_ASSIGN_NODE( @1.first_line, MK_IDENT_NODE(@1.first_line, $1), $3 ); free($1); }
+		   | T_IDENT T_ASSIGN expression       				  { $$ = MK_ASSIGN_NODE( @1.first_line, MK_IDENT_NODE(@1.first_line, $1), $3 ); }
            /* a single subscript could be an expression itself */
            | expression '[' expression ']' %prec T_SB_END     { $$ = MK_SB_NODE( @1.first_line, $1, $3 ); }
            /* range evaluation */

@@ -57,37 +57,6 @@ enum H_NODE_TYPE {
 /* pre declaration of class Node */
 class  Node;
 
-class NodeList {
-    public  :
-		llist_t llist;
-
-		NodeList(){
-			ll_init(&llist);
-		}
-
-		~NodeList(){
-			ll_free(&llist);
-		}
-
-		INLINE void head( Node *a, Node *b ){
-			ll_prepend( &llist, b );
-			ll_prepend( &llist, a );
-        }
-
-        INLINE void head( Node *a ){
-        	ll_prepend( &llist, a );
-        }
-
-        INLINE void tail( Node *a, Node *b ){
-        	ll_append( &llist, a );
-        	ll_append( &llist, b );
-        }
-
-        INLINE void tail( Node *a ){
-        	ll_append( &llist, a );
-        }
-};
-
 /* possible values for a generic node */
 class NodeValue {
     public :
@@ -204,7 +173,7 @@ class ExpressionNode : public Node {
     public :
 
         ExpressionNode( size_t lineno, int expression );
-        ExpressionNode( size_t lineno, int expression, NodeList *list );
+        ExpressionNode( size_t lineno, int expression, llist_t *list );
         ExpressionNode( size_t lineno, int expression, int argc, ... );
 
         Node *clone();
@@ -216,9 +185,9 @@ class StatementNode : public Node {
 
         StatementNode( size_t lineno, int statement );
         StatementNode( size_t lineno, int statement, int argc, ... );
-        StatementNode( size_t lineno, int statement, NodeList *identList, Node *expr );
-        StatementNode( size_t lineno, int statement, Node *sw, NodeList *caselist );
-        StatementNode( size_t lineno, int statement, Node *sw, NodeList *caselist, Node *deflt );
+        StatementNode( size_t lineno, int statement, llist_t *identList, Node *expr );
+        StatementNode( size_t lineno, int statement, Node *sw, llist_t *caselist );
+        StatementNode( size_t lineno, int statement, Node *sw, llist_t *caselist, Node *deflt );
 
         Node *clone();
 };
@@ -268,8 +237,8 @@ class FunctionNode : public Node {
 class CallNode : public Node {
     public :
 
-        CallNode( size_t lineno, char *name, NodeList *argv );
-        CallNode( size_t lineno, Node *alias, NodeList *argv );
+        CallNode( size_t lineno, char *name, llist_t *argv );
+        CallNode( size_t lineno, Node *alias, llist_t *argv );
 
         Node *clone();
 };
@@ -287,7 +256,7 @@ public :
 class NewNode : public Node {
 	public :
 
-		NewNode( size_t lineno, char *type, NodeList *argv );
+		NewNode( size_t lineno, char *type, llist_t *argv );
 
 		Node *clone();
 };
@@ -296,7 +265,7 @@ class NewNode : public Node {
 class StructureNode : public Node {
     public :
 
-        StructureNode( size_t lineno, char *s_name, NodeList *attributes );
+        StructureNode( size_t lineno, char *s_name, llist_t *attributes );
 };
 
 /* method declarations */
@@ -312,8 +281,8 @@ class MethodDeclarationNode : public Node {
 /* class type definition */
 class ClassNode : public Node {
 	public :
-		NodeList m_extends;
-		ClassNode( size_t lineno, char *classname, NodeList *extends, NodeList *members );
+		llist_t m_extends;
+		ClassNode( size_t lineno, char *classname, llist_t *extends, llist_t *members );
 };
 
 #endif

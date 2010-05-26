@@ -214,10 +214,10 @@ void vm_release( vm_t *vm ){
 		for( f_item = module->functions.head; f_item; f_item = f_item->next ){
 			delete (vm_function_t *)f_item->data;
 		}
-		ll_free( &module->functions );
+		ll_clear( &module->functions );
 	}
 
-	ll_free(&vm->modules);
+	ll_clear(&vm->modules);
 
     vm->mcache.clear();
     vm->vconst.release();
@@ -1381,8 +1381,8 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 	Node	  *baseclass;
 	Object    *baseproto;
 
-	if( ll_size(&cnode->m_extends.llist) > 0 ){
-		ll_foreach( &cnode->m_extends.llist, node ){
+	if( ll_size(&cnode->m_extends) > 0 ){
+		ll_foreach( &cnode->m_extends, node ){
 			baseclass = (Node *)node->data;
 			baseproto = vm_get_type( vm, (char *)baseclass->value.m_identifier.c_str() );
 			if( baseproto == H_UNDEFINED ){

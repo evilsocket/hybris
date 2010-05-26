@@ -373,7 +373,7 @@ INLINE void vm_depool( vm_t *vm, pthread_t tid = 0 ){
 	vm_thread_scope_t::iterator i_scope = vm->th_frames.find(tid);
 	if( i_scope != vm->th_frames.end() ){
 
-		ll_free( i_scope->second );
+		ll_clear( i_scope->second );
 		free( i_scope->second );
 
 		vm->th_frames.erase( i_scope );

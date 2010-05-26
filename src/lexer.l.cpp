@@ -84,13 +84,13 @@ union hyb_token_value {
 	char    byte;
 	char    string[MAX_STRING_SIZE];
 	/* variable identifier */
-	char   *identifier;
+	char    identifier[MAX_STRING_SIZE];
 	/* function prototype declaration */
 	function_decl_t *function;
 	/* method prototype declaration */
 	method_decl_t *method;
 	/* node list for multiple nodes on one statement */
-	NodeList *list;
+	llist_t *list;
 	/* not reduced node */
 	Node *node;
 	/* access specifiers */
@@ -368,7 +368,7 @@ include          BEGIN(T_INCLUSION);
 		hyb_error( H_ET_GENERIC, "Identifier name above max size" );
 	}
 
-	yylval->identifier = strdup( yytext );
+	strncpy( yylval->identifier, yytext, MAX_STRING_SIZE );
 
 	return T_IDENT;
 }

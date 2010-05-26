@@ -56,7 +56,10 @@ llist_t;
  * you have to MANUALLY fix the pointers.
  */
 #define ll_foreach_to( ll, item, i, to ) for( i = 0, item = (ll)->head; i < to; ++i, item = item->next )
-
+/*
+ * Allocate and initialize a new linked list.
+ */
+#define ll_create() (llist_t *)calloc( 1, sizeof(llist_t) )
 /*
  * Initialize a linked list.
  */
@@ -84,20 +87,46 @@ llist_t;
  */
 void 	ll_append( llist_t *ll, void *data );
 /*
+ * Add two elements to the end of the list.
+ */
+#define ll_append_pair( ll, a, b ) ll_append( (ll), a ); \
+								   ll_append( (ll), b )
+/*
  * Add an element on top of the list.
  */
 void 	ll_prepend( llist_t *ll, void *data );
+/*
+ * Add two elements on top of the list.
+ */
+#define ll_prepend_pair( ll, a, b ) ll_prepend( (ll), b ); \
+									ll_prepend( (ll), a )
 /*
  * Move the item from one list to the end of another.
  */
 void 	ll_move( llist_t *from, llist_t *to, ll_item_t *item );
 /*
+ * Merge 'source' list inside 'dest' list, the elements of
+ * 'dest' will be removed.
+ */
+void	ll_merge( llist_t *dest, llist_t *source );
+/*
+ * Same as ll_merge, plus destroy the 'source' list.
+ */
+#define ll_merge_destroy( dest, source ) ll_merge( (dest), (source) ); \
+										 ll_destroy( (source) )
+/*
  * Remove an element from the list.
  */
 void 	ll_remove( llist_t *ll, ll_item_t *item );
 /*
- * Clear and deallocate the list.
+ * Clear and deallocate each item of the list.
  */
-void 	ll_free( llist_t *ll );
+void 	ll_clear( llist_t *ll );
+/*
+ * Clear and deallocate the list itself previously
+ * created with the ll_create macro.
+ */
+#define ll_destroy( ll ) ll_clear( (ll) ); \
+						 free(ll)
 
 #endif

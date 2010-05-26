@@ -82,6 +82,45 @@ void ll_move( llist_t *from, llist_t *to, ll_item_t *item ){
 	++to->items;
 }
 
+void ll_merge( llist_t *dest, llist_t *source ){
+	ll_item_t *item = source->head,
+			  *next;
+
+	dest->items  += source->items;
+	source->items = 0;
+
+	while(item){
+		next = item->next;
+
+		if( item->prev == NULL ){
+			source->head = next;
+		}
+		else{
+			item->prev->next = next;
+		}
+		if( next == NULL ){
+			source->tail = item->prev;
+		}
+		else{
+			next->prev = item->prev;
+		}
+
+		if( dest->head == NULL ){
+			dest->head = item;
+			item->prev = NULL;
+		}
+		else{
+			dest->tail->next = item;
+			item->prev 	     = dest->tail;
+		}
+
+		dest->tail = item;
+		item->next = NULL;
+
+		item = next;
+	}
+}
+
 void ll_remove( llist_t *ll, ll_item_t *item ){
 	if( item->prev == NULL ){
 		ll->head = item->next;
@@ -101,7 +140,7 @@ void ll_remove( llist_t *ll, ll_item_t *item ){
 	free(item);
 }
 
-void ll_free( llist_t *ll ){
+void ll_clear( llist_t *ll ){
 	ll_item_t *item = ll->head,
 			  *next;
 

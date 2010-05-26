@@ -58,7 +58,7 @@ Node::~Node(){
 	ll_foreach( &m_children, child ){
 		delete (Node *)child->data;
 	}
-	ll_free( &m_children );
+	ll_clear( &m_children );
 }
 
 Node *Node::clone(){
@@ -123,14 +123,14 @@ ExpressionNode::ExpressionNode( size_t lineno, int expression ) : Node(H_NT_EXPR
     value.m_expression = expression;
 }
 
-ExpressionNode::ExpressionNode( size_t lineno, int expression, NodeList *list ) : Node(H_NT_EXPRESSION,lineno) {
+ExpressionNode::ExpressionNode( size_t lineno, int expression, llist_t *list ) : Node(H_NT_EXPRESSION,lineno) {
     value.m_expression = expression;
 
     if( list != NULL ){
-		ll_foreach( &list->llist, node ){
+		ll_foreach( list, node ){
 			addChild( (Node *)node->data );
 		}
-		delete list;
+		ll_destroy(list);
 	}
 }
 
@@ -173,40 +173,40 @@ StatementNode::StatementNode( size_t lineno, int statement, int argc, ... ) : No
 	va_end(ap);
 }
 
-StatementNode::StatementNode( size_t lineno, int statement, NodeList *identList, Node *expr ) : Node(H_NT_STATEMENT,lineno) {
+StatementNode::StatementNode( size_t lineno, int statement, llist_t *identList, Node *expr ) : Node(H_NT_STATEMENT,lineno) {
     value.m_statement = statement;
 
 	addChild(expr);
 
-	ll_foreach( &identList->llist, node ){
+	ll_foreach( identList, node ){
 		addChild( (Node *)node->data );
 	}
 
-	delete identList;
+	ll_destroy(identList);
 }
 
-StatementNode::StatementNode( size_t lineno, int statement, Node *sw, NodeList *caselist ) : Node(H_NT_STATEMENT,lineno) {
+StatementNode::StatementNode( size_t lineno, int statement, Node *sw, llist_t *caselist ) : Node(H_NT_STATEMENT,lineno) {
     value.m_statement = statement;
     value.m_switch    = sw;
 
     if( caselist != NULL ){
-        ll_foreach( &caselist->llist, node ){
+        ll_foreach( caselist, node ){
 			addChild( (Node *)node->data );
 		}
-		delete caselist;
+		ll_destroy(caselist);
 	}
 }
 
-StatementNode::StatementNode( size_t lineno, int statement, Node *sw, NodeList *caselist, Node *deflt ) : Node(H_NT_STATEMENT,lineno) {
+StatementNode::StatementNode( size_t lineno, int statement, Node *sw, llist_t *caselist, Node *deflt ) : Node(H_NT_STATEMENT,lineno) {
     value.m_statement = statement;
     value.m_switch    = sw;
     value.m_default   = deflt;
 
     if( caselist != NULL ){
-        ll_foreach( &caselist->llist, node ){
+        ll_foreach( caselist, node ){
 			addChild( (Node *)node->data );
 		}
-		delete caselist;
+		ll_destroy(caselist);
 	}
 }
 
@@ -334,23 +334,23 @@ Node *FunctionNode::clone(){
 }
 
 /* function calls */
-CallNode::CallNode( size_t lineno, char *name, NodeList *argv ) : Node(H_NT_CALL,lineno) {
+CallNode::CallNode( size_t lineno, char *name, llist_t *argv ) : Node(H_NT_CALL,lineno) {
     value.m_call = name;
     if( argv != NULL ){
-        ll_foreach( &argv->llist, node ){
+        ll_foreach( argv, node ){
 			addChild( (Node *)node->data );
 		}
-		delete argv;
+		ll_destroy(argv);
 	}
 }
 
-CallNode::CallNode( size_t lineno, Node *alias, NodeList *argv ) :  Node(H_NT_CALL,lineno) {
+CallNode::CallNode( size_t lineno, Node *alias, llist_t *argv ) :  Node(H_NT_CALL,lineno) {
     value.m_alias_call = alias;
     if( argv != NULL ){
-        ll_foreach( &argv->llist, node ){
+        ll_foreach( argv, node ){
 			addChild( (Node *)node->data );
 		}
-		delete argv;
+        ll_destroy(argv);
 	}
 }
 
@@ -389,13 +389,13 @@ Node *TryCatchNode::clone(){
 }
 
 /* structure or class creation */
-NewNode::NewNode( size_t lineno, char *type, NodeList *argv ) : Node(H_NT_NEW,lineno){
+NewNode::NewNode( size_t lineno, char *type, llist_t *argv ) : Node(H_NT_NEW,lineno){
 	value.m_identifier = type;
 	if( argv != NULL ){
-        ll_foreach( &argv->llist, node ){
+        ll_foreach( argv, node ){
 			addChild( (Node *)node->data );
 		}
-		delete argv;
+        ll_destroy(argv);
 	}
 }
 
@@ -410,13 +410,13 @@ Node *NewNode::clone(){
 }
 
 /* struct type definition */
-StructureNode::StructureNode( size_t lineno, char *s_name, NodeList *attributes ) : Node(H_NT_STRUCT,lineno) {
+StructureNode::StructureNode( size_t lineno, char *s_name, llist_t *attributes ) : Node(H_NT_STRUCT,lineno) {
     value.m_identifier = s_name;
     if( attributes != NULL ){
-        ll_foreach( &attributes->llist, node ){
+        ll_foreach( attributes, node ){
 			addChild( (Node *)node->data );
 		}
-		delete attributes;
+        ll_destroy(attributes);
 	}
 }
 
@@ -492,19 +492,19 @@ Node *MethodDeclarationNode::clone(){
 }
 
 /* class type definition */
-ClassNode::ClassNode( size_t lineno, char *classname, NodeList *extends, NodeList *members ) : Node(H_NT_CLASS,lineno) {
+ClassNode::ClassNode( size_t lineno, char *classname, llist_t *extends, llist_t *members ) : Node(H_NT_CLASS,lineno) {
 	value.m_identifier = classname;
 	if( extends != NULL ){
-        ll_foreach( &extends->llist, node ){
-			m_extends.tail( (Node *)node->data );
+        ll_foreach( extends, node ){
+			ll_append( &m_extends, (Node *)node->data );
 		}
-        delete extends;
+        ll_destroy(extends);
 	}
 	if( members != NULL ){
-        ll_foreach( &members->llist, node ){
+        ll_foreach( members, node ){
 			addChild( (Node *)node->data );
 		}
-		delete members;
+        ll_destroy(members);
 	}
 }
 
