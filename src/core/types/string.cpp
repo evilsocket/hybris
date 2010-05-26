@@ -463,7 +463,7 @@ Object *string_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, 
 	 * Evaluate each object and insert it into the stack
 	 */
 	ll_foreach_to( &argv->m_children, iitem, i, argc ){
-		value = vm_exec( vm, frame, (Node *)iitem->data );
+		value = vm_exec( vm, frame, ll_node( iitem ) );
 
 		if( frame->state.is(Exception) || frame->state.is(Return) ){
 			vm_pop_frame( vm );

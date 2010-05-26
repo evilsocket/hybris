@@ -29,6 +29,11 @@ using std::vector;
 using std::list;
 using std::string;
 
+/*
+ * Cast a linked list item to a Node pointer
+ */
+#define ll_node(ll_node_item) ll_data( Node *, ll_node_item )
+
 enum H_NODE_TYPE {
     H_NT_NONE        = 0,
     H_NT_CONSTANT    = 1,

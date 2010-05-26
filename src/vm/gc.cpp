@@ -46,7 +46,7 @@ INLINE void gc_unlock(){
  * Free 'item' and remove it from 'list'.
  */
 void gc_free( llist_t *list, ll_item_t *item ){
-	Object *obj = (Object *)item->data;
+	Object *obj = ll_data( Object *, item );
 
     __gc.usage -= obj->gc_size;
     /*
@@ -186,7 +186,7 @@ void gc_sweep_generation( llist_t *generation ){
 		 * at the end of the loop to switch the pointers.
 		 */
 		ll_next = ll_item->next;
-		o 		= (Object *)ll_item->data;
+		o 		= ll_data( Object *, ll_item );
 
 		/*
 		 * Constant object, move it from the heap structure to the
@@ -261,7 +261,7 @@ void gc_collect( vm_t *vm ){
 		 * Loop each active main memory frame and mark alive objects.
 		 */
 		for( item = scope->head; item; item = item->next ){
-			frame = (vframe_t *)item->data;
+			frame = ll_data( vframe_t *, item );
 			size  = frame->size();
 			/*
 			 * Loop each object defined into this frame.

@@ -314,14 +314,14 @@ identList : T_IDENT ',' identList {
 attrList  : accessSpecifier identList T_EOSTMT attrList {
 			  $$ = REDUCE_NODE($4);
 			  ll_foreach( $2, node ){
-				  ll_prepend( $$, MK_ATTR_NODE( @1.first_line, $1, (Node *)node->data ) );
+				  ll_prepend( $$, MK_ATTR_NODE( @1.first_line, $1, ll_node(node) ) );
 			  }
 			  ll_destroy($2);
 		  }
 		  | accessSpecifier identList T_EOSTMT {
 			  $$ = ll_create();
 			  ll_foreach( $2, node ){
-				  ll_prepend( $$, MK_ATTR_NODE( @1.first_line, $1, (Node *)node->data ) );
+				  ll_prepend( $$, MK_ATTR_NODE( @1.first_line, $1, ll_node(node) ) );
 			  }
 			  ll_destroy($2);
 		  }

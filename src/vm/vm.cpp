@@ -210,9 +210,9 @@ void vm_release( vm_t *vm ){
 	vm_module_t   *module;
 
 	for( m_item = vm->modules.head; m_item; m_item = m_item->next ){
-		module = (vm_module_t *)m_item->data;
+		module = ll_data( vm_module_t *, m_item );
 		for( f_item = module->functions.head; f_item; f_item = f_item->next ){
-			delete (vm_function_t *)f_item->data;
+			delete ll_data( vm_function_t *, f_item );
 		}
 		ll_clear( &module->functions );
 	}
@@ -260,7 +260,7 @@ void vm_load_module( vm_t *vm, string path, string name ){
 
     /* check that the module isn't already loaded */
     for( item = vm->modules.head; item; item = item->next ){
-    	module = (vm_module_t *)item->data;
+    	module = ll_data( vm_module_t *, item );
         if( module->name == name ){
             return;
         }
@@ -419,7 +419,7 @@ void vm_print_stack_trace( vm_t *vm, bool force /*= false*/ ){
 		fprintf( stderr, "\nCall Stack [memory usage %d bytes] :\n\n", gc_mm_usage() );
 
 		for( item = vm->frames.head, j = 1; item && j < stop; item = item->next, ++j ){
-			frame = (vframe_t *)item->data;
+			frame = ll_data( vframe_t *, item );
 			args  = frame->size();
 			last  = args - 1;
 			pad   = j;
@@ -554,7 +554,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	 * Evaluate each object and insert it into the stack
 	 */
 	for( i = 0, iitem = prototype->m_children.head, aitem = argv->m_children.head; i < argc; ++i, aitem = aitem->next ){
-		value = vm_exec( vm, root, (Node *)aitem->data );
+		value = vm_exec( vm, root, ll_node( aitem ) );
 
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
@@ -564,7 +564,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 			stack.push( value );
 		}
 		else{
-			stack.insert( (char *)((Node *)iitem->data)->value.m_identifier.c_str(), value );
+			stack.insert( (char *)ll_node( iitem )->value.m_identifier.c_str(), value );
 			iitem = iitem->next;
 		}
 	}
@@ -595,7 +595,8 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, Object *c
 			stack.push( value );
 		}
 		else{
-			stack.insert( (char *)((Node *)iitem->data)->value.m_identifier.c_str(), value );
+			stack.insert( (char *)ll_node( iitem )->value.m_identifier.c_str(), value );
+
 			iitem = iitem->next;
 		}
 	}
@@ -658,7 +659,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 
 	argc = argv->children();
 	ll_foreach_to( &argv->m_children, iitem, i, argc ){
-		value = vm_exec( vm, root, (Node *)iitem->data );
+		value = vm_exec( vm, root, ll_node( iitem ) );
 
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
@@ -696,7 +697,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	stack.push( (Object *)fn_pointer );
 	argc = argv->children();
 	ll_foreach_to( &argv->m_children, iitem, i, argc ){
-		value = vm_exec( vm, root, (Node *)iitem->data );
+		value = vm_exec( vm, root, ll_node( iitem ) );
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
 			return;
@@ -726,7 +727,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	vm_add_frame( vm, &stack );
 	argc = argv->children();
 	ll_foreach_to( &argv->m_children, iitem, i, argc ){
-		value = vm_exec( vm, root, (Node *)iitem->data );
+		value = vm_exec( vm, root, ll_node( iitem ) );
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
 			return;
@@ -785,7 +786,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vm_function_t *function,
 	 * object and check the type.
 	 */
 	ll_foreach_to( &argv->m_children, iitem, i, argc ){
-		value = vm_exec( vm, root, (Node *)iitem->data );
+		value = vm_exec( vm, root, ll_node( iitem ) );
 
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
@@ -1295,7 +1296,7 @@ INLINE Object *vm_exec_structure_declaration( vm_t *vm, vframe_t *frame, Node * 
 	/* structure prototypes are not garbage collected */
     Object *s = (Object *)(new Structure());
     ll_foreach( &node->m_children, llitem ){
-    	ob_add_attribute( s, (char *)((Node *)llitem->data)->value.m_identifier.c_str() );
+    	ob_add_attribute( s, (char *)ll_node( llitem )->value.m_identifier.c_str() );
     }
 
     /*
@@ -1327,7 +1328,7 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 	((Class *)c)->name = classname;
 
 	ll_foreach( &node->m_children, llitem ){
-		declchild = (Node *)llitem->data;
+		declchild = ll_node( llitem );
 		/*
 		 * Define an attribute
 		 */
@@ -1383,7 +1384,7 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 
 	if( ll_size(&cnode->m_extends) > 0 ){
 		ll_foreach( &cnode->m_extends, llnode ){
-			baseclass = (Node *)llnode->data;
+			baseclass = ll_node( llnode );
 			baseproto = vm_get_type( vm, (char *)baseclass->value.m_identifier.c_str() );
 			if( baseproto == H_UNDEFINED ){
 				hyb_error( H_ET_SYNTAX, "'%s' undeclared class type", baseclass->value.m_identifier.c_str() );
@@ -1469,7 +1470,7 @@ Object *vm_exec_threaded_call( vm_t *vm, string function_name, vframe_t *frame, 
 	}
 
 	ll_foreach( &function->m_children, llitem ){
-		body = (Node *)llitem->data;
+		body = ll_node( llitem );
     	if( body->type() == H_NT_IDENTIFIER ){
     		identifiers.push_back( body->value.m_identifier );
     	}
@@ -1524,7 +1525,7 @@ Object *vm_exec_threaded_call( vm_t *vm, Node *function, vframe_t *frame, vmem_t
 	vector<string> identifiers;
 
 	ll_foreach( &function->m_children, llitem ){
-		body = (Node *)llitem->data;
+		body = ll_node( llitem );
     	if( body->type() == H_NT_IDENTIFIER ){
     		identifiers.push_back( body->value.m_identifier );
     	}
@@ -1579,7 +1580,7 @@ INLINE Object *vm_exec_user_function_call( vm_t *vm, vframe_t *frame, Node *call
     Node	  *idnode;
 
     ll_foreach_to( &function->m_children, iitem, i, argc ){
-    	idnode = (Node *)iitem->data;
+    	idnode = ll_node( iitem );
     	identifiers.push_back( idnode->value.m_identifier );
     }
 
@@ -1653,7 +1654,7 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
 		}
 
 		ll_foreach_to( &type->m_children, llitem, i, children ){
-			object = vm_exec( vm, frame, (Node *)llitem->data );
+			object = vm_exec( vm, frame, ll_node( llitem ) );
 			ob_set_attribute( newtype, (char *)stype->s_attributes.label(i), object );
 		}
 	}
@@ -2188,8 +2189,8 @@ INLINE Object *vm_exec_switch( vm_t *vm, vframe_t *frame, Node *node){
     for( case_item = node->m_children.head; case_item; case_item = case_item->next ){
     	stmt_item = case_item->next;
 
-        stmt_node = (Node *)stmt_item->data;
-        case_node = (Node *)case_item->data;
+        stmt_node = ll_node( stmt_item );
+        case_node = ll_node( case_item );
 
         if( case_node != H_UNDEFINED && stmt_node != H_UNDEFINED ){
             compare = vm_exec( vm, frame, case_node );
@@ -2233,7 +2234,7 @@ INLINE Object *vm_exec_explode( vm_t *vm, vframe_t *frame, Node *node ){
 	 * Initialize all the identifiers with a <false>.
 	 */
 	for( i = 0, llitem = node->m_children.head; i < n_ids; ++i, llitem = llitem->next ){
-		frame->add( (char *)((Node *)llitem->next->data)->value.m_identifier.c_str(),
+		frame->add( (char *)ll_node(llitem)->value.m_identifier.c_str(),
 					(Object *)gc_new_boolean(false) );
 	}
 
@@ -2243,7 +2244,7 @@ INLINE Object *vm_exec_explode( vm_t *vm, vframe_t *frame, Node *node ){
 	 */
 	Integer index(0);
 	for( llitem = node->m_children.head; (unsigned)index.value < n_end; ++index.value, llitem = llitem->next ){
-		frame->add( (char *)((Node *)llitem->next->data)->value.m_identifier.c_str(),
+		frame->add( (char *)ll_node(llitem)->value.m_identifier.c_str(),
 					 ob_cl_at( value, (Object *)&index ) );
 	}
 
@@ -2310,29 +2311,29 @@ INLINE Object *vm_exec_array( vm_t *vm, vframe_t *frame, Node *node ){
 	Object *v = (Object *)gc_new_vector();
 
 	ll_foreach( &node->m_children, llitem ){
-		ob_cl_push_reference( v, vm_exec( vm, frame, (Node *)llitem->data ) );
+		ob_cl_push_reference( v, vm_exec( vm, frame, ll_node( llitem ) ) );
 	}
 
 	return v;
 }
 
 INLINE Object *vm_exec_map( vm_t *vm, vframe_t *frame, Node *node ){
-	ll_item_t *key_item,
-			  *val_item;
+	ll_item_t *key,
+			  *val;
 	Object 	  *m = (Object *)gc_new_map();
 
 
-	for( key_item = node->m_children.head; key_item; key_item = key_item->next ){
-		val_item = key_item->next;
+	for( key = node->m_children.head; key; key= key->next ){
+		val = key->next;
 
 		ob_cl_set_reference( m,
-							 vm_exec( vm, frame, (Node *)key_item->data ),
-							 vm_exec( vm, frame, (Node *)val_item->data ) );
+							 vm_exec( vm, frame, ll_node(key) ),
+							 vm_exec( vm, frame, ll_node(val) ) );
 
 		/*
-		 * key_item += 2
+		 * key += 2
 		 */
-		key_item = key_item->next;
+		key = key->next;
 	}
 
 	return m;

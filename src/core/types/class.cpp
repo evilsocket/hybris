@@ -49,7 +49,7 @@ Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *me
 	stack.insert( "me", c );
 	stack.add( "name", (Object *)gc_new_string(method_name) );
 	ll_foreach_to( &argv->m_children, iitem, i, argc ){
-		value = vm_exec( vm, frame, (Node *)iitem->data );
+		value = vm_exec( vm, frame, ll_node( iitem ) );
 
 		if( frame->state.is(Exception) || frame->state.is(Return) ){
 			vm_pop_frame( vm );
@@ -124,7 +124,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	va_start( ap, argc );
 	for( i = 0, iitem = op->m_children.head; i < argc; ++i, iitem = iitem->next ){
 		value = va_arg( ap, Object * );
-		stack.insert( (char *)((Node*)iitem->data)->value.m_identifier.c_str(), value );
+		stack.insert( (char *)ll_node( iitem )->value.m_identifier.c_str(), value );
 	}
 	va_end(ap);
 
@@ -201,7 +201,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	va_start( ap, argc );
 	for( i = 0, iitem = ds->m_children.head; i < argc; ++i, iitem = iitem->next ){
 		value = va_arg( ap, Object * );
-		stack.insert( (char *)((Node *)iitem->data)->value.m_identifier.c_str(), value );
+		stack.insert( (char *)ll_node( iitem )->value.m_identifier.c_str(), value );
 	}
 	va_end(ap);
 
@@ -776,7 +776,7 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 	 * Evaluate each object and insert it into the stack
 	 */
 	for( i = 0, aitem = argv->m_children.head, iitem = method->m_children.head; i < argc; ++i, aitem = aitem->next ){
-		value = vm_exec( vm, frame, (Node *)aitem->data );
+		value = vm_exec( vm, frame, ll_node( aitem ) );
 		/*
 		 * Check if vm_exec raised an exception.
 		 */
@@ -793,7 +793,7 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 			stack.push( value );
 		}
 		else{
-			stack.insert( (char *)((Node *)iitem->data)->value.m_identifier.c_str(), value );
+			stack.insert( (char *)ll_node(iitem)->value.m_identifier.c_str(), value );
 			iitem = iitem->next;
 		}
 	}

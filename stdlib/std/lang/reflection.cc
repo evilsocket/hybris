@@ -124,11 +124,11 @@ HYBRIS_DEFINE_FUNCTION(hdyn_functions){
 		   *vec;
 
 	for( m_item = vm->modules.head; m_item; m_item = m_item->next ){
-		module = (vm_module_t *)m_item->data;
+		module = ll_data( vm_module_t *, m_item );
 		vec    = (Object *)gc_new_vector();
 
 		for( f_item = module->functions.head; f_item; f_item = f_item->next ){
-			ob_cl_push_reference( vec, (Object *)gc_new_string( ((vm_function_t *)f_item->data)->identifier.c_str()  ) );
+			ob_cl_push_reference( vec, (Object *)gc_new_string( ll_data( vm_function_t *, f_item )->identifier.c_str()  ) );
 		}
 
 		ob_cl_set_reference( map, (Object *)gc_new_string( module->name.c_str() ), vec );

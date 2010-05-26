@@ -465,12 +465,12 @@ INLINE vm_function_t *vm_get_function( vm_t *vm, char *identifier ){
 	 * Search it in dynamic loaded modules.
 	 */
 	ll_foreach( &vm->modules, m_item ){
-		module = (vm_module_t *)m_item->data;
+		module = ll_data( vm_module_t *, m_item );
 		/*
 		 * For each function of the module.
 		 */
 		ll_foreach( &module->functions, f_item ){
-			function = (vm_function_t *)f_item->data;
+			function = ll_data( vm_function_t *, f_item );
 			/*
 			 * Found it, add to the cache and return.
 			 */

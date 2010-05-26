@@ -43,6 +43,10 @@ typedef struct {
 llist_t;
 
 /*
+ * Macro to obtain item data and cast it to its original type.
+ */
+#define ll_data( t, llitem ) ((t)((llitem)->data))
+/*
  * Macro to easily loop the list.
  * NOTE: This macro has to be used only for read only loops,
  * if during a loop the list is modified (i.e. an element is removed),
