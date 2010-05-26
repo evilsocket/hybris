@@ -144,7 +144,7 @@ HYBRIS_DEFINE_FUNCTION(hmethods){
 
 	vm_parse_argv( "C", &co);
 
-	for( i = co->c_methods.begin(); i != co->c_methods.end(); i++ ){
+	vv_foreach( i, co->c_methods ){
 		ob_cl_push_reference( vo, (Object *)gc_new_string( (*i)->label.c_str() ) );
 	}
 

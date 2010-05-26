@@ -177,7 +177,7 @@ void vm_release( vm_t *vm ){
         if( vm->th_frames.size() ){
             fprintf( stdout, "[WARNING] Hard killing remaining running threads ... " );
             vm_thread_scope_t::iterator ti;
-            for( ti = vm->th_frames.begin(); ti != vm->th_frames.end(); ti++ ){
+            vv_foreach( ti, vm->th_frames ){
             	 pthread_kill( (pthread_t)ti->first, SIGTERM );
             	 delete ti->second;
             }
@@ -526,8 +526,9 @@ void vm_parse_frame_argv( vframe_t *argv, char *format, ... ){
  * Here starts the vm execution functions definition.
  */
 INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner,  Object *cobj, int argc, Node *prototype, Node *argv ){
-	int 	i, n_ids(prototype->children());
-	Object *value;
+	int 	   i, n_ids(prototype->children());
+	ll_item_t *iitem, *aitem;
+	Object 	  *value;
 
 	/*
 	 * Check for heavy recursions and/or nested calls.
@@ -552,8 +553,9 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	/*
 	 * Evaluate each object and insert it into the stack
 	 */
-	for( i = 0; i < argc; ++i ){
-		value = vm_exec( vm, root, argv->child(i) );
+	for( i = 0, iitem = prototype->m_children.head, aitem = argv->m_children.head; i < argc; ++i, aitem = aitem->next ){
+		value = vm_exec( vm, root, (Node *)aitem->data );
+
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
 			return;
@@ -562,15 +564,17 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 			stack.push( value );
 		}
 		else{
-			stack.insert( (char *)prototype->child(i)->value.m_identifier.c_str(), value );
+			stack.insert( (char *)((Node *)iitem->data)->value.m_identifier.c_str(), value );
+			iitem = iitem->next;
 		}
 	}
 }
 
 INLINE void vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, Object *cobj, Node *ids, int argc, ... ){
-	va_list ap;
-	int i, n_ids(ids->children());
-	Object *value;
+	va_list    ap;
+	int 	   i, n_ids(ids->children());
+	ll_item_t *iitem;
+	Object 	  *value;
 
 	/*
 	 * Check for heavy recursions and/or nested calls.
@@ -585,13 +589,14 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, Object *c
 	 * Evaluate each object and insert it into the stack
 	 */
 	va_start( ap, argc );
-	for( i = 0; i < argc; ++i ){
+	for( i = 0, iitem = ids->m_children.head; i < argc; ++i ){
 		value = va_arg( ap, Object * );
 		if( i >= n_ids ){
 			stack.push( value );
 		}
 		else{
-			stack.insert( (char *)ids->child(i)->value.m_identifier.c_str(), value );
+			stack.insert( (char *)((Node *)iitem->data)->value.m_identifier.c_str(), value );
+			iitem = iitem->next;
 		}
 	}
 	va_end(ap);
@@ -600,8 +605,8 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, Object *c
 }
 
 INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, vmem_t *argv ){
-	int 	i, n_ids( ids.size() ), argc;
-	Object *value;
+	int 	   i, n_ids( ids.size() ), argc;
+	Object 	  *value;
 
 	/*
 	 * Check for heavy recursions and/or nested calls.
@@ -632,8 +637,9 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 }
 
 INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, Node *argv ){
-	int 	i, n_ids( ids.size() ), argc;
-	Object *value;
+	int 	   i, n_ids( ids.size() ), argc;
+	ll_item_t *iitem;
+	Object 	  *value;
 
 	/*
 	 * Check for heavy recursions and/or nested calls.
@@ -651,12 +657,12 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	vm_add_frame( vm, &stack );
 
 	argc = argv->children();
-	for( i = 0; i < argc; ++i ){
-		value = vm_exec( vm, root, argv->at(i) );
+	ll_foreach_to( &argv->m_children, iitem, i, argc ){
+		value = vm_exec( vm, root, (Node *)iitem->data );
 
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
-		    return;
+			return;
 		}
 
 		if( i >= n_ids ){
@@ -669,8 +675,9 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 }
 
 INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Extern *fn_pointer, Node *argv ){
-	int 	i, argc;
-	Object *value;
+	int 	  i, argc;
+	Object 	  *value;
+	ll_item_t *iitem;
 
 	/*
 	 * Check for heavy recursions and/or nested calss.
@@ -688,8 +695,8 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	vm_add_frame( vm, &stack );
 	stack.push( (Object *)fn_pointer );
 	argc = argv->children();
-	for( i = 0; i < argc; ++i ){
-		value = vm_exec( vm, root, argv->child(i) );
+	ll_foreach_to( &argv->m_children, iitem, i, argc ){
+		value = vm_exec( vm, root, (Node *)iitem->data );
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
 			return;
@@ -699,8 +706,9 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 }
 
 INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Node *argv ){
-	int 	i, argc;
-	Object *value;
+	int 	  i, argc;
+	Object 	  *value;
+	ll_item_t *iitem;
 
 	/*
 	 * Check for heavy recursions and/or nested calls.
@@ -717,8 +725,8 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	 */
 	vm_add_frame( vm, &stack );
 	argc = argv->children();
-	for( i = 0; i < argc; ++i ){
-		value = vm_exec( vm, root, argv->child(i) );
+	ll_foreach_to( &argv->m_children, iitem, i, argc ){
+		value = vm_exec( vm, root, (Node *)iitem->data );
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
 			return;
@@ -729,6 +737,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 
 INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vm_function_t *function, vframe_t &stack, string owner, Node *argv ){
 	int 	i, argc, f_argc, t;
+	ll_item_t *iitem;
 	Object *value;
 	H_OBJECT_TYPE type;
 	/*
@@ -775,8 +784,8 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vm_function_t *function,
 	 * Ok, argc is the right one (or one of the right ones), now evaluate each
 	 * object and check the type.
 	 */
-	for( i = 0; i < argc; ++i ){
-		value = vm_exec( vm, root, argv->child(i) );
+	ll_foreach_to( &argv->m_children, iitem, i, argc ){
+		value = vm_exec( vm, root, (Node *)iitem->data );
 
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
@@ -1277,8 +1286,7 @@ INLINE Object *vm_exec_function_declaration( vm_t *vm, vframe_t *frame, Node *no
 }
 
 INLINE Object *vm_exec_structure_declaration( vm_t *vm, vframe_t *frame, Node * node ){
-    int        i, attributes( node->children() );
-    char      *structname = (char *)node->value.m_identifier.c_str();
+    char *structname = (char *)node->value.m_identifier.c_str();
 
 	if( vm->vtypes.find(structname) != H_UNDEFINED ){
 		hyb_error( H_ET_SYNTAX, "Structure '%s' already defined", structname );
@@ -1286,10 +1294,10 @@ INLINE Object *vm_exec_structure_declaration( vm_t *vm, vframe_t *frame, Node * 
 
 	/* structure prototypes are not garbage collected */
     Object *s = (Object *)(new Structure());
-
-    for( i = 0; i < attributes; ++i ){
-        ob_add_attribute( s, (char *)node->child(i)->value.m_identifier.c_str() );
+    ll_foreach( &node->m_children, llitem ){
+    	ob_add_attribute( s, (char *)((Node *)llitem->data)->value.m_identifier.c_str() );
     }
+
     /*
      * ::defineType will take care of the structure attributes
 	 * to prevent it to be garbage collected (see ::onConstant).
@@ -1303,7 +1311,8 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 	int        i, members( node->children() );
 	char      *classname = (char *)node->value.m_identifier.c_str(),
 			  *attrname;
-	Node      *attribute;
+	Node      *declchild,
+			  *attribute;
 	Object    *static_attr_value;
 
 	if( vm->vtypes.find(classname) != H_UNDEFINED ){
@@ -1317,12 +1326,13 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 	 */
 	((Class *)c)->name = classname;
 
-	for( i = 0; i < members; ++i ){
+	ll_foreach( &node->m_children, llitem ){
+		declchild = (Node *)llitem->data;
 		/*
 		 * Define an attribute
 		 */
-		if( node->child(i)->type() == H_NT_IDENTIFIER ){
-			attribute = node->child(i);
+		if( declchild->type() == H_NT_IDENTIFIER ){
+			attribute = declchild;
 			/*
 			 * Initialize static attributes.
 			 */
@@ -1352,8 +1362,8 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 		/*
 		 * Define a method
 		 */
-		else if( node->child(i)->type() == H_NT_METHOD_DECL ){
-			ob_define_method( c, (char *)node->child(i)->value.m_method.c_str(), node->child(i) );
+		else if( declchild->type() == H_NT_METHOD_DECL ){
+			ob_define_method( c, (char *)declchild->value.m_method.c_str(), declchild );
 		}
 		/*
 		 * WTF this should not happen!
@@ -1387,7 +1397,7 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 			ClassMethodIterator 	mi;
 			ClassPrototypesIterator pi;
 
-			for( ai = cobj->c_attributes.begin(); ai != cobj->c_attributes.end(); ai++ ){
+			vv_foreach( ai, cobj->c_attributes ){
 				attrname  = (char *)(*ai)->label.c_str();
 
 				ob_define_attribute( c, attrname, (*ai)->value->access, (*ai)->value->is_static );
@@ -1400,8 +1410,8 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 				}
 			}
 
-			for( mi = cobj->c_methods.begin(); mi != cobj->c_methods.end(); mi++ ){
-				for( pi = (*mi)->value->prototypes.begin(); pi != (*mi)->value->prototypes.end(); pi++ ){
+			vv_foreach( mi, cobj->c_methods ){
+				vv_foreach( pi, (*mi)->value->prototypes ){
 					ob_define_method( c, (char *)(*mi)->label.c_str(), *pi );
 				}
 			}
@@ -1568,11 +1578,14 @@ INLINE Object *vm_exec_user_function_call( vm_t *vm, vframe_t *frame, Node *call
         return H_UNDEFINED;
     }
 
-    size_t i(0),
-    	   argc( function->value.m_argc );
+    size_t 	   i(0),
+			   argc( function->value.m_argc );
+    ll_item_t *iitem;
+    Node	  *idnode;
 
-    for( i = 0; i < argc; ++i ){
-    	identifiers.push_back( function->child(i)->value.m_identifier );
+    ll_foreach_to( &function->m_children, iitem, i, argc ){
+    	idnode = (Node *)iitem->data;
+    	identifiers.push_back( idnode->value.m_identifier );
     }
 
     if( function->value.m_vargs ){
@@ -1614,6 +1627,7 @@ INLINE Object *vm_exec_user_function_call( vm_t *vm, vframe_t *frame, Node *call
 
 INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
     char      *type_name = (char *)type->value.m_identifier.c_str();
+    ll_item_t *llitem;
     Object    *user_type = H_UNDEFINED,
               *newtype   = H_UNDEFINED,
               *object    = H_UNDEFINED;
@@ -1643,8 +1657,8 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
 								 children );
 		}
 
-		for( i = 0; i < children; ++i ){
-			object = vm_exec( vm, frame, type->child(i) );
+		ll_foreach_to( &type->m_children, llitem, i, children ){
+			object = vm_exec( vm, frame, (Node *)llitem->data );
 			ob_set_attribute( newtype, (char *)stype->s_attributes.label(i), object );
 		}
 	}

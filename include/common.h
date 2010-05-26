@@ -35,6 +35,10 @@
 #define MAX_IDENT_SIZE  100
 
 #define HMAXARGS 200
+/*
+ * Macro to easily loop std::* collections.
+ */
+#define vv_foreach( iterator, vv ) for( iterator = (vv).begin(); iterator != (vv).end(); iterator++ )
 
 /*
  * Function declaration descriptor.
@@ -85,7 +89,7 @@ enum H_ERROR_TYPE {
 /*
  * Main flex error routine.
  */
-void yyerror( char *error );
+void  yyerror( char *error );
 /*
  * Throw an error with a given type and a give message,
  * if type == H_ET_WARNING the process will continue, otherwise

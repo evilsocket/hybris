@@ -28,7 +28,7 @@ Object *binary_clone( Object *me ){
     Binary *bclone = gc_new_binary(),
                  *bme    = (Binary *)me;
 
-    for( i = bme->value.begin(); i != bme->value.end(); i++ ){
+    vv_foreach( i, bme->value ){
         ob_cl_push_reference( (Object *)bclone, ob_clone( *i ) );
     }
 
@@ -131,7 +131,7 @@ void binary_print( Object *me, int tabs ){
         fprintf( stdout, "\t" );
     }
     fprintf( stdout, "binary {\n" );
-    for( i = bme->value.begin(); i != bme->value.end(); i++ ){
+    vv_foreach( i, bme->value ){
         item = *i;
         fprintf( stdout, "%.2X", ((Char *)item)->value );
     }

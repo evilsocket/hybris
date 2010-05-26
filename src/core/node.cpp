@@ -46,27 +46,19 @@ NodeValue::~NodeValue(){
 
 }
 
-Node::Node() : m_type(H_NT_NONE), m_lineno(0) {
-
+Node::Node() : m_type(H_NT_NONE), m_lineno(0), m_body(NULL) {
+	ll_init( &m_children );
 }
 
-Node::Node( H_NODE_TYPE type, size_t lineno ) : m_type(type), m_lineno(lineno)
-{
-
+Node::Node( H_NODE_TYPE type, size_t lineno ) : m_type(type), m_lineno(lineno), m_body(NULL) {
+	ll_init( &m_children );
 }
 
 Node::~Node(){
-    int i, sz( size() );
-
-    for( i = 0; i < sz; ++i ){
-        Node * child = at(i);
-        delete child;
-    }
-    clear();
-}
-
-void Node::addChild( Node *child ){
-	push_back(child);
+	ll_foreach( &m_children, child ){
+		delete (Node *)child->data;
+	}
+	ll_free( &m_children );
 }
 
 Node *Node::clone(){
@@ -135,9 +127,8 @@ ExpressionNode::ExpressionNode( size_t lineno, int expression, NodeList *list ) 
     value.m_expression = expression;
 
     if( list != NULL ){
-		reserve( ll_size(&list->llist) );
 		ll_foreach( &list->llist, node ){
-			push_back( (Node *)node->data );
+			addChild( (Node *)node->data );
 		}
 		delete list;
 	}
@@ -148,23 +139,20 @@ ExpressionNode::ExpressionNode( size_t lineno, int expression, int argc, ... ) :
     va_list ap;
 	int i;
 
-	reserve(argc);
-
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
-		push_back( va_arg( ap, Node * ) );
+		addChild( va_arg( ap, Node * ) );
 	}
 	va_end(ap);
 }
 
 Node *ExpressionNode::clone(){
 	Node *clone = new ExpressionNode( m_lineno, value.m_expression, 0 );
-	int  i, sz(size());
-    for( i = 0; i < sz; ++i ){
-    	if( child(i) ){
-    		clone->push_back( child(i)->clone() );
-    	}
-    }
+
+	ll_foreach( &m_children, nclone ){
+		clone->addChild( ((Node *)nclone->data)->clone() );
+	}
+
     return clone;
 }
 
@@ -178,11 +166,9 @@ StatementNode::StatementNode( size_t lineno, int statement, int argc, ... ) : No
     va_list ap;
 	int i;
 
-    reserve(argc);
-
 	va_start( ap, argc );
 	for( i = 0; i < argc; ++i ){
-		push_back( va_arg( ap, Node * ) );
+		addChild( va_arg( ap, Node * ) );
 	}
 	va_end(ap);
 }
@@ -190,12 +176,10 @@ StatementNode::StatementNode( size_t lineno, int statement, int argc, ... ) : No
 StatementNode::StatementNode( size_t lineno, int statement, NodeList *identList, Node *expr ) : Node(H_NT_STATEMENT,lineno) {
     value.m_statement = statement;
 
-    reserve( ll_size(&identList->llist) + 1 );
-
-	push_back(expr);
+	addChild(expr);
 
 	ll_foreach( &identList->llist, node ){
-		push_back( (Node *)node->data );
+		addChild( (Node *)node->data );
 	}
 
 	delete identList;
@@ -206,9 +190,8 @@ StatementNode::StatementNode( size_t lineno, int statement, Node *sw, NodeList *
     value.m_switch    = sw;
 
     if( caselist != NULL ){
-        reserve( ll_size(&caselist->llist) );
         ll_foreach( &caselist->llist, node ){
-			push_back( (Node *)node->data );
+			addChild( (Node *)node->data );
 		}
 		delete caselist;
 	}
@@ -220,9 +203,8 @@ StatementNode::StatementNode( size_t lineno, int statement, Node *sw, NodeList *
     value.m_default   = deflt;
 
     if( caselist != NULL ){
-        reserve( ll_size(&caselist->llist) );
         ll_foreach( &caselist->llist, node ){
-			push_back( (Node *)node->data );
+			addChild( (Node *)node->data );
 		}
 		delete caselist;
 	}
@@ -230,14 +212,12 @@ StatementNode::StatementNode( size_t lineno, int statement, Node *sw, NodeList *
 
 Node *StatementNode::clone(){
 	Node *clone = new StatementNode( m_lineno, value.m_statement, 0 );
-	int   i, sz(size());
 
 	clone->value.m_switch  = ( value.m_switch  ? value.m_switch->clone() : NULL );
 	clone->value.m_default = ( value.m_default ? value.m_default->clone() : NULL );
-	for( i = 0; i < sz; ++i ){
-		if( child(i) ){
-			clone->push_back( child(i)->clone() );
-		}
+
+	ll_foreach( &m_children, nclone ){
+		clone->addChild( ((Node *)nclone->data)->clone() );
 	}
 
     return clone;
@@ -266,7 +246,7 @@ IdentifierNode::IdentifierNode( size_t lineno, access_t access, bool is_static, 
     value.m_static	   = is_static;
 	value.m_identifier = identifier;
 
-	push_back(v);
+	addChild(v);
 }
 
 Node *IdentifierNode::clone(){
@@ -304,11 +284,9 @@ FunctionNode::FunctionNode( size_t lineno, function_decl_t *declaration ) : Node
     value.m_vargs 	 = declaration->vargs;
     value.m_argc	 = declaration->argc;
 
-    reserve(value.m_argc);
-
 	/* add function prototype args children */
 	for( int i = 0; i < value.m_argc; ++i ){
-		push_back( new IdentifierNode( m_lineno, declaration->argv[i] ) );
+		addChild( new IdentifierNode( m_lineno, declaration->argv[i] ) );
 	}
 }
 
@@ -320,16 +298,15 @@ FunctionNode::FunctionNode( size_t lineno, function_decl_t *declaration, int arg
     va_list ap;
 	int i;
 
-    reserve( value.m_argc + argc );
-
 	/* add function prototype args children */
 	for( i = 0; i < value.m_argc; ++i ){
-		push_back( new IdentifierNode( m_lineno, declaration->argv[i] ) );
+		addChild( new IdentifierNode( m_lineno, declaration->argv[i] ) );
 	}
 	/* add function body statements node */
 	va_start( ap, argc );
-	for( i = 0; i < argc; ++i ){
-		push_back( va_arg( ap, Node * ) );
+	addChild( m_body = va_arg( ap, Node * ) );
+	for( i = 1; i < argc; ++i ){
+		addChild( va_arg( ap, Node * ) );
 	}
 	va_end(ap);
 }
@@ -340,14 +317,17 @@ FunctionNode::FunctionNode( size_t lineno, const char *name ) : Node(H_NT_FUNCTI
 
 Node *FunctionNode::clone(){
 	Node *clone = new FunctionNode( m_lineno, value.m_function.c_str() );
-	int   i, sz(size());
 
 	clone->value.m_argc  = value.m_argc;
 	clone->value.m_vargs = value.m_vargs;
-	for( i = 0; i < sz; ++i ){
-		if( child(i) ){
-			clone->push_back( child(i)->clone() );
+
+	ll_foreach( &m_children, child ){
+		Node *nclone = ((Node *)child->data)->clone();
+
+		if( ((Node *)child->data) == m_body ){
+			clone->m_body = nclone;
 		}
+		clone->addChild( nclone );
 	}
 
 	return clone;
@@ -357,9 +337,8 @@ Node *FunctionNode::clone(){
 CallNode::CallNode( size_t lineno, char *name, NodeList *argv ) : Node(H_NT_CALL,lineno) {
     value.m_call = name;
     if( argv != NULL ){
-        reserve( ll_size(&argv->llist) );
         ll_foreach( &argv->llist, node ){
-			push_back( (Node *)node->data );
+			addChild( (Node *)node->data );
 		}
 		delete argv;
 	}
@@ -368,9 +347,8 @@ CallNode::CallNode( size_t lineno, char *name, NodeList *argv ) : Node(H_NT_CALL
 CallNode::CallNode( size_t lineno, Node *alias, NodeList *argv ) :  Node(H_NT_CALL,lineno) {
     value.m_alias_call = alias;
     if( argv != NULL ){
-        reserve( ll_size(&argv->llist) );
         ll_foreach( &argv->llist, node ){
-			push_back( (Node *)node->data );
+			addChild( (Node *)node->data );
 		}
 		delete argv;
 	}
@@ -378,7 +356,6 @@ CallNode::CallNode( size_t lineno, Node *alias, NodeList *argv ) :  Node(H_NT_CA
 
 Node *CallNode::clone(){
 	Node *clone = H_UNDEFINED;
-	int   i, sz(size());
 
     if( value.m_alias_call == NULL ){
         clone = new CallNode( m_lineno, (char *)value.m_call.c_str(), NULL );
@@ -386,11 +363,9 @@ Node *CallNode::clone(){
     else{
         clone = new CallNode( m_lineno, value.m_alias_call, NULL );
     }
-    for( i = 0; i < sz; ++i ){
-    	if( child(i) ){
-    		clone->push_back( child(i)->clone() );
-    	}
-    }
+	ll_foreach( &m_children, nclone ){
+		clone->addChild( ((Node *)nclone->data)->clone() );
+	}
 
     return clone;
 }
@@ -417,9 +392,8 @@ Node *TryCatchNode::clone(){
 NewNode::NewNode( size_t lineno, char *type, NodeList *argv ) : Node(H_NT_NEW,lineno){
 	value.m_identifier = type;
 	if( argv != NULL ){
-        reserve( ll_size(&argv->llist) );
         ll_foreach( &argv->llist, node ){
-			push_back( (Node *)node->data );
+			addChild( (Node *)node->data );
 		}
 		delete argv;
 	}
@@ -427,12 +401,9 @@ NewNode::NewNode( size_t lineno, char *type, NodeList *argv ) : Node(H_NT_NEW,li
 
 Node *NewNode::clone(){
 	Node *clone = new NewNode( m_lineno, (char *)value.m_identifier.c_str(), NULL );
-	int   i, sz(size());
 
-	for( i = 0; i < sz; ++i ){
-		if( child(i) ){
-			clone->push_back( child(i)->clone() );
-		}
+	ll_foreach( &m_children, nclone ){
+		clone->addChild( ((Node *)nclone->data)->clone() );
 	}
 
 	return clone;
@@ -442,9 +413,8 @@ Node *NewNode::clone(){
 StructureNode::StructureNode( size_t lineno, char *s_name, NodeList *attributes ) : Node(H_NT_STRUCT,lineno) {
     value.m_identifier = s_name;
     if( attributes != NULL ){
-        reserve( ll_size(&attributes->llist) );
         ll_foreach( &attributes->llist, node ){
-			push_back( (Node *)node->data );
+			addChild( (Node *)node->data );
 		}
 		delete attributes;
 	}
@@ -460,15 +430,16 @@ MethodDeclarationNode::MethodDeclarationNode( size_t lineno, access_t access, me
     va_list ap;
 	int i;
 
-    reserve( value.m_argc + argc );
 	/* add method prototype args children */
 	for( i = 0; i < value.m_argc; ++i ){
-		push_back( new IdentifierNode( m_lineno, declaration->argv[i] ) );
+		addChild( new IdentifierNode( m_lineno, declaration->argv[i] ) );
 	}
 	/* add method body statements node */
 	va_start( ap, argc );
-	for( i = 0; i < argc; ++i ){
-		push_back( va_arg( ap, Node * ) );
+	m_body = va_arg( ap, Node * );
+	addChild(m_body);
+	for( i = 1; i < argc; ++i ){
+		addChild( va_arg( ap, Node * ) );
 	}
 	va_end(ap);
 }
@@ -483,15 +454,15 @@ MethodDeclarationNode::MethodDeclarationNode( size_t lineno, access_t access, me
     va_list ap;
 	int i;
 
-    reserve( value.m_argc + argc );
 	/* add method prototype args children */
 	for( i = 0; i < value.m_argc; ++i ){
-		push_back( new IdentifierNode( m_lineno, declaration->argv[i] ) );
+		addChild( new IdentifierNode( m_lineno, declaration->argv[i] ) );
 	}
 	/* add method body statements node */
 	va_start( ap, argc );
-	for( i = 0; i < argc; ++i ){
-		push_back( va_arg( ap, Node * ) );
+	addChild( m_body = va_arg( ap, Node * ) );
+	for( i = 1; i < argc; ++i ){
+		addChild( va_arg( ap, Node * ) );
 	}
 	va_end(ap);
 }
@@ -503,16 +474,20 @@ MethodDeclarationNode::MethodDeclarationNode( size_t lineno, const char *name, a
 
 Node *MethodDeclarationNode::clone(){
 	Node *clone = new MethodDeclarationNode( m_lineno, value.m_method.c_str(), value.m_access );
-	int   i, sz(size());
 
 	clone->value.m_static = value.m_static;
 	clone->value.m_vargs  = value.m_vargs;
 	clone->value.m_argc	  = value.m_argc;
-	for( i = 0; i < sz; ++i ){
-		if( child(i) ){
-			clone->push_back( child(i)->clone() );
+
+	ll_foreach( &m_children, child ){
+		Node *nclone = ((Node *)child->data)->clone();
+
+		if( ((Node *)child->data) == m_body ){
+			clone->m_body = nclone;
 		}
+		clone->addChild( nclone );
 	}
+
 	return clone;
 }
 
@@ -526,9 +501,8 @@ ClassNode::ClassNode( size_t lineno, char *classname, NodeList *extends, NodeLis
         delete extends;
 	}
 	if( members != NULL ){
-        reserve( ll_size(&members->llist) );
         ll_foreach( &members->llist, node ){
-			push_back( (Node *)node->data );
+			addChild( (Node *)node->data );
 		}
 		delete members;
 	}

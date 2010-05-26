@@ -49,6 +49,13 @@ llist_t;
  * you have to MANUALLY fix the pointers.
  */
 #define ll_foreach( ll, item ) for( ll_item_t *item = (ll)->head; item; item = item->next )
+/*
+ * Macro to easily loop the list until a certain item.
+ * NOTE: This macro has to be used only for read only loops,
+ * if during a loop the list is modified (i.e. an element is removed),
+ * you have to MANUALLY fix the pointers.
+ */
+#define ll_foreach_to( ll, item, i, to ) for( i = 0, item = (ll)->head; i < to; ++i, item = item->next )
 
 /*
  * Initialize a linked list.

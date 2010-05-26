@@ -310,7 +310,7 @@ Object *map_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, cha
 	if( (method = ob_get_builtin_method( me, method_id )) == NULL ){
 		hyb_error( H_ET_SYNTAX, "Map type does not have a '%s' method", method_id );
 	}
-
+	ll_item_t *iitem;
 	Object  *value,
 			*result;
 	vframe_t stack;
@@ -325,8 +325,8 @@ Object *map_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, cha
 	/*
 	 * Evaluate each object and insert it into the stack
 	 */
-	for( i = 0; i < argc; ++i ){
-		value = vm_exec( vm, frame, argv->child(i) );
+	ll_foreach_to( &argv->m_children, iitem, i, argc ){
+		value = vm_exec( vm, frame, (Node *)iitem->data );
 
 		if( frame->state.is(Exception) || frame->state.is(Return) ){
 			vm_pop_frame( vm );

@@ -28,7 +28,7 @@ Object *struct_clone( Object *me ){
                     *sme    = ob_struct_ucast(me);
     StructureAttributeIterator ai;
 
-    for( ai = sme->s_attributes.begin(); ai != sme->s_attributes.end(); ai++ ){
+    vv_foreach( ai, sme->s_attributes ){
     	ob_set_attribute( (Object *)sclone, (char *)(*ai)->label.c_str(), (*ai)->value );
     }
 
@@ -70,7 +70,7 @@ void struct_print( Object *me, int tabs ){
     int i;
 
     fprintf( stdout, "struct {\n" );
-    for( ai = sme->s_attributes.begin(); ai != sme->s_attributes.end(); ai++ ){
+    vv_foreach( ai, sme->s_attributes ){
     	for( i = 0; i <= tabs; ++i ) fprintf( stdout, "\t" );
     	printf( "%s : ", (*ai)->label.c_str() );
 		ob_print( (*ai)->value, tabs + 1 );

@@ -301,7 +301,7 @@ accessSpecifier : T_PUBLIC    { $$ = asPublic;    }
 		        | /* empty */ { $$ = asPublic;    };
 
 identList : T_IDENT ',' identList { $$ = REDUCE_NODE($3); $$->head( MK_IDENT_NODE(@1.first_line,$1) ); free($1); }
-		  | T_IDENT ',' T_IDENT   { $$ = MK_NODE_LIST();  $$->tail( MK_IDENT_NODE(@1.first_line,$1), MK_IDENT_NODE(@3.first_line,$3) ); free($1); free($3); }
+		  | T_IDENT ',' T_IDENT   { $$ = MK_NODE_LIST();  $$->tail( MK_IDENT_NODE(@3.first_line,$3), MK_IDENT_NODE(@1.first_line,$1) ); }
 		  | T_IDENT 			  { $$ = MK_NODE_LIST();  $$->head( MK_IDENT_NODE(@1.first_line,$1) ); free($1); }
 
 attrList  : accessSpecifier identList T_EOSTMT attrList {

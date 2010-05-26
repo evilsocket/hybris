@@ -119,14 +119,18 @@ class NodeValue {
 };
 
 /* node base class */
-class Node : public vector<Node *> {
+class Node {
 
 protected :
 
     H_NODE_TYPE  m_type;
     size_t		 m_lineno;
-
 public  :
+    /*
+     * Used when the node is a function or method prototype.
+     */
+    Node		*m_body;
+    llist_t		 m_children;
 
     Node();
     Node( H_NODE_TYPE type, size_t lineno );
@@ -142,12 +146,31 @@ public  :
 		return m_lineno;
 	}
 
-    INLINE unsigned int children(){
-        return size();
+    INLINE size_t children(){
+        return m_children.items;
     }
 
-    INLINE Node *child( unsigned int i ){
-        return (*this)[i];
+    INLINE void addChild( Node *child ){
+    	ll_append( &m_children, child );
+    }
+
+    INLINE Node *child( size_t i ){
+        switch(i){
+			case 0 : return (Node *)m_children.head->data;
+			case 1 : return (Node *)m_children.head->next->data;
+			case 2 : return (Node *)m_children.head->next->next->data;
+			case 3 : return (Node *)m_children.head->next->next->next->data;
+
+			default :
+				/*
+				 * THIS SHOULD NEVER HAPPEN!
+				 */
+				assert( false );
+        }
+    }
+
+    INLINE Node *at( size_t i ){
+    	return child(i);
     }
 
     INLINE char *id(){
@@ -155,10 +178,8 @@ public  :
     }
 
     INLINE Node *body(){
-    	return value.m_argc >= size() ? NULL : at( value.m_argc );
+    	return m_body;
     }
-
-    void addChild( Node *child );
 
     virtual Node *clone();
 };

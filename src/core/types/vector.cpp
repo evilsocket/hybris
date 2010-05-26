@@ -98,7 +98,7 @@ Object *vector_clone( Object *me ){
     Vector *vclone = gc_new_vector(),
            *vme    = ob_vector_ucast(me);
 
-    for( i = vme->value.begin(); i != vme->value.end(); i++ ){
+    vv_foreach( i, vme->value ){
         ob_cl_push_reference( (Object *)vclone, ob_clone( *i ) );
     }
 
@@ -187,7 +187,7 @@ void vector_print( Object *me, int tabs ){
         fprintf( stdout, "\t" );
     }
     fprintf( stdout, "array {\n" );
-    for( i = vme->value.begin(); i != vme->value.end(); i++ ){
+    vv_foreach( i, vme->value ){
         item = *i;
         ob_print( item, tabs + 1 );
         fprintf( stdout, "\n" );
@@ -412,6 +412,7 @@ Object *vector_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, 
 		hyb_error( H_ET_SYNTAX, "Vector type does not have a '%s' method", method_id );
 	}
 
+	ll_item_t *iitem;
 	Object  *value,
 			*result;
 	vframe_t stack;
@@ -426,8 +427,8 @@ Object *vector_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, 
 	/*
 	 * Evaluate each object and insert it into the stack
 	 */
-	for( i = 0; i < argc; ++i ){
-		value = vm_exec( vm, frame, argv->child(i) );
+	ll_foreach_to( &argv->m_children, iitem, i, argc ){
+		value = vm_exec( vm, frame, (Node *)iitem->data );
 
 		if( frame->state.is(Exception) || frame->state.is(Return) ){
 			vm_pop_frame( vm );

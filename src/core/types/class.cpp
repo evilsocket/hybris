@@ -24,6 +24,7 @@ Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *me
 	Node    *method = H_UNDEFINED;
 	vframe_t stack,
 			*frame;
+	ll_item_t *iitem;
 	Object  *value  = H_UNDEFINED,
 			*result = H_UNDEFINED;
 	size_t i, argc(argv->children());
@@ -47,8 +48,8 @@ Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *me
 
 	stack.insert( "me", c );
 	stack.add( "name", (Object *)gc_new_string(method_name) );
-	for( i = 0; i < argc; ++i ){
-		value = vm_exec( vm, frame, argv->child(i) );
+	ll_foreach_to( &argv->m_children, iitem, i, argc ){
+		value = vm_exec( vm, frame, (Node *)iitem->data );
 
 		if( frame->state.is(Exception) || frame->state.is(Return) ){
 			vm_pop_frame( vm );
@@ -83,6 +84,7 @@ Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *me
 Object *class_call_overloaded_operator( Object *me, const char *op_name, int argc, ... ){
 	Node    *op = H_UNDEFINED;
 	vframe_t stack;
+	ll_item_t *iitem;
 	Object  *result = H_UNDEFINED,
 			*value  = H_UNDEFINED;
 	unsigned int i, op_argc;
@@ -120,9 +122,9 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 
 	stack.insert( "me", me );
 	va_start( ap, argc );
-	for( i = 0; i < argc; ++i ){
+	for( i = 0, iitem = op->m_children.head; i < argc; ++i, iitem = iitem->next ){
 		value = va_arg( ap, Object * );
-		stack.insert( (char *)op->child(i)->value.m_identifier.c_str(), value );
+		stack.insert( (char *)((Node*)iitem->data)->value.m_identifier.c_str(), value );
 	}
 	va_end(ap);
 
@@ -151,6 +153,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool lazy, int argc, ... ){
 	Node    *ds = H_UNDEFINED;
 	vframe_t stack;
+	ll_item_t *iitem;
 	Object  *result = H_UNDEFINED,
 			*value  = H_UNDEFINED;
 	unsigned int i, ds_argc;
@@ -196,9 +199,9 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 
 	stack.insert( "me", me );
 	va_start( ap, argc );
-	for( i = 0; i < argc; ++i ){
+	for( i = 0, iitem = ds->m_children.head; i < argc; ++i, iitem = iitem->next ){
 		value = va_arg( ap, Object * );
-		stack.insert( (char *)ds->child(i)->value.m_identifier.c_str(), value );
+		stack.insert( (char *)((Node *)iitem->data)->value.m_identifier.c_str(), value );
 	}
 	va_end(ap);
 
@@ -238,7 +241,7 @@ Object *class_clone( Object *me ){
     ClassPrototypesIterator pi;
     prototypes_t 				  prototypes;
 
-    for( ai = cme->c_attributes.begin(); ai != cme->c_attributes.end(); ai++ ){
+    vv_foreach( ai, cme->c_attributes ){
     	/*
     	 * If the attribute is not static, clone the entire structure.
     	 */
@@ -259,9 +262,9 @@ Object *class_clone( Object *me ){
     	}
     }
 
-    for( mi = cme->c_methods.begin(); mi != cme->c_methods.end(); mi++ ){
+    vv_foreach( mi, cme->c_methods ){
     	prototypes.clear();
-    	for( pi = (*mi)->value->prototypes.begin(); pi != (*mi)->value->prototypes.end(); pi++ ){
+    	vv_foreach( pi, (*mi)->value->prototypes ){
     		prototypes.push_back( (*pi)->clone() );
     	}
 
@@ -295,7 +298,7 @@ void class_free( Object *me ){
      * Check if the class has a destructors and call it.
      */
     if( (method = cme->c_methods.find( "__expire" )) ){
-		for( pi = method->prototypes.begin(); pi != method->prototypes.end(); pi++ ){
+		vv_foreach( pi, method->prototypes ){
 			Node *dtor = (*pi);
 			vframe_t stack;
 			extern vm_t *__hyb_vm;
@@ -313,7 +316,7 @@ void class_free( Object *me ){
 	/*
 	 * Delete c_methods structure pointers.
 	 */
-	for( mi = cme->c_methods.begin(); mi != cme->c_methods.end(); mi++ ){
+	vv_foreach( mi, cme->c_methods ){
 		method = (*mi)->value;
 		delete method;
 	}
@@ -321,7 +324,7 @@ void class_free( Object *me ){
 	/*
 	 * Delete c_attributes structure pointers and decrement values references.
 	 */
-	for( ai = cme->c_attributes.begin(); ai != cme->c_attributes.end(); ai++ ){
+	vv_foreach( ai, cme->c_attributes ){
 		attribute = (*ai)->value;
 		/*
 		 * Static attributes are just references to the main prototype that is
@@ -656,7 +659,7 @@ Node *class_get_method( Object *me, char *name, int argc ){
 		Node *best_match = NULL;
 		int   best_match_argc, match_argc;
 
-		for( pi = method->prototypes.begin(); pi != method->prototypes.end(); pi++ ){
+		vv_foreach( pi, method->prototypes ){
 			/*
 			 * The last child of a method is its body itself, so we compare
 			 * call children with method->children() - 1 to ignore the body.
@@ -684,6 +687,7 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 	size_t 	 method_argc,
 			 i,
 		 	 argc   = argv->children();
+	ll_item_t *aitem, *iitem;
 	Object  *value  = H_UNDEFINED,
 			*result = H_UNDEFINED;
 	Node    *method = class_get_method( me, method_id, argc );
@@ -771,8 +775,8 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 	/*
 	 * Evaluate each object and insert it into the stack
 	 */
-	for( i = 0; i < argc; ++i ){
-		value = vm_exec( vm, frame, argv->child(i) );
+	for( i = 0, aitem = argv->m_children.head, iitem = method->m_children.head; i < argc; ++i, aitem = aitem->next ){
+		value = vm_exec( vm, frame, (Node *)aitem->data );
 		/*
 		 * Check if vm_exec raised an exception.
 		 */
@@ -789,7 +793,8 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 			stack.push( value );
 		}
 		else{
-			stack.insert( (char *)method->child(i)->value.m_identifier.c_str(), value );
+			stack.insert( (char *)((Node *)iitem->data)->value.m_identifier.c_str(), value );
+			iitem = iitem->next;
 		}
 	}
 	/* execute the method */

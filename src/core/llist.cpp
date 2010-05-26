@@ -39,13 +39,13 @@ void ll_prepend( llist_t *ll, void *data ){
 	ll_item_t *item = (ll_item_t *)calloc( 1, sizeof(ll_item_t) );
 
 	item->data = data;
-	item->next = ll->head;
 
-	if( ll->head ){
-		ll->head->prev = item;
+	if( ll->head == NULL ){
+		ll->tail = item;
 	}
 	else{
-		ll->tail = item;
+		ll->head->prev = item;
+		item->next 	   = ll->head;
 	}
 
 	ll->head = item;
