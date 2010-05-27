@@ -35,8 +35,6 @@ typedef vector<string> matches_t;
 
 #define IS_WHITESPACE(c) strchr( " \r\n\t", (c) )
 
-#define INC_LINE_NO() if( __hyb_line_stack.size() ) __hyb_line_stack.back() = ++yylineno
-
 #define LEX_NEXT()	   yyinput()
 #define LEX_FETCH(c)   (c = LEX_NEXT())
 #define LEX_UNFETCH(c) unput(c)
@@ -70,8 +68,9 @@ vector<string> __hyb_file_stack;
  * A stack container for correct line numbering upon inclusion.
  */
 vector<int>	   __hyb_line_stack;
-
-extern int     yylineno;
+/*
+ * Extern VM reference.
+ */
 extern vm_t   *__hyb_vm;
 
 int yyparse(void);
@@ -119,7 +118,7 @@ typedef struct YYLTYPE
 /*
  * Make sure every rule yylloc is correctly updated.
  */
-#define YY_USER_ACTION yylloc->first_line = yylineno;
+#define YY_USER_ACTION yylloc->first_line = vm_get_lineno(__hyb_vm);
 
 %}
 
@@ -137,7 +136,7 @@ operators  "[]"|"[]="|"[]<"|".."|"+"|"+="|"-"|"-="|"/"|"/="|"*"|"*="|"%"|"%="|"+
 %%
 
 [ \t]+ ;
-[\n]             { INC_LINE_NO(); }
+[\n]             { vm_inc_lineno(__hyb_vm); }
 
 include          BEGIN(T_INCLUSION);
 
@@ -191,8 +190,10 @@ include          BEGIN(T_INCLUSION);
     	hyb_error( H_ET_GENERIC, "Could not open '%s' for inclusion", yytext );
     }
 
-    __hyb_line_stack.push_back(yylineno);
-    yylineno = 1;
+    __hyb_line_stack.push_back( vm_get_lineno(__hyb_vm) );
+
+    vm_set_lineno( __hyb_vm, 1 );
+
     yypush_buffer_state( yy_create_buffer( yyin, YY_BUF_SIZE ) );
 
     BEGIN(INITIAL);
@@ -203,7 +204,7 @@ include          BEGIN(T_INCLUSION);
 	}
 	if( __hyb_line_stack.size() ){
 		__hyb_line_stack.pop_back();
-		yylineno = __hyb_line_stack.back();
+		vm_set_lineno( __hyb_vm, __hyb_line_stack.back() );
 	}
 
     yypop_buffer_state();
@@ -347,12 +348,8 @@ include          BEGIN(T_INCLUSION);
 }
 
 "__LINE__" {
-	if( __hyb_line_stack.size() ){
-		yylval->integer = __hyb_line_stack.back();
-	}
-	else{
-		yylval->integer = 0;
-	}
+	yylval->integer = vm_get_lineno(__hyb_vm);
+
 	return T_INTEGER;
 }
 
@@ -398,13 +395,17 @@ void hyb_lex_skip_comment(){
 loop:
     while( LEX_FETCH(c) != '*' && c != 0 ){
         if( c == '\n' ){
-        	INC_LINE_NO();
+        	vm_inc_lineno(__hyb_vm);
         }
     }
 
     if( LEX_FETCH(c1) != '/' && c != 0){
-        if( c1 == '\n' ){ INC_LINE_NO(); }
+        if( c1 == '\n' ){
+        	vm_inc_lineno(__hyb_vm);
+        }
+
         LEX_UNFETCH(c1);
+
         goto loop;
     }
 }
@@ -414,7 +415,7 @@ void hyb_lex_skip_line(){
 
     while( LEX_FETCH(c) != '\n' && c != EOF );
 
-    INC_LINE_NO();
+    vm_inc_lineno(__hyb_vm);
 }
 
 char hyb_lex_char( char delimiter ){
@@ -706,7 +707,7 @@ void hyb_parse_string( const char *str ){
 	prev      = YY_CURRENT_BUFFER_LVALUE;
 	state     = YYSTATE;
 	prev_yyin = yyin;
-	lineno    = yylineno;
+	lineno    = vm_get_lineno(__hyb_vm);
 	/*
 	 * yy_scan_string will call yy_switch_to_buffer with
 	 * the newly created buffer from str.
@@ -717,7 +718,7 @@ void hyb_parse_string( const char *str ){
 	 */
 	BEGIN(INITIAL);
 
-	yylineno = 1;
+	vm_set_lineno( __hyb_vm, 1 );
 	/*
 	 * Parse the str, yyparse will call yylex.
 	 */
@@ -739,6 +740,7 @@ void hyb_parse_string( const char *str ){
 	 */
 	BEGIN(state);
 
-	yylineno = lineno;
-	yyin 	 = prev_yyin;
+	vm_set_lineno( __hyb_vm, lineno );
+
+	yyin = prev_yyin;
 }

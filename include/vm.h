@@ -326,34 +326,16 @@ void 		vm_print_stack_trace( vm_t *vm, bool force = false );
 								  vm->lineno = line; \
 								  vm_line_unlock(vm)
 /*
- * Return current line number accordingly to the vm state.
+ * Increment current line number.
+ */
+#define vm_inc_lineno( vm ) vm_line_lock(vm); \
+						    ++vm->lineno; \
+						    vm_line_unlock(vm)
+/*
+ * Return current line number.
  */
 INLINE size_t vm_get_lineno( vm_t *vm ){
-	/*
-	 * None state, no lines processed yet.
-	 */
-	if( vm->state == vmNone ){
-		return 0;
-	}
-	/*
-	 * Parsing state, return global line counter.
-	 */
-	else if( vm->state == vmParsing ){
-		extern int yylineno;
-		return yylineno;
-	}
-	/*
-	 * Executing state, return inner line counter.
-	 */
-	else if( vm->state == vmExecuting ){
-		return vm->lineno;
-	}
-	else{
-		/*
-		 * THIS SHOULD NEVER HAPPEN!
-		 */
-		assert(false);
-	}
+	return vm->lineno;
 }
 /*
  * Add a thread to the threads pool.

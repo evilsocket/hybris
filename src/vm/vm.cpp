@@ -116,6 +116,10 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
      */
     vm->main_tid = pthread_self();
     /*
+     * First line.
+     */
+    vm->lineno   = 1;
+    /*
      * Save interpreter directory
      */
     getcwd( vm->args.rootpath, 0xFF );
