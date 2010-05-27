@@ -58,7 +58,7 @@ HYBRIS_DEFINE_FUNCTION(heval){
 
 	vm_parse_argv( "p", &code );
 
-	hyb_parse_string( code );
+	hyb_parse_string( vm, code );
 
 	return H_DEFAULT_RETURN;
 }
@@ -82,7 +82,7 @@ HYBRIS_DEFINE_FUNCTION(hload){
 
 	fclose(fp);
 
-	hyb_parse_string( buffer.c_str() );
+	hyb_parse_string( vm, buffer.c_str() );
 
 	return H_DEFAULT_RETURN;
 }
@@ -144,7 +144,7 @@ HYBRIS_DEFINE_FUNCTION(hmethods){
 
 	vm_parse_argv( "C", &co );
 
-	vv_foreach( ITree<class_method_t>, i, co->c_methods ){
+	itree_foreach( class_method_t, i, co->c_methods ){
 		ob_cl_push_reference( vo, (Object *)gc_new_string( (*i)->label.c_str() ) );
 	}
 

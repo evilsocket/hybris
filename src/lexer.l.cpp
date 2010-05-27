@@ -695,7 +695,7 @@ method_decl_t *hyb_lex_operator( char * text ){
     return declaration;
 }
 
-void hyb_parse_string( const char *str ){
+void hyb_parse_string( vm_t *vm, const char *str ){
 	YY_BUFFER_STATE prev, current;
 	int				state;
 	int				lineno;
@@ -707,7 +707,7 @@ void hyb_parse_string( const char *str ){
 	prev      = YY_CURRENT_BUFFER_LVALUE;
 	state     = YYSTATE;
 	prev_yyin = yyin;
-	lineno    = vm_get_lineno(__hyb_vm);
+	lineno    = vm_get_lineno(vm);
 	/*
 	 * yy_scan_string will call yy_switch_to_buffer with
 	 * the newly created buffer from str.
@@ -718,7 +718,7 @@ void hyb_parse_string( const char *str ){
 	 */
 	BEGIN(INITIAL);
 
-	vm_set_lineno( __hyb_vm, 1 );
+	vm_set_lineno( vm, 1 );
 	/*
 	 * Parse the str, yyparse will call yylex.
 	 */
@@ -740,7 +740,7 @@ void hyb_parse_string( const char *str ){
 	 */
 	BEGIN(state);
 
-	vm_set_lineno( __hyb_vm, lineno );
+	vm_set_lineno( vm, lineno );
 
 	yyin = prev_yyin;
 }

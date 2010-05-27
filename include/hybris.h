@@ -40,7 +40,7 @@ extern Integer __default_error_value;
 /*
  * Parse and execute a string.
  */
-void hyb_parse_string( const char *str );
+void hyb_parse_string( vm_t *vm, const char *str );
 
 #endif
 

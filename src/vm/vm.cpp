@@ -1403,7 +1403,7 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 			ClassMethodIterator 	mi;
 			ClassPrototypesIterator pi;
 
-			vv_foreach( ITree<class_attribute_t>, ai, cobj->c_attributes ){
+			itree_foreach( class_attribute_t, ai, cobj->c_attributes ){
 				attrname  = (char *)(*ai)->label.c_str();
 
 				ob_define_attribute( c, attrname, (*ai)->value->access, (*ai)->value->is_static );
@@ -1416,7 +1416,7 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 				}
 			}
 
-			vv_foreach( ITree<class_method_t>, mi, cobj->c_methods ){
+			itree_foreach( class_method_t, mi, cobj->c_methods ){
 				vv_foreach( vector<Node *>, pi, (*mi)->value->prototypes ){
 					ob_define_method( c, (char *)(*mi)->label.c_str(), *pi );
 				}

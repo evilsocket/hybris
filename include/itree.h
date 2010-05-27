@@ -40,7 +40,10 @@ using std::vector;
 using std::string;
 
 #define H_TEMPLATE_T template< typename value_t >
-
+/*
+ * A macro to easily loop itrees.
+ */
+#define itree_foreach( INNER_TYPE, ITERATOR, ITREE ) vv_foreach( ITree<INNER_TYPE>, ITERATOR, ITREE )
 /*
  * This class is the base for all the lookup tables inside Hybris.
  * It's used by MemorySegment, CodeSegment, cache tables and so on.
