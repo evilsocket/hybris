@@ -606,7 +606,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, Object *c
 	vm_add_frame( vm, &stack );
 }
 
-INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, vmem_t *argv ){
+INLINE void vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, vector<string> ids, vmem_t *argv ){
 	int 	   i, n_ids( ids.size() ), argc;
 	Object 	  *value;
 
@@ -1458,7 +1458,7 @@ INLINE Object *vm_exec_builtin_function_call( vm_t *vm, vframe_t *frame, Node * 
     return result;
 }
 
-Object *vm_exec_threaded_call( vm_t *vm, string function_name, vframe_t *frame, vmem_t *argv ){
+Object *vm_exec_threaded_call( vm_t *vm, string function_name, vmem_t *argv ){
 	Node    *function = H_UNDEFINED;
 	vframe_t stack;
 	Object  *result   = H_UNDEFINED;
@@ -1498,20 +1498,10 @@ Object *vm_exec_threaded_call( vm_t *vm, string function_name, vframe_t *frame, 
     	}
 	}
 
-	vm_prepare_stack( vm, frame, stack, function_name, identifiers, argv );
-
-	vm_check_frame_exit(frame);
+	vm_prepare_stack( vm, stack, function_name, identifiers, argv );
 
 	/* call the function */
 	result = vm_exec( vm, &stack, body );
-
-	/*
-	 * Check for unhandled exceptions and put them on the root
-	 * memory frame.
-	 */
-	if( stack.state.is(Exception) ){
-		frame->state.set( Exception, stack.state.value );
-	}
 
 	vm_dismiss_stack( vm );
 
@@ -1542,7 +1532,7 @@ Object *vm_exec_threaded_call( vm_t *vm, Node *function, vframe_t *frame, vmem_t
 							    argv->size() );
 	}
 
-	vm_prepare_stack( vm, frame, stack, function->value.m_function, identifiers, argv );
+	vm_prepare_stack( vm, stack, function->value.m_function, identifiers, argv );
 
 	vm_check_frame_exit(frame);
 

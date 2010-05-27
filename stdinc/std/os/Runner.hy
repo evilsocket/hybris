@@ -35,7 +35,7 @@ class Runner extends Thread {
 	}	
 
 	method go( ... ){
-		me.start_argv( [ me.cref.run, @ ] );
+		me.start( [ me.cref.run, @ ] );
 	}
 
 	method __to_string(){	

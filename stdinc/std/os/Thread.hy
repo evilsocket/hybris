@@ -26,12 +26,6 @@ class Thread  {
 		me.function_name = function_name;
 		me.id 			 = 0;
 	}
-	
-	public method start_argv( args ){
-		me.id = pthread_create_argv( me.function_name, args );
-	
-		return (me.id > 0);
-	}
 
 	public method start( args ){
 		me.id = pthread_create( me.function_name, args );

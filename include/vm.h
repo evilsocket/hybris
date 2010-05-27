@@ -574,7 +574,7 @@ void vm_parse_frame_argv( vframe_t *argv, char *format, ... );
  */
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Object *cobj, int argc, Node *prototype, Node *argv );
 void 	  vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, Object *cobj, Node *ids, int argc, ... );
-void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, vmem_t *argv );
+void 	  vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, vector<string> ids, vmem_t *argv );
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, Node *argv );
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Extern *fn_pointer, Node *argv );
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Node *argv );
@@ -596,7 +596,7 @@ Object   *vm_exec_dll_function_call( vm_t *vm, vframe_t *, Node * );
 /*
  * Special case to handle threaded function calls by name and by alias.
  */
-Object   *vm_exec_threaded_call( vm_t *vm, string function_name, vframe_t *frame, vmem_t *argv );
+Object   *vm_exec_threaded_call( vm_t *vm, string function_name, vmem_t *argv );
 Object   *vm_exec_threaded_call( vm_t *vm, Node *function, vframe_t *frame, vmem_t *argv );
 /*
  * Node handler dispatcher.

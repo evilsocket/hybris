@@ -164,7 +164,7 @@ HYBRIS_DEFINE_FUNCTION(hcall){
 		}
 	}
 
-	Object *state = vm_exec_threaded_call( vm, function, data, &stack );
+	Object *state = vm_exec_threaded_call( vm, function, &stack );
 
 	return state;
 }

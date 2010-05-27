@@ -20,14 +20,12 @@
 #include <errno.h>
 
 HYBRIS_DEFINE_FUNCTION(hpthread_create);
-HYBRIS_DEFINE_FUNCTION(hpthread_create_argv);
 HYBRIS_DEFINE_FUNCTION(hpthread_exit);
 HYBRIS_DEFINE_FUNCTION(hpthread_join);
 HYBRIS_DEFINE_FUNCTION(hpthread_kill);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "pthread_create",      hpthread_create,      H_REQ_ARGC(1,2), { H_REQ_TYPES(otString), H_REQ_TYPES(otVector) } },
-	{ "pthread_create_argv", hpthread_create_argv, H_REQ_ARGC(2),   { H_REQ_TYPES(otString), H_REQ_TYPES(otVector) } },
 	{ "pthread_exit", 		 hpthread_exit,        H_NO_ARGS },
 	{ "pthread_join", 		 hpthread_join,        H_REQ_ARGC(1),   { H_REQ_TYPES(otInteger) } },
 	{ "pthread_kill", 		 hpthread_kill,        H_REQ_ARGC(2),   { H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
@@ -35,7 +33,8 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 };
 
 typedef struct {
-    vmem_t *data;
+	string  function;
+    vmem_t *frame;
     vm_t   *vm;
 }
 thread_args_t;
@@ -50,51 +49,39 @@ void * hyb_pthread_worker( void *arg ){
 	pthread_mutex_lock(&__vm_sync_mutex);
 	pthread_mutex_unlock(&__vm_sync_mutex);
 
-	string		   thread_name;
-    thread_args_t *args = (thread_args_t *)arg;
-    vm_t      	  *vm  = args->vm;
-    vmem_t        *data = args->data,
-				   stack;
-    size_t		   i;
+	thread_args_t *args = (thread_args_t *)arg;
 
-    vm_parse_argv( "s", &thread_name );
+	vm_exec_threaded_call( args->vm,
+						   args->function,
+						   args->frame );
 
-    for( i = 1; i < data->size(); ++i ){
-		stack.push( vm_argv(i) );
-	}
+    vm_depool( args->vm );
 
-	vm_exec_threaded_call( vm, thread_name, data, &stack );
-
-	delete args->data;
-    delete args;
-
-    vm_depool( vm );
+	delete args->frame;
+	delete args;
 
     pthread_exit(NULL);
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_create){
-	String    *thread_name = NULL;
 	Vector    *thread_argv = NULL;
 	pthread_t tid;
-	int       i, code, argc;
-	vframe_t *thframe;
-	thread_args_t *args = new thread_args_t;
+	int       code, argc;
 	Integer index(0);
+	thread_args_t *args = new thread_args_t;
 
-	vm_parse_argv( "SV", &thread_name, &thread_argv );
+	vm_parse_argv( "sV", &args->function, &thread_argv );
 
-	argc 	= (thread_argv ? ob_get_size( (Object *)thread_argv ) : 0);
-	thframe = new vmem_t;
+	argc  		= (thread_argv ? ob_get_size( (Object *)thread_argv ) : 0);
+	args->frame = new vmem_t;
+	args->vm    = vm;
 
-	thframe->push( (Object *)thread_name );
 	for( ; index.value < argc; ++index.value ){
-		thframe->push( ob_cl_at( (Object *)thread_argv, (Object *)&index ) );
+		args->frame->push( ob_cl_at( (Object *)thread_argv,
+									 (Object *)&index )
+						 );
 	}
 
-	args->vm   = vm;
-	args->data = thframe;
-
 	/*
 	 * Make sure the thread is not goin to start until we want
 	 * it to start.
@@ -109,76 +96,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
     	/*
     	 * Append the newly created frame.
     	 */
-    	ll_append( scope, thframe );
-    	/*
-    	 * Ok, it's safe to start the thread now.
-    	 */
-    	pthread_mutex_unlock(&__vm_sync_mutex);
-
-    	return ob_dcast( gc_new_integer(tid) );
-    }
-    else{
-    	pthread_mutex_unlock(&__vm_sync_mutex);
-
-    	switch( code ){
-			case EAGAIN :
-				hyb_error( H_ET_WARNING, "The system lacked the necessary resources to create another thread, or the system-imposed "
-										 "limit on the total number of threads in a process PTHREAD_THREADS_MAX would be exceeded" );
-			break;
-
-			case EINVAL :
-				hyb_error( H_ET_WARNING, "Invalid attribute value for pthread_create" );
-			break;
-
-			case EPERM  :
-				hyb_error( H_ET_WARNING, "The caller does not have appropriate permission to set the required scheduling parameters or scheduling policy" );
-			break;
-
-			default :
-				hyb_error( H_ET_WARNING, "Unknown system error while creating the thread" );
-    	}
-
-    	return H_DEFAULT_ERROR;
-    }
-}
-
-HYBRIS_DEFINE_FUNCTION(hpthread_create_argv){
-	String    *thread_name;
-	Vector    *thread_argv;
-	pthread_t tid;
-    int       i, code, argc;
-    vframe_t *thframe;
-    thread_args_t *args = new thread_args_t;
-    Integer index(0);
-
-    vm_parse_argv( "SV", &thread_name, &thread_argv );
-
-    argc 	= ob_get_size( (Object *)thread_argv );
-    thframe = new vmem_t;
-
-	thframe->push( (Object *)thread_name );
-	for( ; index.value < argc; ++index.value ){
-    	thframe->push( ob_cl_at( (Object *)thread_argv, (Object *)&index ) );
-    }
-
-	args->vm   = vm;
-	args->data = thframe;
-
-	/*
-	 * Make sure the thread is not goin to start until we want
-	 * it to start.
-	 */
-	pthread_mutex_lock(&__vm_sync_mutex);
-
-    if( (code = pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args )) == 0 ){
-        /*
-         * Create the memory scope for the thread.
-         */
-    	vm_scope_t *scope = vm_pool( vm, tid );
-    	/*
-    	 * Append the newly created frame.
-    	 */
-    	ll_append( scope, thframe );
+    	ll_append( scope, args->frame );
     	/*
     	 * Ok, it's safe to start the thread now.
     	 */
