@@ -117,7 +117,7 @@ public  :
     }
 
     ITree();
-    ~ITree();
+    virtual ~ITree();
 
     /* Get the number of items mapped here. f*/
     INLINE unsigned int size(){
@@ -134,7 +134,7 @@ public  :
 	/* Insert the value if it's not already mapped, otherwise change the old reference to this. */
     value_t *insert( char *label, value_t *value );
     /* Remove an object from the tree */
-    void	 remove( char *label );
+    value_t	*remove( char *label );
     /* Find the item mappeb with 'label', or return NULL if it's not here */
     value_t *find( char *label );
     /* Replace the value if it already exists */
@@ -163,9 +163,12 @@ H_TEMPLATE_T value_t * ITree<value_t>::insert( char *label, value_t *value ){
     return value;
 }
 
-H_TEMPLATE_T void ITree<value_t>::remove( char *label ){
-	pair_t *item = (pair_t *)at_remove( &m_tree, label, strlen(label) );
+H_TEMPLATE_T value_t *ITree<value_t>::remove( char *label ){
+	pair_t  *item = (pair_t *)at_remove( &m_tree, label, strlen(label) );
+	value_t *pval = NULL;
+
 	if( item ){
+		pval = item->value;
 		size_t i, size(m_elements);
 		for( i = 0; i < size; ++i ){
 			if( m_map[i] == item ){
@@ -176,6 +179,7 @@ H_TEMPLATE_T void ITree<value_t>::remove( char *label ){
 			}
 		}
 	}
+	return pval;
 }
 
 H_TEMPLATE_T value_t * ITree<value_t>::find( char *label ){

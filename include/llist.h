@@ -125,7 +125,7 @@ void	ll_merge( llist_t *dest, llist_t *source );
 /*
  * Remove an element from the list.
  */
-void 	ll_remove( llist_t *ll, ll_item_t *item );
+void   *ll_remove( llist_t *ll, ll_item_t *item );
 /*
  * Clear and deallocate each item of the list.
  */

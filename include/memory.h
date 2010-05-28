@@ -113,6 +113,7 @@ class MemorySegment : public ITree<Object> {
 		pthread_mutex_t mutex;
 
 		MemorySegment();
+		~MemorySegment();
 
 		INLINE Object *operator [] ( int index ){
 			return m_map[index]->value;
@@ -138,6 +139,15 @@ class MemorySegment : public ITree<Object> {
          */
         Object *add( char *identifier, Object *object );
         /*
+         * Wrapper around ITree<Object *>::insert to increment the object
+         * reference counter.
+         */
+        INLINE Object *insert( char *label, Object *object ){
+        	object->ref++;
+
+        	return ITree<Object>::insert( label, object );
+        }
+        /*
          * Unlikely ::add, this method will not clone the object, but just
          * define it and mark it as a constant value.
          */
@@ -145,7 +155,7 @@ class MemorySegment : public ITree<Object> {
         	/*
         	 * Insert the object.
         	 */
-        	Object *o = insert( identifier, object );
+        	Object *o = MemorySegment::insert( identifier, object );
 			/*
 			 * Make sure it's marked as constant.
 			 */
@@ -165,7 +175,7 @@ class MemorySegment : public ITree<Object> {
         INLINE Object *push( Object *value ){
         	char label[0xFF] = {0};
         	sprintf( label, "HANONYMOUSIDENTIFIER%d", m_elements );
-        	return insert( label, value );
+        	return MemorySegment::insert( label, value );
         }
         /*
          * Special method to push temporary values onto the stack.
@@ -175,7 +185,7 @@ class MemorySegment : public ITree<Object> {
 
 			sprintf( label, "HTMPOBJ%p", value );
 
-			return insert( label, value );
+			return MemorySegment::insert( label, value );
         }
         /*
 		 * Special method to remove temporary values from the stack.
@@ -186,6 +196,8 @@ class MemorySegment : public ITree<Object> {
 			sprintf( label, "HTMPOBJ%p", value );
 
 			remove( label );
+
+			value->ref--;
 		}
 
         /*

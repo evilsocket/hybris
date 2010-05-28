@@ -23,21 +23,36 @@ MemorySegment::MemorySegment() : ITree<Object>(), mutex(PTHREAD_MUTEX_INITIALIZE
 
 }
 
+MemorySegment::~MemorySegment(){
+	vector<pair_t *>::iterator i;
+	register size_t value;
+	vv_foreach( vector<pair_t *>, i, m_map ){
+		value = (*i)->value->ref;
+		(*i)->value->ref = (value <= 0 ? value : --value);
+	}
+}
+
 Object *MemorySegment::add( char *identifier, Object *object ){
     Object *next = H_UNDEFINED,
            *prev = H_UNDEFINED,
            *retn = H_UNDEFINED;
 
     /*
-	* First of all, create a clone of the object instance.
+	* Create a clone of the object instance if it's already
+	* referenced somewhere else (or it's a constant), otherwhise just use it as it is.
 	*/
-    next = ob_clone(object);
+	if( object->ref != 0 || (object->attributes & H_OA_CONSTANT) == H_OA_CONSTANT ){
+		next = ob_clone(object);
+	}
+	else{
+		next = object;
+	}
 
     pthread_mutex_lock( &mutex );
 
     /* if object does not exist yet, insert as a new one */
     if( (prev = get( identifier )) == H_UNDEFINED ){
-    	retn = insert( identifier, next );
+    	retn = MemorySegment::insert( identifier, next );
     }
     /* else set the new value */
     else{
@@ -53,13 +68,13 @@ Object *MemorySegment::add( char *identifier, Object *object ){
 		  * Plain object, do a normal memory replacement and ob_free the old value.
 		  */
 		 else{
-			 replace( identifier, prev, next );
+			 next->ref++;
+			 prev->ref--;
 
-			 ob_free(prev);
-
-			 retn = next;
+			 retn = replace( identifier, prev, next );
 		 }
     }
+
     pthread_mutex_unlock( &mutex );
 
     return retn;
