@@ -163,6 +163,11 @@ enum vm_state_t {
 
 typedef struct _vm_t {
 	/*
+	 * Main argc and argv references.
+	 */
+	int	   *argc;
+	char ***argv;
+	/*
 	 * Main thread id.
 	 */
 	pthread_t main_tid;
@@ -268,7 +273,7 @@ vm_t 	   *vm_create();
 /*
  * Initialize the virtual machine attributes and global constants.
  */
-void 	    vm_init( vm_t *vm, int argc, char *argv[], char *envp[] );
+void 	    vm_init( vm_t *vm, int optind, int *argc, char **argv[], char *envp[] );
 /*
  * Release the virtual machine content (free memory).
  */

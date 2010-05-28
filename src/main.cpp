@@ -236,7 +236,7 @@ int main( int argc, char *argv[], char* envp[] ){
      * vm_t will receive every argument starting from the script
      * name to build the script virtual argv.
      */
-    vm_init( __hyb_vm, argc - (optind - 1), argv + (optind - 1), envp );
+    vm_init( __hyb_vm, optind, &argc, &argv, envp );
 
     extern FILE *yyin;
     /*

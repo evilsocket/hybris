@@ -107,10 +107,15 @@ int vm_chdir( vm_t *vm ){
 	return 0;
 }
 
-void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
+void vm_init( vm_t *vm, int optind, int *argc, char **argv[], char *envp[] ){
     int i;
     char name[0xFF] = {0};
 
+    /*
+     * Initialize argc and argv references.
+     */
+    vm->argc = argc;
+	vm->argv = argv;
     /*
      * Initialize main vm thread id.
      */
@@ -152,15 +157,18 @@ void vm_init( vm_t *vm, int argc, char *argv[], char *envp[] ){
     ll_init( &vm->frames );
     ll_append( &vm->frames, &vm->vmem );
 
-    int h_argc = argc - 1;
+    int r_argc = *argc - (optind - 1),
+    	h_argc = r_argc - 1;
+
+    char **r_argv = (*argv) + (optind - 1);
 
     /*
      * Initialize command line arguments
      */
     HYBRIS_DEFINE_CONSTANT( vm, "argc", gc_new_integer(h_argc) );
-    for( i = 1; i < argc; ++i ){
+    for( i = 1; i < r_argc; ++i ){
         sprintf( name, "%d", i - 1);
-        HYBRIS_DEFINE_CONSTANT( vm, name, gc_new_string(argv[i]) );
+        HYBRIS_DEFINE_CONSTANT( vm, name, gc_new_string( r_argv[i] ) );
     }
     /*
      * Initialize misc constants
