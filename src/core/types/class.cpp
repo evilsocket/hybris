@@ -336,6 +336,7 @@ void class_free( Object *me ){
 		 * of the program.
 		 */
 		if( attribute->is_static == false ){
+			attribute->value->ref--;
 			delete attribute;
 		}
 	}
