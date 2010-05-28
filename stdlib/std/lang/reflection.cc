@@ -195,7 +195,7 @@ HYBRIS_DEFINE_FUNCTION(hcall_method){
 	 * memory frame.
 	 */
 	if( stack.state.is(Exception) ){
-		vm_frame( vm )->state.set( Exception, stack.state.value );
+		vm_frame( vm )->state.set( Exception, stack.state.e_value );
 	}
 
 	/* return method evaluation value */

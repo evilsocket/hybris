@@ -548,8 +548,11 @@ void vm_parse_frame_argv( vframe_t *argv, char *format, ... );
 #define vm_exec_break_state( frame ) frame->state.set(Break)
 #define vm_exec_next_state( frame )  frame->state.set(Next)
 
-#define vm_check_frame_exit(frame) if( frame->state.is(Exception) || frame->state.is(Return) ){ \
-									   return frame->state.value; \
+#define vm_check_frame_exit(frame) if( frame->state.is(Exception) ){ \
+									   return frame->state.e_value; \
+								   } \
+								   else if( frame->state.is(Return) ){ \
+									   return frame->state.r_value; \
 								   }
 /*
  * Methods to initialize a stack given its owner, arguments, identifiers

@@ -448,9 +448,13 @@ Object *string_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, 
 	ll_foreach_to( &argv->m_children, iitem, i, argc ){
 		value = vm_exec( vm, frame, ll_node( iitem ) );
 
-		if( frame->state.is(Exception) || frame->state.is(Return) ){
+		if( frame->state.is(Exception) ){
 			vm_pop_frame( vm );
-			return frame->state.value;
+			return frame->state.e_value;
+		}
+		else if( frame->state.is(Return) ){
+			vm_pop_frame( vm );
+			return frame->state.r_value;
 		}
 
 		stack.push( value );

@@ -51,10 +51,14 @@ Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *me
 	ll_foreach_to( &argv->m_children, iitem, i, argc ){
 		value = vm_exec( vm, frame, ll_node( iitem ) );
 
-		if( frame->state.is(Exception) || frame->state.is(Return) ){
+		if( frame->state.is(Exception) ){
 			vm_pop_frame( vm );
-			return frame->state.value;
-	    }
+			return frame->state.e_value;
+		}
+		else if( frame->state.is(Return) ){
+			vm_pop_frame( vm );
+			return frame->state.r_value;
+		}
 
 		ob_cl_push( (Object *)args, value );
 	}
@@ -70,7 +74,7 @@ Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *me
 	 * memory frame.
 	 */
 	if( stack.state.is(Exception) ){
-		vm_frame( vm )->state.set( Exception, stack.state.value );
+		vm_frame( vm )->state.set( Exception, stack.state.e_value );
 	}
 
 	/* return method evaluation value */
@@ -138,7 +142,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	 * memory frame.
 	 */
 	if( stack.state.is(Exception) ){
-		vm_frame( __hyb_vm )->state.set( Exception, stack.state.value );
+		vm_frame( __hyb_vm )->state.set( Exception, stack.state.e_value );
 	}
 
 	/* return method evaluation value */
@@ -215,7 +219,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	 * memory frame.
 	 */
 	if( stack.state.is(Exception) ){
-		vm_frame( __hyb_vm )->state.set( Exception, stack.state.value );
+		vm_frame( __hyb_vm )->state.set( Exception, stack.state.e_value );
 	}
 
 	/* return method evaluation value */
@@ -780,10 +784,14 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 		/*
 		 * Check if vm_exec raised an exception.
 		 */
-		if( frame->state.is(Exception) || frame->state.is(Return) ){
+		if( frame->state.is(Exception) ){
 			vm_pop_frame( vm );
-			return frame->state.value;
-	    }
+			return frame->state.e_value;
+		}
+		else if( frame->state.is(Return) ){
+			vm_pop_frame( vm );
+			return frame->state.r_value;
+		}
 		/*
 		 * Check if i >= argc for vargs methods :
 		 *
@@ -810,7 +818,7 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 	 * memory frame.
 	 */
 	if( stack.state.is(Exception) ){
-		frame->state.set( Exception, stack.state.value );
+		frame->state.set( Exception, stack.state.e_value );
 	}
 
 	/* return method evaluation value */

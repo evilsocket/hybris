@@ -204,12 +204,12 @@ void vm_release( vm_t *vm ){
      */
     if( vm->vmem.state.is(Exception) ){
     	vm->vmem.state.unset(Exception);
-    	assert( vm->vmem.state.value != NULL );
-    	if( vm->vmem.state.value->type->svalue ){
-    		fprintf( stderr, "\033[22;31mERROR : Unhandled exception : %s\n\033[00m", ob_svalue(vm->vmem.state.value).c_str() );
+    	assert( vm->vmem.state.e_value != NULL );
+    	if( vm->vmem.state.e_value->type->svalue ){
+    		fprintf( stderr, "\033[22;31mERROR : Unhandled exception : %s\n\033[00m", ob_svalue(vm->vmem.state.e_value).c_str() );
     	}
     	else{
-    		fprintf( stderr, "\033[22;31mERROR : Unhandled '%s' exception .\n\033[00m", ob_typename(vm->vmem.state.value) );
+    		fprintf( stderr, "\033[22;31mERROR : Unhandled '%s' exception .\n\033[00m", ob_typename(vm->vmem.state.e_value) );
     	}
     }
     /*
@@ -882,7 +882,7 @@ Object *vm_exec( vm_t *vm, vframe_t *frame, Node *node ){
 	 * with a non handled exception.
 	 */
 	if( frame->state.is(Exception) ){
-		return frame->state.value;
+		return frame->state.e_value;
 	}
     /*
 	 * A return statement was succesfully executed, skip everything
@@ -890,7 +890,7 @@ Object *vm_exec( vm_t *vm, vframe_t *frame, Node *node ){
 	 * value.
 	 */
 	else if( frame->state.is(Return) ){
-		return frame->state.value;
+		return frame->state.r_value;
 	}
     /*
      * A next statement was found, so skip nodes execution
@@ -1461,7 +1461,7 @@ INLINE Object *vm_exec_builtin_function_call( vm_t *vm, vframe_t *frame, Node * 
 	 * memory frame.
 	 */
 	if( stack.state.is(Exception) ){
-		frame->state.set( Exception, stack.state.value );
+		frame->state.set( Exception, stack.state.e_value );
 	}
 
     vm_dismiss_stack( vm );
@@ -1556,7 +1556,7 @@ Object *vm_exec_threaded_call( vm_t *vm, Node *function, vframe_t *frame, vmem_t
 	 * memory frame.
 	 */
 	if( stack.state.is(Exception) ){
-		frame->state.set( Exception, stack.state.value );
+		frame->state.set( Exception, stack.state.e_value );
 	}
 
 	vm_dismiss_stack( vm );
@@ -1617,7 +1617,7 @@ INLINE Object *vm_exec_user_function_call( vm_t *vm, vframe_t *frame, Node *call
 	 * memory frame.
 	 */
 	if( stack.state.is(Exception) ){
-		frame->state.set( Exception, stack.state.value );
+		frame->state.set( Exception, stack.state.e_value );
 	}
 
     /* return function evaluation value */
@@ -1713,7 +1713,7 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
 			 * memory frame.
 			 */
 			if( stack.state.is(Exception) ){
-				frame->state.set( Exception, stack.state.value );
+				frame->state.set( Exception, stack.state.e_value );
 			}
 		}
 	}
@@ -1840,11 +1840,11 @@ INLINE Object *vm_exec_return( vm_t *vm, vframe_t *frame, Node *node ){
 	 * Set break and return state to make every loop and/or condition
 	 * statement to exit with this return value.
 	 */
-    frame->state.value = vm_exec( vm, frame, node->child(0) );
+    frame->state.r_value = vm_exec( vm, frame, node->child(0) );
     frame->state.set( Break );
     frame->state.set( Return );
 
-    return frame->state.value;
+    return frame->state.r_value;
 }
 
 INLINE Object *vm_exec_backtick( vm_t *vm, vframe_t *frame, Node *node ){
@@ -2063,16 +2063,19 @@ INLINE Object *vm_exec_foreach( vm_t *vm, vframe_t *frame, Node *node ){
 
         result = vm_exec( vm, frame, body );
 
-        if( frame->state.is(Exception) || frame->state.is(Return) ){
-        	result = frame->state.value;
+        if( frame->state.is(Exception) ){
+        	result = frame->state.e_value;
         	break;
 	    }
-
-        frame->state.unset(Next);
-		if( frame->state.is(Break) ){
+		else if( frame->state.is(Return) ){
+			result = frame->state.r_value;
+			break;
+		}
+		else if( frame->state.is(Break) ){
 			frame->state.unset(Break);
 			break;
 		}
+		frame->state.unset(Next);
     }
 
     frame->remove_tmp(v);
@@ -2108,16 +2111,19 @@ INLINE Object *vm_exec_foreach_mapping( vm_t *vm, vframe_t *frame, Node *node ){
 
         result = vm_exec( vm, frame, body );
 
-        if( frame->state.is(Exception) || frame->state.is(Return) ){
-			result = frame->state.value;
+        if( frame->state.is(Exception) ){
+			result = frame->state.e_value;
 			break;
 		}
-
-        frame->state.unset(Next);
-		if( frame->state.is(Break) ){
+		else if( frame->state.is(Return) ){
+			result = frame->state.r_value;
+			break;
+		}
+		else if( frame->state.is(Break) ){
 			frame->state.unset(Break);
 			break;
 		}
+		frame->state.unset(Next);
     }
 
     frame->remove_tmp(map);
@@ -2274,7 +2280,7 @@ INLINE Object *vm_exec_try_catch( vm_t *vm, vframe_t *frame, Node *node ){
 	vm_exec( vm, frame, main_body );
 
 	if( frame->state.is(Exception) ){
-		exception = frame->state.value;
+		exception = frame->state.e_value;
 
 		assert( exception != H_UNDEFINED );
 
@@ -2679,10 +2685,6 @@ INLINE Object *vm_exec_shiftl( vm_t *vm, vframe_t *frame, Node *node ){
 
     a = vm_exec( vm, frame, node->child(0) );
 	b = vm_exec( vm, frame, node->child(1) );
-
-	if( frame->state.is(Exception) ){
-		return frame->state.value;
-	}
 
 	vm_check_frame_exit(frame)
 

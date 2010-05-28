@@ -49,11 +49,12 @@ typedef struct _vframe_state {
 	 */
 	unsigned long mask;
 	/*
-	 * This will hold the exception or return data.
+	 * Those will hold the exception or return data.
 	 */
-	Object *value;
+	Object *e_value;
+	Object *r_value;
 
-	_vframe_state() : mask(None), value(NULL) {
+	_vframe_state() : mask(None), e_value(NULL), r_value(NULL) {
 
 	}
 
@@ -63,7 +64,12 @@ typedef struct _vframe_state {
 
 	INLINE void set( state_t s, Object *v ){
 		mask |= s;
-		value = v;
+		if( s == Exception ){
+			e_value = v;
+		}
+		else{
+			r_value = v;
+		}
 	}
 
 	INLINE void unset( state_t s ){
@@ -75,13 +81,14 @@ typedef struct _vframe_state {
 	}
 
 	INLINE void assign( struct _vframe_state& s ){
-		mask  = s.mask;
-		value = s.value;
+		mask    = s.mask;
+		e_value = s.e_value;
+		r_value = s.r_value;
 	}
 
 	INLINE void reset(){
 		mask  = None;
-		value = NULL;
+		e_value = r_value = NULL;
 	}
 }
 vframe_state_t;
