@@ -72,7 +72,6 @@ typedef struct _vm_t   vm_t;
  * Determine if an object has to be moved to the lag space.
  */
 #define GC_IS_LAGGING(v)     		  v / (double)__gc.collections >= GC_LAGGING_THRESHOLD
-
 /*
  * Main gc structure, kind of the "head" of the pool.
  *

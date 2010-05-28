@@ -29,9 +29,15 @@ Object *MemorySegment::add( char *identifier, Object *object ){
            *retn = H_UNDEFINED;
 
     /*
-	* First of all, create a clone of the object instance.
-	*/
-    next = ob_clone(object);
+     * Is the VM telling us to use a reference instead of a clone?
+	 */
+    if( object->use_ref == false ){
+    	next = ob_clone(object);
+    }
+    else{
+    	next = object;
+    	next->use_ref = false;
+    }
 
     pthread_mutex_lock( &mutex );
 

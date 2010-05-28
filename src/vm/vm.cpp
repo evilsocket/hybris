@@ -1639,7 +1639,16 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
     if( (user_type = vm_get_type( vm,type_name)) == H_UNDEFINED ){
     	hyb_error( H_ET_SYNTAX, "'%s' undeclared type", type_name );
     }
+    /*
+     * Clone the object prototype.
+     */
     newtype = ob_clone(user_type);
+	/*
+	 * Tell the vm to use a reference to this object instead of a
+	 * clone, this will avoid duplicate classes and therefore multiple
+	 * destructor calls.
+	 */
+	newtype->use_ref = true;
 	/*
 	 * It's ok to initialize less attributes that the structure/class
 	 * has (non ini'ed attributes are set to 0 by default), but
@@ -1655,10 +1664,14 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
 								 children );
 		}
 
+		frame->push_tmp(newtype);
+
 		ll_foreach_to( &type->m_children, llitem, i, children ){
 			object = vm_exec( vm, frame, ll_node( llitem ) );
 			ob_set_attribute( newtype, (char *)stype->s_attributes.label(i), object );
 		}
+
+		frame->remove_tmp(newtype);
 	}
 	else if( ob_is_class(newtype) ){
 		/*
@@ -1691,6 +1704,8 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
 
 			vframe_t stack;
 
+			stack.push_tmp(newtype);
+
 			vm_prepare_stack( vm,
 							  frame,
 							  stack,
@@ -1701,6 +1716,8 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
 							  type );
 
 			vm_check_frame_exit(frame);
+
+			stack.remove_tmp(newtype);
 
 			/* call the ctor */
 			vm_exec( vm, &stack, ctor->body() );
