@@ -33,16 +33,13 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 };
 
 typedef struct {
+	vm_t   *vm;
     Node   *handler;
     vmem_t *data;
 }
 http_progress_callback_data_t;
 
-static vm_t *__vm;
-
 extern "C" void hybris_module_init( vm_t * vm ){
-	__vm = vm;
-
     curl_global_init(CURL_GLOBAL_ALL);
 }
 
@@ -67,7 +64,7 @@ static size_t http_progress_callback( http_progress_callback_data_t *http_data, 
 	stack.push( h_dltotal );
 	stack.push( h_dlnow );
 
-	vm_exec_threaded_call( __vm, http_data->handler, http_data->data, &stack );
+	vm_exec_threaded_call( http_data->vm, http_data->handler, http_data->data, &stack );
 
 	return 0;
 }
@@ -269,6 +266,7 @@ HYBRIS_DEFINE_FUNCTION(hhttp_download){
 
 		http_data->handler = (Node *)alias->value;
 		http_data->data    = data;
+		http_data->vm	   = vm;
 
 		curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 0L );
 		curl_easy_setopt( curl, CURLOPT_PROGRESSFUNCTION, http_progress_callback );

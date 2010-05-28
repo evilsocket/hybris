@@ -41,18 +41,6 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "", NULL }
 };
 
-extern "C" void hybris_module_init( vm_t * vm ){
-	extern vm_t  *__hyb_vm;
-
-	/*
-	 * This module is linked against libhybris.so.1 which contains a compiled
-	 * parser.cpp, which has an uninitialized __hyb_vm pointer.
-	 * The real vm_t is passed to this function by the core, so we have to initialize
-	 * the pointer with the right data.
-	 */
-	__hyb_vm = vm;
-}
-
 HYBRIS_DEFINE_FUNCTION(heval){
 	char *code;
 
