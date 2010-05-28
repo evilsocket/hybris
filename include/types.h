@@ -65,14 +65,12 @@ typedef MemorySegment vframe_t;
  * gc_size	  : size in bytes of the entire object
  * gc_mark    : mark-&-sweep gc flag
  * gc_count	  : number of times the object passed the garbage collection
- * ref		  : counter to keep track of object references
  * attributes : object memory attributes mask
  */
 #define BASE_OBJECT_HEADER struct _object_type_t *type;     \
 						   size_t				  gc_size;  \
                            bool                   gc_mark;  \
 						   size_t				  gc_count; \
-						   size_t				  ref; \
                            size_t                 attributes
 /*
  * Default object header initialization macro .
@@ -80,7 +78,6 @@ typedef MemorySegment vframe_t;
 #define BASE_OBJECT_HEADER_INIT(t) gc_mark(false), \
 								   gc_size(0), \
 								   gc_count(0), \
-								   ref(0), \
                                    attributes(H_OA_NONE), \
                                    type(&t ## _Type)
 /*
@@ -89,7 +86,6 @@ typedef MemorySegment vframe_t;
 #define OB_BASE_INIT(o,t) o->gc_mark = false; \
 						  o->gc_count = 0; \
 						  o->gc_size = 0; \
-						  o->ref	 = 0; \
 						  o->attributes = H_OA_NONE; \
 						  o->type = &t ## _Type
 
@@ -1073,13 +1069,6 @@ INLINE Object* ob_clone( Object *o ){
 }
 
 INLINE bool ob_free( Object *o ){
-	Object *child;
-	size_t  i;
-	for( i = 0, child = NULL; (child = ob_traverse( o, i )) != NULL; ++i ){
-		child->ref--;
-	}
-	o->ref--;
-
     if( o->type->free != NULL ){
     	/*
     	 * The free function is defined only for collection types or
@@ -1567,7 +1556,6 @@ INLINE Object *ob_cl_push( Object *a, Object *b ){
 
 INLINE Object *ob_cl_push_reference( Object *a, Object *b ){
 	if( a->type->cl_push_reference != NULL ){
-		a->ref++;
 		return a->type->cl_push_reference(a,b);
 	}
 	else{
@@ -1577,9 +1565,7 @@ INLINE Object *ob_cl_push_reference( Object *a, Object *b ){
 
 INLINE Object *ob_cl_pop( Object *o ){
 	if( o->type->cl_pop != NULL ){
-		Object *item = o->type->cl_pop(o);
-		item->ref--;
-		return item;
+		return o->type->cl_pop(o);
 	}
 	else{
 		hyb_error( H_ET_SYNTAX, "'%s' not iterable or not editable object type", ob_typename(o) );
@@ -1588,9 +1574,7 @@ INLINE Object *ob_cl_pop( Object *o ){
 
 INLINE Object *ob_cl_remove( Object *a, Object *b ){
 	if( a->type->cl_remove != NULL ){
-		Object *item = a->type->cl_remove(a,b);
-		item->ref--;
-		return item;
+		return a->type->cl_remove(a,b);
 	}
 	else{
 		hyb_error( H_ET_SYNTAX, "'%s' not iterable or not editable object type", ob_typename(a) );
@@ -1617,7 +1601,6 @@ INLINE Object *ob_cl_set( Object *a, Object *b, Object *c ){
 
 INLINE Object *ob_cl_set_reference( Object *a, Object *b, Object *c ){
     if( a->type->cl_set_reference != NULL ){
-    	c->ref++;
 		return a->type->cl_set_reference(a,b,c);
 	}
 	else{
@@ -1687,7 +1670,6 @@ INLINE void ob_set_attribute( Object *s, char *a, Object *v ){
 
 INLINE void ob_set_attribute_reference( Object *s, char *a, Object *v ){
     if( s->type->set_attribute_reference != NULL ){
-    	v->ref++;
 		return s->type->set_attribute_reference(s,a,v);
 	}
 	else{

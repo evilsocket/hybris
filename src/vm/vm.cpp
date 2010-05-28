@@ -1640,7 +1640,6 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
     	hyb_error( H_ET_SYNTAX, "'%s' undeclared type", type_name );
     }
     newtype = ob_clone(user_type);
-
 	/*
 	 * It's ok to initialize less attributes that the structure/class
 	 * has (non ini'ed attributes are set to 0 by default), but
@@ -1841,7 +1840,6 @@ INLINE Object *vm_exec_return( vm_t *vm, vframe_t *frame, Node *node ){
 	 * statement to exit with this return value.
 	 */
     frame->state.r_value = vm_exec( vm, frame, node->child(0) );
-    frame->state.r_value->ref++;
     frame->state.set( Break );
     frame->state.set( Return );
 
@@ -2285,8 +2283,6 @@ INLINE Object *vm_exec_try_catch( vm_t *vm, vframe_t *frame, Node *node ){
 
 		assert( exception != H_UNDEFINED );
 
-		exception->ref--;
-
 		frame->add( (char *)ex_ident->value.m_identifier.c_str(), exception );
 
 		frame->state.unset(Exception);
@@ -2360,13 +2356,11 @@ INLINE Object *vm_exec_assign( vm_t *vm, vframe_t *frame, Node *node ){
     		hyb_error( H_ET_SYNTAX, "'me' is a reserved word" );
     	}
 
-    	value  = vm_exec( vm, frame, node->child(1) );
+    	value = vm_exec( vm, frame, node->child(1) );
 
     	vm_check_frame_exit(frame)
 
-		object = frame->add( (char *)lexpr->value.m_identifier.c_str(), value );
-
-		return object;
+		return object = frame->add( (char *)lexpr->value.m_identifier.c_str(), value );
     }
     /*
      * If not, we evaluate the first node as a "owner->child->..." sequence,

@@ -35,8 +35,8 @@ HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "var_values",     hvar_values,     H_NO_ARGS },
 	{ "user_functions", huser_functions, H_NO_ARGS },
 	{ "dyn_functions",  hdyn_functions,  H_NO_ARGS },
-	{ "methods",        hmethods,        H_REQ_ARGC(1), { H_REQ_TYPES(otClass) } },
-	{ "call",           hcall,		     H_REQ_ARGC(1), { H_REQ_TYPES(otString)} },
+	{ "methods",        hmethods,        H_REQ_ARGC(1), { H_REQ_TYPES(otClass)  } },
+	{ "call",           hcall,		     H_REQ_ARGC(1), { H_REQ_TYPES(otString) } },
 	{ "call_method",    hcall_method,    H_REQ_ARGC(3), { H_REQ_TYPES(otClass), H_REQ_TYPES(otString), H_REQ_TYPES(otVector) } },
 	{ "", NULL }
 };

@@ -128,9 +128,7 @@ void ll_merge( llist_t *dest, llist_t *source ){
 	}
 }
 
-void *ll_remove( llist_t *ll, ll_item_t *item ){
-	void *data = item->data;
-
+void ll_remove( llist_t *ll, ll_item_t *item ){
 	if( item->prev == NULL ){
 		ll->head = item->next;
 	}
@@ -147,8 +145,6 @@ void *ll_remove( llist_t *ll, ll_item_t *item ){
 	--ll->items;
 
 	free(item);
-
-	return data;
 }
 
 void ll_clear( llist_t *ll ){

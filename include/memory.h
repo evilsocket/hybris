@@ -66,11 +66,9 @@ typedef struct _vframe_state {
 		mask |= s;
 		if( s == Exception ){
 			e_value = v;
-			e_value->ref++;
 		}
 		else{
 			r_value = v;
-			r_value->ref++;
 		}
 	}
 
@@ -115,7 +113,6 @@ class MemorySegment : public ITree<Object> {
 		pthread_mutex_t mutex;
 
 		MemorySegment();
-		~MemorySegment();
 
 		INLINE Object *operator [] ( int index ){
 			return m_map[index]->value;
@@ -140,15 +137,6 @@ class MemorySegment : public ITree<Object> {
          * 			constant value.
          */
         Object *add( char *identifier, Object *object );
-        /*
-         * Wrapper around ITree<Object *>::insert to increment the object
-         * reference counter.
-         */
-        INLINE Object *insert( char *label, Object *object ){
-        	object->ref++;
-
-        	return ITree<Object>::insert( label, object );
-        }
         /*
          * Unlikely ::add, this method will not clone the object, but just
          * define it and mark it as a constant value.
@@ -198,8 +186,6 @@ class MemorySegment : public ITree<Object> {
 			sprintf( label, "HTMPOBJ%p", value );
 
 			remove( label );
-
-			value->ref--;
 		}
 
         /*

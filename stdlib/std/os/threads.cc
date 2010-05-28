@@ -25,10 +25,10 @@ HYBRIS_DEFINE_FUNCTION(hpthread_join);
 HYBRIS_DEFINE_FUNCTION(hpthread_kill);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "pthread_create",      hpthread_create,      H_REQ_ARGC(1,2), { H_REQ_TYPES(otString), H_REQ_TYPES(otVector) } },
-	{ "pthread_exit", 		 hpthread_exit,        H_NO_ARGS },
-	{ "pthread_join", 		 hpthread_join,        H_REQ_ARGC(1),   { H_REQ_TYPES(otInteger) } },
-	{ "pthread_kill", 		 hpthread_kill,        H_REQ_ARGC(2),   { H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
+	{ "pthread_create",      hpthread_create, H_REQ_ARGC(1,2), { H_REQ_TYPES(otString), H_REQ_TYPES(otVector) } },
+	{ "pthread_exit", 		 hpthread_exit,   H_NO_ARGS },
+	{ "pthread_join", 		 hpthread_join,   H_REQ_ARGC(1),   { H_REQ_TYPES(otInteger) } },
+	{ "pthread_kill", 		 hpthread_kill,   H_REQ_ARGC(2),   { H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
 	{ "", NULL }
 };
 
