@@ -19,23 +19,6 @@
 #include "hybris.h"
 
 /** builtin methods **/
-INLINE ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_id ){
-	size_t 				  i;
-	ob_builtin_methods_t *methods = c->type->builtin_methods;
-	/*
-	 * Builtin methods are supposed to be only a few, so a loop with a string
-	 * comparision is faster than an hashmap/asciitree initialization and
-	 * further search.
-	 */
-	for( i = 0; methods[i].method != NULL; ++i ){
-		if( methods[i].name == method_id ){
-			return methods[i].method;
-		}
-	}
-
-	return NULL;
-}
-
 Object *__vector_size( vm_t *vm, Object *me, vframe_t *data ){
 	return (Object *)gc_new_integer( ob_vector_ucast(me)->items );
 }
@@ -450,7 +433,14 @@ Object *vector_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, 
 	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
 }
 
-static ob_builtin_methods_t __vector_builtin_methods;
+static ob_builtin_method_t vector_builtin_methods[] = {
+	{ "size",     (ob_type_builtin_method_t *)__vector_size },
+	{ "pop",      (ob_type_builtin_method_t *)__vector_pop },
+	{ "remove",   (ob_type_builtin_method_t *)__vector_remove },
+	{ "contains", (ob_type_builtin_method_t *)__vector_contains },
+	{ "join",     (ob_type_builtin_method_t *)__vector_join },
+	{ OB_BUILIN_METHODS_END_MARKER }
+};
 
 IMPLEMENT_TYPE(Vector) {
     /** type code **/
@@ -460,15 +450,7 @@ IMPLEMENT_TYPE(Vector) {
 	/** type basic size **/
     OB_COLLECTION_SIZE,
     /** type builtin methods **/
-    {
-		{ "size",     (ob_type_builtin_method_t *)__vector_size },
-		{ "pop",      (ob_type_builtin_method_t *)__vector_pop },
-		{ "remove",   (ob_type_builtin_method_t *)__vector_remove },
-		{ "contains", (ob_type_builtin_method_t *)__vector_contains },
-		{ "join",     (ob_type_builtin_method_t *)__vector_join },
-		{ OB_BUILIN_METHODS_END_MARKER }
-    },
-
+    vector_builtin_methods,
 	/** generic function pointers **/
     0, // type_name
     vector_traverse, // traverse

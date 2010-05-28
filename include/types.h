@@ -202,15 +202,29 @@ typedef struct {
 	string 					  name;
 	ob_type_builtin_method_t *method;
 }
-ob_builtin_methods_t;
-/*
- * Max number of builtin methods a type can have.
- */
-#define OB_MAX_BUILTIN_METHODS 100
+ob_builtin_method_t;
 /*
  * End marker for builtin methods map.
  */
 #define OB_BUILIN_METHODS_END_MARKER { "", NULL }
+/*
+ * Class for builtin methods lookup.
+ */
+class ob_builtin_methods_t : public ITree<ob_type_builtin_method_t> {
+	public :
+
+		INLINE ob_builtin_methods_t( ob_builtin_method_t methods[] ) : ITree<ob_type_builtin_method_t>() {
+			size_t i;
+			for( i = 0; methods[i].method != NULL; ++i ){
+				insert( (char *)methods[i].name.c_str(), methods[i].method );
+			}
+		}
+
+};
+/*
+ * Static array used for types with no builtin methods.
+ */
+static ob_builtin_method_t NO_BUILTIN_METHODS[] = { OB_BUILIN_METHODS_END_MARKER };
 
 #ifndef H_ACCESS_SPECIFIER
 	enum access_t {
@@ -340,20 +354,20 @@ typedef struct _object_type_t {
      * Type code among H_OBJECT_TYPE enumeration values used
      * for type comparision.
      */
-    H_OBJECT_TYPE code;
+    H_OBJECT_TYPE 			    code;
     /*
      * Type name.
      */
-    const char   *name;
+    const char  			   *name;
     /*
      * Type basic size, if the object is a collection size is set to 0
      * and ob_get_size will return the number of its elements.
      */
-    size_t        size;
+    size_t        				size;
     /*
      * Type builtin methods map.
      */
-    ob_builtin_methods_t builtin_methods[OB_MAX_BUILTIN_METHODS];
+    ob_builtin_methods_t 		builtin_methods;
 
     /** generic function pointers **/
     ob_typename_function_t      type_name;
@@ -449,6 +463,12 @@ object_type_t;
  * on each type, type compatibility, reference counting and so on .
  * They MUST be used on every access on type functions instead of the function pointers directly.
  */
+
+/*
+ * Macro to easily get a builtin method function pointer, given its name,
+ * from the inner ITree each type has .
+ */
+#define ob_get_builtin_method( obj, method_id ) obj->type->builtin_methods.find(method_id)
 /*
  * Return the type name of the object.
  */

@@ -214,8 +214,7 @@ IMPLEMENT_TYPE(Binary) {
 	/** type basic size **/
     OB_COLLECTION_SIZE,
     /** type builtin methods **/
-    { OB_BUILIN_METHODS_END_MARKER },
-
+    NO_BUILTIN_METHODS,
 	/** generic function pointers **/
     0, // type_name
     binary_traverse, // traverse

@@ -19,23 +19,6 @@
 #include "hybris.h"
 
 /** helpers **/
-INLINE ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_id ){
-	size_t 				  i;
-	ob_builtin_methods_t *methods = c->type->builtin_methods;
-	/*
-	 * Builtin methods are supposed to be only a few, so a loop with a string
-	 * comparision is faster than an hashmap/asciitree initialization and
-	 * further search.
-	 */
-	for( i = 0; methods[i].method != NULL; ++i ){
-		if( methods[i].name == method_id ){
-			return methods[i].method;
-		}
-	}
-
-	return NULL;
-}
-
 int map_find( Object *m, Object *key ){
     Map *mm = (Map *)m;
     size_t     i;
@@ -348,6 +331,16 @@ Object *map_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, cha
 	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
 }
 
+static ob_builtin_method_t map_builtin_methods[] = {
+	{ "size",   (ob_type_builtin_method_t *)__map_size },
+	{ "pop",    (ob_type_builtin_method_t *)__map_pop },
+	{ "unmap",  (ob_type_builtin_method_t *)__map_unmap },
+	{ "has",    (ob_type_builtin_method_t *)__map_has },
+	{ "keys",   (ob_type_builtin_method_t *)__map_keys },
+	{ "values", (ob_type_builtin_method_t *)__map_values },
+	OB_BUILIN_METHODS_END_MARKER
+};
+
 IMPLEMENT_TYPE(Map) {
     /** type code **/
     otMap,
@@ -356,16 +349,7 @@ IMPLEMENT_TYPE(Map) {
 	/** type basic size **/
     OB_COLLECTION_SIZE,
     /** type builtin methods **/
-    {
-		{ "size",   (ob_type_builtin_method_t *)__map_size },
-		{ "pop",    (ob_type_builtin_method_t *)__map_pop },
-		{ "unmap",  (ob_type_builtin_method_t *)__map_unmap },
-		{ "has",    (ob_type_builtin_method_t *)__map_has },
-		{ "keys",   (ob_type_builtin_method_t *)__map_keys },
-		{ "values", (ob_type_builtin_method_t *)__map_values },
-		OB_BUILIN_METHODS_END_MARKER
-    },
-
+    map_builtin_methods,
 	/** generic function pointers **/
     0, // type_name
     map_traverse, // traverse

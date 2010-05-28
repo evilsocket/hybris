@@ -406,8 +406,7 @@ IMPLEMENT_TYPE(Char) {
 	/** type basic size **/
     sizeof(char),
     /** type builtin methods **/
-    { OB_BUILIN_METHODS_END_MARKER },
-
+    NO_BUILTIN_METHODS,
 	/** generic function pointers **/
     0, // type_name
     0, // traverse

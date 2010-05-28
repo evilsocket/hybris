@@ -21,23 +21,6 @@
 #include <algorithm>
 
 /** helpers **/
-INLINE ob_type_builtin_method_t *ob_get_builtin_method( Object *c, char *method_id ){
-	size_t 				  i;
-	ob_builtin_methods_t *methods = c->type->builtin_methods;
-	/*
-	 * Builtin methods are supposed to be only a few, so a loop with a string
-	 * comparision is faster than an hashmap/asciitree initialization and
-	 * further search.
-	 */
-	for( i = 0; methods[i].method != NULL; ++i ){
-		if( methods[i].name == method_id ){
-			return methods[i].method;
-		}
-	}
-
-	return NULL;
-}
-
 size_t string_replace( string &source, const string find, string replace ) {
     int i,
 		count,
@@ -485,6 +468,16 @@ Object *string_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, 
 	return (result == H_UNDEFINED ? H_DEFAULT_RETURN : result);
 }
 
+static ob_builtin_method_t string_builtin_methods[] = {
+	{ "length",  (ob_type_builtin_method_t *)__string_length },
+	{ "find",    (ob_type_builtin_method_t *)__string_find },
+	{ "substr",  (ob_type_builtin_method_t *)__string_substr },
+	{ "replace", (ob_type_builtin_method_t *)__string_replace },
+	{ "split",   (ob_type_builtin_method_t *)__string_split },
+	{ "trim",    (ob_type_builtin_method_t *)__string_trim },
+	OB_BUILIN_METHODS_END_MARKER
+};
+
 IMPLEMENT_TYPE(String) {
     /** type code **/
     otString,
@@ -493,16 +486,7 @@ IMPLEMENT_TYPE(String) {
 	/** type basic size **/
     OB_COLLECTION_SIZE,
     /** type builtin methods **/
-    {
-    	{ "length",  (ob_type_builtin_method_t *)__string_length },
-        { "find",    (ob_type_builtin_method_t *)__string_find },
-        { "substr",  (ob_type_builtin_method_t *)__string_substr },
-        { "replace", (ob_type_builtin_method_t *)__string_replace },
-        { "split",   (ob_type_builtin_method_t *)__string_split },
-        { "trim",    (ob_type_builtin_method_t *)__string_trim },
-	    OB_BUILIN_METHODS_END_MARKER
-    },
-
+    string_builtin_methods,
 	/** generic function pointers **/
     0, // type_name
     0, // traverse

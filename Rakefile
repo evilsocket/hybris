@@ -115,7 +115,7 @@ Maintainer: Simone Margaritelli < evilsocket@gmail.com >
 Installed-Size: 2512
 Priority: optional
 Pre-Depends: dpkg
-Depends: libpcre3, libstdc++6, libcurl3, libffi5, libxml2
+Depends: libpcre3, libstdc++6, libcurl3, libffi5, libxml2, libreadline6
 Section: developement
 Description: Hybris programming language interpreter and standard libraries.
  Hybris, which stands for hybrid scripiting language, is an open source scripting language with dynamic typing, which is a language that does not require explicit declaration of the type of a variable, but understands how to treat the variable in question in accordance with the value which is initialized and subsequently treated, and object-oriented, which listen to the needs of developers who want to automate certain procedures in a simple and fast way."

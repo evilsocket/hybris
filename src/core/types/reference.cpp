@@ -460,8 +460,7 @@ IMPLEMENT_TYPE(Reference) {
 	/** type basic size **/
     sizeof( Object * ),
     /** type builtin methods **/
-    { OB_BUILIN_METHODS_END_MARKER },
-
+    NO_BUILTIN_METHODS,
 	/** generic function pointers **/
     ref_typename, // type_name
     ref_traverse, // traverse

@@ -146,8 +146,7 @@ IMPLEMENT_TYPE(Handle) {
 	/** type basic size **/
     sizeof(void *),
     /** type builtin methods **/
-    { OB_BUILIN_METHODS_END_MARKER },
-
+    NO_BUILTIN_METHODS,
 	/** generic function pointers **/
     0, // type_name
     handle_traverse, // traverse

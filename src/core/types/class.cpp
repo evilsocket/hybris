@@ -825,8 +825,7 @@ IMPLEMENT_TYPE(Class) {
 	/** type basic size **/
     OB_COLLECTION_SIZE,
     /** type builtin methods **/
-    { OB_BUILIN_METHODS_END_MARKER },
-
+    NO_BUILTIN_METHODS,
 	/** generic function pointers **/
     class_typename, // type_name
     class_traverse, // traverse

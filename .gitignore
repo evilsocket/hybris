@@ -18,3 +18,4 @@ include/parser.h
 *.log
 examples
 benchmark.sh
+build
