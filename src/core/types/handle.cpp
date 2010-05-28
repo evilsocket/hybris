@@ -19,10 +19,6 @@
 #include "hybris.h"
 
 /** generic function pointers **/
-Object *handle_traverse( Object *me, int index ){
-	return (index > 0 ? NULL : (Object *)((Handle *)me)->value);
-}
-
 Object *handle_clone( Object *me ){
     return (Object *)gc_new_handle( ob_handle_ucast(me)->value );
 }
@@ -149,7 +145,7 @@ IMPLEMENT_TYPE(Handle) {
     NO_BUILTIN_METHODS,
 	/** generic function pointers **/
     0, // type_name
-    handle_traverse, // traverse
+    0, // traverse
 	handle_clone, // clone
 	0, // free
 	0, // get_size
