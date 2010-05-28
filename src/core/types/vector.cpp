@@ -71,6 +71,40 @@ Object *__vector_join( vm_t *vm, Object *me, vframe_t *data ){
 	return (Object *)gc_new_string(join.c_str());
 }
 
+Object *__vector_max( vm_t *vm, Object *me, vframe_t *data ){
+	Object *array = me,
+		   *obj,
+		   *max   = NULL;
+	Integer index(0);
+	int size( ob_get_size(array) );
+
+	for( ; index.value < size; ++index.value ){
+		obj = ob_cl_at( array, (Object *)&index );
+		if( max == NULL || ob_cmp( obj, max ) == 1 ){
+			max = obj;
+		}
+	}
+
+	return ob_clone(max);
+}
+
+Object *__vector_min( vm_t *vm, Object *me, vframe_t *data ){
+	Object *array = me,
+		   *obj,
+		   *min   = NULL;
+	Integer index(0);
+	int size( ob_get_size(array) );
+
+	for( ; index.value < size; ++index.value ){
+		obj = ob_cl_at( array, (Object *)&index );
+		if( min == NULL || ob_cmp( obj, min ) == -1 ){
+			min = obj;
+		}
+	}
+
+	return ob_clone(min);
+}
+
 /** generic function pointers **/
 Object *vector_traverse( Object *me, int index ){
 	return ((unsigned)index >= ((Vector *)me)->items ? NULL : ((Vector *)me)->value.at(index));
@@ -443,6 +477,8 @@ static ob_builtin_method_t vector_builtin_methods[] = {
 	{ "remove",   (ob_type_builtin_method_t *)__vector_remove },
 	{ "contains", (ob_type_builtin_method_t *)__vector_contains },
 	{ "join",     (ob_type_builtin_method_t *)__vector_join },
+	{ "min",	  (ob_type_builtin_method_t *)__vector_min },
+	{ "max",	  (ob_type_builtin_method_t *)__vector_max },
 	{ OB_BUILIN_METHODS_END_MARKER }
 };
 

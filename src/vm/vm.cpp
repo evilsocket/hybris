@@ -1841,6 +1841,7 @@ INLINE Object *vm_exec_return( vm_t *vm, vframe_t *frame, Node *node ){
 	 * statement to exit with this return value.
 	 */
     frame->state.r_value = vm_exec( vm, frame, node->child(0) );
+    frame->state.r_value->ref++;
     frame->state.set( Break );
     frame->state.set( Return );
 
@@ -2283,6 +2284,8 @@ INLINE Object *vm_exec_try_catch( vm_t *vm, vframe_t *frame, Node *node ){
 		exception = frame->state.e_value;
 
 		assert( exception != H_UNDEFINED );
+
+		exception->ref--;
 
 		frame->add( (char *)ex_ident->value.m_identifier.c_str(), exception );
 

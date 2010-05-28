@@ -129,6 +129,24 @@ Object *__string_trim( vm_t *vm, Object *me, vframe_t *data ){
 	return (Object *)gc_new_string(s.c_str());
 }
 
+Object *__string_repeat( vm_t *vm, Object *me, vframe_t *data ){
+	if( vm_argc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'repeat' requires 1 parameter (called with %d)", vm_argc() );
+	}
+	ob_type_assert( vm_argv(0), otInteger, "repeat" );
+
+	string str 	  = ob_string_ucast(me)->value,
+		   repeated("");
+	size_t repeat = ob_ivalue( vm_argv(0) ),
+		   i;
+
+	for( i = 0; i < repeat; ++i ){
+		repeated += str;
+	}
+
+	return (Object *)gc_new_string(repeated.c_str());
+}
+
 /** generic function pointers **/
 Object *string_clone( Object *me ){
     return (Object *)gc_new_string( ob_string_ucast(me)->value.c_str() );
@@ -479,6 +497,7 @@ static ob_builtin_method_t string_builtin_methods[] = {
 	{ "replace", (ob_type_builtin_method_t *)__string_replace },
 	{ "split",   (ob_type_builtin_method_t *)__string_split },
 	{ "trim",    (ob_type_builtin_method_t *)__string_trim },
+	{ "repeat",  (ob_type_builtin_method_t *)__string_repeat },
 	OB_BUILIN_METHODS_END_MARKER
 };
 

@@ -233,13 +233,13 @@ Mentre prima utilizzavamo H_REQ_ARGC(0) e basta, poichè la funzione non richied
 Object *arg_0,
        *arg_1;
 
-arg_0 = vm_argv(0);
-arg_1 = vm_argv(1);
+arg_0 = ob_argv(0);
+arg_1 = ob_argv(1);
 </pre>
 
 <p>
 Ogni oggetto di Hybris, è rappresentato dalla struttura “Object” (definita nel file <a href="http://github.com/evilsocket/hybris/blob/master/include/types.h" class="urlextern" title="http://github.com/evilsocket/hybris/blob/master/include/types.h"  rel="nofollow">types.h</a>) che naturalmente non può essere direttamente usato come un tipo C/C++.
-In questo blocco di codice, tramite la macro <strong>vm_argv( n )</strong> dove <strong>n</strong> rappresenta l&#039;n-esimo argomento della funzione che ci interessa, preleviamo i due argomenti della funzione <strong>add</strong> e li mettiamo dentro le variabili arg_0 (il primo argomento) e arg_1 (il secondo).
+In questo blocco di codice, tramite la macro <strong>ob_argv( n )</strong> dove <strong>n</strong> rappresenta l&#039;n-esimo argomento della funzione che ci interessa, preleviamo i due argomenti della funzione <strong>add</strong> e li mettiamo dentro le variabili arg_0 (il primo argomento) e arg_1 (il secondo).
 </p>
 <pre class="code cpp"><span class="co1">// prelevo il valore double dai due argomenti, in base alla loro</span>
 <span class="co1">// tipologia</span>

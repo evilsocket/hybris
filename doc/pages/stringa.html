@@ -1,11 +1,4 @@
 
-
-
-
-
-
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="it"
@@ -131,13 +124,23 @@ Divide la stringa in un array di stringhe, utilizzando il separatore specificato
 
 Elimina ogni carattere “white space” (tab, new line, line feed, ecc) dall&#039;inizio e dalla fine della stringa, restituendo una nuova stringa .
 </p>
-<pre class="code hybris">s <span class="sy0">=</span> <span class="st0">&quot;hello world from hybris&quot;</span><span class="sy0">;</span>
-&nbsp;
-<span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;<span class="es0">\t</span><span class="es0">\n</span><span class="es0">\r</span> hello world<span class="es0">\n</span>&quot;</span><span class="sy0">.</span><span class="me1">trim</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;<span class="es0">\t</span><span class="es0">\n</span><span class="es0">\r</span> hello world<span class="es0">\n</span>&quot;</span><span class="sy0">.</span><span class="me1">trim</span><span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
 <pre class="code">hello world</pre>
 
 </div>
-<!-- SECTION "trim()" [2055-2330] -->
+<!-- SECTION "trim()" [2055-2297] -->
+<h2><a name="repeat_times" id="repeat_times">repeat( times )</a></h2>
+<div class="level2">
+
+<p>
+
+Restituisce una stringa formata dalla stringa principale ripetuta &#039;times&#039; volte.
+</p>
+<pre class="code hybris"><span class="kw3">println</span><span class="br0">&#40;</span> <span class="st0">&quot;hello &quot;</span><span class="sy0">.</span><span class="me1">repeat</span><span class="br0">&#40;</span>2<span class="br0">&#41;</span> <span class="br0">&#41;</span><span class="sy0">;</span></pre>
+<pre class="code">hello hello</pre>
+
+</div>
+<!-- SECTION "repeat( times )" [2298-2478] -->
 <h1><a name="esempio" id="esempio">Esempio</a></h1>
 <div class="level1">
 <pre class="code hybris"> <span class="co1">// dichiaro una stringa</span>
@@ -157,7 +160,7 @@ Elimina ogni carattere “white space” (tab, new line, line feed, ecc) dall&#0
 Stringa modificata : ’abcdefghijkl‘</pre>
 
 </div>
-<!-- SECTION "Esempio" [2331-] --><div class="footnotes">
+<!-- SECTION "Esempio" [2479-] --><div class="footnotes">
 <div class="fn"><sup><a href="#fnt__1" id="fn__1" name="fn__1" class="fn_bot">1)</a></sup> 
 La grandezza di una stringa è ottenibile sia con la funzione <strong>strlen</strong> che più genericamente con <strong>sizeof</strong> .</div>
 <div class="fn"><sup><a href="#fnt__2" id="fn__2" name="fn__2" class="fn_bot">2)</a></sup> 

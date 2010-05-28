@@ -66,9 +66,11 @@ typedef struct _vframe_state {
 		mask |= s;
 		if( s == Exception ){
 			e_value = v;
+			e_value->ref++;
 		}
 		else{
 			r_value = v;
+			r_value->ref++;
 		}
 	}
 
