@@ -51,7 +51,7 @@ HYBRIS_DEFINE_FUNCTION(hticks){
     timeval ts;
     gettimeofday(&ts,0);
 
-    return ob_dcast( gc_new_integer( ts.tv_sec * 1000 + (ts.tv_usec / 1000) ) );
+    return ob_dcast( gc_new_integer( ts.tv_sec + ts.tv_usec * 0.000001 ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(husleep){
