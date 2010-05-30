@@ -23,6 +23,7 @@
 #include <hybris.h>
 
 HYBRIS_DEFINE_FUNCTION(hticks);
+HYBRIS_DEFINE_FUNCTION(hfticks);
 HYBRIS_DEFINE_FUNCTION(husleep);
 HYBRIS_DEFINE_FUNCTION(hsleep);
 HYBRIS_DEFINE_FUNCTION(htime);
@@ -31,6 +32,7 @@ HYBRIS_DEFINE_FUNCTION(hstrdate);
 
 HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "ticks",   hticks,   H_NO_ARGS },
+	{ "fticks",  hfticks,  H_NO_ARGS },
 	{ "usleep",  husleep,  H_REQ_ARGC(1), { H_REQ_TYPES(otInteger) } },
 	{ "sleep",   hsleep,   H_REQ_ARGC(1), { H_REQ_TYPES(otInteger) } },
 	{ "time",    htime,    H_NO_ARGS },
@@ -52,6 +54,13 @@ HYBRIS_DEFINE_FUNCTION(hticks){
     gettimeofday(&ts,0);
 
     return ob_dcast( gc_new_integer( ts.tv_sec + ts.tv_usec * 0.000001 ) );
+}
+
+HYBRIS_DEFINE_FUNCTION(hfticks){
+    timeval ts;
+    gettimeofday(&ts,0);
+
+    return ob_dcast( gc_new_float( ts.tv_sec + ts.tv_usec * 0.000001 ) );
 }
 
 HYBRIS_DEFINE_FUNCTION(husleep){

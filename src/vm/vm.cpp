@@ -1636,7 +1636,7 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
 	 * Search for the used defined type calls, most like C++
 	 * class constructors but without strict prototypes.
 	 */
-    if( (user_type = vm_get_type( vm,type_name)) == H_UNDEFINED ){
+    if( (user_type = vm_get_type( vm, type_name )) == H_UNDEFINED ){
     	hyb_error( H_ET_SYNTAX, "'%s' undeclared type", type_name );
     }
     /*
@@ -1934,8 +1934,8 @@ INLINE Object *vm_exec_subscript_get( vm_t *vm, vframe_t *frame, Node *node ){
            *result     = H_UNDEFINED;
 
     if( node->children() == 3 ){
+    	identifier = vm_exec( vm, frame, node->child(0) );
 		array 	   = vm_exec( vm, frame, node->child(1) );
-		identifier = vm_exec( vm, frame, node->child(0) );
 		index      = vm_exec( vm, frame, node->child(2) );
 
 		vm_check_frame_exit(frame)
