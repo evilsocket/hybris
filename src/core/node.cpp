@@ -22,7 +22,6 @@
 NodeValue::NodeValue() :
     constant(NULL),
     identifier(""),
-    opcode(0),
     function(""),
     method(""),
     access(asPublic),
@@ -41,23 +40,19 @@ NodeValue::NodeValue() :
 
 }
 
-NodeValue::~NodeValue(){
-
+Node::Node() : type(H_NT_NONE), lineno(0), body(NULL) {
+	ll_init( &children );
 }
 
-Node::Node() : m_type(H_NT_NONE), m_lineno(0), m_body(NULL) {
-	ll_init( &m_children );
-}
-
-Node::Node( H_NODE_TYPE type, size_t lineno ) : m_type(type), m_lineno(lineno), m_body(NULL) {
-	ll_init( &m_children );
+Node::Node( H_NODE_TYPE type, size_t lineno ) : type(type), opcode(type), lineno(lineno), body(NULL) {
+	ll_init( &children );
 }
 
 Node::~Node(){
-	ll_foreach( &m_children, child ){
+	ll_foreach( &children, child ){
 		delete ll_node( child );
 	}
-	ll_clear( &m_children );
+	ll_clear( &children );
 }
 
 Node *Node::clone(){
@@ -95,19 +90,19 @@ ConstantNode::ConstantNode( size_t lineno, bool v ) : Node(H_NT_CONSTANT,lineno)
 
 Node *ConstantNode::clone() {
 	if( ob_is_int(value.constant) ){
-		return new ConstantNode( m_lineno, (ob_int_ucast(value.constant))->value );
+		return new ConstantNode( lineno, (ob_int_ucast(value.constant))->value );
 	}
 	else if( ob_is_float(value.constant) ){
-		return new ConstantNode( m_lineno, ob_float_ucast(value.constant)->value );
+		return new ConstantNode( lineno, ob_float_ucast(value.constant)->value );
 	}
 	else if( ob_is_char(value.constant) ){
-		return new ConstantNode( m_lineno, ob_char_ucast(value.constant)->value );
+		return new ConstantNode( lineno, ob_char_ucast(value.constant)->value );
 	}
 	else if( ob_is_string(value.constant) ){
-		return new ConstantNode( m_lineno, (char *)ob_string_ucast(value.constant)->value.c_str() );
+		return new ConstantNode( lineno, (char *)ob_string_ucast(value.constant)->value.c_str() );
 	}
 	else if( ob_is_boolean(value.constant) ){
-		return new ConstantNode( m_lineno, ob_bool_ucast(value.constant)->value );
+		return new ConstantNode( lineno, ob_bool_ucast(value.constant)->value );
 	}
 	else{
 		/*
@@ -119,19 +114,19 @@ Node *ConstantNode::clone() {
 
 /* expressions */
 ExpressionNode::ExpressionNode( size_t lineno, int expression ) : Node(H_NT_EXPRESSION,lineno) {
-    value.opcode = expression;
+    opcode = expression;
 }
 
 ExpressionNode::ExpressionNode( size_t lineno, int expression, llist_t *list ) : Node(H_NT_EXPRESSION,lineno) {
-    value.opcode = expression;
+    opcode = expression;
 
     if( list != NULL ){
-    	ll_merge_destroy( &m_children, list );
+    	ll_merge_destroy( &children, list );
 	}
 }
 
 ExpressionNode::ExpressionNode( size_t lineno, int expression, int argc, ... ) : Node(H_NT_EXPRESSION,lineno) {
-    value.opcode = expression;
+    opcode = expression;
     va_list ap;
 	int i;
 
@@ -143,10 +138,10 @@ ExpressionNode::ExpressionNode( size_t lineno, int expression, int argc, ... ) :
 }
 
 Node *ExpressionNode::clone(){
-	Node *clone = new ExpressionNode( m_lineno, value.opcode, 0 ),
+	Node *clone = new ExpressionNode( lineno, opcode, 0 ),
 		 *node;
 
-	ll_foreach( &m_children, nitem ){
+	ll_foreach( &children, nitem ){
 		node = ll_node(nitem);
 		clone->addChild( node ? node->clone() : node );
 	}
@@ -156,11 +151,11 @@ Node *ExpressionNode::clone(){
 
 /* statements */
 StatementNode::StatementNode( size_t lineno, int statement ) : Node(H_NT_STATEMENT,lineno) {
-    value.opcode = statement;
+    opcode = statement;
 }
 
 StatementNode::StatementNode( size_t lineno, int statement, int argc, ... ) : Node(H_NT_STATEMENT,lineno) {
-    value.opcode = statement;
+    opcode = statement;
     va_list ap;
 	int i;
 
@@ -172,42 +167,42 @@ StatementNode::StatementNode( size_t lineno, int statement, int argc, ... ) : No
 }
 
 StatementNode::StatementNode( size_t lineno, int statement, llist_t *identList, Node *expr ) : Node(H_NT_STATEMENT,lineno) {
-    value.opcode = statement;
+    opcode = statement;
 
 	addChild(expr);
 
 	if( identList ){
-		ll_merge_destroy( &m_children, identList );
+		ll_merge_destroy( &children, identList );
 	}
 }
 
 StatementNode::StatementNode( size_t lineno, int statement, Node *sw, llist_t *caselist ) : Node(H_NT_STATEMENT,lineno) {
-    value.opcode = statement;
-    value.switch_block    = sw;
+    opcode 			   = statement;
+    value.switch_block = sw;
 
     if( caselist != NULL ){
-    	ll_merge_destroy( &m_children, caselist );
+    	ll_merge_destroy( &children, caselist );
 	}
 }
 
 StatementNode::StatementNode( size_t lineno, int statement, Node *sw, llist_t *caselist, Node *deflt ) : Node(H_NT_STATEMENT,lineno) {
-    value.opcode = statement;
+    opcode 				  = statement;
     value.switch_block    = sw;
     value.default_block   = deflt;
 
     if( caselist != NULL ){
-    	ll_merge_destroy( &m_children, caselist );
+    	ll_merge_destroy( &children, caselist );
 	}
 }
 
 Node *StatementNode::clone(){
-	Node *clone = new StatementNode( m_lineno, value.opcode, 0 ),
+	Node *clone = new StatementNode( lineno, opcode, 0 ),
 		 *node;
 
 	clone->value.switch_block  = ( value.switch_block  ? value.switch_block->clone() : NULL );
 	clone->value.default_block = ( value.default_block ? value.default_block->clone() : NULL );
 
-	ll_foreach( &m_children, nitem ){
+	ll_foreach( &children, nitem ){
 		node = ll_node(nitem);
 		clone->addChild( node ? node->clone() : node );
 	}
@@ -221,7 +216,7 @@ IdentifierNode::IdentifierNode( size_t lineno, char *identifier ) : Node(H_NT_ID
 }
 
 IdentifierNode::IdentifierNode( size_t lineno, access_t access, Node *i ) : Node(H_NT_IDENTIFIER,lineno) {
-	assert( i->type() == H_NT_IDENTIFIER );
+	assert( i->type == H_NT_IDENTIFIER );
 
 	value.access     = access;
 	value.identifier = i->value.identifier;
@@ -229,26 +224,26 @@ IdentifierNode::IdentifierNode( size_t lineno, access_t access, Node *i ) : Node
 
 IdentifierNode::IdentifierNode( size_t lineno, access_t access, char *identifier ) : Node(H_NT_IDENTIFIER,lineno) {
     value.access     = access;
-    value.is_static	   = false;
+    value.is_static	 = false;
 	value.identifier = identifier;
 }
 
 IdentifierNode::IdentifierNode( size_t lineno, access_t access, bool is_static, char *identifier, Node *v ) : Node(H_NT_IDENTIFIER,lineno) {
     value.access     = access;
-    value.is_static	   = is_static;
+    value.is_static	 = is_static;
 	value.identifier = identifier;
 
 	addChild(v);
 }
 
 Node *IdentifierNode::clone(){
-	Node *clone = new IdentifierNode( m_lineno, (char *)value.identifier.c_str() ),
+	Node *clone = new IdentifierNode( lineno, (char *)value.identifier.c_str() ),
 		 *node;
 
-	clone->value.access = value.access;
+	clone->value.access    = value.access;
     clone->value.is_static = value.is_static;
 
-    ll_foreach( &m_children, nitem ){
+    ll_foreach( &children, nitem ){
     	node = ll_node(nitem);
    		clone->addChild( node ? node->clone() : node );
    	}
@@ -263,7 +258,7 @@ AttributeRequestNode::AttributeRequestNode( size_t lineno, Node *owner, Node *me
 }
 
 Node *AttributeRequestNode::clone(){
-	return new AttributeRequestNode( m_lineno, value.owner, value.member );
+	return new AttributeRequestNode( lineno, value.owner, value.member );
 }
 
 /* class method call */
@@ -273,36 +268,36 @@ MethodCallNode::MethodCallNode( size_t lineno, Node *owner, Node *call ) : Node(
 }
 
 Node *MethodCallNode::clone(){
-	return new MethodCallNode( m_lineno, value.owner, value.member );
+	return new MethodCallNode( lineno, value.owner, value.member );
 }
 
 /* functions */
 FunctionNode::FunctionNode( size_t lineno, function_decl_t *declaration ) : Node(H_NT_FUNCTION,lineno) {
     value.function = declaration->function;
-    value.vargs 	 = declaration->vargs;
-    value.argc	 = declaration->argc;
+    value.vargs    = declaration->vargs;
+    value.argc	   = declaration->argc;
 
 	/* add function prototype args children */
-	for( int i = 0; i < value.argc; ++i ){
-		addChild( new IdentifierNode( m_lineno, declaration->argv[i] ) );
+	for( size_t i = 0; i < value.argc; ++i ){
+		addChild( new IdentifierNode( lineno, declaration->argv[i] ) );
 	}
 }
 
 FunctionNode::FunctionNode( size_t lineno, function_decl_t *declaration, int argc, ... ) : Node(H_NT_FUNCTION,lineno) {
-    value.function = declaration->function;
-    value.vargs 	 = declaration->vargs;
-    value.argc	 = declaration->argc;
-
     va_list ap;
-	int i;
+	size_t  i;
+
+	value.function = declaration->function;
+    value.vargs    = declaration->vargs;
+    value.argc	   = declaration->argc;
 
 	/* add function prototype args children */
 	for( i = 0; i < value.argc; ++i ){
-		addChild( new IdentifierNode( m_lineno, declaration->argv[i] ) );
+		addChild( new IdentifierNode( lineno, declaration->argv[i] ) );
 	}
 	/* add function body statements node */
 	va_start( ap, argc );
-	addChild( m_body = va_arg( ap, Node * ) );
+	addChild( body = va_arg( ap, Node * ) );
 	for( i = 1; i < argc; ++i ){
 		addChild( va_arg( ap, Node * ) );
 	}
@@ -314,18 +309,18 @@ FunctionNode::FunctionNode( size_t lineno, const char *name ) : Node(H_NT_FUNCTI
 }
 
 Node *FunctionNode::clone(){
-	Node *clone = new FunctionNode( m_lineno, value.function.c_str() ),
+	Node *clone = new FunctionNode( lineno, value.function.c_str() ),
 		 *node,
 		 *nclone;
 
 	clone->value.argc  = value.argc;
 	clone->value.vargs = value.vargs;
 
-	ll_foreach( &m_children, nitem ){
+	ll_foreach( &children, nitem ){
 		node   = ll_node( nitem );
 		nclone = (node ? node->clone() : node);
-		if( node == m_body ){
-			clone->m_body = nclone;
+		if( node == body ){
+			clone->body = nclone;
 		}
 		clone->addChild( nclone );
 	}
@@ -337,14 +332,14 @@ Node *FunctionNode::clone(){
 CallNode::CallNode( size_t lineno, char *name, llist_t *argv ) : Node(H_NT_CALL,lineno) {
     value.call = name;
     if( argv != NULL ){
-    	ll_merge_destroy( &m_children, argv );
+    	ll_merge_destroy( &children, argv );
 	}
 }
 
 CallNode::CallNode( size_t lineno, Node *alias, llist_t *argv ) :  Node(H_NT_CALL,lineno) {
     value.alias = alias;
     if( argv != NULL ){
-    	ll_merge_destroy( &m_children, argv );
+    	ll_merge_destroy( &children, argv );
 	}
 }
 
@@ -353,12 +348,12 @@ Node *CallNode::clone(){
 		 *node;
 
     if( value.alias == NULL ){
-        clone = new CallNode( m_lineno, (char *)value.call.c_str(), NULL );
+        clone = new CallNode( lineno, (char *)value.call.c_str(), NULL );
     }
     else{
-        clone = new CallNode( m_lineno, value.alias, NULL );
+        clone = new CallNode( lineno, value.alias, NULL );
     }
-	ll_foreach( &m_children, nitem ){
+	ll_foreach( &children, nitem ){
 		node = ll_node(nitem);
 		clone->addChild( node ? node->clone() : node );
 	}
@@ -368,7 +363,7 @@ Node *CallNode::clone(){
 
 /* try/catch/finally statements */
 TryCatchNode::TryCatchNode( size_t lineno, int statement, Node *try_block, char *exception_id, Node *catch_block, Node *finally_block ) : Node(H_NT_STATEMENT,lineno) {
-	value.opcode 	    = statement;
+	opcode 	    		= statement;
 	value.try_block     = try_block;
 	value.exception_id  = exception_id;
 	value.catch_block   = catch_block;
@@ -376,8 +371,8 @@ TryCatchNode::TryCatchNode( size_t lineno, int statement, Node *try_block, char 
 }
 
 Node *TryCatchNode::clone(){
-	return new TryCatchNode( m_lineno,
-							 value.opcode,
+	return new TryCatchNode( lineno,
+							 opcode,
 							 value.try_block,
 							 (char *)value.exception_id.c_str(),
 							 value.catch_block,
@@ -388,15 +383,15 @@ Node *TryCatchNode::clone(){
 NewNode::NewNode( size_t lineno, char *type, llist_t *argv ) : Node(H_NT_NEW,lineno){
 	value.identifier = type;
 	if( argv != NULL ){
-		ll_merge_destroy( &m_children, argv );
+		ll_merge_destroy( &children, argv );
 	}
 }
 
 Node *NewNode::clone(){
-	Node *clone = new NewNode( m_lineno, (char *)value.identifier.c_str(), NULL ),
+	Node *clone = new NewNode( lineno, (char *)value.identifier.c_str(), NULL ),
 		 *node;
 
-	ll_foreach( &m_children, nitem ){
+	ll_foreach( &children, nitem ){
 		node = ll_node(nitem);
 		clone->addChild( node ? node->clone() : node );
 	}
@@ -408,7 +403,7 @@ Node *NewNode::clone(){
 StructureNode::StructureNode( size_t lineno, char *s_name, llist_t *attributes ) : Node(H_NT_STRUCT,lineno) {
     value.identifier = s_name;
     if( attributes != NULL ){
-    	ll_merge_destroy( &m_children, attributes );
+    	ll_merge_destroy( &children, attributes );
 	}
 }
 
@@ -424,11 +419,11 @@ MethodDeclarationNode::MethodDeclarationNode( size_t lineno, access_t access, me
 
 	/* add method prototype args children */
 	for( i = 0; i < value.argc; ++i ){
-		addChild( new IdentifierNode( m_lineno, declaration->argv[i] ) );
+		addChild( new IdentifierNode( lineno, declaration->argv[i] ) );
 	}
 	/* add method body statements node */
 	va_start( ap, argc );
-	addChild( m_body = va_arg( ap, Node * ) );
+	addChild( body = va_arg( ap, Node * ) );
 	for( i = 1; i < argc; ++i ){
 		addChild( va_arg( ap, Node * ) );
 	}
@@ -436,10 +431,10 @@ MethodDeclarationNode::MethodDeclarationNode( size_t lineno, access_t access, me
 }
 
 MethodDeclarationNode::MethodDeclarationNode( size_t lineno, access_t access, method_decl_t *declaration, bool is_static, int argc, ... ) : Node(H_NT_METHOD_DECL,lineno) {
-    value.method = declaration->method;
-    value.vargs  = declaration->vargs;
-    value.argc   = declaration->argc;
-    value.access = access;
+    value.method 	= declaration->method;
+    value.vargs  	= declaration->vargs;
+    value.argc   	= declaration->argc;
+    value.access 	= access;
     value.is_static = is_static;
 
     va_list ap;
@@ -447,11 +442,11 @@ MethodDeclarationNode::MethodDeclarationNode( size_t lineno, access_t access, me
 
 	/* add method prototype args children */
 	for( i = 0; i < value.argc; ++i ){
-		addChild( new IdentifierNode( m_lineno, declaration->argv[i] ) );
+		addChild( new IdentifierNode( lineno, declaration->argv[i] ) );
 	}
 	/* add method body statements node */
 	va_start( ap, argc );
-	addChild( m_body = va_arg( ap, Node * ) );
+	addChild( body = va_arg( ap, Node * ) );
 	for( i = 1; i < argc; ++i ){
 		addChild( va_arg( ap, Node * ) );
 	}
@@ -464,7 +459,7 @@ MethodDeclarationNode::MethodDeclarationNode( size_t lineno, const char *name, a
 }
 
 Node *MethodDeclarationNode::clone(){
-	Node *clone = new MethodDeclarationNode( m_lineno, value.method.c_str(), value.access ),
+	Node *clone = new MethodDeclarationNode( lineno, value.method.c_str(), value.access ),
 		 *node,
 		 *nclone;
 
@@ -472,11 +467,11 @@ Node *MethodDeclarationNode::clone(){
 	clone->value.vargs     = value.vargs;
 	clone->value.argc	   = value.argc;
 
-	ll_foreach( &m_children, nitem ){
+	ll_foreach( &children, nitem ){
 		node   = ll_node( nitem );
 		nclone = node ? node->clone() : node;
-		if( node == m_body ){
-			clone->m_body = nclone;
+		if( node == body ){
+			clone->body = nclone;
 		}
 		clone->addChild( nclone );
 	}
@@ -486,14 +481,13 @@ Node *MethodDeclarationNode::clone(){
 
 /* class type definition */
 ClassNode::ClassNode( size_t lineno, char *classname, llist_t *extends, llist_t *members ) : Node(H_NT_CLASS,lineno) {
-	ll_init(&value.extends);
-
 	value.identifier = classname;
 	if( extends != NULL ){
+		ll_init( &value.extends );
 		ll_merge_destroy( &value.extends, extends );
 	}
 	if( members != NULL ){
-		ll_merge_destroy( &m_children, members );
+		ll_merge_destroy( &children, members );
 	}
 }
 

@@ -70,19 +70,19 @@ HYBRIS_DEFINE_FUNCTION(hpack){
 			do_simple_packing( stream, o, size );
 		break;
 		case otVector  :
-			if( (vargc() - 1) != ob_get_size(o) ){
-				hyb_error( H_ET_SYNTAX, "not enough parameters to pack an array of %d elements (given %d)", ob_get_size(o), vargc() );
+			if( (vm_argc() - 1) != ob_get_size(o) ){
+				hyb_error( H_ET_SYNTAX, "not enough parameters to pack an array of %d elements (given %d)", ob_get_size(o), vm_argc() );
 			}
-			for( i = 1, j = 0; i < vargc(); ++i, ++j ){
+			for( i = 1, j = 0; i < vm_argc(); ++i, ++j ){
 				ob_argv_type_assert( i, otInteger, "pack" );
 				do_simple_packing( stream, ob_vector_ucast(o)->value[j], ob_ivalue( vm_argv(i) ) );
 			}
 		break;
 		case otStructure :
-			if( (vargc() - 1) != ob_get_size(o) ){
-				hyb_error( H_ET_SYNTAX, "not enough parameters to pack a structure with %d attributes (given %d)", ob_get_size(o), vargc() );
+			if( (vm_argc() - 1) != ob_get_size(o) ){
+				hyb_error( H_ET_SYNTAX, "not enough parameters to pack a structure with %d attributes (given %d)", ob_get_size(o), vm_argc() );
 			}
-			for( i = 1, j = 0; i < vargc(); ++i, ++j ){
+			for( i = 1, j = 0; i < vm_argc(); ++i, ++j ){
 				ob_argv_type_assert( i, otInteger, "pack" );
 				do_simple_packing( stream, ob_struct_ucast(o)->s_attributes.at(j), ob_ivalue( vm_argv(i) ) );
 			}

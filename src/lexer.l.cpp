@@ -192,15 +192,28 @@ include          BEGIN(T_INCLUSION);
 
     __hyb_line_stack.push_back( vm_get_lineno(__hyb_vm) );
 
+	const char *filename = __hyb_file_stack.back().c_str(),
+			   *sep		 = strrchr( filename, '/' );
+	if( sep ){
+		filename = sep + 1;
+	}
+
+    vm_set_source( __hyb_vm, filename );
     vm_set_lineno( __hyb_vm, 1 );
 
     yypush_buffer_state( yy_create_buffer( yyin, YY_BUF_SIZE ) );
 
     BEGIN(INITIAL);
 }
-<<EOF>> {
-	if( __hyb_file_stack.size() ){
+<T_INCLUSION><<EOF>> {
+	if( __hyb_file_stack.size() >= 1 ){
 		__hyb_file_stack.pop_back();
+		if( __hyb_file_stack.size() ){
+			vm_set_source( __hyb_vm, __hyb_file_stack.back() );
+		}
+		else{
+			vm_set_source( __hyb_vm, __hyb_vm->args.source );
+		}
 	}
 	if( __hyb_line_stack.size() ){
 		__hyb_line_stack.pop_back();
@@ -695,6 +708,7 @@ method_decl_t *hyb_lex_operator( char * text ){
     return declaration;
 }
 
+
 void hyb_parse_string( vm_t *vm, const char *str ){
 	YY_BUFFER_STATE prev, current;
 	int				state;
@@ -744,3 +758,30 @@ void hyb_parse_string( vm_t *vm, const char *str ){
 
 	yyin = prev_yyin;
 }
+
+void hyb_parse_file( vm_t *vm, const char *filename ){
+	FILE  *fp = fopen( filename, "rt" );
+	string source, buffer;
+	char   line[1024] = {0};
+
+	if( fp ){
+		source = vm_get_source(vm);
+
+		while( fgets( line, 1024, fp ) != NULL ){
+			buffer += line;
+		}
+
+		fclose(fp);
+
+		const char *sep = strrchr( filename, '/' );
+		if( sep ){
+			filename = sep + 1;
+		}
+		vm_set_source( vm, filename );
+
+		hyb_parse_string( vm, buffer.c_str() );
+
+		vm_set_source( vm, source );
+	}
+}
+

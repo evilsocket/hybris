@@ -38,6 +38,10 @@ extern Integer __default_error_value;
 #define H_DEFAULT_ERROR  (Object *)&__default_error_value
 #define H_VOID_VALUE     H_DEFAULT_RETURN
 /*
+ * Parse and execute a file.
+ */
+void hyb_parse_file( vm_t *vm, const char *filename );
+/*
  * Parse and execute a string.
  */
 void hyb_parse_string( vm_t *vm, const char *str );

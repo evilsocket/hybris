@@ -68,17 +68,21 @@ class NodeValue {
 
         Object  *constant;
         string   identifier;
-        int      opcode;
+
         Node    *switch_block;
         Node    *default_block;
+
         string   function;
         bool	 vargs;
+
         access_t access;
         bool	 is_static;
         string   method;
+
         string   call;
-        size_t	 argc;
         Node    *alias;
+        size_t	 argc;
+
         Node    *owner;
         Node    *member;
 
@@ -90,51 +94,34 @@ class NodeValue {
         llist_t  extends;
 
         NodeValue();
-        ~NodeValue();
 };
 
 /* node base class */
 class Node {
 
-protected :
-
-    H_NODE_TYPE  m_type;
-    size_t		 m_lineno;
 public  :
-    /*
-     * Used when the node is a function or method prototype.
-     */
-    Node		*m_body;
-    llist_t		 m_children;
+
+	size_t		 lineno;
+	H_NODE_TYPE  type;
+	int      	 opcode;
+    Node		*body;
+    llist_t		 children;
+    NodeValue 	 value;
 
     Node();
     Node( H_NODE_TYPE type, size_t lineno );
     ~Node();
 
-    NodeValue value;
-
-    INLINE H_NODE_TYPE type(){
-        return m_type;
-    }
-
-    INLINE size_t lineno(){
-		return m_lineno;
-	}
-
-    INLINE size_t children(){
-        return m_children.items;
-    }
-
     INLINE void addChild( Node *child ){
-    	ll_append( &m_children, child );
+    	ll_append( &children, child );
     }
 
     INLINE Node *child( size_t i ){
         switch(i){
-			case 0 : return (Node *)m_children.head->data;
-			case 1 : return (Node *)m_children.head->next->data;
-			case 2 : return (Node *)m_children.head->next->next->data;
-			case 3 : return (Node *)m_children.head->next->next->next->data;
+			case 0 : return (Node *)children.head->data;
+			case 1 : return (Node *)children.head->next->data;
+			case 2 : return (Node *)children.head->next->next->data;
+			case 3 : return (Node *)children.head->next->next->next->data;
 
 			default :
 				/*
@@ -146,10 +133,6 @@ public  :
 
     INLINE char *id(){
     	return (char *)value.identifier.c_str();
-    }
-
-    INLINE Node *body(){
-    	return m_body;
     }
 
     virtual Node *clone();

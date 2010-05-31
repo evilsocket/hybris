@@ -28,16 +28,16 @@ Object *__vector_pop( vm_t *vm, Object *me, vframe_t *data ){
 }
 
 Object *__vector_remove( vm_t *vm, Object *me, vframe_t *data ){
-	if( vargc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'remove' requires 1 parameter (called with %d)", vargc() );
+	if( vm_argc() != 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'remove' requires 1 parameter (called with %d)", vm_argc() );
 	}
 
 	return (Object *)ob_cl_remove( me, vm_argv(0) );
 }
 
 Object *__vector_contains( vm_t *vm, Object *me, vframe_t *data ){
-	if( vargc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'contains' requires 1 parameter (called with %d)", vargc() );
+	if( vm_argc() != 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'contains' requires 1 parameter (called with %d)", vm_argc() );
 	}
 
 	Object *array = me,
@@ -55,8 +55,8 @@ Object *__vector_contains( vm_t *vm, Object *me, vframe_t *data ){
 }
 
 Object *__vector_join( vm_t *vm, Object *me, vframe_t *data ){
-	if( vargc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'join' requires 1 parameter (called with %d)", vargc() );
+	if( vm_argc() != 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'join' requires 1 parameter (called with %d)", vm_argc() );
 	}
 
 	Object *array = me;
@@ -433,7 +433,7 @@ Object *vector_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, 
 	Object  *value,
 			*result;
 	vframe_t stack;
-	size_t   i, argc = argv->children();
+	size_t   i, argc = argv->children.items;
 
 	/*
 	 * Add this frame as the active stack
@@ -444,7 +444,7 @@ Object *vector_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, 
 	/*
 	 * Evaluate each object and insert it into the stack
 	 */
-	ll_foreach_to( &argv->m_children, iitem, i, argc ){
+	ll_foreach_to( &argv->children, iitem, i, argc ){
 		value = vm_exec( vm, frame, ll_node( iitem ) );
 
 		if( frame->state.is(Exception) ){

@@ -41,16 +41,16 @@ Object *__map_pop( vm_t *vm, Object *me, vframe_t *data ){
 }
 
 Object *__map_unmap( vm_t *vm, Object *me, vframe_t *data ){
-	if( vargc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'unmap' requires 1 parameter (called with %d)", vargc() );
+	if( vm_argc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'unmap' requires 1 parameter (called with %d)", vm_argc() );
 	}
 
 	return ob_cl_remove( me, vm_argv(0) );
 }
 
 Object *__map_has( vm_t *vm, Object *me, vframe_t *data ){
-	if( vargc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'has' requires 1 parameter (called with %d)", vargc() );
+	if( vm_argc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'has' requires 1 parameter (called with %d)", vm_argc() );
 	}
 
 	return (Object *)gc_new_boolean( map_find( me, vm_argv(0) ) == -1 ? false : true );
@@ -297,7 +297,7 @@ Object *map_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, cha
 	Object  *value,
 			*result;
 	vframe_t stack;
-	size_t   i, argc = argv->children();
+	size_t   i, argc = argv->children.items;
 
 	/*
 	 * Add this frame as the active stack
@@ -308,7 +308,7 @@ Object *map_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, cha
 	/*
 	 * Evaluate each object and insert it into the stack
 	 */
-	ll_foreach_to( &argv->m_children, iitem, i, argc ){
+	ll_foreach_to( &argv->children, iitem, i, argc ){
 		value = vm_exec( vm, frame, ll_node( iitem ) );
 
 		if( frame->state.is(Exception) ){

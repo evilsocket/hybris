@@ -73,7 +73,6 @@ extern "C" void hybris_module_init( vm_t * vm ){
 	HYBRIS_DEFINE_CONSTANT( vm, "MNT_DETACH", gc_new_integer(MNT_DETACH) );
 	HYBRIS_DEFINE_CONSTANT( vm, "MNT_EXPIRE", gc_new_integer(MNT_EXPIRE) );
 
-
 #ifdef S_WRITE
 	HYBRIS_DEFINE_CONSTANT( vm, "S_WRITE", gc_new_integer(S_WRITE) );
 	HYBRIS_DEFINE_CONSTANT( vm, "S_APPEND", gc_new_integer(S_APPEND) );

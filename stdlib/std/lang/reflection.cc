@@ -55,22 +55,13 @@ HYBRIS_DEFINE_FUNCTION(hload){
 	char  *filename;
 	string buffer;
 
-	vm_parse_argv( "p", &filename);
+	vm_parse_argv( "p", &filename );
 
 	if( hyb_file_exists( filename ) == 0 ){
 		return H_DEFAULT_ERROR;
 	}
 
-	FILE  *fp = fopen( filename, "rt" );
-	char   line[1024] = {0};
-
-    while( fgets( line, 1024, fp ) != NULL ){
-    	buffer += line;
-    }
-
-	fclose(fp);
-
-	hyb_parse_string( vm, buffer.c_str() );
+	hyb_parse_file( vm, filename );
 
 	return H_DEFAULT_RETURN;
 }
@@ -106,7 +97,7 @@ HYBRIS_DEFINE_FUNCTION(hdyn_functions){
 	ll_item_t	  *m_item,
 				  *f_item;
 	vm_module_t   *module;
-	vfunction_t *function;
+	vm_function_t *function;
 
 	Object *map = (Object *)gc_new_map(),
 		   *vec;
@@ -116,7 +107,7 @@ HYBRIS_DEFINE_FUNCTION(hdyn_functions){
 		vec    = (Object *)gc_new_vector();
 
 		for( f_item = module->functions.head; f_item; f_item = f_item->next ){
-			ob_cl_push_reference( vec, (Object *)gc_new_string( ll_data( vfunction_t *, f_item )->identifier.c_str()  ) );
+			ob_cl_push_reference( vec, (Object *)gc_new_string( ll_data( vm_function_t *, f_item )->identifier.c_str()  ) );
 		}
 
 		ob_cl_set_reference( map, (Object *)gc_new_string( module->name.c_str() ), vec );
@@ -145,9 +136,9 @@ HYBRIS_DEFINE_FUNCTION(hcall){
 
 	vm_parse_argv( "s", &function );
 
-	if( vargc() > 1 ){
+	if( vm_argc() > 1 ){
 		unsigned int i;
-		for( i = 1; i < vargc(); ++i ){
+		for( i = 1; i < vm_argc(); ++i ){
 			stack.push( vm_argv(i) );
 		}
 	}
@@ -186,7 +177,7 @@ HYBRIS_DEFINE_FUNCTION(hcall_method){
 	vm_add_frame( vm, &stack );
 
 	/* call the method */
-	result = vm_exec( vm, &stack, method->body() );
+	result = vm_exec( vm, &stack, method->body );
 
 	vm_pop_frame( vm );
 

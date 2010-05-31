@@ -27,7 +27,7 @@ Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *me
 	ll_item_t *iitem;
 	Object  *value  = H_UNDEFINED,
 			*result = H_UNDEFINED;
-	size_t i, argc(argv->children());
+	size_t i, argc(argv->children.items);
 
 	method = ob_get_method( c, (char *)"__method", 2 );
 	if( method == H_UNDEFINED ){
@@ -48,7 +48,7 @@ Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *me
 
 	stack.insert( "me", c );
 	stack.add( "name", (Object *)gc_new_string(method_name) );
-	ll_foreach_to( &argv->m_children, iitem, i, argc ){
+	ll_foreach_to( &argv->children, iitem, i, argc ){
 		value = vm_exec( vm, frame, ll_node( iitem ) );
 
 		if( frame->state.is(Exception) ){
@@ -65,7 +65,7 @@ Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *me
 	stack.add( "argv", (Object *)args );
 
 	/* call the method */
-	result = vm_exec( vm, &stack, method->body() );
+	result = vm_exec( vm, &stack, method->body );
 
 	vm_pop_frame( vm );
 
@@ -106,12 +106,12 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
 	}
 
-	op_argc = op->children() - 1;
+	op_argc = op->children.items - 1;
 	op_argc = (op_argc < 0 ? 0 : op_argc);
 
 	/*
 	 * The last child of a method is its body itself, so we compare
-	 * call children with method->children() - 1 to ignore the body.
+	 * call children with method->children.items - 1 to ignore the body.
 	 */
 	if( argc != op_argc ){
 		hyb_error( H_ET_SYNTAX, "operator '%s' requires %d parameters (called with %d)",
@@ -126,14 +126,14 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 
 	stack.insert( "me", me );
 	va_start( ap, argc );
-	for( i = 0, iitem = op->m_children.head; i < argc; ++i, iitem = iitem->next ){
+	for( i = 0, iitem = op->children.head; i < argc; ++i, iitem = iitem->next ){
 		value = va_arg( ap, Object * );
 		stack.insert( (char *)ll_node( iitem )->value.identifier.c_str(), value );
 	}
 	va_end(ap);
 
 	/* call the operator */
-	result = vm_exec( __hyb_vm, &stack, op->body() );
+	result = vm_exec( __hyb_vm, &stack, op->body );
 
 	vm_pop_frame( __hyb_vm );
 
@@ -180,11 +180,11 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 		hyb_error( H_ET_GENERIC, "Reached max number of nested calls" );
 	}
 
-	ds_argc = ds->children() - 1;
+	ds_argc = ds->children.items - 1;
 
 	/*
 	 * The last child of a method is its body itself, so we compare
-	 * call children with method->children() - 1 to ignore the body.
+	 * call children with method->children.items - 1 to ignore the body.
 	 */
 	if( argc != ds_argc ){
 		hyb_error( H_ET_SYNTAX, "descriptor '%s' requires %d parameters (called with %d)",
@@ -203,14 +203,14 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 
 	stack.insert( "me", me );
 	va_start( ap, argc );
-	for( i = 0, iitem = ds->m_children.head; i < argc; ++i, iitem = iitem->next ){
+	for( i = 0, iitem = ds->children.head; i < argc; ++i, iitem = iitem->next ){
 		value = va_arg( ap, Object * );
 		stack.insert( (char *)ll_node( iitem )->value.identifier.c_str(), value );
 	}
 	va_end(ap);
 
 	/* call the descriptor */
-	result = vm_exec( __hyb_vm, &stack, ds->body() );
+	result = vm_exec( __hyb_vm, &stack, ds->body );
 
 	vm_pop_frame( __hyb_vm );
 
@@ -312,7 +312,7 @@ void class_free( Object *me ){
 
 			vm_add_frame( __hyb_vm, &stack );
 
-			vm_exec( __hyb_vm, &stack, dtor->body() );
+			vm_exec( __hyb_vm, &stack, dtor->body );
 
 			vm_pop_frame( __hyb_vm );
 		}
@@ -666,14 +666,14 @@ Node *class_get_method( Object *me, char *name, int argc ){
 		vv_foreach( vector<Node *>, pi, method->prototypes ){
 			/*
 			 * The last child of a method is its body itself, so we compare
-			 * call children with method->children() - 1 to ignore the body.
+			 * call children with method->children.items - 1 to ignore the body.
 			 */
 			if( best_match == NULL ){
 				best_match 		= *pi;
-				best_match_argc = best_match->children() - 1;
+				best_match_argc = best_match->children.items - 1;
 			}
 			else{
-				match_argc = (*pi)->children() - 1;
+				match_argc = (*pi)->children.items - 1;
 				if( match_argc != best_match_argc && match_argc == argc ){
 					return (*pi);
 				}
@@ -690,7 +690,7 @@ Node *class_get_method( Object *me, char *name, int argc ){
 Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, char *method_id, Node *argv ){
 	size_t 	 method_argc,
 			 i,
-		 	 argc   = argv->children();
+		 	 argc   = argv->children.items;
 	ll_item_t *aitem, *iitem;
 	Object  *value  = H_UNDEFINED,
 			*result = H_UNDEFINED;
@@ -734,9 +734,9 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 
 	/*
 	 * The last child of a method is its body itself, so we compare
-	 * call children with method->children() - 1 to ignore the body.
+	 * call children with method->children.items - 1 to ignore the body.
 	 */
-	method_argc = method->children() - 1;
+	method_argc = method->children.items - 1;
 	method_argc = (method_argc < 0 ? 0 : method_argc);
 
 	if( method->value.vargs ){
@@ -779,7 +779,7 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 	/*
 	 * Evaluate each object and insert it into the stack
 	 */
-	for( i = 0, aitem = argv->m_children.head, iitem = method->m_children.head; i < argc; ++i, aitem = aitem->next ){
+	for( i = 0, aitem = argv->children.head, iitem = method->children.head; i < argc; ++i, aitem = aitem->next ){
 		value = vm_exec( vm, frame, ll_node( aitem ) );
 		/*
 		 * Check if vm_exec raised an exception.
@@ -806,7 +806,7 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 		}
 	}
 	/* execute the method */
-	result = vm_exec( vm, &stack, method->body() );
+	result = vm_exec( vm, &stack, method->body );
 
 	/*
 	 * Dismiss the stack.

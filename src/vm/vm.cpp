@@ -72,13 +72,23 @@ FILE *vm_fopen( vm_t *vm ){
 	extern vector<int>	  __hyb_line_stack;
 
     if( *vm->args.source ){
-    	__hyb_file_stack.push_back( vm->args.source);
-    	__hyb_line_stack.push_back(0);
+    	const char *filename = vm->args.source,
+				   *sep 	 = strrchr( filename, '/' );
+    	if( sep ){
+    		filename = sep + 1;
+    	}
+    	printf( "vm_set_source( %p, %s )\n", vm, filename );
+    	vm_set_source( vm, filename );
+
+    	__hyb_file_stack.push_back( filename );
+    	__hyb_line_stack.push_back( 1 );
 
         vm->fp = fopen( vm->args.source, "r" );
         vm_chdir( vm );
     }
     else{
+    	vm_set_source( vm, "<stdin>" );
+
     	__hyb_file_stack.push_back("<stdin>");
 
     	vm->fp = stdin;
@@ -225,7 +235,7 @@ void vm_release( vm_t *vm ){
 	for( m_item = vm->modules.head; m_item; m_item = m_item->next ){
 		module = ll_data( vm_module_t *, m_item );
 		for( f_item = module->functions.head; f_item; f_item = f_item->next ){
-			delete ll_data( vfunction_t *, f_item );
+			delete ll_data( vm_function_t *, f_item );
 		}
 		ll_clear( &module->functions );
 	}
@@ -299,7 +309,7 @@ void vm_load_module( vm_t *vm, string path, string name ){
     }
 
     /* exported functions vector */
-    vfunction_t *functions = (vfunction_t *)dlsym( hmodule, "hybris_module_functions" );
+    vm_function_t *functions = (vm_function_t *)dlsym( hmodule, "hybris_module_functions" );
     if(!functions){
         dlclose(hmodule);
         hyb_error( H_ET_WARNING, "could not find module '%s' functions pointer", path.c_str() );
@@ -309,7 +319,7 @@ void vm_load_module( vm_t *vm, string path, string name ){
     module = new vm_module_t( name, path, hmodule, initializer );
 
     while( functions[i].function != NULL ){
-        vfunction_t *function = new vfunction_t();
+        vm_function_t *function = new vm_function_t();
 
         function->identifier = functions[i].identifier;
         function->function   = functions[i].function;
@@ -539,7 +549,7 @@ void vm_parse_frame_argv( vframe_t *argv, char *format, ... ){
  * Here starts the vm execution functions definition.
  */
 INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner,  Object *cobj, int argc, Node *prototype, Node *argv ){
-	int 	   i, n_ids(prototype->children());
+	int 	   i, n_ids(prototype->children.items);
 	ll_item_t *iitem, *aitem;
 	Object 	  *value;
 
@@ -566,7 +576,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	/*
 	 * Evaluate each object and insert it into the stack
 	 */
-	for( i = 0, iitem = prototype->m_children.head, aitem = argv->m_children.head; i < argc; ++i, aitem = aitem->next ){
+	for( i = 0, iitem = prototype->children.head, aitem = argv->children.head; i < argc; ++i, aitem = aitem->next ){
 		value = vm_exec( vm, root, ll_node( aitem ) );
 
 		if( root->state.is(Exception) ){
@@ -585,7 +595,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 
 INLINE void vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, Object *cobj, Node *ids, int argc, ... ){
 	va_list    ap;
-	int 	   i, n_ids(ids->children());
+	int 	   i, n_ids(ids->children.items);
 	ll_item_t *iitem;
 	Object 	  *value;
 
@@ -602,7 +612,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, Object *c
 	 * Evaluate each object and insert it into the stack
 	 */
 	va_start( ap, argc );
-	for( i = 0, iitem = ids->m_children.head; i < argc; ++i ){
+	for( i = 0, iitem = ids->children.head; i < argc; ++i ){
 		value = va_arg( ap, Object * );
 		if( i >= n_ids ){
 			stack.push( value );
@@ -670,8 +680,8 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	 */
 	vm_add_frame( vm, &stack );
 
-	argc = argv->children();
-	ll_foreach_to( &argv->m_children, iitem, i, argc ){
+	argc = argv->children.items;
+	ll_foreach_to( &argv->children, iitem, i, argc ){
 		value = vm_exec( vm, root, ll_node( iitem ) );
 
 		if( root->state.is(Exception) ){
@@ -708,8 +718,8 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	 */
 	vm_add_frame( vm, &stack );
 	stack.push( (Object *)fn_pointer );
-	argc = argv->children();
-	ll_foreach_to( &argv->m_children, iitem, i, argc ){
+	argc = argv->children.items;
+	ll_foreach_to( &argv->children, iitem, i, argc ){
 		value = vm_exec( vm, root, ll_node( iitem ) );
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
@@ -738,8 +748,8 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	 * Add this frame as the active stack
 	 */
 	vm_add_frame( vm, &stack );
-	argc = argv->children();
-	ll_foreach_to( &argv->m_children, iitem, i, argc ){
+	argc = argv->children.items;
+	ll_foreach_to( &argv->children, iitem, i, argc ){
 		value = vm_exec( vm, root, ll_node( iitem ) );
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
@@ -749,7 +759,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	}
 }
 
-INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vfunction_t *function, vframe_t &stack, string owner, Node *argv ){
+INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vm_function_t *function, vframe_t &stack, string owner, Node *argv ){
 	int 	i, argc, f_argc, t;
 	ll_item_t *iitem;
 	Object *value;
@@ -764,7 +774,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vfunction_t *function, v
 	/*
 	 * First of all, check that the arguments number is the right one.
 	 */
-	argc = argv->children();
+	argc = argv->children.items;
 	for( i = 0 ;; ++i ){
 		f_argc = function->argc[i];
 		if( f_argc < 0 ){
@@ -798,7 +808,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vfunction_t *function, v
 	 * Ok, argc is the right one (or one of the right ones), now evaluate each
 	 * object and check the type.
 	 */
-	ll_foreach_to( &argv->m_children, iitem, i, argc ){
+	ll_foreach_to( &argv->children, iitem, i, argc ){
 		value = vm_exec( vm, root, ll_node( iitem ) );
 
 		if( root->state.is(Exception) ){
@@ -909,9 +919,9 @@ Object *vm_exec( vm_t *vm, vframe_t *frame, Node *node ){
 	/*
 	 * Set current line number.
 	 */
-	vm_set_lineno( vm, node->lineno() );
+	vm_set_lineno( vm, node->lineno );
 
-    switch( node->type() ){
+    switch( node->type ){
         /* identifier */
         case H_NT_IDENTIFIER :
             return vm_exec_identifier( vm, frame, node );
@@ -949,7 +959,7 @@ Object *vm_exec( vm_t *vm, vframe_t *frame, Node *node ){
         	 */
         	gc_collect( vm );
 
-            switch( node->value.opcode ){
+            switch( node->opcode ){
 				/* statement unless expression */
 				case T_UNLESS :
 					return vm_exec_unless( vm, frame, node );
@@ -1001,7 +1011,7 @@ Object *vm_exec( vm_t *vm, vframe_t *frame, Node *node ){
 
         /* expressions */
         case H_NT_EXPRESSION   :
-            switch( node->value.opcode ){
+            switch( node->opcode ){
                 /* identifier = expression */
                 case T_ASSIGN    :
                     return vm_exec_assign( vm, frame, node );
@@ -1308,7 +1318,7 @@ INLINE Object *vm_exec_structure_declaration( vm_t *vm, vframe_t *frame, Node * 
 
 	/* structure prototypes are not garbage collected */
     Object *s = (Object *)(new Structure());
-    ll_foreach( &node->m_children, llitem ){
+    ll_foreach( &node->children, llitem ){
     	ob_add_attribute( s, (char *)ll_node( llitem )->value.identifier.c_str() );
     }
 
@@ -1322,7 +1332,7 @@ INLINE Object *vm_exec_structure_declaration( vm_t *vm, vframe_t *frame, Node * 
 }
 
 INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node ){
-	int        i, members( node->children() );
+	int        i, members( node->children.items );
 	char      *classname = (char *)node->value.identifier.c_str(),
 			  *attrname;
 	Node      *declchild,
@@ -1340,12 +1350,12 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 	 */
 	((Class *)c)->name = classname;
 
-	ll_foreach( &node->m_children, llitem ){
+	ll_foreach( &node->children, llitem ){
 		declchild = ll_node( llitem );
 		/*
 		 * Define an attribute
 		 */
-		if( declchild->type() == H_NT_IDENTIFIER ){
+		if( declchild->type == H_NT_IDENTIFIER ){
 			attribute = declchild;
 			/*
 			 * Initialize static attributes.
@@ -1376,7 +1386,7 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 		/*
 		 * Define a method
 		 */
-		else if( declchild->type() == H_NT_METHOD_DECL ){
+		else if( declchild->type == H_NT_METHOD_DECL ){
 			ob_define_method( c, (char *)declchild->value.method.c_str(), declchild );
 		}
 		/*
@@ -1441,7 +1451,7 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 
 INLINE Object *vm_exec_builtin_function_call( vm_t *vm, vframe_t *frame, Node * call ){
     char        *callname = (char *)call->value.call.c_str();
-    vfunction_t* function;
+    vm_function_t* function;
     vframe_t     stack;
     Object      *result = H_UNDEFINED;
 
@@ -1482,9 +1492,9 @@ Object *vm_exec_threaded_call( vm_t *vm, string function_name, vmem_t *argv ){
 		hyb_error( H_ET_SYNTAX, "'%s' undeclared user function identifier", function_name.c_str() );
 	}
 
-	ll_foreach( &function->m_children, llitem ){
+	ll_foreach( &function->children, llitem ){
 		body = ll_node( llitem );
-    	if( body->type() == H_NT_IDENTIFIER ){
+    	if( body->type == H_NT_IDENTIFIER ){
     		identifiers.push_back( body->value.identifier );
     	}
     	else{
@@ -1527,9 +1537,9 @@ Object *vm_exec_threaded_call( vm_t *vm, Node *function, vframe_t *frame, vmem_t
 	Node    *body   = H_UNDEFINED;
 	vector<string> identifiers;
 
-	ll_foreach( &function->m_children, llitem ){
+	ll_foreach( &function->children, llitem ){
 		body = ll_node( llitem );
-    	if( body->type() == H_NT_IDENTIFIER ){
+    	if( body->type == H_NT_IDENTIFIER ){
     		identifiers.push_back( body->value.identifier );
     	}
     	else{
@@ -1582,25 +1592,25 @@ INLINE Object *vm_exec_user_function_call( vm_t *vm, vframe_t *frame, Node *call
     ll_item_t *iitem;
     Node	  *idnode;
 
-    ll_foreach_to( &function->m_children, iitem, i, argc ){
+    ll_foreach_to( &function->children, iitem, i, argc ){
     	idnode = ll_node( iitem );
     	identifiers.push_back( idnode->value.identifier );
     }
 
     if( function->value.vargs ){
-    	if( call->children() < identifiers.size() ){
+    	if( call->children.items < identifiers.size() ){
    			hyb_error( H_ET_SYNTAX, "function '%s' requires at least %d parameters (called with %d)",
 									function->value.function.c_str(),
    									identifiers.size(),
-   									call->children() );
+   									call->children.items );
        }
    	}
     else{
-		if( identifiers.size() != call->children() ){
+		if( identifiers.size() != call->children.items ){
 			hyb_error( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
 									function->value.function.c_str(),
 									identifiers.size(),
-									call->children() );
+									call->children.items );
 		}
     }
 
@@ -1609,7 +1619,7 @@ INLINE Object *vm_exec_user_function_call( vm_t *vm, vframe_t *frame, Node *call
     vm_check_frame_exit(frame);
 
     /* call the function */
-    result = vm_exec( vm, &stack, function->body() );
+    result = vm_exec( vm, &stack, function->body );
 
     vm_dismiss_stack( vm );
 	/*
@@ -1630,7 +1640,7 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
     Object    *user_type = H_UNDEFINED,
               *newtype   = H_UNDEFINED,
               *object    = H_UNDEFINED;
-    size_t     i, children( type->children() );
+    size_t     i, children( type->children.items );
 
 	/*
 	 * Search for the used defined type calls, most like C++
@@ -1666,7 +1676,7 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
 
 		frame->push_tmp(newtype);
 
-		ll_foreach_to( &type->m_children, llitem, i, children ){
+		ll_foreach_to( &type->children, llitem, i, children ){
 			object = vm_exec( vm, frame, ll_node( llitem ) );
 			ob_set_attribute( newtype, (char *)stype->s_attributes.label(i), object );
 		}
@@ -1720,7 +1730,7 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
 			stack.remove_tmp(newtype);
 
 			/* call the ctor */
-			vm_exec( vm, &stack, ctor->body() );
+			vm_exec( vm, &stack, ctor->body );
 
 			vm_dismiss_stack( vm );
 
@@ -1747,7 +1757,7 @@ INLINE Object *vm_exec_dll_function_call( vm_t *vm, vframe_t *frame, Node *call 
      * We assume that dll module is already loaded, otherwise there shouldn't be
      * any vm_exec_dll_function_call call .
      */
-    vfunction_t *dllcall = vm_get_function( vm, (char *)"dllcall" );
+    vm_function_t *dllcall = vm_get_function( vm, (char *)"dllcall" );
 
     if( (fn_pointer = frame->get( callname )) == H_UNDEFINED ){
         return H_UNDEFINED;
@@ -1933,7 +1943,7 @@ INLINE Object *vm_exec_subscript_get( vm_t *vm, vframe_t *frame, Node *node ){
            *index      = H_UNDEFINED,
            *result     = H_UNDEFINED;
 
-    if( node->children() == 3 ){
+    if( node->children.items == 3 ){
     	identifier = vm_exec( vm, frame, node->child(0) );
 		array 	   = vm_exec( vm, frame, node->child(1) );
 		index      = vm_exec( vm, frame, node->child(2) );
@@ -2172,7 +2182,7 @@ INLINE Object *vm_exec_if( vm_t *vm, vframe_t *frame, Node *node ){
         result = vm_exec( vm, frame, node->child(1) );
     }
     /* handle else case */
-    else if( node->children() > 2 ){
+    else if( node->children.items > 2 ){
         result = vm_exec( vm, frame, node->child(2) );
     }
 
@@ -2211,7 +2221,7 @@ INLINE Object *vm_exec_switch( vm_t *vm, vframe_t *frame, Node *node){
     target = vm_exec( vm, frame, node->value.switch_block );
 
     // exec case labels
-    for( case_item = node->m_children.head; case_item; case_item = case_item->next->next ){
+    for( case_item = node->children.head; case_item; case_item = case_item->next->next ){
     	stmt_item = case_item->next;
 
         stmt_node = ll_node( stmt_item );
@@ -2246,14 +2256,14 @@ INLINE Object *vm_exec_explode( vm_t *vm, vframe_t *frame, Node *node ){
 	expr  = node->child(0);
 	value = vm_exec( vm, frame, expr );
 
-	size_t n_ids   = node->children() - 1,
+	size_t n_ids   = node->children.items - 1,
 		   n_items = ob_get_size(value),
 		   n_end   = (n_ids > n_items ? n_items : n_ids),
 		   i;
 	/*
 	 * Initialize all the identifiers with a <false>.
 	 */
-	for( llitem = node->m_children.head->next; llitem; llitem = llitem->next ){
+	for( llitem = node->children.head->next; llitem; llitem = llitem->next ){
 		frame->add( (char *)ll_node(llitem)->value.identifier.c_str(),
 							(Object *)gc_new_boolean(false) );
 	}
@@ -2262,7 +2272,7 @@ INLINE Object *vm_exec_explode( vm_t *vm, vframe_t *frame, Node *node ){
 	 * the rest of them to <null>.
 	 */
 	Integer index(0);
-	for( llitem = node->m_children.head->next; (unsigned)index.value < n_end; ++index.value, llitem = llitem->next ){
+	for( llitem = node->children.head->next; (unsigned)index.value < n_end; ++index.value, llitem = llitem->next ){
 		frame->add( (char *)ll_node(llitem)->value.identifier.c_str(),
 					 ob_cl_at( value, (Object *)&index ) );
 	}
@@ -2328,7 +2338,7 @@ INLINE Object *vm_exec_eostmt( vm_t *vm, vframe_t *frame, Node *node ){
 INLINE Object *vm_exec_array( vm_t *vm, vframe_t *frame, Node *node ){
 	Object *v = (Object *)gc_new_vector();
 
-	ll_foreach( &node->m_children, llitem ){
+	ll_foreach( &node->children, llitem ){
 		ob_cl_push_reference( v, vm_exec( vm, frame, ll_node( llitem ) ) );
 	}
 
@@ -2341,7 +2351,7 @@ INLINE Object *vm_exec_map( vm_t *vm, vframe_t *frame, Node *node ){
 	Object 	  *m = (Object *)gc_new_map();
 
 
-	for( key = node->m_children.head; key; key= key->next ){
+	for( key = node->children.head; key; key= key->next ){
 		val = key->next;
 
 		ob_cl_set_reference( m,
@@ -2367,7 +2377,7 @@ INLINE Object *vm_exec_assign( vm_t *vm, vframe_t *frame, Node *node ){
      * a new variable or assigning it a new value, nothing
      * complicated about it.
      */
-    if( lexpr->type() == H_NT_IDENTIFIER ){
+    if( lexpr->type == H_NT_IDENTIFIER ){
     	if( lexpr->value.identifier == "me" ){
     		hyb_error( H_ET_SYNTAX, "'me' is a reserved word" );
     	}
@@ -2382,7 +2392,7 @@ INLINE Object *vm_exec_assign( vm_t *vm, vframe_t *frame, Node *node ){
      * If not, we evaluate the first node as a "owner->child->..." sequence,
      * just like the vm_exec_attribute_request handler.
      */
-    else if( lexpr->type() == H_NT_ATTRIBUTE ){
+    else if( lexpr->type == H_NT_ATTRIBUTE ){
     	Node *member    = lexpr,
 			 *owner     = member->value.owner,
 			 *attribute = member->value.member;

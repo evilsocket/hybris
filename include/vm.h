@@ -73,7 +73,7 @@ using std::map;
 /*
  * Macro to define module exported functions structure.
  */
-#define HYBRIS_EXPORTED_FUNCTIONS() extern "C" vfunction_t hybris_module_functions[] =
+#define HYBRIS_EXPORTED_FUNCTIONS() extern "C" vm_function_t hybris_module_functions[] =
 /*
  * Macro to easily access hybris functions parameters.
  */
@@ -81,7 +81,7 @@ using std::map;
 /*
  * Macro to easily access hybris functions parameters number.
  */
-#define vargc()     (data->size())
+#define vm_argc()     (data->size())
 /*
  * Pre declaration of structure vm_t.
  */
@@ -95,7 +95,7 @@ typedef void     (*initializer_t)( vm_t * );
  */
 typedef Object * (*function_t)( vm_t *, vmem_t * );
 
-typedef struct _vfunction_t {
+typedef struct _vm_function_t {
 	/*
 	 * Function identifier.
 	 */
@@ -113,7 +113,7 @@ typedef struct _vfunction_t {
      */
     H_OBJECT_TYPE types[HMAXARGS][20];
 }
-vfunction_t;
+vm_function_t;
 
 /*
  * Split 'str' into 'tokens' vector using 'delimiters'.
@@ -150,7 +150,7 @@ typedef struct vm_module {
 vm_module_t;
 
 typedef llist_t				      	  vm_modules_t;
-typedef ITree<vfunction_t> 	  	  vm_mcache_t;
+typedef ITree<vm_function_t> 	  	  vm_mcache_t;
 typedef ITree<pcre>					  vm_pcache_t;
 typedef llist_t		 			  	  vm_scope_t;
 typedef map< pthread_t, vm_scope_t *> vm_thread_scope_t;
@@ -178,6 +178,14 @@ typedef struct _vm_t {
 	 * it's safe to not have a mutex here.
 	 */
 	vm_state_t state;
+	/*
+	 * Current executing/parsing source file.
+	 */
+	string source;
+	/*
+	 * Mutex to lock to change source.
+	 */
+	pthread_mutex_t source_mutex;
 	/*
 	 * Current executing/parsing line number.
 	 */
@@ -257,6 +265,8 @@ vm_t;
 /*
  * Macros to lock and unlock the vm mutexes.
  */
+#define vm_source_lock( vm )      pthread_mutex_lock( &vm->source_mutex )
+#define vm_source_unlock( vm )    pthread_mutex_unlock( &vm->source_mutex )
 #define vm_line_lock( vm )      pthread_mutex_lock( &vm->line_mutex )
 #define vm_line_unlock( vm )    pthread_mutex_unlock( &vm->line_mutex )
 #define vm_mm_lock( vm )  	    pthread_mutex_lock( &vm->mm_pool_mutex )
@@ -325,6 +335,12 @@ Object 	   *vm_raise_exception( const char *fmt, ... );
  */
 void 		vm_print_stack_trace( vm_t *vm, bool force = false );
 /*
+ * Set current source file name.
+ */
+#define vm_set_source( vm, name ) vm_source_lock(vm); \
+								  vm->source = name; \
+								  vm_source_unlock(vm)
+/*
  * Set current line number.
  */
 #define vm_set_lineno( vm, line ) vm_line_lock(vm); \
@@ -336,6 +352,12 @@ void 		vm_print_stack_trace( vm_t *vm, bool force = false );
 #define vm_inc_lineno( vm ) vm_line_lock(vm); \
 						    ++vm->lineno; \
 						    vm_line_unlock(vm)
+/*
+ * Return current source.
+ */
+INLINE string vm_get_source( vm_t *vm ){
+	return vm->source;
+}
 /*
  * Return current line number.
  */
@@ -427,9 +449,9 @@ INLINE void vm_timer( vm_t *vm, int start = 0 ){
  * loaded module and return its pointer.
  * Handle function pointer caching.
  */
-INLINE vfunction_t *vm_get_function( vm_t *vm, char *identifier ){
+INLINE vm_function_t *vm_get_function( vm_t *vm, char *identifier ){
 	vm_module_t   *module;
-	vfunction_t *function;
+	vm_function_t *function;
 
 	/*
 	 * First check if it's already cached.
@@ -446,7 +468,7 @@ INLINE vfunction_t *vm_get_function( vm_t *vm, char *identifier ){
 		 * For each function of the module.
 		 */
 		ll_foreach( &module->functions, f_item ){
-			function = ll_data( vfunction_t *, f_item );
+			function = ll_data( vm_function_t *, f_item );
 			/*
 			 * Found it, add to the cache and return.
 			 */
@@ -568,7 +590,7 @@ void 	  vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, vector<string
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, Node *argv );
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Extern *fn_pointer, Node *argv );
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Node *argv );
-void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vfunction_t *function, vframe_t &stack, string owner, Node *argv );
+void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vm_function_t *function, vframe_t &stack, string owner, Node *argv );
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, Node *function, vframe_t &stack, string owner, Node *argv );
 void 	  vm_dismiss_stack( vm_t *vm );
 /*
