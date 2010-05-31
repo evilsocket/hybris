@@ -106,7 +106,7 @@ HYBRIS_DEFINE_FUNCTION(hdyn_functions){
 	ll_item_t	  *m_item,
 				  *f_item;
 	vm_module_t   *module;
-	vm_function_t *function;
+	vfunction_t *function;
 
 	Object *map = (Object *)gc_new_map(),
 		   *vec;
@@ -116,7 +116,7 @@ HYBRIS_DEFINE_FUNCTION(hdyn_functions){
 		vec    = (Object *)gc_new_vector();
 
 		for( f_item = module->functions.head; f_item; f_item = f_item->next ){
-			ob_cl_push_reference( vec, (Object *)gc_new_string( ll_data( vm_function_t *, f_item )->identifier.c_str()  ) );
+			ob_cl_push_reference( vec, (Object *)gc_new_string( ll_data( vfunction_t *, f_item )->identifier.c_str()  ) );
 		}
 
 		ob_cl_set_reference( map, (Object *)gc_new_string( module->name.c_str() ), vec );
@@ -145,9 +145,9 @@ HYBRIS_DEFINE_FUNCTION(hcall){
 
 	vm_parse_argv( "s", &function );
 
-	if( vm_argc() > 1 ){
+	if( vargc() > 1 ){
 		unsigned int i;
-		for( i = 1; i < vm_argc(); ++i ){
+		for( i = 1; i < vargc(); ++i ){
 			stack.push( vm_argv(i) );
 		}
 	}
@@ -180,7 +180,7 @@ HYBRIS_DEFINE_FUNCTION(hcall_method){
 	stack.insert( "me", (Object *)classref );
 	for( ; (unsigned)index.value < argc; ++index.value ){
 		value = ob_cl_at( (Object *)argv, (Object *)&index );
-		stack.insert( (char *)method->child( index.value )->value.m_identifier.c_str(), value  );
+		stack.insert( (char *)method->child( index.value )->value.identifier.c_str(), value  );
 	}
 
 	vm_add_frame( vm, &stack );

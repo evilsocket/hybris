@@ -225,7 +225,7 @@ void vm_release( vm_t *vm ){
 	for( m_item = vm->modules.head; m_item; m_item = m_item->next ){
 		module = ll_data( vm_module_t *, m_item );
 		for( f_item = module->functions.head; f_item; f_item = f_item->next ){
-			delete ll_data( vm_function_t *, f_item );
+			delete ll_data( vfunction_t *, f_item );
 		}
 		ll_clear( &module->functions );
 	}
@@ -299,7 +299,7 @@ void vm_load_module( vm_t *vm, string path, string name ){
     }
 
     /* exported functions vector */
-    vm_function_t *functions = (vm_function_t *)dlsym( hmodule, "hybris_module_functions" );
+    vfunction_t *functions = (vfunction_t *)dlsym( hmodule, "hybris_module_functions" );
     if(!functions){
         dlclose(hmodule);
         hyb_error( H_ET_WARNING, "could not find module '%s' functions pointer", path.c_str() );
@@ -309,7 +309,7 @@ void vm_load_module( vm_t *vm, string path, string name ){
     module = new vm_module_t( name, path, hmodule, initializer );
 
     while( functions[i].function != NULL ){
-        vm_function_t *function = new vm_function_t();
+        vfunction_t *function = new vfunction_t();
 
         function->identifier = functions[i].identifier;
         function->function   = functions[i].function;
@@ -560,7 +560,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	/*
 	 * Static methods can not use 'me' instance.
 	 */
-	if( prototype->value.m_static == false ){
+	if( prototype->value.is_static == false ){
 		stack.insert( "me", cobj );
 	}
 	/*
@@ -577,7 +577,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 			stack.push( value );
 		}
 		else{
-			stack.insert( (char *)ll_node( iitem )->value.m_identifier.c_str(), value );
+			stack.insert( (char *)ll_node( iitem )->value.identifier.c_str(), value );
 			iitem = iitem->next;
 		}
 	}
@@ -608,7 +608,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, Object *c
 			stack.push( value );
 		}
 		else{
-			stack.insert( (char *)ll_node( iitem )->value.m_identifier.c_str(), value );
+			stack.insert( (char *)ll_node( iitem )->value.identifier.c_str(), value );
 
 			iitem = iitem->next;
 		}
@@ -749,7 +749,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	}
 }
 
-INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vm_function_t *function, vframe_t &stack, string owner, Node *argv ){
+INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vfunction_t *function, vframe_t &stack, string owner, Node *argv ){
 	int 	i, argc, f_argc, t;
 	ll_item_t *iitem;
 	Object *value;
@@ -852,7 +852,7 @@ INLINE void vm_dismiss_stack( vm_t *vm ){
 }
 
 INLINE Node * vm_find_function( vm_t *vm, vframe_t *frame, Node *call ){
-    char *callname = (char *)call->value.m_call.c_str();
+    char *callname = (char *)call->value.call.c_str();
 
     /* search first in the code segment */
 	Node *function = H_UNDEFINED;
@@ -865,8 +865,8 @@ INLINE Node * vm_find_function( vm_t *vm, vframe_t *frame, Node *call ){
 		return (Node *)alias->value;
 	}
 	/* try to evaluate the call as an alias itself */
-	if( call->value.m_alias_call != NULL ){
-		alias = (Alias *)vm_exec( vm, frame, call->value.m_alias_call );
+	if( call->value.alias != NULL ){
+		alias = (Alias *)vm_exec( vm, frame, call->value.alias );
 		if( ob_is_alias(alias) ){
 			return (Node *)alias->value;
 		}
@@ -949,7 +949,7 @@ Object *vm_exec( vm_t *vm, vframe_t *frame, Node *node ){
         	 */
         	gc_collect( vm );
 
-            switch( node->value.m_statement ){
+            switch( node->value.opcode ){
 				/* statement unless expression */
 				case T_UNLESS :
 					return vm_exec_unless( vm, frame, node );
@@ -1001,7 +1001,7 @@ Object *vm_exec( vm_t *vm, vframe_t *frame, Node *node ){
 
         /* expressions */
         case H_NT_EXPRESSION   :
-            switch( node->value.m_expression ){
+            switch( node->value.opcode ){
                 /* identifier = expression */
                 case T_ASSIGN    :
                     return vm_exec_assign( vm, frame, node );
@@ -1154,7 +1154,7 @@ Object *vm_exec( vm_t *vm, vframe_t *frame, Node *node ){
 INLINE Object *vm_exec_identifier( vm_t *vm, vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
     Node   *function   = H_UNDEFINED;
-    char   *identifier = (char *)node->value.m_identifier.c_str();
+    char   *identifier = (char *)node->value.identifier.c_str();
 
     /*
    	 * First thing first, check for a constant object name.
@@ -1217,11 +1217,11 @@ INLINE Object *vm_exec_attribute_request( vm_t *vm, vframe_t *frame, Node *node 
 	char    *name,
 			*owner_id;
 	access_t access;
-	Node    *member = node->value.m_member;
+	Node    *member = node->value.member;
 
-	cobj      = vm_exec( vm, frame, node->value.m_owner );
-	owner_id  = (char *)node->value.m_owner->value.m_identifier.c_str();
-	name      = (char *)member->value.m_identifier.c_str();
+	cobj      = vm_exec( vm, frame, node->value.owner );
+	owner_id  = (char *)node->value.owner->value.identifier.c_str();
+	name      = (char *)member->value.identifier.c_str();
 	attribute = ob_get_attribute( cobj, name, true );
 
 	if( attribute == H_UNDEFINED ){
@@ -1260,11 +1260,11 @@ INLINE Object *vm_exec_method_call( vm_t *vm, vframe_t *frame, Node *node ){
 	Object  *cobj   = H_UNDEFINED;
 	char    *name,
 			*owner_id;
-	Node    *member = node->value.m_member;
+	Node    *member = node->value.member;
 
-	cobj 	 = vm_exec( vm, frame, node->value.m_owner );
-	owner_id = (char *)node->value.m_owner->value.m_identifier.c_str();
-	name 	 = (char *)member->value.m_call.c_str();
+	cobj 	 = vm_exec( vm, frame, node->value.owner );
+	owner_id = (char *)node->value.owner->value.identifier.c_str();
+	name 	 = (char *)member->value.call.c_str();
 
 	return ob_call_method( vm, frame, cobj, owner_id, name, member );
 }
@@ -1280,11 +1280,11 @@ INLINE Object *vm_exec_constant( vm_t *vm, vframe_t *frame, Node *node ){
 	 * (the object->attributes bitmask is set to H_OT_CONSTANT), it
 	 * simply skips it in the loop.
 	 */
-    return node->value.m_constant;
+    return node->value.constant;
 }
 
 INLINE Object *vm_exec_function_declaration( vm_t *vm, vframe_t *frame, Node *node ){
-    char *function_name = (char *)node->value.m_function.c_str();
+    char *function_name = (char *)node->value.function.c_str();
 
     /* check for double definition */
     if( vm->vcode.get(function_name) != H_UNDEFINED ){
@@ -1300,7 +1300,7 @@ INLINE Object *vm_exec_function_declaration( vm_t *vm, vframe_t *frame, Node *no
 }
 
 INLINE Object *vm_exec_structure_declaration( vm_t *vm, vframe_t *frame, Node * node ){
-    char *structname = (char *)node->value.m_identifier.c_str();
+    char *structname = (char *)node->value.identifier.c_str();
 
 	if( vm->vtypes.find(structname) != H_UNDEFINED ){
 		hyb_error( H_ET_SYNTAX, "Structure '%s' already defined", structname );
@@ -1309,7 +1309,7 @@ INLINE Object *vm_exec_structure_declaration( vm_t *vm, vframe_t *frame, Node * 
 	/* structure prototypes are not garbage collected */
     Object *s = (Object *)(new Structure());
     ll_foreach( &node->m_children, llitem ){
-    	ob_add_attribute( s, (char *)ll_node( llitem )->value.m_identifier.c_str() );
+    	ob_add_attribute( s, (char *)ll_node( llitem )->value.identifier.c_str() );
     }
 
     /*
@@ -1323,7 +1323,7 @@ INLINE Object *vm_exec_structure_declaration( vm_t *vm, vframe_t *frame, Node * 
 
 INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node ){
 	int        i, members( node->children() );
-	char      *classname = (char *)node->value.m_identifier.c_str(),
+	char      *classname = (char *)node->value.identifier.c_str(),
 			  *attrname;
 	Node      *declchild,
 			  *attribute;
@@ -1350,7 +1350,7 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 			/*
 			 * Initialize static attributes.
 			 */
-			if( attribute->value.m_static ){
+			if( attribute->value.is_static ){
 				static_attr_value = vm_exec( vm, frame, attribute->child(0) );
 				/*
 				 * Static attributes are not garbage collectable until the end of
@@ -1362,22 +1362,22 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 				 */
 				ob_class_ucast(c)->c_attributes.insert( attribute->id(),
 														new class_attribute_t( attribute->id(),
-																			   attribute->value.m_access,
+																			   attribute->value.access,
 																			   static_attr_value,
-																			   attribute->value.m_static ) );
+																			   attribute->value.is_static ) );
 			}
 			else{
 				/*
 				 * Non static attribute, just define it with a void value.
 				 */
-				ob_define_attribute( c, attribute->id(), attribute->value.m_access, attribute->value.m_static );
+				ob_define_attribute( c, attribute->id(), attribute->value.access, attribute->value.is_static );
 			}
 		}
 		/*
 		 * Define a method
 		 */
 		else if( declchild->type() == H_NT_METHOD_DECL ){
-			ob_define_method( c, (char *)declchild->value.m_method.c_str(), declchild );
+			ob_define_method( c, (char *)declchild->value.method.c_str(), declchild );
 		}
 		/*
 		 * WTF this should not happen!
@@ -1395,12 +1395,12 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 	Node	  *baseclass;
 	Object    *baseproto;
 
-	if( ll_size(&cnode->m_extends) > 0 ){
-		ll_foreach( &cnode->m_extends, llnode ){
+	if( ll_size(&cnode->value.extends) > 0 ){
+		ll_foreach( &cnode->value.extends, llnode ){
 			baseclass = ll_node( llnode );
-			baseproto = vm_get_type( vm, (char *)baseclass->value.m_identifier.c_str() );
+			baseproto = vm_get_type( vm, (char *)baseclass->value.identifier.c_str() );
 			if( baseproto == H_UNDEFINED ){
-				hyb_error( H_ET_SYNTAX, "'%s' undeclared class type", baseclass->value.m_identifier.c_str() );
+				hyb_error( H_ET_SYNTAX, "'%s' undeclared class type", baseclass->value.identifier.c_str() );
 			}
 			else if( ob_is_class(baseproto) == false ){
 				hyb_error( H_ET_SYNTAX, "couldn't extend from '%s' type", ob_typename(baseproto) );
@@ -1440,8 +1440,8 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 }
 
 INLINE Object *vm_exec_builtin_function_call( vm_t *vm, vframe_t *frame, Node * call ){
-    char        *callname = (char *)call->value.m_call.c_str();
-    vm_function_t* function;
+    char        *callname = (char *)call->value.call.c_str();
+    vfunction_t* function;
     vframe_t     stack;
     Object      *result = H_UNDEFINED;
 
@@ -1485,7 +1485,7 @@ Object *vm_exec_threaded_call( vm_t *vm, string function_name, vmem_t *argv ){
 	ll_foreach( &function->m_children, llitem ){
 		body = ll_node( llitem );
     	if( body->type() == H_NT_IDENTIFIER ){
-    		identifiers.push_back( body->value.m_identifier );
+    		identifiers.push_back( body->value.identifier );
     	}
     	else{
     		break;
@@ -1493,7 +1493,7 @@ Object *vm_exec_threaded_call( vm_t *vm, string function_name, vmem_t *argv ){
 	}
 
 
-    if( function->value.m_vargs ){
+    if( function->value.vargs ){
     	if( argv->size() < identifiers.size() ){
 			hyb_error( H_ET_SYNTAX, "function '%s' requires at least %d parameters (called with %d)",
 									function_name.c_str(),
@@ -1530,7 +1530,7 @@ Object *vm_exec_threaded_call( vm_t *vm, Node *function, vframe_t *frame, vmem_t
 	ll_foreach( &function->m_children, llitem ){
 		body = ll_node( llitem );
     	if( body->type() == H_NT_IDENTIFIER ){
-    		identifiers.push_back( body->value.m_identifier );
+    		identifiers.push_back( body->value.identifier );
     	}
     	else{
     		break;
@@ -1539,12 +1539,12 @@ Object *vm_exec_threaded_call( vm_t *vm, Node *function, vframe_t *frame, vmem_t
 
 	if( identifiers.size() != argv->size() ){
 		hyb_error( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
-							    function->value.m_function.c_str(),
+							    function->value.function.c_str(),
 							    identifiers.size(),
 							    argv->size() );
 	}
 
-	vm_prepare_stack( vm, stack, function->value.m_function, identifiers, argv );
+	vm_prepare_stack( vm, stack, function->value.function, identifiers, argv );
 
 	vm_check_frame_exit(frame);
 
@@ -1578,19 +1578,19 @@ INLINE Object *vm_exec_user_function_call( vm_t *vm, vframe_t *frame, Node *call
     }
 
     size_t 	   i(0),
-			   argc( function->value.m_argc );
+			   argc( function->value.argc );
     ll_item_t *iitem;
     Node	  *idnode;
 
     ll_foreach_to( &function->m_children, iitem, i, argc ){
     	idnode = ll_node( iitem );
-    	identifiers.push_back( idnode->value.m_identifier );
+    	identifiers.push_back( idnode->value.identifier );
     }
 
-    if( function->value.m_vargs ){
+    if( function->value.vargs ){
     	if( call->children() < identifiers.size() ){
    			hyb_error( H_ET_SYNTAX, "function '%s' requires at least %d parameters (called with %d)",
-									function->value.m_function.c_str(),
+									function->value.function.c_str(),
    									identifiers.size(),
    									call->children() );
        }
@@ -1598,13 +1598,13 @@ INLINE Object *vm_exec_user_function_call( vm_t *vm, vframe_t *frame, Node *call
     else{
 		if( identifiers.size() != call->children() ){
 			hyb_error( H_ET_SYNTAX, "function '%s' requires %d parameters (called with %d)",
-									function->value.m_function.c_str(),
+									function->value.function.c_str(),
 									identifiers.size(),
 									call->children() );
 		}
     }
 
-    vm_prepare_stack( vm, frame, stack, function->value.m_function, identifiers, call );
+    vm_prepare_stack( vm, frame, stack, function->value.function, identifiers, call );
 
     vm_check_frame_exit(frame);
 
@@ -1625,7 +1625,7 @@ INLINE Object *vm_exec_user_function_call( vm_t *vm, vframe_t *frame, Node *call
 }
 
 INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
-    char      *type_name = (char *)type->value.m_identifier.c_str();
+    char      *type_name = (char *)type->value.identifier.c_str();
     ll_item_t *llitem;
     Object    *user_type = H_UNDEFINED,
               *newtype   = H_UNDEFINED,
@@ -1685,19 +1685,19 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
 		 */
 		Node *ctor = ob_get_method( newtype, type_name, children );
 		if( ctor != H_UNDEFINED ){
-			if( ctor->value.m_vargs ){
-				if( children < ctor->value.m_argc ){
+			if( ctor->value.vargs ){
+				if( children < ctor->value.argc ){
 					hyb_error( H_ET_SYNTAX, "class '%s' constructor requires at least %d arguments, called with %d",
 											 type_name,
-											 ctor->value.m_argc,
+											 ctor->value.argc,
 											 children );
 			   }
 			}
 			else{
-				if( children > ctor->value.m_argc ){
+				if( children > ctor->value.argc ){
 					hyb_error( H_ET_SYNTAX, "class '%s' constructor requires %d arguments, called with %d",
 											 type_name,
-											 ctor->value.m_argc,
+											 ctor->value.argc,
 											 children );
 				}
 			}
@@ -1738,7 +1738,7 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
 }
 
 INLINE Object *vm_exec_dll_function_call( vm_t *vm, vframe_t *frame, Node *call ){
-    char    *callname   = (char *)call->value.m_call.c_str();
+    char    *callname   = (char *)call->value.call.c_str();
     vframe_t stack;
     Object  *result     = H_UNDEFINED,
             *fn_pointer = H_UNDEFINED;
@@ -1747,7 +1747,7 @@ INLINE Object *vm_exec_dll_function_call( vm_t *vm, vframe_t *frame, Node *call 
      * We assume that dll module is already loaded, otherwise there shouldn't be
      * any vm_exec_dll_function_call call .
      */
-    vm_function_t *dllcall = vm_get_function( vm, (char *)"dllcall" );
+    vfunction_t *dllcall = vm_get_function( vm, (char *)"dllcall" );
 
     if( (fn_pointer = frame->get( callname )) == H_UNDEFINED ){
         return H_UNDEFINED;
@@ -1785,7 +1785,7 @@ Object *vm_exec_function_call( vm_t *vm, vframe_t *frame, Node *call ){
     	return result;
     }
     else{
-    	hyb_error( H_ET_SYNTAX, "'%s' undeclared function identifier", call->value.m_call.c_str() );
+    	hyb_error( H_ET_SYNTAX, "'%s' undeclared function identifier", call->value.call.c_str() );
     }
 
     return result;
@@ -2061,7 +2061,7 @@ INLINE Object *vm_exec_foreach( vm_t *vm, vframe_t *frame, Node *node ){
     char   *identifier;
     Integer index(0);
 
-    identifier = (char *)node->child(0)->value.m_identifier.c_str();
+    identifier = (char *)node->child(0)->value.identifier.c_str();
     v          = vm_exec( vm, frame, node->child(1) );
     body       = node->child(2);
     size       = ob_get_size(v);
@@ -2107,8 +2107,8 @@ INLINE Object *vm_exec_foreach_mapping( vm_t *vm, vframe_t *frame, Node *node ){
     char   *key_identifier,
            *value_identifier;
 
-    key_identifier   = (char *)node->child(0)->value.m_identifier.c_str();
-    value_identifier = (char *)node->child(1)->value.m_identifier.c_str();
+    key_identifier   = (char *)node->child(0)->value.identifier.c_str();
+    value_identifier = (char *)node->child(1)->value.identifier.c_str();
     map              = vm_exec( vm, frame, node->child(2) );
     body             = node->child(3);
     size             = ob_get_size(map);
@@ -2208,7 +2208,7 @@ INLINE Object *vm_exec_switch( vm_t *vm, vframe_t *frame, Node *node){
            *compare   = H_UNDEFINED,
            *result    = H_UNDEFINED;
 
-    target = vm_exec( vm, frame, node->value.m_switch );
+    target = vm_exec( vm, frame, node->value.switch_block );
 
     // exec case labels
     for( case_item = node->m_children.head; case_item; case_item = case_item->next->next ){
@@ -2229,8 +2229,8 @@ INLINE Object *vm_exec_switch( vm_t *vm, vframe_t *frame, Node *node){
     }
 
     // exec default case
-    if( node->value.m_default != H_UNDEFINED ){
-        result = vm_exec( vm, frame, node->value.m_default );
+    if( node->value.default_block != H_UNDEFINED ){
+        result = vm_exec( vm, frame, node->value.default_block );
 
         vm_check_frame_exit(frame)
     }
@@ -2254,7 +2254,7 @@ INLINE Object *vm_exec_explode( vm_t *vm, vframe_t *frame, Node *node ){
 	 * Initialize all the identifiers with a <false>.
 	 */
 	for( llitem = node->m_children.head->next; llitem; llitem = llitem->next ){
-		frame->add( (char *)ll_node(llitem)->value.m_identifier.c_str(),
+		frame->add( (char *)ll_node(llitem)->value.identifier.c_str(),
 							(Object *)gc_new_boolean(false) );
 	}
 	/*
@@ -2263,7 +2263,7 @@ INLINE Object *vm_exec_explode( vm_t *vm, vframe_t *frame, Node *node ){
 	 */
 	Integer index(0);
 	for( llitem = node->m_children.head->next; (unsigned)index.value < n_end; ++index.value, llitem = llitem->next ){
-		frame->add( (char *)ll_node(llitem)->value.m_identifier.c_str(),
+		frame->add( (char *)ll_node(llitem)->value.identifier.c_str(),
 					 ob_cl_at( value, (Object *)&index ) );
 	}
 
@@ -2287,10 +2287,9 @@ INLINE Object *vm_exec_throw( vm_t *vm, vframe_t *frame, Node *node ){
 }
 
 INLINE Object *vm_exec_try_catch( vm_t *vm, vframe_t *frame, Node *node ){
-	Node   *main_body    = node->value.m_try_block,
-		   *ex_ident     = node->value.m_exp_id,
-		   *catch_body   = node->value.m_catch_block,
-		   *finally_body = node->value.m_finally_block;
+	Node   *main_body    = node->value.try_block,
+		   *catch_body   = node->value.catch_block,
+		   *finally_body = node->value.finally_block;
 	Object *exception    = H_UNDEFINED;
 
 	vm_exec( vm, frame, main_body );
@@ -2300,7 +2299,7 @@ INLINE Object *vm_exec_try_catch( vm_t *vm, vframe_t *frame, Node *node ){
 
 		assert( exception != H_UNDEFINED );
 
-		frame->add( (char *)ex_ident->value.m_identifier.c_str(), exception );
+		frame->add( (char *)node->value.exception_id.c_str(), exception );
 
 		frame->state.unset(Exception);
 
@@ -2369,7 +2368,7 @@ INLINE Object *vm_exec_assign( vm_t *vm, vframe_t *frame, Node *node ){
      * complicated about it.
      */
     if( lexpr->type() == H_NT_IDENTIFIER ){
-    	if( lexpr->value.m_identifier == "me" ){
+    	if( lexpr->value.identifier == "me" ){
     		hyb_error( H_ET_SYNTAX, "'me' is a reserved word" );
     	}
 
@@ -2377,7 +2376,7 @@ INLINE Object *vm_exec_assign( vm_t *vm, vframe_t *frame, Node *node ){
 
     	vm_check_frame_exit(frame)
 
-		return object = frame->add( (char *)lexpr->value.m_identifier.c_str(), value );
+		return object = frame->add( (char *)lexpr->value.identifier.c_str(), value );
     }
     /*
      * If not, we evaluate the first node as a "owner->child->..." sequence,
@@ -2385,8 +2384,8 @@ INLINE Object *vm_exec_assign( vm_t *vm, vframe_t *frame, Node *node ){
      */
     else if( lexpr->type() == H_NT_ATTRIBUTE ){
     	Node *member    = lexpr,
-			 *owner     = member->value.m_owner,
-			 *attribute = member->value.m_member;
+			 *owner     = member->value.owner,
+			 *attribute = member->value.member;
 
     	Object *obj = vm_exec( vm, frame, owner ),
     		   *value;
@@ -2403,7 +2402,7 @@ INLINE Object *vm_exec_assign( vm_t *vm, vframe_t *frame, Node *node ){
 
     	vm_check_frame_exit(frame)
 
-    	ob_set_attribute( obj, (char *)attribute->value.m_identifier.c_str(), value );
+    	ob_set_attribute( obj, (char *)attribute->value.identifier.c_str(), value );
 
     	return obj;
     }

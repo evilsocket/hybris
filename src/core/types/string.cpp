@@ -40,8 +40,8 @@ Object *__string_length( vm_t *vm, Object *me, vframe_t *data ){
 }
 
 Object *__string_find( vm_t *vm, Object *me, vframe_t *data ){
-	if(  vm_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'find' requires 1 parameter (called with %d)",  vm_argc() );
+	if(  vargc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'find' requires 1 parameter (called with %d)",  vargc() );
 	}
 	ob_argv_types_assert( 0, otString, otChar, "find" );
 
@@ -53,13 +53,13 @@ Object *__string_find( vm_t *vm, Object *me, vframe_t *data ){
 }
 
 Object *__string_substr( vm_t *vm, Object *me, vframe_t *data ){
-	if( vm_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'substr' requires at least 1 parameter (called with %d)", vm_argc() );
+	if( vargc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'substr' requires at least 1 parameter (called with %d)", vargc() );
 	}
 	ob_type_assert( vm_argv(0), otInteger, "substr" );
 
 	string sub;
-	if( vm_argc() == 2 ){
+	if( vargc() == 2 ){
 		ob_type_assert( vm_argv(1), otInteger, "substr" );
 		sub = ob_string_ucast(me)->value.substr( ob_ivalue( vm_argv(0) ), ob_ivalue( vm_argv(1) ) );
 	}
@@ -71,8 +71,8 @@ Object *__string_substr( vm_t *vm, Object *me, vframe_t *data ){
 }
 
 Object *__string_replace( vm_t *vm, Object *me, vframe_t *data ){
-	if( vm_argc() < 2 ){
-		hyb_error( H_ET_SYNTAX, "method 'replace' requires 2 parameters (called with %d)", vm_argc() );
+	if( vargc() < 2 ){
+		hyb_error( H_ET_SYNTAX, "method 'replace' requires 2 parameters (called with %d)", vargc() );
 	}
 	ob_type_assert( vm_argv(0), otString, "replace" );
 	ob_type_assert( vm_argv(1), otString, "replace" );
@@ -94,8 +94,8 @@ Object *__string_replace( vm_t *vm, Object *me, vframe_t *data ){
 }
 
 Object *__string_split( vm_t *vm, Object *me, vframe_t *data ){
-	if( vm_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'split' requires 1 parameter (called with %d)", vm_argc() );
+	if( vargc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'split' requires 1 parameter (called with %d)", vargc() );
 	}
 	ob_types_assert( vm_argv(0), otString, otChar, "split" );
 
@@ -130,8 +130,8 @@ Object *__string_trim( vm_t *vm, Object *me, vframe_t *data ){
 }
 
 Object *__string_repeat( vm_t *vm, Object *me, vframe_t *data ){
-	if( vm_argc() < 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'repeat' requires 1 parameter (called with %d)", vm_argc() );
+	if( vargc() < 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'repeat' requires 1 parameter (called with %d)", vargc() );
 	}
 	ob_type_assert( vm_argv(0), otInteger, "repeat" );
 

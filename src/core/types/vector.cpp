@@ -28,16 +28,16 @@ Object *__vector_pop( vm_t *vm, Object *me, vframe_t *data ){
 }
 
 Object *__vector_remove( vm_t *vm, Object *me, vframe_t *data ){
-	if( vm_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'remove' requires 1 parameter (called with %d)", vm_argc() );
+	if( vargc() != 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'remove' requires 1 parameter (called with %d)", vargc() );
 	}
 
 	return (Object *)ob_cl_remove( me, vm_argv(0) );
 }
 
 Object *__vector_contains( vm_t *vm, Object *me, vframe_t *data ){
-	if( vm_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'contains' requires 1 parameter (called with %d)", vm_argc() );
+	if( vargc() != 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'contains' requires 1 parameter (called with %d)", vargc() );
 	}
 
 	Object *array = me,
@@ -55,8 +55,8 @@ Object *__vector_contains( vm_t *vm, Object *me, vframe_t *data ){
 }
 
 Object *__vector_join( vm_t *vm, Object *me, vframe_t *data ){
-	if( vm_argc() != 1 ){
-		hyb_error( H_ET_SYNTAX, "method 'join' requires 1 parameter (called with %d)", vm_argc() );
+	if( vargc() != 1 ){
+		hyb_error( H_ET_SYNTAX, "method 'join' requires 1 parameter (called with %d)", vargc() );
 	}
 
 	Object *array = me;

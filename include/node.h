@@ -66,27 +66,28 @@ class  Node;
 class NodeValue {
     public :
 
-        Object  *m_constant;
-        string   m_identifier;
-        int      m_expression;
-        int      m_statement;
-        Node    *m_switch;
-        Node    *m_default;
-        string   m_function;
-        bool	 m_vargs;
-        access_t m_access;
-        bool	 m_static;
-        string   m_method;
-        string   m_call;
-        size_t	 m_argc;
-        Node    *m_alias_call;
-        Node    *m_owner;
-        Node    *m_member;
+        Object  *constant;
+        string   identifier;
+        int      opcode;
+        Node    *switch_block;
+        Node    *default_block;
+        string   function;
+        bool	 vargs;
+        access_t access;
+        bool	 is_static;
+        string   method;
+        string   call;
+        size_t	 argc;
+        Node    *alias;
+        Node    *owner;
+        Node    *member;
 
-        Node	*m_try_block;
-        Node	*m_exp_id;
-        Node    *m_catch_block;
-        Node	*m_finally_block;
+        Node	*try_block;
+        string	 exception_id;
+        Node    *catch_block;
+        Node	*finally_block;
+
+        llist_t  extends;
 
         NodeValue();
         ~NodeValue();
@@ -144,7 +145,7 @@ public  :
     }
 
     INLINE char *id(){
-    	return (char *)value.m_identifier.c_str();
+    	return (char *)value.identifier.c_str();
     }
 
     INLINE Node *body(){
@@ -248,7 +249,7 @@ class CallNode : public Node {
 class TryCatchNode : public Node {
 public :
 
-	TryCatchNode( size_t lineno, int statement, Node *try_block, Node	*exp_id, Node *catch_block, Node *finally_block );
+	TryCatchNode( size_t lineno, int statement, Node *try_block, char *exception_id, Node *catch_block, Node *finally_block );
 
 	Node *clone();
 };
@@ -282,7 +283,7 @@ class MethodDeclarationNode : public Node {
 /* class type definition */
 class ClassNode : public Node {
 	public :
-		llist_t m_extends;
+
 		ClassNode( size_t lineno, char *classname, llist_t *extends, llist_t *members );
 };
 

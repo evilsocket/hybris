@@ -293,7 +293,7 @@ typedef Object * (*ob_call_method_function_t)	( vm_t *, vframe_t *, Object *, ch
 /*
  * Object type codes enumeration.
  * otEndMarker is used to mark the last allowed type in
- * vm_function_t::types.
+ * vfunction_t::types.
  */
 enum H_OBJECT_TYPE {
 	otEndMarker = -1,

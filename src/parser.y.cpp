@@ -426,7 +426,7 @@ statement  : T_EOSTMT                                                   { $$ = M
 			 T_CATCH '(' T_IDENT ')'
 			   statement
 			 finallyBlock {
-        	   $$ = MK_TRYCATCH_NODE( @2.first_line, $2, MK_IDENT_NODE( @5.first_line, $5 ), $7, $8 );
+        	   $$ = MK_TRYCATCH_NODE( @2.first_line, $2, $5, $7, $8 );
            };
 
 statements : /* empty */ 		  { $$ = REDUCE_NODE(NULL); }

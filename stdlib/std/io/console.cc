@@ -103,16 +103,16 @@ static void ctype_convert( Object *o, dll_arg_t *pa ) {
 
 HYBRIS_DEFINE_FUNCTION(hprint){
     unsigned int i;
-    for( i = 0; i < vm_argc(); ++i ){
+    for( i = 0; i < vargc(); ++i ){
         ob_print( vm_argv(i) );
     }
     return H_DEFAULT_RETURN;
 }
 
 HYBRIS_DEFINE_FUNCTION(hprintln){
-    if( vm_argc() ){
+    if( vargc() ){
         unsigned int i;
-        for( i = 0; i < vm_argc(); ++i ){
+        for( i = 0; i < vargc(); ++i ){
             ob_print( vm_argv(i) );
             fprintf( stdout, "\n" );
         }
@@ -124,8 +124,8 @@ HYBRIS_DEFINE_FUNCTION(hprintln){
 }
 
 HYBRIS_DEFINE_FUNCTION(hprintf){
-	if( vm_argc() > PRINTF_MAX_ARGS ){
-		hyb_error( H_ET_SYNTAX, "function 'printf' supports at max %d parameters (called with %d)", PRINTF_MAX_ARGS, vm_argc() );
+	if( vargc() > PRINTF_MAX_ARGS ){
+		hyb_error( H_ET_SYNTAX, "function 'printf' supports at max %d parameters (called with %d)", PRINTF_MAX_ARGS, vargc() );
 	}
 
 	typedef int (* function_t)(void);
@@ -133,7 +133,7 @@ HYBRIS_DEFINE_FUNCTION(hprintf){
 
 	ffi_cif    cif;
 	ffi_arg    ul_ret;
-	int        dsize( vm_argc() ),
+	int        dsize( vargc() ),
 			   argc( dsize ),
 			   i;
 	ffi_type **args_t;
@@ -180,12 +180,12 @@ HYBRIS_DEFINE_FUNCTION(hprintf){
 
 HYBRIS_DEFINE_FUNCTION(hinput){
     Object *_return;
-    if( vm_argc() == 2 ){
+    if( vargc() == 2 ){
         ob_print( vm_argv(0) );
         ob_input( vm_argv(1) );
         _return = vm_argv(1);
     }
-    else if( vm_argc() == 1 ){
+    else if( vargc() == 1 ){
         ob_input( vm_argv(0) );
         _return = vm_argv(0);
     }

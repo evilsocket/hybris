@@ -73,7 +73,7 @@ using std::map;
 /*
  * Macro to define module exported functions structure.
  */
-#define HYBRIS_EXPORTED_FUNCTIONS() extern "C" vm_function_t hybris_module_functions[] =
+#define HYBRIS_EXPORTED_FUNCTIONS() extern "C" vfunction_t hybris_module_functions[] =
 /*
  * Macro to easily access hybris functions parameters.
  */
@@ -81,7 +81,7 @@ using std::map;
 /*
  * Macro to easily access hybris functions parameters number.
  */
-#define vm_argc()     (data->size())
+#define vargc()     (data->size())
 /*
  * Pre declaration of structure vm_t.
  */
@@ -95,7 +95,7 @@ typedef void     (*initializer_t)( vm_t * );
  */
 typedef Object * (*function_t)( vm_t *, vmem_t * );
 
-typedef struct _vm_function_t {
+typedef struct _vfunction_t {
 	/*
 	 * Function identifier.
 	 */
@@ -113,7 +113,7 @@ typedef struct _vm_function_t {
      */
     H_OBJECT_TYPE types[HMAXARGS][20];
 }
-vm_function_t;
+vfunction_t;
 
 /*
  * Split 'str' into 'tokens' vector using 'delimiters'.
@@ -150,7 +150,7 @@ typedef struct vm_module {
 vm_module_t;
 
 typedef llist_t				      	  vm_modules_t;
-typedef ITree<vm_function_t> 	  	  vm_mcache_t;
+typedef ITree<vfunction_t> 	  	  vm_mcache_t;
 typedef ITree<pcre>					  vm_pcache_t;
 typedef llist_t		 			  	  vm_scope_t;
 typedef map< pthread_t, vm_scope_t *> vm_thread_scope_t;
@@ -427,9 +427,9 @@ INLINE void vm_timer( vm_t *vm, int start = 0 ){
  * loaded module and return its pointer.
  * Handle function pointer caching.
  */
-INLINE vm_function_t *vm_get_function( vm_t *vm, char *identifier ){
+INLINE vfunction_t *vm_get_function( vm_t *vm, char *identifier ){
 	vm_module_t   *module;
-	vm_function_t *function;
+	vfunction_t *function;
 
 	/*
 	 * First check if it's already cached.
@@ -446,7 +446,7 @@ INLINE vm_function_t *vm_get_function( vm_t *vm, char *identifier ){
 		 * For each function of the module.
 		 */
 		ll_foreach( &module->functions, f_item ){
-			function = ll_data( vm_function_t *, f_item );
+			function = ll_data( vfunction_t *, f_item );
 			/*
 			 * Found it, add to the cache and return.
 			 */
@@ -568,7 +568,7 @@ void 	  vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, vector<string
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, vector<string> ids, Node *argv );
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Extern *fn_pointer, Node *argv );
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string owner, Node *argv );
-void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vm_function_t *function, vframe_t &stack, string owner, Node *argv );
+void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, vfunction_t *function, vframe_t &stack, string owner, Node *argv );
 void 	  vm_prepare_stack( vm_t *vm, vframe_t *root, Node *function, vframe_t &stack, string owner, Node *argv );
 void 	  vm_dismiss_stack( vm_t *vm );
 /*

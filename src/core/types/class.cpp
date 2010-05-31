@@ -128,7 +128,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	va_start( ap, argc );
 	for( i = 0, iitem = op->m_children.head; i < argc; ++i, iitem = iitem->next ){
 		value = va_arg( ap, Object * );
-		stack.insert( (char *)ll_node( iitem )->value.m_identifier.c_str(), value );
+		stack.insert( (char *)ll_node( iitem )->value.identifier.c_str(), value );
 	}
 	va_end(ap);
 
@@ -205,7 +205,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	va_start( ap, argc );
 	for( i = 0, iitem = ds->m_children.head; i < argc; ++i, iitem = iitem->next ){
 		value = va_arg( ap, Object * );
-		stack.insert( (char *)ll_node( iitem )->value.m_identifier.c_str(), value );
+		stack.insert( (char *)ll_node( iitem )->value.identifier.c_str(), value );
 	}
 	va_end(ap);
 
@@ -717,11 +717,11 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 	 * If the method access specifier is not asPublic, only the identifier
 	 * "me" can use the method.
 	 */
-	if( method->value.m_access != asPublic && strcmp( me_id, "me" ) != 0 ){
+	if( method->value.access != asPublic && strcmp( me_id, "me" ) != 0 ){
 		/*
 		 * The method is protected.
 		 */
-		if( method->value.m_access == asProtected ){
+		if( method->value.access == asProtected ){
 			hyb_error( H_ET_SYNTAX, "Protected method '%s' can be accessed only by derived classes of '%s'", method_id, ob_typename(me) );
 		}
 		/*
@@ -739,7 +739,7 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 	method_argc = method->children() - 1;
 	method_argc = (method_argc < 0 ? 0 : method_argc);
 
-	if( method->value.m_vargs ){
+	if( method->value.vargs ){
 		if( argc < method_argc ){
 			hyb_error( H_ET_SYNTAX, "method '%s' requires at least %d parameters (called with %d)",
 									method_id,
@@ -773,7 +773,7 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 	/*
 	 * Static methods can not use 'me' instance.
 	 */
-	if( method->value.m_static == false ){
+	if( method->value.is_static == false ){
 		stack.insert( "me", me );
 	}
 	/*
@@ -801,7 +801,7 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 			stack.push( value );
 		}
 		else{
-			stack.insert( (char *)ll_node(iitem)->value.m_identifier.c_str(), value );
+			stack.insert( (char *)ll_node(iitem)->value.identifier.c_str(), value );
 			iitem = iitem->next;
 		}
 	}

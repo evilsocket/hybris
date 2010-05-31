@@ -27,7 +27,7 @@ CodeSegment::~CodeSegment(){
 }
 
 Node *CodeSegment::add( char *identifier, Node *node ){
-    char *function_name = (char *)node->value.m_function.c_str();
+    char *function_name = (char *)node->value.function.c_str();
 
     /*
      * Functions can be defined only once!

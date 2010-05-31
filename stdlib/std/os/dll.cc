@@ -114,8 +114,8 @@ HYBRIS_DEFINE_FUNCTION(hdlllink){
 }
 
 HYBRIS_DEFINE_FUNCTION(hdllcall){
-	if( vm_argc() > CALL_MAX_ARGS + 1 ){
-        hyb_error( H_ET_SYNTAX, "function 'dllcall' supports at max %d parameters (called with %d)", CALL_MAX_ARGS, vm_argc() );
+	if( vargc() > CALL_MAX_ARGS + 1 ){
+        hyb_error( H_ET_SYNTAX, "function 'dllcall' supports at max %d parameters (called with %d)", CALL_MAX_ARGS, vargc() );
     }
 
 	long addr;
@@ -127,7 +127,7 @@ HYBRIS_DEFINE_FUNCTION(hdllcall){
 
     ffi_cif    cif;
     ffi_arg    ul_ret;
-    int        dsize( vm_argc() ),
+    int        dsize( vargc() ),
                argc( dsize - 1 ),
                i;
     ffi_type **args_t;
