@@ -261,7 +261,7 @@ main : statements {
 
 	vm_timer( __hyb_vm, VM_TIMER_START );
 
-	__hyb_vm->state = vmExecuting;
+	vm_set_state( __hyb_vm, vmExecuting );
 
 	vm_exec( __hyb_vm, &__hyb_vm->vmem, $1 );
 

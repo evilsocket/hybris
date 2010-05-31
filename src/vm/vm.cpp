@@ -77,7 +77,6 @@ FILE *vm_fopen( vm_t *vm ){
     	if( sep ){
     		filename = sep + 1;
     	}
-    	printf( "vm_set_source( %p, %s )\n", vm, filename );
     	vm_set_source( vm, filename );
 
     	__hyb_file_stack.push_back( filename );
@@ -141,10 +140,13 @@ void vm_init( vm_t *vm, int optind, int *argc, char **argv[], char *envp[] ){
     /*
      * Initialize vm mutexes
      */
-    vm->line_mutex	  = PTHREAD_MUTEX_INITIALIZER;
-    vm->mm_pool_mutex = PTHREAD_MUTEX_INITIALIZER;
-    vm->mcache_mutex  = PTHREAD_MUTEX_INITIALIZER;
-    vm->pcre_mutex	  = PTHREAD_MUTEX_INITIALIZER;
+    for( i = 0; i < VM_MUTEXES; ++i ){
+    	vm->mutexes[i] = PTHREAD_MUTEX_INITIALIZER;
+    }
+    /*
+     * Initialize the debugger.
+     */
+    dbg_init( &vm->debugger, vm );
     /*
      * Set segmentation fault signal handler
      */
@@ -920,6 +922,12 @@ Object *vm_exec( vm_t *vm, vframe_t *frame, Node *node ){
 	 * Set current line number.
 	 */
 	vm_set_lineno( vm, node->lineno );
+	/*
+	 * Check if debugger is running and trigger it.
+	 */
+	if( vm->state == vmDebugging ){
+		dbg_trigger( &vm->debugger, frame, node );
+	}
 
     switch( node->type ){
         /* identifier */

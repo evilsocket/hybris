@@ -28,6 +28,7 @@
 #include "types.h"
 #include "memory.h"
 #include "code.h"
+#include "debug.h"
 
 using std::string;
 using std::vector;
@@ -158,7 +159,8 @@ typedef map< pthread_t, vm_scope_t *> vm_thread_scope_t;
 enum vm_state_t {
 	vmNone    = 0,
 	vmParsing,
-	vmExecuting
+	vmExecuting,
+	vmDebugging
 };
 
 typedef struct _vm_t {
@@ -168,14 +170,38 @@ typedef struct _vm_t {
 	int	   *argc;
 	char ***argv;
 	/*
+	 * Pointer to environment variables listing.
+	 */
+	char **env;
+	/*
+	 * VM command line arguments.
+	 */
+	vm_args_t args;
+
+	/*
+	 * Various mutexes for thread safety.
+	 */
+	#define VM_STATE_MUTEX  0
+	#define VM_SOURCE_MUTEX 1
+	#define VM_LINE_MUTEX   2
+	#define VM_MM_MUTEX 	3
+	#define VM_MCACHE_MUTEX 4
+	#define VM_PCRE_MUTEX 	5
+	#define VM_MUTEXES 	    6
+
+	pthread_mutex_t mutexes[VM_MUTEXES];
+
+	/*
+	 * VM debugger.
+	 */
+	dbg_t debugger;
+	/*
 	 * Main thread id.
 	 */
 	pthread_t main_tid;
 	/*
 	 * The current state of the vm.
 	 *
-	 * NOTE : The state is set only by the main process, so
-	 * it's safe to not have a mutex here.
 	 */
 	vm_state_t state;
 	/*
@@ -183,17 +209,9 @@ typedef struct _vm_t {
 	 */
 	string source;
 	/*
-	 * Mutex to lock to change source.
-	 */
-	pthread_mutex_t source_mutex;
-	/*
 	 * Current executing/parsing line number.
 	 */
 	size_t lineno;
-	/*
-	 * Mutex to lock to change lineno.
-	 */
-	pthread_mutex_t line_mutex;
 	/*
 	 * The list of active memory frames on the main thread.
 	 */
@@ -203,78 +221,60 @@ typedef struct _vm_t {
 	 */
 	vm_thread_scope_t th_frames;
 	/*
-	 * Frames list mutex.
-	 */
-	pthread_mutex_t  mm_pool_mutex;
-	/*
 	 * Source file handle
 	 */
-	FILE          *fp;
-	/*
-	 * Pointer to environment variables listing.
-	 */
-	char         **env;
+	FILE *fp;
 	/*
 	 * Constats memory segment.
 	 */
-	vmem_t         vconst;
+	vmem_t vconst;
 	/*
 	 * Main memory segment.
 	 */
-	vmem_t         vmem;
+	vmem_t vmem;
 	/*
 	 * Main code segment.
 	 */
-	vcode_t        vcode;
+	vcode_t vcode;
 	/*
 	 * Type definitions segment, where structures and classes
 	 * prototypes are defined.
 	 */
-	vmem_t         vtypes;
-	/*
-	 * VM command line arguments.
-	 */
-	vm_args_t       args;
+	vmem_t vtypes;
 	/*
 	 * Functions lookup hashtable cache.
 	 */
-	vm_mcache_t	   mcache;
-	/*
-	 * Lookup cache mutex.
-	 */
-	pthread_mutex_t mcache_mutex;
+	vm_mcache_t mcache;
 	/*
 	 * Dynamically loaded modules instances.
 	 */
-	vm_modules_t    modules;
+	vm_modules_t modules;
 	/*
 	 * Compiled regular expressions cache.
 	 */
-	vm_pcache_t  pcre_cache;
-	/*
-	 * Regexp cache mutex.
-	 */
-	pthread_mutex_t pcre_mutex;
+	vm_pcache_t pcre_cache;
 	/*
 	 * Flag set to true when vm_release is called, used to prevent
 	 * recursive calls when an error is triggered inside a class destructor.
 	 */
-	bool 		   releasing;
+	bool releasing;
 }
 vm_t;
 /*
  * Macros to lock and unlock the vm mutexes.
  */
-#define vm_source_lock( vm )      pthread_mutex_lock( &vm->source_mutex )
-#define vm_source_unlock( vm )    pthread_mutex_unlock( &vm->source_mutex )
-#define vm_line_lock( vm )      pthread_mutex_lock( &vm->line_mutex )
-#define vm_line_unlock( vm )    pthread_mutex_unlock( &vm->line_mutex )
-#define vm_mm_lock( vm )  	    pthread_mutex_lock( &vm->mm_pool_mutex )
-#define vm_mm_unlock( vm )   	pthread_mutex_unlock( &vm->mm_pool_mutex )
-#define vm_mcache_lock( vm )    pthread_mutex_lock( &vm->mcache_mutex )
-#define vm_mcache_unlock( vm )  pthread_mutex_unlock( &vm->mcache_mutex )
-#define vm_pcre_lock( vm )      pthread_mutex_lock( &vm->pcre_mutex )
-#define vm_pcre_unlock( vm )    pthread_mutex_unlock( &vm->pcre_mutex )
+#define vm_state_lock( vm )     pthread_mutex_lock( &vm->mutexes[VM_STATE_MUTEX] )
+#define vm_state_unlock( vm )   pthread_mutex_unlock( &vm->mutexes[VM_STATE_MUTEX] )
+#define vm_source_lock( vm )    pthread_mutex_lock( &vm->mutexes[VM_SOURCE_MUTEX] )
+#define vm_source_unlock( vm )  pthread_mutex_unlock( &vm->mutexes[VM_SOURCE_MUTEX] )
+#define vm_line_lock( vm )      pthread_mutex_lock( &vm->mutexes[VM_LINE_MUTEX] )
+#define vm_line_unlock( vm )    pthread_mutex_unlock( &vm->mutexes[VM_LINE_MUTEX] )
+#define vm_mm_lock( vm )  	    pthread_mutex_lock( &vm->mutexes[VM_MM_MUTEX] )
+#define vm_mm_unlock( vm )   	pthread_mutex_unlock( &vm->mutexes[VM_MM_MUTEX] )
+#define vm_mcache_lock( vm )    pthread_mutex_lock( &vm->mutexes[VM_MCACHE_MUTEX] )
+#define vm_mcache_unlock( vm )  pthread_mutex_unlock( &vm->mutexes[VM_MCACHE_MUTEX] )
+#define vm_pcre_lock( vm )      pthread_mutex_lock( &vm->mutexes[VM_PCRE_MUTEX] )
+#define vm_pcre_unlock( vm )    pthread_mutex_unlock( &vm->mutexes[VM_PCRE_MUTEX] )
 
 /*
  * Alloc a virtual machine instance.
@@ -334,6 +334,13 @@ Object 	   *vm_raise_exception( const char *fmt, ... );
  * Print the calling stack trace.
  */
 void 		vm_print_stack_trace( vm_t *vm, bool force = false );
+/*
+ * Set current vm state.
+ */
+#define vm_set_state( vm, s ) vm_state_lock(vm); \
+							  vm->state = s; \
+							  vm_state_unlock(vm)
+
 /*
  * Set current source file name.
  */

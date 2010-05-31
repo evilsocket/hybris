@@ -205,7 +205,7 @@ include          BEGIN(T_INCLUSION);
 
     BEGIN(INITIAL);
 }
-<T_INCLUSION><<EOF>> {
+<<EOF>> {
 	if( __hyb_file_stack.size() >= 1 ){
 		__hyb_file_stack.pop_back();
 		if( __hyb_file_stack.size() ){
