@@ -24,6 +24,11 @@
  */
 static gc_t __gc;
 
+/*
+ * Define to print GC debug messages.
+ */
+#undef GC_DEBUG
+
 #ifdef GC_DEBUG
 #	define DEBUG( fmt, ... ) fprintf( stdout, fmt, __VA_ARGS__ )
 #else

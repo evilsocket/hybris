@@ -1322,6 +1322,7 @@ INLINE Object *vm_exec_function_declaration( vm_t *vm, vframe_t *frame, Node *no
 
 INLINE Object *vm_exec_structure_declaration( vm_t *vm, vframe_t *frame, Node * node ){
     char *structname = (char *)node->value.identifier.c_str();
+    Node *attribute;
 
 	if( vm->vtypes.find(structname) != H_UNDEFINED ){
 		hyb_error( H_ET_SYNTAX, "Structure '%s' already defined", structname );
@@ -1330,11 +1331,12 @@ INLINE Object *vm_exec_structure_declaration( vm_t *vm, vframe_t *frame, Node * 
 	/* structure prototypes are not garbage collected */
     Object *s = (Object *)(new Structure());
     ll_foreach( &node->children, llitem ){
-    	ob_add_attribute( s, (char *)ll_node( llitem )->value.identifier.c_str() );
+    	attribute = ll_node(llitem);
+    	ob_define_attribute( s, attribute->id(), asPublic, false );
     }
 
     /*
-     * ::defineType will take care of the structure attributes
+     * vm_define_type will take care of the structure attributes
 	 * to prevent it to be garbage collected (see ::onConstant).
      */
     vm_define_type( vm, structname, s );

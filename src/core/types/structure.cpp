@@ -20,16 +20,20 @@
 
 /** generic function pointers **/
 Object *struct_traverse( Object *me, int index ){
-	return (index >= ((Structure *)me)->s_attributes.size() ? NULL : ((Structure *)me)->s_attributes.at(index));
+	Structure *sme   = ob_struct_ucast(me);
+	Object    *child = (index >= sme->s_attributes.size() ? NULL : sme->s_attributes.at(index));
+
+	return child;
 }
 
 Object *struct_clone( Object *me ){
     Structure *sclone = gc_new_struct(),
-                    *sme    = ob_struct_ucast(me);
+              *sme    = ob_struct_ucast(me);
     StructureAttributeIterator ai;
 
     itree_foreach( Object, ai, sme->s_attributes ){
-    	ob_set_attribute( (Object *)sclone, (char *)(*ai)->label.c_str(), (*ai)->value );
+    	sclone->s_attributes.insert( (char *)(*ai)->label.c_str(),
+									 ob_clone( (*ai)->value ) );
     }
 
     sclone->items = sme->items;
@@ -93,7 +97,7 @@ Object *struct_assign( Object *me, Object *op ){
 void struct_define_attribute( Object *me, char *name, access_t a, bool is_static /*= false*/ ){
 	Structure *sme = ob_struct_ucast(me);
 
-	sme->s_attributes.insert( name, (Object *)gc_new_integer(0) );
+	sme->s_attributes.insert( name, H_VOID_VALUE );
 	sme->items = sme->s_attributes.size();
 }
 
