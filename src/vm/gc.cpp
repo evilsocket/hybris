@@ -150,9 +150,12 @@ size_t gc_mm_threshold(){
  * Recursively mark an object (and its inner items).
  */
 void gc_mark( Object *o, bool mark /*= true*/ ){
-	if( o ){
-		DEBUG( "[GC DEBUG] Marking object at %p as %s.\n", o, (mark ? "alive" : "dead") );
-
+	/*
+	 * If the object is a reference, mark it only if it's not already marked, this
+	 * will avoid infinite recursion for its referenced pointer.
+	 */
+	if( o && !(ob_is_reference(o) && o->gc_mark == mark && ob_ref_ucast(o)->value->gc_mark == mark) ){
+		DEBUG( "[GC DEBUG] Marking %s object at %p as %s.\n", ob_typename(o), o, (mark ? "alive" : "dead") );
 		/*
 		 * Mark the object.
 		 */

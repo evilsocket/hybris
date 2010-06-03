@@ -36,10 +36,10 @@ Object *ref_traverse( Object *me, int index ){
 }
 
 Object *ref_clone( Object *me ){
-	Reference *rme	= ob_ref_ucast(me),
-					*rclone = gc_new_reference( rme->value );
+	Reference *rme	  = ob_ref_ucast(me),
+			  *rclone = gc_new_reference( rme->value );
 
-    return (me = (Object *)(rclone));
+    return (Object *)rclone;
 }
 
 size_t ref_get_size( Object *me ){
@@ -84,7 +84,7 @@ double ref_fvalue( Object *me ){
 }
 
 bool ref_lvalue( Object *me ){
-    return ob_ref_ucast(me)->value ? ob_lvalue( ob_ref_ucast(me)->value ) : false;
+    return ob_ref_ucast(me)->value != NULL;
 }
 
 string ref_svalue( Object *me ){
