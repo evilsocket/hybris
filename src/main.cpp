@@ -55,6 +55,11 @@ int main( int argc, char *argv[], char* envp[] ){
             { "cgi",	 0, 0, 'c' },
             { "time",    0, 0, 't' },
             { "trace",   0, 0, 's' },
+            /*
+             * TODO
+             *
+             * { "debug",   0, 0, 'd' },
+             */
             { "help",    0, 0, 'h' },
             { 0, 0, 0, 0 }
     };
@@ -69,7 +74,7 @@ int main( int argc, char *argv[], char* envp[] ){
     long gc_threshold,
 		 mm_threshold;
 
-    while( (c = getopt_long( argc, argv, "m:g:ctsh", options, &index)) != -1 ){
+    while( (c = getopt_long( argc, argv, /* "m:g:ctsdh" */ "m:g:ctsh", options, &index)) != -1 ){
         switch (c) {
 			/*
 			 * Handle garbage collection threshold argument.
@@ -219,7 +224,15 @@ int main( int argc, char *argv[], char* envp[] ){
         		 */
         		__hyb_vm->args.stacktrace = 1;
         	break;
-
+        	/*
+        	 * TODO
+        	 *
+			 * Enable debug mode.
+        	 * case 'd':
+        	 *
+        	 *	__hyb_vm->args.debug = true;
+        	 * break;
+			 */
         	case 'h':
         		return hyb_usage(argv[0]);
             break;
@@ -237,6 +250,14 @@ int main( int argc, char *argv[], char* envp[] ){
      * name to build the script virtual argv.
      */
     vm_init( __hyb_vm, optind, &argc, &argv, envp );
+
+    /*
+     * TODO
+     *
+     * if( __hyb_vm->args.debug ){
+     *     dbg_main( &__hyb_vm->debugger );
+     * }
+     */
 
     extern FILE *yyin;
     /*

@@ -1,5 +1,5 @@
 /*
- * This file is part of the Hybris programming language interpreter.
+ * This file is part of the Hybris programming language.
  *
  * Copyleft of Simone Margaritelli aka evilsocket <evilsocket@gmail.com>
  *
@@ -16,36 +16,38 @@
  * You should have received a copy of the GNU General Public License
  * along with Hybris.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef _HDEBUG_H_
-#   define _HDEBUG_H_
+include std.test.TestUnit;
 
-#include "common.h"
+class TestSuite {
+	protected units;
+	protected results;
+	protected name;
 
-typedef struct bpoint {
-	char   source[0xFF];
-	char   line[0xFF];
-	size_t lineno;
+	public method TestSuite( name ){
+		me.name    = name;		
+		me.units   = [];
+		me.results = [];
+	}	
+
+	public method add( unit ){
+		me.units[] = unit;
+	}
+
+	public method run(){
+		foreach( unit of me.units ){
+			me.results[] = unit.run();
+		}
+	}
+
+	public method __to_string(){
+		repr = "<" + me.name + ">\n";
+			   
+		foreach( result of me.results ){
+			repr += result;
+		}
+
+		repr += "</" + me.name + ">";
+		
+		return repr;	
+	}	
 }
-bpoint_t;
-
-typedef struct {
-	vm_t   *vm;
-	llist_t bpoints;
-}
-dbg_t;
-
-typedef void (* dbg_command_handler_t)( dbg_t *, char *, vframe_t *, Node * );
-
-typedef struct {
-	string 				  name;
-	string 				  desc;
-	dbg_command_handler_t handler;
-}
-dbg_command_t;
-
-
-void dbg_init( dbg_t *dbg, vm_t *vm );
-void dbg_main( dbg_t *dbg );
-void dbg_trigger( dbg_t *dbg, vframe_t *frame, Node *node );
-
-#endif

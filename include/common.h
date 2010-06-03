@@ -76,6 +76,8 @@ typedef struct {
 
 	bool  cgi_mode;
 
+	bool  debug;
+
     ulong gc_threshold;
     ulong mm_threshold;
 }

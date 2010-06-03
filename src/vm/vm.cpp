@@ -922,13 +922,16 @@ Object *vm_exec( vm_t *vm, vframe_t *frame, Node *node ){
 	 * Set current line number.
 	 */
 	vm_set_lineno( vm, node->lineno );
-	/*
-	 * Check if debugger is running and trigger it.
-	 */
-	if( vm->state == vmDebugging ){
-		dbg_trigger( &vm->debugger, frame, node );
-	}
 
+	/*
+	 * TODO
+	 *
+	 * Check if debugger is running and trigger it.
+	 *
+	 * if( vm->args.debug ){
+	 *     dbg_trigger( &vm->debugger, frame, node );
+	 * }
+	 */
     switch( node->type ){
         /* identifier */
         case H_NT_IDENTIFIER :
