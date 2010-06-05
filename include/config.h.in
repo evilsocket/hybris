@@ -1,0 +1,7 @@
+#cmakedefine AUTHOR "@AUTHOR@"
+/* system path for hybris global scripts */
+#cmakedefine INC_PATH "@INC_PATH@"
+/* system path for libraries (.so dynamic libs) */
+#cmakedefine LIB_PATH "@LIB_PATH@"
+/* Define to the version of this package. */
+#cmakedefine VERSION "@VERSION@"
