@@ -51,7 +51,8 @@ set( OPTIMIZATION "-O3 -pipe -fomit-frame-pointer -ffast-math" )
 set( COMMON_CXXFLAGS "-w ${OPTIMIZATION}" )
 # compute standard library compilation flags
 execute_process( COMMAND xml2-config --cflags OUTPUT_VARIABLE LIBXML_CXXFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE )
-set( STD_CXXFLAGS "${COMMON_CXXFLAGS} ${LIBXML_CXXFLAGS}" )
+execute_process( COMMAND pkg-config --cflags libffi OUTPUT_VARIABLE LIBFFI_CXXFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE )
+set( STD_CXXFLAGS "${COMMON_CXXFLAGS} ${LIBXML_CXXFLAGS} ${LIBFFI_CXXFLAGS}" )
 
 # libhybris.so sources
 file( GLOB_RECURSE MAIN_SOURCES src/*.cpp )
