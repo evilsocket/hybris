@@ -589,7 +589,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 			stack.push( value );
 		}
 		else{
-			stack.insert( (char *)ll_node( iitem )->value.identifier.c_str(), value );
+			stack.insert( ll_node( iitem )->id(), value );
 			iitem = iitem->next;
 		}
 	}
@@ -620,7 +620,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, Object *c
 			stack.push( value );
 		}
 		else{
-			stack.insert( (char *)ll_node( iitem )->value.identifier.c_str(), value );
+			stack.insert( ll_node( iitem )->id(), value );
 
 			iitem = iitem->next;
 		}
@@ -1175,7 +1175,7 @@ Object *vm_exec( vm_t *vm, vframe_t *frame, Node *node ){
 INLINE Object *vm_exec_identifier( vm_t *vm, vframe_t *frame, Node *node ){
     Object *o = H_UNDEFINED;
     Node   *function   = H_UNDEFINED;
-    char   *identifier = (char *)node->value.identifier.c_str();
+    char   *identifier = node->id();
 
     /*
    	 * First thing first, check for a constant object name.
@@ -1241,8 +1241,8 @@ INLINE Object *vm_exec_attribute_request( vm_t *vm, vframe_t *frame, Node *node 
 	Node    *member = node->value.member;
 
 	cobj      = vm_exec( vm, frame, node->value.owner );
-	owner_id  = (char *)node->value.owner->value.identifier.c_str();
-	name      = (char *)member->value.identifier.c_str();
+	owner_id  = (char *)node->value.owner->id();
+	name      = (char *)member->id();
 	attribute = ob_get_attribute( cobj, name, true );
 
 	if( attribute == H_UNDEFINED ){
@@ -1284,7 +1284,7 @@ INLINE Object *vm_exec_method_call( vm_t *vm, vframe_t *frame, Node *node ){
 	Node    *member = node->value.member;
 
 	cobj 	 = vm_exec( vm, frame, node->value.owner );
-	owner_id = (char *)node->value.owner->value.identifier.c_str();
+	owner_id = node->value.owner->id();
 	name 	 = (char *)member->value.call.c_str();
 
 	return ob_call_method( vm, frame, cobj, owner_id, name, member );
@@ -1321,7 +1321,7 @@ INLINE Object *vm_exec_function_declaration( vm_t *vm, vframe_t *frame, Node *no
 }
 
 INLINE Object *vm_exec_structure_declaration( vm_t *vm, vframe_t *frame, Node * node ){
-    char *structname = (char *)node->value.identifier.c_str();
+    char *structname = node->id();
     Node *attribute;
 
 	if( vm->vtypes.find(structname) != H_UNDEFINED ){
@@ -1346,7 +1346,7 @@ INLINE Object *vm_exec_structure_declaration( vm_t *vm, vframe_t *frame, Node * 
 
 INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node ){
 	int        i, members( node->children.items );
-	char      *classname = (char *)node->value.identifier.c_str(),
+	char      *classname = node->id(),
 			  *attrname;
 	Node      *declchild,
 			  *attribute;
@@ -1421,9 +1421,9 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 	if( ll_size(&cnode->value.extends) > 0 ){
 		ll_foreach( &cnode->value.extends, llnode ){
 			baseclass = ll_node( llnode );
-			baseproto = vm_get_type( vm, (char *)baseclass->value.identifier.c_str() );
+			baseproto = vm_get_type( vm, (char *)baseclass->id() );
 			if( baseproto == H_UNDEFINED ){
-				hyb_error( H_ET_SYNTAX, "'%s' undeclared class type", baseclass->value.identifier.c_str() );
+				hyb_error( H_ET_SYNTAX, "'%s' undeclared class type", baseclass->id() );
 			}
 			else if( ob_is_class(baseproto) == false ){
 				hyb_error( H_ET_SYNTAX, "couldn't extend from '%s' type", ob_typename(baseproto) );
@@ -1648,7 +1648,7 @@ INLINE Object *vm_exec_user_function_call( vm_t *vm, vframe_t *frame, Node *call
 }
 
 INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
-    char      *type_name = (char *)type->value.identifier.c_str();
+    char      *type_name = type->id();
     ll_item_t *llitem;
     Object    *user_type = H_UNDEFINED,
               *newtype   = H_UNDEFINED,
@@ -2084,7 +2084,7 @@ INLINE Object *vm_exec_foreach( vm_t *vm, vframe_t *frame, Node *node ){
     char   *identifier;
     Integer index(0);
 
-    identifier = (char *)node->child(0)->value.identifier.c_str();
+    identifier = node->child(0)->id();
     v          = vm_exec( vm, frame, node->child(1) );
     body       = node->child(2);
     size       = ob_get_size(v);
@@ -2130,8 +2130,8 @@ INLINE Object *vm_exec_foreach_mapping( vm_t *vm, vframe_t *frame, Node *node ){
     char   *key_identifier,
            *value_identifier;
 
-    key_identifier   = (char *)node->child(0)->value.identifier.c_str();
-    value_identifier = (char *)node->child(1)->value.identifier.c_str();
+    key_identifier   = node->child(0)->id();
+    value_identifier = node->child(1)->id();
     map              = vm_exec( vm, frame, node->child(2) );
     body             = node->child(3);
     size             = ob_get_size(map);
@@ -2277,8 +2277,7 @@ INLINE Object *vm_exec_explode( vm_t *vm, vframe_t *frame, Node *node ){
 	 * Initialize all the identifiers with a <false>.
 	 */
 	for( llitem = node->children.head->next; llitem; llitem = llitem->next ){
-		frame->add( (char *)ll_node(llitem)->value.identifier.c_str(),
-							(Object *)gc_new_boolean(false) );
+		frame->add( ll_node(llitem)->id(), (Object *)gc_new_boolean(false) );
 	}
 	/*
 	 * Fill initializers until the iterable object ends, leave
@@ -2286,8 +2285,7 @@ INLINE Object *vm_exec_explode( vm_t *vm, vframe_t *frame, Node *node ){
 	 */
 	Integer index(0);
 	for( llitem = node->children.head->next; (unsigned)index.value < n_end; ++index.value, llitem = llitem->next ){
-		frame->add( (char *)ll_node(llitem)->value.identifier.c_str(),
-					 ob_cl_at( value, (Object *)&index ) );
+		frame->add( ll_node(llitem)->id(), ob_cl_at( value, (Object *)&index ) );
 	}
 
 	return value;
@@ -2399,7 +2397,7 @@ INLINE Object *vm_exec_assign( vm_t *vm, vframe_t *frame, Node *node ){
 
     	vm_check_frame_exit(frame)
 
-		return object = frame->add( (char *)lexpr->value.identifier.c_str(), value );
+		return object = frame->add( lexpr->id(), value );
     }
     /*
      * If not, we evaluate the first node as a "owner->child->..." sequence,
@@ -2425,7 +2423,7 @@ INLINE Object *vm_exec_assign( vm_t *vm, vframe_t *frame, Node *node ){
 
     	vm_check_frame_exit(frame)
 
-    	ob_set_attribute( obj, (char *)attribute->value.identifier.c_str(), value );
+    	ob_set_attribute( obj, attribute->id(), value );
 
     	return obj;
     }

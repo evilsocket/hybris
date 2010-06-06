@@ -171,7 +171,7 @@ HYBRIS_DEFINE_FUNCTION(hcall_method){
 	stack.insert( "me", (Object *)classref );
 	for( ; (unsigned)index.value < argc; ++index.value ){
 		value = ob_cl_at( (Object *)argv, (Object *)&index );
-		stack.insert( (char *)method->child( index.value )->value.identifier.c_str(), value  );
+		stack.insert( method->child( index.value )->id(), value  );
 	}
 
 	vm_add_frame( vm, &stack );

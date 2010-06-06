@@ -237,7 +237,7 @@ IdentifierNode::IdentifierNode( size_t lineno, access_t access, bool is_static, 
 }
 
 Node *IdentifierNode::clone(){
-	Node *clone = new IdentifierNode( lineno, (char *)value.identifier.c_str() ),
+	Node *clone = new IdentifierNode( lineno, id() ),
 		 *node;
 
 	clone->value.access    = value.access;
@@ -388,7 +388,7 @@ NewNode::NewNode( size_t lineno, char *type, llist_t *argv ) : Node(H_NT_NEW,lin
 }
 
 Node *NewNode::clone(){
-	Node *clone = new NewNode( lineno, (char *)value.identifier.c_str(), NULL ),
+	Node *clone = new NewNode( lineno, id(), NULL ),
 		 *node;
 
 	ll_foreach( &children, nitem ){

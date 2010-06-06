@@ -128,7 +128,7 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 	va_start( ap, argc );
 	for( i = 0, iitem = op->children.head; i < argc; ++i, iitem = iitem->next ){
 		value = va_arg( ap, Object * );
-		stack.insert( (char *)ll_node( iitem )->value.identifier.c_str(), value );
+		stack.insert( ll_node( iitem )->id(), value );
 	}
 	va_end(ap);
 
@@ -205,7 +205,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	va_start( ap, argc );
 	for( i = 0, iitem = ds->children.head; i < argc; ++i, iitem = iitem->next ){
 		value = va_arg( ap, Object * );
-		stack.insert( (char *)ll_node( iitem )->value.identifier.c_str(), value );
+		stack.insert( ll_node( iitem )->id(), value );
 	}
 	va_end(ap);
 
@@ -801,7 +801,7 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 			stack.push( value );
 		}
 		else{
-			stack.insert( (char *)ll_node(iitem)->value.identifier.c_str(), value );
+			stack.insert( ll_node(iitem)->id(), value );
 			iitem = iitem->next;
 		}
 	}
