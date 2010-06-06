@@ -46,6 +46,7 @@ Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *me
 
 	stack.owner = string(c_name) + "::" + string("__method");
 
+	c->referenced = true;
 	stack.insert( "me", c );
 	stack.add( "name", (Object *)gc_new_string(method_name) );
 	ll_foreach_to( &argv->children, iitem, i, argc ){
@@ -60,7 +61,13 @@ Object *class_call_undefined_method( vm_t *vm, Object *c, char *c_name, char *me
 			return frame->state.r_value;
 		}
 
-		ob_cl_push( (Object *)args, value );
+		if( value->referenced ){
+			ob_cl_push( (Object *)args, value );
+		}
+		else{
+			value->referenced = true;
+			ob_cl_push_reference( (Object *)args, value );
+		}
 	}
 	stack.add( "argv", (Object *)args );
 
@@ -124,10 +131,12 @@ Object *class_call_overloaded_operator( Object *me, const char *op_name, int arg
 
 	vm_add_frame( __hyb_vm, &stack );
 
+	me->referenced = true;
 	stack.insert( "me", me );
 	va_start( ap, argc );
 	for( i = 0, iitem = op->children.head; i < argc; ++i, iitem = iitem->next ){
 		value = va_arg( ap, Object * );
+		value->referenced = true;
 		stack.insert( ll_node( iitem )->id(), value );
 	}
 	va_end(ap);
@@ -201,6 +210,7 @@ Object *class_call_overloaded_descriptor( Object *me, const char *ds_name, bool 
 	 */
 	stack.owner = string(ob_typename(me)) + "::" + string(ds_name);
 
+	me->referenced = true;
 	stack.insert( "me", me );
 	va_start( ap, argc );
 	for( i = 0, iitem = ds->children.head; i < argc; ++i, iitem = iitem->next ){
@@ -238,8 +248,9 @@ Object *class_traverse( Object *me, int index ){
 }
 
 Object *class_clone( Object *me ){
-    Class *cclone = gc_new_class(),
-                *cme    = ob_class_ucast(me);
+    Class  *cclone = gc_new_class(),
+           *cme    = ob_class_ucast(me);
+    Object *a_value;
     ClassAttributeIterator  ai;
     ClassMethodIterator     mi;
     ClassPrototypesIterator pi;
@@ -250,11 +261,14 @@ Object *class_clone( Object *me ){
     	 * If the attribute is not static, clone the entire structure.
     	 */
     	if( (*ai)->value->is_static == false ){
+    		a_value = ob_clone( (*ai)->value->value );
+    		a_value->referenced = true;
+
 			cclone->c_attributes.insert( (char *)(*ai)->value->name.c_str(),
 										 new class_attribute_t(
 												 (*ai)->value->name,
 												 (*ai)->value->access,
-												 ob_clone((*ai)->value->value)
+												 a_value
 										 )
 									   );
     	}
@@ -774,6 +788,7 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 	 * Static methods can not use 'me' instance.
 	 */
 	if( method->value.is_static == false ){
+		me->referenced = true;
 		stack.insert( "me", me );
 	}
 	/*
@@ -781,6 +796,7 @@ Object *class_call_method( vm_t *vm, vframe_t *frame, Object *me, char *me_id, c
 	 */
 	for( i = 0, aitem = argv->children.head, iitem = method->children.head; i < argc; ++i, aitem = aitem->next ){
 		value = vm_exec( vm, frame, ll_node( aitem ) );
+		value->referenced = true;
 		/*
 		 * Check if vm_exec raised an exception.
 		 */

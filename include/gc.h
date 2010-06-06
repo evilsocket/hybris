@@ -87,13 +87,13 @@ typedef struct _vm_t   vm_t;
  * mutex        : Mutex to lock the pool while collecting.
  */
 typedef struct _gc {
-	llist_t		constants;
-	llist_t		lag;
-	llist_t		heap;
-	size_t		collections;
-    size_t     	usage;
-    size_t     	gc_threshold;
-    size_t		mm_threshold;
+	llist_t			constants;
+	llist_t			lag;
+	llist_t			heap;
+	size_t			collections;
+    size_t     		usage;
+    size_t     		gc_threshold;
+    size_t			mm_threshold;
 	pthread_mutex_t mutex;
 
 	_gc(){

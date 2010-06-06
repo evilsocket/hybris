@@ -580,6 +580,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	 */
 	for( i = 0, iitem = prototype->children.head, aitem = argv->children.head; i < argc; ++i, aitem = aitem->next ){
 		value = vm_exec( vm, root, ll_node( aitem ) );
+		value->referenced = true;
 
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
@@ -616,6 +617,8 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, Object *c
 	va_start( ap, argc );
 	for( i = 0, iitem = ids->children.head; i < argc; ++i ){
 		value = va_arg( ap, Object * );
+		value->referenced = true;
+
 		if( i >= n_ids ){
 			stack.push( value );
 		}
@@ -648,6 +651,8 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t &stack, string owner, vector<st
 	argc = argv->size();
 	for( i = 0; i < argc; ++i ){
 		value = argv->at(i);
+		value->referenced = true;
+
 		if( i >= n_ids ){
 			stack.push( value );
 		}
@@ -685,6 +690,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	argc = argv->children.items;
 	ll_foreach_to( &argv->children, iitem, i, argc ){
 		value = vm_exec( vm, root, ll_node( iitem ) );
+		value->referenced = true;
 
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
@@ -723,6 +729,8 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	argc = argv->children.items;
 	ll_foreach_to( &argv->children, iitem, i, argc ){
 		value = vm_exec( vm, root, ll_node( iitem ) );
+		value->referenced = true;
+
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
 			return;
@@ -753,6 +761,8 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vframe_t &stack, string 
 	argc = argv->children.items;
 	ll_foreach_to( &argv->children, iitem, i, argc ){
 		value = vm_exec( vm, root, ll_node( iitem ) );
+		value->referenced = true;
+
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
 			return;
@@ -812,6 +822,7 @@ INLINE void vm_prepare_stack( vm_t *vm, vframe_t *root, vm_function_t *function,
 	 */
 	ll_foreach_to( &argv->children, iitem, i, argc ){
 		value = vm_exec( vm, root, ll_node( iitem ) );
+		value->referenced = true;
 
 		if( root->state.is(Exception) ){
 			vm_dismiss_stack( vm );
@@ -1375,6 +1386,8 @@ INLINE Object *vm_exec_class_declaration( vm_t *vm, vframe_t *frame, Node *node 
 			 */
 			if( attribute->value.is_static ){
 				static_attr_value = vm_exec( vm, frame, attribute->child(0) );
+
+				static_attr_value->referenced = true;
 				/*
 				 * Static attributes are not garbage collectable until the end of
 				 * the program is reached because they reside in a global scope.
@@ -1667,12 +1680,6 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
      */
     newtype = ob_clone(user_type);
 	/*
-	 * Tell the vm to use a reference to this object instead of a
-	 * clone, this will avoid duplicate classes and therefore multiple
-	 * destructor calls.
-	 */
-	newtype->use_ref = true;
-	/*
 	 * It's ok to initialize less attributes that the structure/class
 	 * has (non ini'ed attributes are set to 0 by default), but
 	 * you can not set more attributes than the structure/class have.
@@ -1691,7 +1698,14 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
 
 		ll_foreach_to( &type->children, llitem, i, children ){
 			object = vm_exec( vm, frame, ll_node( llitem ) );
-			ob_set_attribute( newtype, (char *)stype->s_attributes.label(i), object );
+
+			if( object->referenced ){
+				ob_set_attribute( newtype, (char *)stype->s_attributes.label(i), object );
+			}
+			else{
+				object->referenced = true;
+				ob_set_attribute_reference( newtype, (char *)stype->s_attributes.label(i), object );
+			}
 		}
 
 		frame->remove_tmp(newtype);
@@ -1819,6 +1833,8 @@ INLINE Object *vm_exec_reference( vm_t *vm, vframe_t *frame, Node *node ){
 
     o = vm_exec( vm, frame, node->child(0) );
 
+    o->referenced = true;
+
     return (Object *)gc_new_reference(o);
 }
 
@@ -1913,6 +1929,7 @@ INLINE Object *vm_exec_vargs( vm_t *vm, vframe_t *frame, Node *node ){
 
 	for( i = 0; i < argc; ++i ){
 		if( strcmp( frame->label(i), "me" ) != 0 ){
+			frame->at(i)->referenced = true;
 			ob_cl_push( vargs, frame->at(i) );
 		}
 	}
@@ -1945,7 +1962,13 @@ INLINE Object *vm_exec_subscript_push( vm_t *vm, vframe_t *frame, Node *node ){
 
 	vm_check_frame_exit(frame)
 
-	res    = ob_cl_push( array, object );
+	if( object->referenced ){
+		res = ob_cl_push( array, object );
+	}
+	else{
+		object->referenced = true;
+		res = ob_cl_push_reference( array, object );
+	}
 
 	return res;
 }
@@ -1992,7 +2015,13 @@ INLINE Object *vm_exec_subscript_set( vm_t *vm, vframe_t *frame, Node *node ){
 
    	vm_check_frame_exit(frame)
 
-   	ob_cl_set( array, index, object );
+   	if( object->referenced ){
+   		ob_cl_set( array, index, object );
+   	}
+   	else{
+   		object->referenced = true;
+   		ob_cl_set_reference( array, index, object );
+   	}
 
    	return array;
 }
@@ -2347,10 +2376,18 @@ INLINE Object *vm_exec_eostmt( vm_t *vm, vframe_t *frame, Node *node ){
 }
 
 INLINE Object *vm_exec_array( vm_t *vm, vframe_t *frame, Node *node ){
-	Object *v = (Object *)gc_new_vector();
+	Object *v = (Object *)gc_new_vector(),
+		   *o;
 
 	ll_foreach( &node->children, llitem ){
-		ob_cl_push_reference( v, vm_exec( vm, frame, ll_node( llitem ) ) );
+		o = vm_exec( vm, frame, ll_node( llitem ) );
+		if( o->referenced ){
+			ob_cl_push( v, o );
+		}
+		else{
+			o->referenced = true;
+			ob_cl_push_reference( v, o );
+		}
 	}
 
 	return v;
@@ -2359,15 +2396,23 @@ INLINE Object *vm_exec_array( vm_t *vm, vframe_t *frame, Node *node ){
 INLINE Object *vm_exec_map( vm_t *vm, vframe_t *frame, Node *node ){
 	ll_item_t *key,
 			  *val;
-	Object 	  *m = (Object *)gc_new_map();
+	Object 	  *m = (Object *)gc_new_map(),
+			  *k,
+			  *v;
 
 
 	for( key = node->children.head; key; key= key->next ){
 		val = key->next;
+		k   = vm_exec( vm, frame, ll_node(key) );
+		v   = vm_exec( vm, frame, ll_node(val) );
 
-		ob_cl_set_reference( m,
-							 vm_exec( vm, frame, ll_node(key) ),
-							 vm_exec( vm, frame, ll_node(val) ) );
+		if( v->referenced ){
+			ob_cl_set( m, k, v );
+		}
+		else{
+			v->referenced = true;
+			ob_cl_set_reference( m, k, v );
+		}
 
 		/*
 		 * key += 2
@@ -2423,7 +2468,13 @@ INLINE Object *vm_exec_assign( vm_t *vm, vframe_t *frame, Node *node ){
 
     	vm_check_frame_exit(frame)
 
-    	ob_set_attribute( obj, attribute->id(), value );
+		if( value->referenced ){
+			ob_set_attribute( obj, attribute->id(), value );
+		}
+		else{
+			value->referenced = true;
+			ob_set_attribute_reference( obj, attribute->id(), value );
+		}
 
     	return obj;
     }

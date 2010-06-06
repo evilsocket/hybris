@@ -62,37 +62,27 @@ typedef MemorySegment vframe_t;
  * of the object structure itself to be down-casted to a base object.
  *
  * type       : type descriptor as pointer (for type checking)
- * use_ref	  : tell the vm to use a reference to this object instead of a clone
+ * referenced : tell the vm to use a reference to this object instead of a clone
  * gc_size	  : size in bytes of the entire object
  * gc_mark    : mark-&-sweep gc flag
  * gc_count	  : number of times the object passed the garbage collection
  * attributes : object memory attributes mask
  */
-#define BASE_OBJECT_HEADER struct _object_type_t *type;     \
-						   bool					  use_ref;  \
-						   size_t				  gc_size;  \
-                           bool                   gc_mark;  \
-						   size_t				  gc_count; \
+#define BASE_OBJECT_HEADER struct _object_type_t *type;       \
+						   bool					  referenced; \
+						   size_t				  gc_size;    \
+                           bool                   gc_mark;    \
+						   size_t				  gc_count;   \
                            size_t                 attributes
 /*
  * Default object header initialization macro .
  */
 #define BASE_OBJECT_HEADER_INIT(t) gc_mark(false), \
-								   use_ref(false), \
+								   referenced(false), \
 								   gc_size(0), \
 								   gc_count(0), \
                                    attributes(H_OA_NONE), \
                                    type(&t ## _Type)
-/*
- * Macro to initialize default fields of an Object pointer.
- */
-#define OB_BASE_INIT(o,t) o->gc_mark = false; \
-						  o->use_ref = false; \
-						  o->gc_count = 0; \
-						  o->gc_size = 0; \
-						  o->attributes = H_OA_NONE; \
-						  o->type = &t ## _Type
-
 /*
  * This macro compare the object type structure pointer with a given
  * type, assuming that all type structure pointers are declared as :
@@ -1562,6 +1552,9 @@ INLINE Object *ob_cl_push_reference( Object *a, Object *b ){
 	if( a->type->cl_push_reference != NULL ){
 		return a->type->cl_push_reference(a,b);
 	}
+	else if( a->type->cl_push ){
+		return a->type->cl_push(a,b);
+	}
 	else{
 		hyb_error( H_ET_SYNTAX, "'%s' not iterable or not editable object type", ob_typename(a) );
 	}
@@ -1606,6 +1599,9 @@ INLINE Object *ob_cl_set( Object *a, Object *b, Object *c ){
 INLINE Object *ob_cl_set_reference( Object *a, Object *b, Object *c ){
     if( a->type->cl_set_reference != NULL ){
 		return a->type->cl_set_reference(a,b,c);
+	}
+	else if( a->type->cl_set ){
+		return a->type->cl_set(a,b,c);
 	}
 	else{
 		hyb_error( H_ET_SYNTAX, "'%s' not iterable or not editable object type", ob_typename(a) );

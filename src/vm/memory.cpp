@@ -29,14 +29,17 @@ Object *MemorySegment::add( char *identifier, Object *object ){
            *retn = H_UNDEFINED;
 
     /*
-     * Is the VM telling us to use a reference instead of a clone?
+     * If the object is already referenced OR is a constant, clone it.
 	 */
-    if( object->use_ref == false ){
+    if( object->referenced == true || (object->attributes & H_OA_CONSTANT) == H_OA_CONSTANT ){
     	next = ob_clone(object);
     }
+    /*
+     * Otherwise just use it.
+     */
     else{
     	next = object;
-    	next->use_ref = false;
+    	next->referenced = true;
     }
 
     pthread_mutex_lock( &mutex );
