@@ -187,7 +187,8 @@ typedef struct _vm_t {
 	#define VM_MM_MUTEX 	3
 	#define VM_MCACHE_MUTEX 4
 	#define VM_PCRE_MUTEX 	5
-	#define VM_MUTEXES 	    6
+	#define VM_TSYNC_MUTEX  6
+	#define VM_MUTEXES 	    7
 
 	pthread_mutex_t mutexes[VM_MUTEXES];
 
@@ -275,6 +276,8 @@ vm_t;
 #define vm_mcache_unlock( vm )  pthread_mutex_unlock( &vm->mutexes[VM_MCACHE_MUTEX] )
 #define vm_pcre_lock( vm )      pthread_mutex_lock( &vm->mutexes[VM_PCRE_MUTEX] )
 #define vm_pcre_unlock( vm )    pthread_mutex_unlock( &vm->mutexes[VM_PCRE_MUTEX] )
+#define vm_tsync_lock( vm )     pthread_mutex_lock( &vm->mutexes[VM_TSYNC_MUTEX] )
+#define vm_tsync_unlock( vm )   pthread_mutex_unlock( &vm->mutexes[VM_TSYNC_MUTEX] )
 
 /*
  * Alloc a virtual machine instance.

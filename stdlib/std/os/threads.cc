@@ -39,17 +39,14 @@ typedef struct {
 }
 thread_args_t;
 
-static pthread_mutex_t __vm_sync_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 void * hyb_pthread_worker( void *arg ){
+	thread_args_t *args = (thread_args_t *)arg;
 	/*
 	 * This will cause the thread to wait until the main process
 	 * finishes its job and releases the mutex.
 	 */
-	pthread_mutex_lock(&__vm_sync_mutex);
-	pthread_mutex_unlock(&__vm_sync_mutex);
-
-	thread_args_t *args = (thread_args_t *)arg;
+	vm_tsync_lock( args->vm );
+	vm_tsync_unlock( args->vm );
 
 	vm_exec_threaded_call( args->vm,
 						   args->function,
@@ -86,9 +83,9 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
 	 * Make sure the thread is not goin to start until we want
 	 * it to start.
 	 */
-	pthread_mutex_lock(&__vm_sync_mutex);
+	vm_tsync_lock(vm);
 
-    if( (code = pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args )) == 0 ){
+	if( (code = pthread_create( &tid, NULL, hyb_pthread_worker, (void *)args )) == 0 ){
         /*
          * Create the memory scope for the thread.
          */
@@ -100,12 +97,12 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
     	/*
     	 * Ok, it's safe to start the thread now.
     	 */
-    	pthread_mutex_unlock(&__vm_sync_mutex);
+    	vm_tsync_unlock(vm);
 
     	return ob_dcast( gc_new_integer(tid) );
     }
     else{
-    	pthread_mutex_unlock(&__vm_sync_mutex);
+    	vm_tsync_unlock(vm);
 
     	switch( code ){
 			case EAGAIN :
