@@ -168,6 +168,7 @@ HYBRIS_DEFINE_FUNCTION(hcall_method){
 		hyb_error( H_ET_SYNTAX, "'%s' does not name a method neither an attribute of '%s'", methodname, classname );
 	}
 	stack.owner = string(classname) + "::" + methodname;
+	classref->referenced = true;
 	stack.insert( "me", (Object *)classref );
 	for( ; (unsigned)index.value < argc; ++index.value ){
 		value = ob_cl_at( (Object *)argv, (Object *)&index );
