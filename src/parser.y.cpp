@@ -250,6 +250,7 @@ vm_t *__hyb_vm;
 %type <list>   caseCascade
 %type <list>   attrList
 %type <list>   identList
+%type <list>   identOrAttributeList
 %type <list>   methodList
 %type <list>   classMembers
 %type <list>   classExtensions
@@ -310,6 +311,37 @@ identList : T_IDENT ',' identList {
 			  $$ = ll_create();
 			  ll_prepend( $$, MK_IDENT_NODE(@1.first_line,$1) );
 		  }
+
+identOrAttributeList : identList ',' identOrAttributeList {
+						$$ = REDUCE_NODE($3);
+						ll_foreach( $1, node ){
+							ll_prepend( $$, ll_node(node) );
+						}
+						ll_destroy($1);
+					 }
+					 | expression T_GET_MEMBER T_IDENT ',' identOrAttributeList {
+						$$ = REDUCE_NODE($5);
+						ll_prepend( $$, MK_ATTRIBUTE_REQUEST_NODE( @1.first_line, $1, MK_IDENT_NODE(@3.first_line, $3) ) );
+					 }
+					 | T_IDENT ',' T_IDENT {
+						$$ = ll_create();
+						ll_append_pair( $$, MK_IDENT_NODE(@3.first_line,$3), MK_IDENT_NODE(@1.first_line,$1) );
+					 }
+					 | expression T_GET_MEMBER T_IDENT ',' expression T_GET_MEMBER T_IDENT {
+						$$ = ll_create();
+						ll_append_pair( $$,
+										MK_ATTRIBUTE_REQUEST_NODE( @5.first_line, $5, MK_IDENT_NODE(@7.first_line, $7) ),
+										MK_ATTRIBUTE_REQUEST_NODE( @1.first_line, $1, MK_IDENT_NODE(@3.first_line, $3) ) );
+					 }
+					 | T_IDENT {
+						$$ = ll_create();
+						ll_prepend( $$, MK_IDENT_NODE(@1.first_line,$1) );
+					 }
+					 | expression T_GET_MEMBER T_IDENT {
+						 $$ = ll_create();
+						 ll_prepend( $$, MK_ATTRIBUTE_REQUEST_NODE( @1.first_line, $1, MK_IDENT_NODE(@3.first_line, $3) ) );
+					 }
+
 
 attrList  : accessSpecifier identList T_EOSTMT attrList {
 			  $$ = REDUCE_NODE($4);
@@ -381,7 +413,7 @@ statement  : T_EOSTMT                                                   { $$ = M
 		   | expression '[' ']' T_ASSIGN expression T_EOSTMT            { $$ = MK_SB_PUSH_NODE( @1.first_line, $1, $5 ); }
            | expression '[' expression ']' T_ASSIGN expression T_EOSTMT { $$ = MK_SB_SET_NODE( @1.first_line, $1, $3, $6 ); }
            /* ( a, b, c ) = array; */
-           | '(' identList ')' T_ASSIGN expression T_EOSTMT             { $$ = MK_EXPLODE_NODE( @2.first_line, $2, $5 ); }
+           | '(' identOrAttributeList ')' T_ASSIGN expression T_EOSTMT  { $$ = MK_EXPLODE_NODE( @2.first_line, $2, $5 ); }
            /* conditional and loops */
            | T_WHILE '(' expression ')' statement                       { $$ = MK_WHILE_NODE( @3.first_line, $3, $5 ); }
            | T_DO statement T_WHILE '(' expression ')' T_EOSTMT         { $$ = MK_DO_NODE( @2.first_line, $2, $5 ); }

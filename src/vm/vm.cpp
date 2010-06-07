@@ -2292,8 +2292,10 @@ INLINE Object *vm_exec_switch( vm_t *vm, vframe_t *frame, Node *node){
 
 INLINE Object *vm_exec_explode( vm_t *vm, vframe_t *frame, Node *node ){
 	ll_item_t *llitem;
-	Node   *expr  = H_UNDEFINED;
-	Object *value = H_UNDEFINED;
+	Node   *expr  = H_UNDEFINED,
+		   *lexp  = H_UNDEFINED;
+	Object *value = H_UNDEFINED,
+		   *item  = H_UNDEFINED;
 
 	expr  = node->child(0);
 	value = vm_exec( vm, frame, expr );
@@ -2302,19 +2304,73 @@ INLINE Object *vm_exec_explode( vm_t *vm, vframe_t *frame, Node *node ){
 		   n_items = ob_get_size(value),
 		   n_end   = (n_ids > n_items ? n_items : n_ids),
 		   i;
+
 	/*
-	 * Initialize all the identifiers with a <false>.
+	 * Initialize all the items with a <false>.
 	 */
 	for( llitem = node->children.head->next; llitem; llitem = llitem->next ){
-		frame->add( ll_node(llitem)->id(), (Object *)gc_new_boolean(false) );
+		lexp = ll_node(llitem);
+
+		/*
+		 * If the first child is an identifier, we are just defining
+		 * a new variable or assigning it a new value, nothing
+		 * complicated about it.
+		 */
+		if( lexp->type == H_NT_IDENTIFIER ){
+			if( lexp->value.identifier == "me" ){
+				hyb_error( H_ET_SYNTAX, "'me' is a reserved word" );
+			}
+			frame->add( lexp->id(), (Object *)gc_new_boolean(false) );
+		}
+		/*
+		 * If not, we evaluate the first node as a "owner->child->..." sequence,
+		 * just like the vm_exec_attribute_request handler.
+		 */
+		else if( lexp->type == H_NT_ATTRIBUTE ){
+			Node *member    = lexp,
+				 *owner     = member->value.owner,
+				 *attribute = member->value.member;
+
+			Object *obj = vm_exec( vm, frame, owner );
+
+			vm_check_frame_exit(frame)
+
+			ob_set_attribute_reference( obj, attribute->id(), (Object *)gc_new_boolean(false) );
+		}
 	}
+
 	/*
 	 * Fill initializers until the iterable object ends, leave
-	 * the rest of them to <null>.
+	 * the rest of them to <false>.
 	 */
 	Integer index(0);
 	for( llitem = node->children.head->next; (unsigned)index.value < n_end; ++index.value, llitem = llitem->next ){
-		frame->add( ll_node(llitem)->id(), ob_cl_at( value, (Object *)&index ) );
+		// frame->add( ll_node(llitem)->id(), ob_cl_at( value, (Object *)&index ) );
+		item = ob_cl_at( value, (Object *)&index );
+		lexp = ll_node(llitem);
+		/*
+		 * Same as before.
+		 */
+		if( lexp->type == H_NT_IDENTIFIER ){
+			frame->add( lexp->id(), item );
+		}
+		else if( lexp->type == H_NT_ATTRIBUTE ){
+			Node *member    = lexp,
+				 *owner     = member->value.owner,
+				 *attribute = member->value.member;
+
+			Object *obj = vm_exec( vm, frame, owner );
+
+			vm_check_frame_exit(frame)
+
+			if( item->referenced ){
+				ob_set_attribute( obj, attribute->id(), item );
+			}
+			else{
+				item->referenced = true;
+				ob_set_attribute_reference( obj, attribute->id(), item );
+			}
+		}
 	}
 
 	return value;
