@@ -54,6 +54,35 @@ Object *__vector_contains( vm_t *vm, Object *me, vframe_t *data ){
 	return (Object *)gc_new_boolean(false);
 }
 
+Object *__vector_unique( vm_t *vm, Object *me, vframe_t *data ){
+	Object *array  = me,
+		   *unique = (Object *)gc_new_vector(),
+		   *item;
+	Integer index(0);
+	int size( ob_get_size(array) );
+	bool contains;
+
+	for( ; index.value < size; ++index.value ){
+		item 	 = ob_cl_at( array, (Object *)&index );
+		contains = false;
+
+		Integer index_u(0);
+		int size_u( ob_get_size(unique) );
+
+		for( ; index_u.value < size_u && !contains; ++index_u.value ){
+			if( ob_cmp( ob_cl_at( unique, (Object *)&index_u ), item ) == 0 ){
+				contains = true;
+			}
+		}
+
+		if( contains == false ){
+			ob_cl_push( unique, item );
+		}
+	}
+
+	return unique;
+}
+
 Object *__vector_join( vm_t *vm, Object *me, vframe_t *data ){
 	if( vm_argc() != 1 ){
 		hyb_error( H_ET_SYNTAX, "method 'join' requires 1 parameter (called with %d)", vm_argc() );
@@ -479,6 +508,7 @@ static ob_builtin_method_t vector_builtin_methods[] = {
 	{ "join",     (ob_type_builtin_method_t *)__vector_join },
 	{ "min",	  (ob_type_builtin_method_t *)__vector_min },
 	{ "max",	  (ob_type_builtin_method_t *)__vector_max },
+	{ "unique",   (ob_type_builtin_method_t *)__vector_unique },
 	{ OB_BUILIN_METHODS_END_MARKER }
 };
 

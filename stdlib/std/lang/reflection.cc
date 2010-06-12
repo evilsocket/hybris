@@ -163,10 +163,11 @@ HYBRIS_DEFINE_FUNCTION(hcall_method){
 	Integer index(0);
 	size_t j, argc( ob_get_size( (Object *)argv ) );
 
-	method = ob_get_method( (Object *)classref, methodname, 2 );
+	method = ob_get_method( (Object *)classref, methodname, argc );
 	if( method == H_UNDEFINED ){
 		hyb_error( H_ET_SYNTAX, "'%s' does not name a method neither an attribute of '%s'", methodname, classname );
 	}
+
 	stack.owner = string(classname) + "::" + methodname;
 	classref->referenced = true;
 	stack.insert( "me", (Object *)classref );
@@ -176,7 +177,6 @@ HYBRIS_DEFINE_FUNCTION(hcall_method){
 	}
 
 	vm_add_frame( vm, &stack );
-
 	/* call the method */
 	result = vm_exec( vm, &stack, method->body );
 

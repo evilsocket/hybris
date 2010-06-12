@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project(hybris)
 
+OPTION( WITH_DEBUG "enable debug module" OFF )
+
 # cmake needed modules
 include(CheckIncludeFiles)
 
@@ -47,7 +49,16 @@ set( MINOR_VERSION 0 )
 set( PATCH_LEVEL   0 )
 set( VERSION "${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_LEVEL} beta 3" )
 # common compilation flags
-set( OPTIMIZATION "-O3 -pipe -fomit-frame-pointer -ffast-math" )
+if (WITH_DEBUG)
+	message(STATUS "Configuring for debug")
+	set( CMAKE_BUILD_TYPE Debug )
+	set( OPTIMIZATION "-g -pg" )
+else (WITH_DEBUG)
+	message(STATUS "Configuring for release")
+	set( CMAKE_BUILD_TYPE Release )
+	set( OPTIMIZATION "-O3 -pipe -fomit-frame-pointer -ffast-math" )
+endif (WITH_DEBUG)
+
 set( COMMON_CXXFLAGS "-w ${OPTIMIZATION}" )
 # compute standard library compilation flags
 execute_process( COMMAND xml2-config --cflags OUTPUT_VARIABLE LIBXML_CXXFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE )

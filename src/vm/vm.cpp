@@ -1741,7 +1741,7 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
 
 			vframe_t stack;
 
-			stack.push_tmp(newtype);
+			frame->push_tmp(newtype);
 
 			vm_prepare_stack( vm,
 							  frame,
@@ -1754,7 +1754,7 @@ INLINE Object *vm_exec_new_operator( vm_t *vm, vframe_t *frame, Node *type ){
 
 			vm_check_frame_exit(frame);
 
-			stack.remove_tmp(newtype);
+			frame->remove_tmp(newtype);
 
 			/* call the ctor */
 			vm_exec( vm, &stack, ctor->body );
@@ -2345,7 +2345,6 @@ INLINE Object *vm_exec_explode( vm_t *vm, vframe_t *frame, Node *node ){
 	 */
 	Integer index(0);
 	for( llitem = node->children.head->next; (unsigned)index.value < n_end; ++index.value, llitem = llitem->next ){
-		// frame->add( ll_node(llitem)->id(), ob_cl_at( value, (Object *)&index ) );
 		item = ob_cl_at( value, (Object *)&index );
 		lexp = ll_node(llitem);
 		/*
@@ -2497,8 +2496,18 @@ INLINE Object *vm_exec_assign( vm_t *vm, vframe_t *frame, Node *node ){
     	value = vm_exec( vm, frame, node->child(1) );
 
     	vm_check_frame_exit(frame)
-
-		return object = frame->add( lexpr->id(), value );
+    	/*
+    	 * Is a global identifier?
+    	 */
+		if( vm->vmem.find( lexpr->id() ) != H_UNDEFINED ){
+			return object = vm->vmem.add( lexpr->id(), value );
+		}
+		/*
+		 * Update local identifier.
+		 */
+		else{
+			return object = frame->add( lexpr->id(), value );
+		}
     }
     /*
      * If not, we evaluate the first node as a "owner->child->..." sequence,
