@@ -59,7 +59,12 @@ else (WITH_DEBUG)
 	set( OPTIMIZATION "-O3 -pipe -fomit-frame-pointer -ffast-math" )
 endif (WITH_DEBUG)
 
-set( COMMON_CXXFLAGS "-w ${OPTIMIZATION}" )
+if (APPLE)
+	set( COMMON_CXXFLAGS "-w -I/opt/local/include/ ${OPTIMIZATION}" )
+else (APPLE)
+	set( COMMON_CXXFLAGS "-w ${OPTIMIZATION}" )
+endif (APPLE)
+
 # compute standard library compilation flags
 execute_process( COMMAND xml2-config --cflags OUTPUT_VARIABLE LIBXML_CXXFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE )
 execute_process( COMMAND pkg-config --cflags libffi OUTPUT_VARIABLE LIBFFI_CXXFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE )

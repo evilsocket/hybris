@@ -42,6 +42,10 @@
 #define vv_foreach( VTYPE, iterator, vv ) VTYPE::const_iterator iterator ## cached_end( (vv).end() ); \
 										  for( iterator = (vv).begin(); iterator != iterator ## cached_end; ++iterator )
 
+#ifndef ulong
+	typedef unsigned long ulong;
+#endif
+
 /*
  * Function declaration descriptor.
  */
