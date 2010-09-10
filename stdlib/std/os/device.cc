@@ -20,22 +20,27 @@
 #include <sys/stat.h>
 #include <sys/mount.h>
 
+/*
+ * It seems there're some issues regarding mount system call, temporary disabled.
+ */
+#if 0
+
 HYBRIS_DEFINE_FUNCTION(hmknod);
 HYBRIS_DEFINE_FUNCTION(hmkfifo);
 HYBRIS_DEFINE_FUNCTION(hmount);
 HYBRIS_DEFINE_FUNCTION(humount2);
 HYBRIS_DEFINE_FUNCTION(humount);
 
-HYBRIS_EXPORTED_FUNCTIONS() {
-	{ "mknod",   hmknod,   H_REQ_ARGC(3), { H_REQ_TYPES(otString), H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
-	{ "mkfifo",  hmkfifo,  H_REQ_ARGC(2), { H_REQ_TYPES(otString), H_REQ_TYPES(otInteger) } },
-#ifndef __APPLE__
-	{ "mount",   hmount,   H_REQ_ARGC(4), { H_REQ_TYPES(otString), H_REQ_TYPES(otString), H_REQ_TYPES(otString), H_REQ_TYPES(otInteger) } },
-	{ "umount2", humount2, H_REQ_ARGC(2), { H_REQ_TYPES(otString), H_REQ_TYPES(otInteger) } },
-	{ "umount",  humount,  H_REQ_ARGC(1), { H_REQ_TYPES(otString)} },
-#endif
-	{ "", NULL }
-};
+	HYBRIS_EXPORTED_FUNCTIONS() {
+		{ "mknod",   hmknod,   H_REQ_ARGC(3), { H_REQ_TYPES(otString), H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
+		{ "mkfifo",  hmkfifo,  H_REQ_ARGC(2), { H_REQ_TYPES(otString), H_REQ_TYPES(otInteger) } },
+	#ifndef __APPLE__
+		{ "mount",   hmount,   H_REQ_ARGC(4), { H_REQ_TYPES(otString), H_REQ_TYPES(otString), H_REQ_TYPES(otString), H_REQ_TYPES(otInteger) } },
+		{ "umount2", humount2, H_REQ_ARGC(2), { H_REQ_TYPES(otString), H_REQ_TYPES(otInteger) } },
+		{ "umount",  humount,  H_REQ_ARGC(1), { H_REQ_TYPES(otString)} },
+	#endif
+		{ "", NULL }
+	};
 
 extern "C" void hybris_module_init( vm_t * vm ){
 	HYBRIS_DEFINE_CONSTANT( vm, "S_IFIFO", gc_new_integer(S_IFIFO) );
@@ -131,5 +136,11 @@ HYBRIS_DEFINE_FUNCTION(humount){
 
 	return (Object *)gc_new_integer( umount( file ) );
 }
+#endif
+
+#else
+HYBRIS_EXPORTED_FUNCTIONS() {
+	{ "", NULL }
+};
 #endif
 
