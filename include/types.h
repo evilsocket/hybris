@@ -967,9 +967,9 @@ typedef struct _class_attribute_t {
 		name(n),
 		access(a),
 		value(v),
-		is_static(_static),
-		mutex(PTHREAD_MUTEX_INITIALIZER){
-
+		is_static(_static)/*,
+		mutex(PTHREAD_MUTEX_INITIALIZER)*/{
+		pthread_mutex_init( &mutex, NULL );
 	}
 
 	INLINE void lock(){

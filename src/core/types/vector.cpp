@@ -509,7 +509,7 @@ static ob_builtin_method_t vector_builtin_methods[] = {
 	{ "min",	  (ob_type_builtin_method_t *)__vector_min },
 	{ "max",	  (ob_type_builtin_method_t *)__vector_max },
 	{ "unique",   (ob_type_builtin_method_t *)__vector_unique },
-	{ OB_BUILIN_METHODS_END_MARKER }
+	OB_BUILIN_METHODS_END_MARKER
 };
 
 IMPLEMENT_TYPE(Vector) {

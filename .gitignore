@@ -21,7 +21,10 @@ benchmark.sh
 build
 CMakeCache.txt
 CMakeFiles
+CMakeScripts
 Makefile
 cmake_install.cmake
 install_manifest.txt
 tests
+hybris.build
+.DS_Store

@@ -58,7 +58,9 @@ extern "C" void hybris_module_init( vm_t * vm ){
 	HYBRIS_DEFINE_CONSTANT( vm, "SIGPIPE", gc_new_integer(SIGPIPE) ); /* Broken pipe (POSIX).  */
 	HYBRIS_DEFINE_CONSTANT( vm, "SIGALRM", gc_new_integer(SIGALRM) ); /* Alarm clock (POSIX).  */
 	HYBRIS_DEFINE_CONSTANT( vm, "SIGTERM", gc_new_integer(SIGTERM) ); /* Termination (ANSI).  */
+#ifndef __APPLE__
 	HYBRIS_DEFINE_CONSTANT( vm, "SIGSTKFLT", gc_new_integer(SIGSTKFLT) ); /* Stack fault.  */
+#endif
 	HYBRIS_DEFINE_CONSTANT( vm, "SIGCLD", gc_new_integer(SIGCHLD) ); /* Same as SIGCHLD (System V).  */
 	HYBRIS_DEFINE_CONSTANT( vm, "SIGCHLD", gc_new_integer(SIGCHLD) ); /* Child status has changed (POSIX).  */
 	HYBRIS_DEFINE_CONSTANT( vm, "SIGCONT", gc_new_integer(SIGCONT) ); /* Continue (POSIX).  */
@@ -74,7 +76,9 @@ extern "C" void hybris_module_init( vm_t * vm ){
 	HYBRIS_DEFINE_CONSTANT( vm, "SIGWINCH", gc_new_integer(SIGWINCH) ); /* Window size change (4.3 BSD, Sun).  */
 	HYBRIS_DEFINE_CONSTANT( vm, "SIGPOLL", gc_new_integer(SIGIO) ); /* Pollable event occurred (System V).  */
 	HYBRIS_DEFINE_CONSTANT( vm, "SIGIO", gc_new_integer(SIGIO) ); /* I/O now possible (4.2 BSD).  */
+#ifndef __APPLE__
 	HYBRIS_DEFINE_CONSTANT( vm, "SIGPWR", gc_new_integer(SIGPWR) ); /* Power failure restart (System V).  */
+#endif
 	HYBRIS_DEFINE_CONSTANT( vm, "SIGSYS", gc_new_integer(SIGSYS) ); /* Bad system call.  */
 }
 

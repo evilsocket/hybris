@@ -101,7 +101,8 @@ typedef struct _gc {
 		usage        = 0;
 		gc_threshold = GC_DEFAULT_MEMORY_THRESHOLD;
 		mm_threshold = GC_ALLOWED_MEMORY_THRESHOLD;
-		mutex        = PTHREAD_MUTEX_INITIALIZER;
+		//mutex        = PTHREAD_MUTEX_INITIALIZER;
+		pthread_mutex_init( &mutex, NULL );
 
 		ll_init( &constants );
 		ll_init( &lag );

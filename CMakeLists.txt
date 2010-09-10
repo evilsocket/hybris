@@ -115,7 +115,9 @@ set_target_properties( libhybris PROPERTIES
 					   COMPILE_FLAGS ${COMMON_CXXFLAGS}
 					   # Output directory
 					   RUNTIME_OUTPUT_DIRECTORY build/${PREFIX}/lib
-					   LIBRARY_OUTPUT_DIRECTORY build/${PREFIX}/lib )
+					   LIBRARY_OUTPUT_DIRECTORY build/${PREFIX}/lib 
+					   # Install name directory (for Mac OS X install_name_tool)
+					   INSTALL_NAME_DIR /${PREFIX}/lib )
 # Needed libraries
 target_link_libraries( libhybris dl pcre pthread readline )
 

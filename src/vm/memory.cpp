@@ -19,8 +19,8 @@
 #include "memory.h"
 #include "common.h"
 
-MemorySegment::MemorySegment() : ITree<Object>(), mutex(PTHREAD_MUTEX_INITIALIZER) {
-
+MemorySegment::MemorySegment() : ITree<Object>()/*, mutex(PTHREAD_MUTEX_INITIALIZER)*/ {
+	pthread_mutex_init( &mutex, NULL );
 }
 
 Object *MemorySegment::add( char *identifier, Object *object ){

@@ -80,6 +80,7 @@ extern "C" void hybris_module_init( vm_t * vm ){
 	HYBRIS_DEFINE_CONSTANT( vm, "AF_UNSPEC", gc_new_integer(AF_UNSPEC) );
 	HYBRIS_DEFINE_CONSTANT( vm, "AF_LOCAL", gc_new_integer(AF_LOCAL) );
 	HYBRIS_DEFINE_CONSTANT( vm, "AF_UNIX", gc_new_integer(AF_UNIX) );
+#ifndef __APPLE__
 	HYBRIS_DEFINE_CONSTANT( vm, "AF_FILE", gc_new_integer(AF_FILE) );
 	HYBRIS_DEFINE_CONSTANT( vm, "AF_INET", gc_new_integer(AF_INET) );
 	HYBRIS_DEFINE_CONSTANT( vm, "AF_AX25", gc_new_integer(AF_AX25) );
@@ -115,6 +116,7 @@ extern "C" void hybris_module_init( vm_t * vm ){
 	HYBRIS_DEFINE_CONSTANT( vm, "AF_ISDN", gc_new_integer(AF_ISDN) );
 	HYBRIS_DEFINE_CONSTANT( vm, "AF_PHONET", gc_new_integer(AF_PHONET) );
 	HYBRIS_DEFINE_CONSTANT( vm, "AF_IEEE802154", gc_new_integer(AF_IEEE802154) );
+#endif
 	HYBRIS_DEFINE_CONSTANT( vm, "AF_MAX", gc_new_integer(AF_MAX) );
 	/*
 	 * Socket types.
@@ -122,12 +124,14 @@ extern "C" void hybris_module_init( vm_t * vm ){
 	HYBRIS_DEFINE_CONSTANT( vm, "SOCK_STREAM", gc_new_integer(SOCK_STREAM) );
 	HYBRIS_DEFINE_CONSTANT( vm, "SOCK_DGRAM", gc_new_integer(SOCK_DGRAM) );
 	HYBRIS_DEFINE_CONSTANT( vm, "SOCK_RAW", gc_new_integer(SOCK_RAW) );
+#ifndef __APPLE__
 	HYBRIS_DEFINE_CONSTANT( vm, "SOCK_RDM", gc_new_integer(SOCK_RDM) );
 	HYBRIS_DEFINE_CONSTANT( vm, "SOCK_SEQPACKET", gc_new_integer(SOCK_SEQPACKET) );
 	HYBRIS_DEFINE_CONSTANT( vm, "SOCK_DCCP", gc_new_integer(SOCK_DCCP) );
 	HYBRIS_DEFINE_CONSTANT( vm, "SOCK_PACKET", gc_new_integer(SOCK_PACKET) );
 	HYBRIS_DEFINE_CONSTANT( vm, "SOCK_CLOEXEC", gc_new_integer(SOCK_CLOEXEC) );
 	HYBRIS_DEFINE_CONSTANT( vm, "SOCK_NONBLOCK", gc_new_integer(SOCK_NONBLOCK) );
+#endif
 }
 
 HYBRIS_DEFINE_FUNCTION(hsocket){

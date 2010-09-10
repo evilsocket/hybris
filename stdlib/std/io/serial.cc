@@ -21,6 +21,8 @@
 #include <errno.h>
 #include <termios.h>
 
+#ifndef __APPLE__
+
 HYBRIS_DEFINE_FUNCTION(hserial_open);
 HYBRIS_DEFINE_FUNCTION(hserial_fcntl);
 HYBRIS_DEFINE_FUNCTION(hserial_get_attr);
@@ -503,3 +505,11 @@ HYBRIS_DEFINE_FUNCTION(hserial_close){
 
 	return (Object *)gc_new_integer( close(fd) );
 }
+
+#else
+
+HYBRIS_EXPORTED_FUNCTIONS() {
+	{ "", NULL }
+};
+
+#endif

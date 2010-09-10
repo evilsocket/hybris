@@ -29,9 +29,11 @@ HYBRIS_DEFINE_FUNCTION(humount);
 HYBRIS_EXPORTED_FUNCTIONS() {
 	{ "mknod",   hmknod,   H_REQ_ARGC(3), { H_REQ_TYPES(otString), H_REQ_TYPES(otInteger), H_REQ_TYPES(otInteger) } },
 	{ "mkfifo",  hmkfifo,  H_REQ_ARGC(2), { H_REQ_TYPES(otString), H_REQ_TYPES(otInteger) } },
+#ifndef __APPLE__
 	{ "mount",   hmount,   H_REQ_ARGC(4), { H_REQ_TYPES(otString), H_REQ_TYPES(otString), H_REQ_TYPES(otString), H_REQ_TYPES(otInteger) } },
 	{ "umount2", humount2, H_REQ_ARGC(2), { H_REQ_TYPES(otString), H_REQ_TYPES(otInteger) } },
 	{ "umount",  humount,  H_REQ_ARGC(1), { H_REQ_TYPES(otString)} },
+#endif
 	{ "", NULL }
 };
 
@@ -58,6 +60,7 @@ extern "C" void hybris_module_init( vm_t * vm ){
 	HYBRIS_DEFINE_CONSTANT( vm, "S_IXOTH", gc_new_integer(S_IXOTH) );
 	HYBRIS_DEFINE_CONSTANT( vm, "S_ISVTX", gc_new_integer(S_ISVTX) );
 
+#ifndef __APPLE__
 	HYBRIS_DEFINE_CONSTANT( vm, "MS_RDONLY", gc_new_integer(MS_RDONLY) );
 	HYBRIS_DEFINE_CONSTANT( vm, "MS_NOSUID", gc_new_integer(MS_NOSUID) );
 	HYBRIS_DEFINE_CONSTANT( vm, "MS_NODEV", gc_new_integer(MS_NODEV) );
@@ -72,6 +75,7 @@ extern "C" void hybris_module_init( vm_t * vm ){
 	HYBRIS_DEFINE_CONSTANT( vm, "MNT_FORCE",  gc_new_integer(MNT_FORCE) );
 	HYBRIS_DEFINE_CONSTANT( vm, "MNT_DETACH", gc_new_integer(MNT_DETACH) );
 	HYBRIS_DEFINE_CONSTANT( vm, "MNT_EXPIRE", gc_new_integer(MNT_EXPIRE) );
+#endif
 
 #ifdef S_WRITE
 	HYBRIS_DEFINE_CONSTANT( vm, "S_WRITE", gc_new_integer(S_WRITE) );
@@ -99,10 +103,11 @@ HYBRIS_DEFINE_FUNCTION(hmkfifo){
 	return (Object *)gc_new_integer( mkfifo( path, mode ) );
 }
 
+#ifndef __APPLE__
 HYBRIS_DEFINE_FUNCTION(hmount){
 	char 		 *special_file,
-				 *dir,
-				 *fstype;
+				 *dir;
+	int			 *fstype;
 	unsigned long options;
 
 	vm_parse_argv( "pppl", &special_file, &dir, &fstype, &options );
@@ -126,3 +131,5 @@ HYBRIS_DEFINE_FUNCTION(humount){
 
 	return (Object *)gc_new_integer( umount( file ) );
 }
+#endif
+

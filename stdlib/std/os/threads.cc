@@ -99,7 +99,7 @@ HYBRIS_DEFINE_FUNCTION(hpthread_create){
     	 */
     	vm_tsync_unlock(vm);
 
-    	return ob_dcast( gc_new_integer(tid) );
+    	return ob_dcast( gc_new_integer((unsigned long)tid) );
     }
     else{
     	vm_tsync_unlock(vm);
@@ -134,13 +134,19 @@ HYBRIS_DEFINE_FUNCTION(hpthread_exit){
 }
 
 HYBRIS_DEFINE_FUNCTION(hpthread_join){
+
     long  tid;
     void *status;
 
     vm_parse_argv( "l", &tid );
 
     if( tid > 0 ){
+#ifndef __APPLE__
     	pthread_join( tid, &status );
+#else
+    	pthread_join( (_opaque_pthread_t *)tid, &status );
+#endif
+
 		return H_DEFAULT_RETURN;
     }
     else{
@@ -155,7 +161,11 @@ HYBRIS_DEFINE_FUNCTION(hpthread_kill){
 	vm_parse_argv( "ll", &tid, &sig );
 
 	if( tid > 0 ){
+#ifndef __APPLE__
 		return (Object *)gc_new_integer( pthread_kill( tid, sig ) );
+#else
+		return (Object *)gc_new_integer( pthread_kill( (_opaque_pthread_t *)tid, sig ) );
+#endif
 	}
 	else{
 		return H_DEFAULT_ERROR;
