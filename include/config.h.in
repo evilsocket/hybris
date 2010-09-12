@@ -5,3 +5,5 @@
 #cmakedefine LIB_PATH "@LIB_PATH@"
 /* Define to the version of this package. */
 #cmakedefine VERSION "@VERSION@"
+/* Define dynamic libraries ext */
+#cmakedefine DYN_EXT "@DYN_EXT@"

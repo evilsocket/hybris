@@ -141,7 +141,6 @@ void vm_init( vm_t *vm, int optind, int *argc, char **argv[], char *envp[] ){
      * Initialize vm mutexes
      */
     for( i = 0; i < VM_MUTEXES; ++i ){
-    	// vm->mutexes[i] = PTHREAD_MUTEX_INITIALIZER;
     	pthread_mutex_init( &vm->mutexes[i], NULL );
     }
     /*
@@ -269,19 +268,11 @@ void vm_load_namespace( vm_t *vm, string path ){
             vm_load_namespace( vm, path + ent->d_name );
         }
         /* load .so/.dylib dynamic module */
-#ifndef __APPLE__
-        else if( strstr( ent->d_name, ".so" ) ){
+        else if( strstr( ent->d_name, DYN_EXT ) ){
             string modname = string(ent->d_name);
-            modname.replace( modname.find(".so"), 3, "" );
+            modname.replace( modname.find(DYN_EXT), strlen(DYN_EXT), "" );
             vm_load_module( vm, path + '/' + ent->d_name, modname );
         }
-#else
-        else if( strstr( ent->d_name, ".dylib" ) ){
-            string modname = string(ent->d_name);
-            modname.replace( modname.find(".dylib"), 6, "" );
-            vm_load_module( vm, path + '/' + ent->d_name, modname );
-        }
-#endif
     }
 
     closedir(dir);

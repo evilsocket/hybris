@@ -19,7 +19,7 @@
 #include "memory.h"
 #include "common.h"
 
-MemorySegment::MemorySegment() : ITree<Object>()/*, mutex(PTHREAD_MUTEX_INITIALIZER)*/ {
+MemorySegment::MemorySegment() : ITree<Object>() {
 	pthread_mutex_init( &mutex, NULL );
 }
 
